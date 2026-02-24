@@ -33,9 +33,10 @@ export default function MarkdownPage({ file, title }: MarkdownPageProps) {
   )
 
   const content = getPageContent(file)
+  const isHome = file === 'home.md'
 
   return (
-    <ContentLayout>
+    <ContentLayout fullWidth={isHome}>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div onClick={handleClick}>
         <MarkdownRenderer content={content} highlightTerm={highlightTerm} />

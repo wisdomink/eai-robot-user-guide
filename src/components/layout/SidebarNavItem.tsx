@@ -21,7 +21,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
       <button
         onClick={() => hasPages && setIsExpanded(!isExpanded)}
         className={clsx(
-          'w-full flex items-center gap-1.5 py-2 px-3 text-left text-sm font-rubik rounded-md transition-colors',
+          'w-full flex items-center gap-1.5 py-2 px-3 text-left text-[var(--fs-sidebar)] font-rubik rounded-md transition-colors',
           'font-semibold text-navy',
           hasPages ? 'hover:bg-gray-100 cursor-pointer' : 'text-gray-400 cursor-default'
         )}
@@ -30,7 +30,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
         {hasPages && (
           <svg
             className={clsx(
-              'w-4 h-4 transition-transform flex-shrink-0',
+              'w-[clamp(14px,1vw,18px)] h-[clamp(14px,1vw,18px)] transition-transform flex-shrink-0',
               isExpanded ? 'rotate-90' : 'rotate-0'
             )}
             fill="none"
@@ -42,7 +42,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
           </svg>
         )}
         {/* Spacer for items without chevron to keep text aligned */}
-        {!hasPages && <span className="w-4 flex-shrink-0" />}
+        {!hasPages && <span className="w-[clamp(14px,1vw,18px)] flex-shrink-0" />}
         <span>{section.title}</span>
       </button>
       {isExpanded && hasPages && (
@@ -54,7 +54,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  'block py-2 px-3 pl-10 text-sm rounded-md transition-colors',
+                  'block py-2 px-3 pl-10 text-[var(--fs-sidebar)] rounded-md transition-colors',
                   isActive
                     ? 'bg-ios-blue/10 text-ios-blue font-medium'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-navy'

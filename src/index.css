@@ -31,10 +31,36 @@
   --text-small: 0.75rem;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT VARIABLES
+   Proportional to Figma design at 1440px viewport.
+   Uses clamp(min, preferred-vw, max) so everything scales
+   with the viewport while staying within usable bounds.
+══════════════════════════════════════════════════════════════ */
+:root {
+  /* Layout dimensions */
+  --header-height: clamp(44px, 3.9vw, 72px);
+  --sidebar-width: clamp(220px, 20vw, 380px);
+
+  /* Icon sizes — ratio ~1:2 matching Figma */
+  --icon-sm: clamp(16px, 1.5vw, 26px);   /* hamburger menu – compact */
+  --icon-md: clamp(32px, 3.2vw, 54px);   /* company logo – prominent */
+
+  /* Typography – proportional */
+  --fs-body:    clamp(13px, 1.04vw, 18px);
+  --fs-sidebar: clamp(12.5px, 0.97vw, 16px);
+  --fs-sidebar-title: clamp(14px, 1.11vw, 20px);
+  --fs-h1:      clamp(24px, 2.5vw, 44px);
+  --fs-h2:      clamp(15px, 1.25vw, 22px);
+  --fs-h3:      clamp(13px, 1.04vw, 18px);
+  --fs-table:   clamp(12px, 0.9vw, 16px);
+  --fs-code:    clamp(11px, 0.8vw, 15px);
+}
+
 body {
   margin: 0;
   font-family: var(--font-roboto);
-  font-size: var(--text-body);
+  font-size: var(--fs-body);
   color: var(--color-navy);
   background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +77,7 @@ body {
 ══════════════════════════════════════════════════════════════ */
 .md-body h1 {
   font-family: var(--font-rubik);
-  font-size: var(--text-h1);
+  font-size: var(--fs-h1);
   font-weight: 700;
   color: var(--color-navy);
   margin-bottom: 1.5rem;
@@ -61,7 +87,7 @@ body {
 
 .md-body h2 {
   font-family: var(--font-rubik);
-  font-size: 1.125rem;
+  font-size: var(--fs-h2);
   font-weight: 600;
   color: var(--color-navy);
   margin: 2.25rem 0 0.75rem;
@@ -71,7 +97,7 @@ body {
 
 .md-body h3 {
   font-family: var(--font-rubik);
-  font-size: var(--text-body);
+  font-size: var(--fs-h3);
   font-weight: 600;
   color: var(--color-navy);
   margin: 1.5rem 0 0.5rem;
@@ -81,6 +107,7 @@ body {
   color: var(--color-gray-700);
   margin-bottom: 0.875rem;
   line-height: 1.7;
+  font-size: var(--fs-body);
 }
 
 .md-body ol,
@@ -93,6 +120,7 @@ body {
   color: var(--color-gray-700);
   margin-bottom: 0.5rem;
   line-height: 1.7;
+  font-size: var(--fs-body);
 }
 
 .md-body strong {
@@ -151,7 +179,7 @@ body {
   border: 1px solid var(--color-gray-200);
   border-radius: 4px;
   padding: 1px 6px;
-  font-size: 0.8125rem;
+  font-size: var(--fs-code);
   font-family: 'SF Mono', 'Fira Mono', 'Cascadia Code', monospace;
   color: #c0392b;
 }
@@ -169,7 +197,7 @@ body {
   border: none;
   padding: 0;
   color: #cdd6f4;
-  font-size: 0.8125rem;
+  font-size: var(--fs-code);
   line-height: 1.6;
 }
 
@@ -178,7 +206,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0;
-  font-size: 0.875rem;
+  font-size: var(--fs-table);
 }
 
 .md-body th {
@@ -207,6 +235,17 @@ body {
   border-radius: 8px;
   border: 1px solid var(--color-gray-200);
   margin: 1rem 0;
+}
+
+/* Home hero image — full-bleed, fill content area */
+.md-body img[src*="home-hero"] {
+  width: 100%;
+  max-width: none;
+  border: none;
+  border-radius: 0;
+  margin: 0.5rem 0 0;
+  object-fit: cover;
+  min-height: 50vh;
 }
 
 /* ══════════════════════════════════════════════════════════════
