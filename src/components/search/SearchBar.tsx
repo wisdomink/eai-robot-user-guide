@@ -59,7 +59,7 @@ export default function SearchBar() {
 
   return (
     <div ref={wrapRef} className="relative">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 focus-within:border-purple focus-within:ring-2 focus-within:ring-purple/15 focus-within:bg-white transition-all">
+      <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 bg-gray-50 focus-within:border-purple focus-within:ring-2 focus-within:ring-purple/15 focus-within:bg-white transition-all">
         <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 16 16">
           <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
           <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
