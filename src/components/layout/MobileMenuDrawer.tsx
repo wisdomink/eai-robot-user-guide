@@ -28,7 +28,7 @@ export default function MobileMenuDrawer({ isOpen, onClose }: MobileMenuDrawerPr
         )}
       >
         <div className="flex items-center justify-between h-[var(--header-height)] px-4 border-b border-gray-200">
-          <span className="font-rubik font-semibold text-navy text-[var(--fs-sidebar-title)]">Navigation</span>
+          <span className="font-roboto font-semibold text-navy text-[var(--fs-sidebar-title)]">Navigation</span>
           <button onClick={onClose} className="p-1" aria-label="Close menu">
             <img src={iconClose} alt="" className="w-[var(--icon-sm)] h-[var(--icon-sm)]" />
           </button>

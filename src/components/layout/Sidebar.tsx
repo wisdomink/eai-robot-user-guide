@@ -20,7 +20,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         <Link
           to="/"
           onClick={onNavigate}
-          className="font-rubik font-semibold text-navy text-[var(--fs-sidebar-title)] leading-tight hover:text-ios-blue transition-colors"
+          className="font-roboto font-semibold text-navy text-[var(--fs-sidebar-title)] leading-tight hover:text-ios-blue transition-colors"
         >
           {sidebarConfig.title}
         </Link>

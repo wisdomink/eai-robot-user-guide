@@ -21,7 +21,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
       <button
         onClick={() => hasPages && setIsExpanded(!isExpanded)}
         className={clsx(
-          'w-full flex items-center gap-1.5 py-2 px-3 text-left text-[var(--fs-sidebar)] font-rubik rounded-md transition-colors',
+          'w-full flex items-center gap-1.5 py-2 px-3 text-left text-[var(--fs-sidebar)] font-roboto rounded-md transition-colors',
           'font-semibold text-navy',
           hasPages ? 'hover:bg-gray-100 cursor-pointer' : 'text-gray-400 cursor-default'
         )}
