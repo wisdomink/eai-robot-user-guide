@@ -51,7 +51,7 @@ export default function ContentLayout({ children, fullWidth }: ContentLayoutProp
           className={clsx(
             fullWidth
               ? 'px-4 md:px-8 lg:px-10 py-4 md:py-6'
-              : 'max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-6 md:py-10'
+              : 'max-w-6xl mx-auto px-4 md:px-8 lg:px-12 py-6 md:py-10'
           )}
         >
           {children}

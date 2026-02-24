@@ -46,15 +46,15 @@
   --icon-sm: clamp(16px, 1.5vw, 26px);   /* hamburger menu – compact */
   --icon-md: clamp(32px, 3.2vw, 54px);   /* company logo – prominent */
 
-  /* Typography – proportional */
-  --fs-body:    clamp(13px, 1.04vw, 18px);
-  --fs-sidebar: clamp(12.5px, 0.97vw, 16px);
-  --fs-sidebar-title: clamp(14px, 1.11vw, 20px);
-  --fs-h1:      clamp(24px, 2.5vw, 44px);
-  --fs-h2:      clamp(15px, 1.25vw, 22px);
-  --fs-h3:      clamp(13px, 1.04vw, 18px);
-  --fs-table:   clamp(12px, 0.9vw, 16px);
-  --fs-code:    clamp(11px, 0.8vw, 15px);
+  /* Typography – fixed at Figma 1440px design values */
+  --fs-body:    15px;
+  --fs-sidebar: 14px;
+  --fs-sidebar-title: 16px;
+  --fs-h1:      36px;
+  --fs-h2:      18px;
+  --fs-h3:      15px;
+  --fs-table:   13px;
+  --fs-code:    12px;
 }
 
 body {
