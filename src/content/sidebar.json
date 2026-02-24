@@ -1,9 +1,5 @@
 {
   "title": "FF Master Ultra Edition",
-  "home": {
-    "slug": "/",
-    "file": "home.md"
-  },
   "sections": [
     {
       "id": "preliminary",
@@ -30,6 +26,11 @@
     {
       "id": "operation",
       "title": "Operation Guide",
+      "pages": []
+    },
+    {
+      "id": "locomotion",
+      "title": "Locomotion & Manipulation Platform Manual",
       "pages": []
     },
     {

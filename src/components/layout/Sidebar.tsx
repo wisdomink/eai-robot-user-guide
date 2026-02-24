@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { sidebarConfig } from '@/content'
 import SidebarNavItem from './SidebarNavItem'
 import SearchBar from '@/components/search/SearchBar'
@@ -8,10 +9,27 @@ interface SidebarProps {
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
   return (
-    <nav className="py-4 px-2 space-y-1" aria-label="Manual navigation">
-      <div className="px-2 pb-3">
+    <nav className="py-4 px-3 space-y-1" aria-label="Manual navigation">
+      {/* Search */}
+      <div className="px-1 pb-3">
         <SearchBar />
       </div>
+
+      {/* Clickable title → cover page */}
+      <div className="px-3 pb-2">
+        <Link
+          to="/"
+          onClick={onNavigate}
+          className="font-rubik font-semibold text-navy text-base leading-tight hover:text-ios-blue transition-colors"
+        >
+          {sidebarConfig.title}
+        </Link>
+      </div>
+
+      {/* Separator */}
+      <div className="border-b border-gray-200 mx-2 mb-1" />
+
+      {/* Navigation sections */}
       {sidebarConfig.sections.map(section => (
         <SidebarNavItem
           key={section.id}

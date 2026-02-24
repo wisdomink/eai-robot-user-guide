@@ -1,13 +1,25 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { sidebarConfig } from '@/content'
-import HomePage from '@/pages/HomePage'
 import MarkdownPage from '@/pages/MarkdownPage'
 
 export default function App() {
+  const firstPageSlug = sidebarConfig.sections[0]?.pages[0]?.slug || '/'
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* Cover / Home page — same unified layout */}
+        <Route
+          path="/"
+          element={
+            <MarkdownPage
+              file="home.md"
+              title="FF Master Ultra Edition"
+            />
+          }
+        />
+
+        {/* All content pages */}
         {sidebarConfig.sections.flatMap(section =>
           section.pages.map(page => (
             <Route
@@ -17,7 +29,9 @@ export default function App() {
             />
           ))
         )}
-        <Route path="*" element={<HomePage />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={firstPageSlug} replace />} />
       </Routes>
     </BrowserRouter>
   )
