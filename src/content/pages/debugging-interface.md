@@ -1,13 +1,51 @@
-# User Debugging Interface (FF Master Ultra)
+# User Debugging Interface
 
-The FF Master Ultra provides multiple debugging interfaces for development and maintenance purposes.
+**No.**
 
-## Interface Specifications
+**Interface Type**
 
-| Interface | Type | Computing Unit | Specification |
-|-----------|------|----------------|---------------|
-| USB | Type-A | Orin NX | USB 3.2 Gen2 |
-| USB | Type-C | Orin NX | USB 3.2 Gen2 |
-| USB | Type-A | RK3588 | USB 3.0 |
-| USB | Type-C | RK3588 | USB 3.0 |
-| SIM Card | Nano SIM | RK3588 | 4G/5G |
+**Interface Name**
+
+**Interface Description**
+
+1
+
+RK3588 USB
+
+USB Type-A
+
+Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth.
+
+2
+
+RK3588 USB
+
+USB Type-C
+
+Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth.
+
+3
+
+Orin NX USB
+
+USB Type-A
+
+Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth.
+
+4
+
+Orin NX USB
+
+USB Type-C
+
+Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth.
+
+5
+
+SIM card slot
+
+SIM card slot
+
+5G module SIM card slot.
+
+![](/images/docx/debugging-interface-1.png)

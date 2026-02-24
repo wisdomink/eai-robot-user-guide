@@ -1,12 +1,47 @@
 # Computational Unit
 
-## On-board Computing Platforms
+Type
 
-| Specification | FF Master / FF Master Edu | FF Master Ultra |
-|---------------|--------------------------|-----------------|
-| Main Control Board | RK3588 | RK3588 |
-| Interactive Computing | RK3588s | RK3588s |
-| AI Computing Unit | — | Jetson Orin NX |
-| GPU | — | 1,024-core NVIDIA Ampere architecture |
-| AI Performance | — | 157 TOPS |
-| Memory | — | 16GB LPDDR5 |
+On-board computer
+
+FF Master / FF Master Edu
+
+One **operation and control computing unit**（PC1) and one** interactive computing unit**（PC3)
+
+FF Master Ultra
+
+One **operation and control computing unit**（PC1), one** interactive computing unit**（PC3) and one** development computing unit**（PC2)** Parameter**
+
+**Development Computing Unit (PC2)**
+
+Processor
+
+Jetson Orin NX
+
+AI Performance
+
+157Tops
+
+GPU
+
+1,024-core NVIDIA Ampere architecture GPU with 32 Tensor Cores
+
+CPU
+
+8-core Arm® Cortex®-A78AE v8.2 64-bit CPU 
+
+Cache
+
+2MB L2 + 4MB L3
+
+VRAM (Graphics Memory)
+
+16G
+
+System Memory (RAM)
+
+16G
+
+Storage
+
+512GB

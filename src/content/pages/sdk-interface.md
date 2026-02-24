@@ -1,11 +1,43 @@
 # Software Development Kit Interface
 
-The SDK interface provides hardware-level access for secondary development on the FF Master Ultra platform.
+**No.**
 
-## Interface Specifications
+**Interface Type**
 
-| Interface | Connector | Specification | Power |
-|-----------|-----------|---------------|-------|
-| Gigabit Ethernet | RJ45 | 1000BASE-T | — |
-| 12V Power Port | XT30UPB-F | 12V DC | 3A max |
-| 48V Power Port | XT30UPB-F | 48V DC | 5A max |
+**Interface Name**
+
+**Interface Description**
+
+1
+
+RJ45
+
+1000 Base-T
+
+Gigabit Ethernet, accessible by both Orin NX and RK3588
+
+2
+
+RJ45
+
+1000 Base-T
+
+Gigabit Ethernet, accessible by both Orin NX and RK3588
+
+3
+
+XT30UPB-F
+
+12V Power Port
+
+12V/3A Power Output
+
+4
+
+XT30UPB-F
+
+48V Power Port
+
+48V/5A Power Output
+
+![](/images/docx/sdk-interface-1.png)

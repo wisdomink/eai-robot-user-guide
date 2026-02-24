@@ -1,5 +1,9 @@
-# Product Structure Diagram (FF Master Ultra)
+# Product Structure Diagram
 
 The following diagram illustrates the main components of the FF Master Ultra.
 
-![Product Structure Diagram - FF Master Ultra showing all major components](/images/product-structure.png)
+![](/images/docx/product-structure-1.png)
+
+![](/images/docx/product-structure-2.png)
+
+![](/images/docx/product-structure-3.png)
