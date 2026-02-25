@@ -1,6 +1,6 @@
 # EAI Robot User Manual (H5)
 
-FF Master Ultra Edition 产品用户手册，基于 React + Markdown 驱动的静态文档站。
+FF Master Ultra Edition 产品用户手册，基于 React + Markdown 驱动的静态文档站，支持 SSG 预渲染。
 
 ## 技术栈
 
@@ -24,18 +24,20 @@ h5-test/
 ├── vite.config.ts
 ├── tsconfig.app.json
 ├── scripts/
-│   └── convert.mjs            ← 源文档 → Markdown 转换脚本
+│   ├── convert.mjs            ← 源文档 → Markdown 转换脚本
+│   └── prerender.mjs          ← SSG 预渲染脚本
 ├── public/
 │   └── images/
 │       ├── home-hero.png      ← 首页封面图
 │       └── docx/              ← convert 脚本从 Word 提取的图片
 └── src/
-    ├── main.tsx               ← 应用入口
+    ├── main.tsx               ← 客户端入口
+    ├── entry-server.tsx       ← SSG 服务端入口（renderToString）
     ├── App.tsx                ← 路由配置（从 sidebar.json 自动生成）
     ├── index.css              ← Tailwind + .md-body 样式 + 搜索高亮
     │
     ├── content/               ← 📝 内容管理（核心）
-    │   ├── sidebar.json       ← 导航树配置
+    │   ├── sidebar.json       ← 导航树配置（5 个章节）
     │   ├── index.ts           ← 内容注册表（import.meta.glob）
     │   ├── source/            ← 原始文档（转换输入）
     │   │   ├── manual.pdf     ← 文本提取源
@@ -52,7 +54,17 @@ h5-test/
     │       ├── sensor-fov.md
     │       ├── joint-limits.md
     │       ├── coordinate-systems.md
-    │       └── specifications.md
+    │       ├── specifications.md
+    │       ├── safety-precautions.md
+    │       ├── startup-guide.md
+    │       ├── shutdown-guide.md
+    │       ├── charging-procedure.md
+    │       ├── remote-control.md
+    │       ├── robot-interaction.md
+    │       ├── ff-robotic-app.md
+    │       ├── others.md
+    │       ├── locomotion-platform.md
+    │       └── contact-information.md
     │
     ├── components/
     │   ├── layout/            ← 布局组件
@@ -91,12 +103,21 @@ npm install
 # 启动开发服务器
 npm run dev
 
-# 生产构建
+# 生产构建（含 SSG 预渲染）
 npm run build
 
 # 预览构建结果
 npm run preview
 ```
+
+### 构建流程
+
+`npm run build` 依次执行以下步骤：
+
+1. **TypeScript 类型检查** — `tsc -b`
+2. **客户端构建** — `vite build`（输出到 `dist/client/`）
+3. **服务端构建** — `vite build --ssr`（输出到 `dist/server/`）
+4. **SSG 预渲染** — `node scripts/prerender.mjs`（为每个路由生成静态 HTML）
 
 ## 内容转换管道（convert）
 
@@ -229,7 +250,7 @@ See also: [Safety Guidelines](/safety-guidelines)
 | 📱 响应式布局 | Desktop 侧边栏常驻，Mobile 抽屉式菜单 |
 | 🖨️ 打印友好 | `@media print` 优化，链接自动显示 URL |
 | 📝 Markdown 驱动 | 内容与代码完全分离，非技术人员可编辑 |
-| ⚡ 构建时打包 | 所有 .md 通过 `import.meta.glob` 在构建时内联 |
+| ⚡ SSG 预渲染 | 构建时为每个路由生成静态 HTML，支持 SEO |
 | 🔄 源文档转换 | PDF + Word → Markdown 自动化管道（`npm run convert`） |
 
 ## 设计系统
@@ -243,10 +264,10 @@ See also: [Safety Guidelines](/safety-guidelines)
 
 ## SEO 说明
 
-当前为纯 SPA 架构，所有 Markdown 内容在构建时打包进 JS bundle。如需搜索引擎索引，可选择以下预渲染方案：
+项目已实现 SSG（Static Site Generation）预渲染：
 
-- **react-snap** — 零配置，使用 Puppeteer 爬取并生成静态 HTML
-- **vite-plugin-prerender** — Vite 插件，构建后自动预渲染指定路由
-- **自定义 SSG 脚本** — 使用 `react-dom/server` 的 `renderToString` 为每个路由生成 HTML
+- **`src/entry-server.tsx`** — 使用 `react-dom/server` 的 `renderToString` 在服务端渲染每个路由
+- **`scripts/prerender.mjs`** — 构建后自动遍历 `sidebar.json` 中的所有路由，生成对应的静态 HTML 文件
+- **动态标题** — 每个页面通过 `document.title` 设置 SEO 友好的标题
 
-每个页面已通过 `document.title` 动态设置标题，为预渲染做好了准备。
+构建时 `npm run build` 会自动完成预渲染，无需额外配置。
