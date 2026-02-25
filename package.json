@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "convert": "node scripts/convert.mjs",
+    "convert:text": "node scripts/convert.mjs --text-only",
+    "convert:images": "node scripts/convert.mjs --images-only"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -20,6 +23,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
+    "mammoth": "^1.11.0",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"

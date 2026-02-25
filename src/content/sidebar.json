@@ -17,7 +17,11 @@
         { "title": "Packing List", "slug": "/packing-list", "file": "packing-list.md" },
         { "title": "Product Overview", "slug": "/product-overview", "file": "product-overview.md" },
         { "title": "Computational Unit", "slug": "/computational-unit", "file": "computational-unit.md" },
-        { "title": "Battery Indicator Lights", "slug": "/battery-indicator-lights", "file": "battery-indicator.md" }
+        { "title": "Battery Indicator Lights", "slug": "/battery-indicator-lights", "file": "battery-indicator.md" },
+        { "title": "Sensor Field of View", "slug": "/sensor-fov", "file": "sensor-fov.md" },
+        { "title": "Joint Name and Joint Limit", "slug": "/joint-limits", "file": "joint-limits.md" },
+        { "title": "Coordinate Systems", "slug": "/coordinate-systems", "file": "coordinate-systems.md" },
+        { "title": "Specifications", "slug": "/specifications", "file": "specifications.md" }
       ]
     },
     {
