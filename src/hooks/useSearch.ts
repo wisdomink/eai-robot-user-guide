@@ -1,79 +1,187 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { getAllPagesForSearch } from '@/content'
+import { useSemanticSearch } from './useSemanticSearch'
+import type { SemanticResult } from './useSemanticSearch'
+import { getAllChunksForSearch, type ContentChunk } from '@/content/chunks'
 
 export interface SearchResult {
   title: string
   section: string
+  sectionTitle: string
   slug: string
-  file: string
   snippet: string
+  headingAnchor: string
+  similarity: number
+  matchType: 'exact' | 'semantic'
 }
 
-function getSnippet(text: string, keyword: string): string {
-  const idx = text.toLowerCase().indexOf(keyword.toLowerCase())
-  if (idx === -1) return text.slice(0, 140) + (text.length > 140 ? '…' : '')
-  const start = Math.max(0, idx - 40)
-  const raw = (start > 0 ? '…' : '') + text.slice(start, start + 140) + (start + 140 < text.length ? '…' : '')
-  return raw
+// ─── Exact search (local, instant) ───────────────────────────
+
+let chunksCache: ContentChunk[] | null = null
+function getCachedChunks(): ContentChunk[] {
+  if (!chunksCache) chunksCache = getAllChunksForSearch()
+  return chunksCache
 }
+
+function searchExact(query: string): SearchResult[] {
+  const q = query.toLowerCase()
+  const chunks = getCachedChunks()
+
+  const scored: { chunk: ContentChunk; score: number; snippet: string }[] = []
+
+  for (const chunk of chunks) {
+    let score = 0
+    let snippet = chunk.textPreview
+
+    // Title exact match → highest priority
+    if (chunk.pageTitle.toLowerCase().includes(q)) {
+      score += 100
+    }
+
+    // Section title match → high priority
+    if (chunk.sectionTitle.toLowerCase().includes(q)) {
+      score += 50
+    }
+
+    // Body text contains query → medium priority
+    const bodyLower = chunk.text.toLowerCase()
+    const idx = bodyLower.indexOf(q)
+    if (idx !== -1) {
+      score += 10
+      // Extract snippet with context around the match
+      const start = Math.max(0, idx - 40)
+      const end = Math.min(chunk.text.length, idx + q.length + 120)
+      snippet =
+        (start > 0 ? '...' : '') +
+        chunk.text.slice(start, end).trim() +
+        (end < chunk.text.length ? '...' : '')
+    }
+
+    if (score > 0) {
+      scored.push({ chunk, score, snippet })
+    }
+  }
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score)
+
+  return scored.slice(0, 10).map(({ chunk, snippet }) => ({
+    title: chunk.pageTitle,
+    section: chunk.sectionId,
+    sectionTitle: chunk.sectionTitle,
+    slug: chunk.pageSlug,
+    snippet,
+    headingAnchor: chunk.headingAnchor,
+    similarity: 0,
+    matchType: 'exact' as const,
+  }))
+}
+
+// ─── Semantic → SearchResult adapter ─────────────────────────
+
+function semanticToSearchResult(r: SemanticResult): SearchResult {
+  return {
+    title: r.pageTitle,
+    section: r.sectionId,
+    sectionTitle: r.sectionTitle,
+    slug: r.pageSlug,
+    snippet: r.textPreview,
+    headingAnchor: r.headingAnchor,
+    similarity: r.similarity,
+    matchType: 'semantic',
+  }
+}
+
+// ─── Main search hook ────────────────────────────────────────
 
 export function useSearch() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const [query, setQuery] = useState('')
+  const [exactResults, setExactResults] = useState<SearchResult[]>([])
+  const [semanticResults, setSemanticResults] = useState<SearchResult[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { searchSemantic, isSearching, error, clearError } = useSemanticSearch()
 
   // The highlight term active on the current page
   const highlightTerm = searchParams.get('q') || ''
 
-  // Build search index (memoized, built once from all page content)
-  const searchIndex = useMemo(() => getAllPagesForSearch(), [])
+  // INSTANT exact search (no debounce)
+  useEffect(() => {
+    const trimmed = query.trim()
+    if (!trimmed) {
+      setExactResults([])
+      return
+    }
+    setExactResults(searchExact(trimmed))
+  }, [query])
 
-  // Debounced query for search
-  const [debouncedQuery, setDebouncedQuery] = useState('')
-
+  // DEBOUNCED semantic search (400ms)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setDebouncedQuery(query)
-    }, 200)
+
+    const trimmed = query.trim()
+    if (!trimmed) {
+      setSemanticResults([])
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchSemantic(trimmed)
+      setSemanticResults(results.map(semanticToSearchResult))
+    }, 400)
+
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [query])
+  }, [query, searchSemantic])
 
-  // Cross-page search results
-  const results: SearchResult[] = useMemo(() => {
-    if (!debouncedQuery.trim()) return []
-    const kw = debouncedQuery.toLowerCase()
-    return searchIndex
-      .filter(p => p.text.toLowerCase().includes(kw) || p.title.toLowerCase().includes(kw))
-      .map(hit => ({
-        ...hit,
-        snippet: getSnippet(hit.text, debouncedQuery),
-      }))
-  }, [debouncedQuery, searchIndex])
+  // Merge: exact first → deduplicate → semantic after
+  const results = useMemo(() => {
+    const exactKeys = new Set(
+      exactResults.map((r) => `${r.slug}#${r.headingAnchor}`)
+    )
+    const dedupedSemantic = semanticResults.filter(
+      (r) => !exactKeys.has(`${r.slug}#${r.headingAnchor}`)
+    )
+    return [...exactResults, ...dedupedSemantic]
+  }, [exactResults, semanticResults])
 
-  // Navigate to a search result page with highlight
+  // Navigate to a search result page with highlight + section anchor
   const navigateToResult = useCallback(
-    (slug: string, keyword: string) => {
+    (
+      slug: string,
+      keyword: string,
+      headingAnchor?: string,
+      matchType?: 'exact' | 'semantic'
+    ) => {
       setIsDropdownOpen(false)
-      navigate(`${slug}?q=${encodeURIComponent(keyword)}`)
+      const params = new URLSearchParams()
+      if (keyword) params.set('q', keyword)
+      if (headingAnchor) params.set('section', headingAnchor)
+      // For semantic results, also trigger section highlighting on the target page
+      if (matchType === 'semantic' && headingAnchor) {
+        params.set('highlight-section', headingAnchor)
+      }
+      const qs = params.toString()
+      navigate(`${slug}${qs ? `?${qs}` : ''}`)
     },
     [navigate]
   )
 
-  // Apply in-page search (navigate to current page with q param)
+  // Apply in-page search (update current page's q param)
   const applyInPageSearch = useCallback(
     (keyword: string) => {
       if (!keyword.trim()) {
-        // Remove q param
         navigate(location.pathname, { replace: true })
       } else {
-        navigate(`${location.pathname}?q=${encodeURIComponent(keyword)}`, { replace: true })
+        navigate(
+          `${location.pathname}?q=${encodeURIComponent(keyword)}`,
+          { replace: true }
+        )
       }
     },
     [navigate, location.pathname]
@@ -81,10 +189,12 @@ export function useSearch() {
 
   const clearSearch = useCallback(() => {
     setQuery('')
-    setDebouncedQuery('')
+    setExactResults([])
+    setSemanticResults([])
     setIsDropdownOpen(false)
+    clearError()
     navigate(location.pathname, { replace: true })
-  }, [navigate, location.pathname])
+  }, [navigate, location.pathname, clearError])
 
   return {
     query,
@@ -92,6 +202,8 @@ export function useSearch() {
     results,
     isDropdownOpen,
     setIsDropdownOpen,
+    isSearching,
+    searchError: error,
     highlightTerm,
     navigateToResult,
     applyInPageSearch,
@@ -99,7 +211,8 @@ export function useSearch() {
   }
 }
 
-// In-page highlight navigation (for marks rendered in the DOM)
+// ─── In-page highlight navigation ───────────────────────────
+
 export function useHighlightNavigation() {
   const [currentIndex, setCurrentIndex] = useState(-1)
   const [totalCount, setTotalCount] = useState(0)
@@ -120,7 +233,7 @@ export function useHighlightNavigation() {
     (direction: 1 | -1) => {
       const marks = document.querySelectorAll('mark.hl')
       if (marks.length === 0) return
-      marks.forEach(m => m.classList.remove('current'))
+      marks.forEach((m) => m.classList.remove('current'))
       const next = (currentIndex + direction + marks.length) % marks.length
       setCurrentIndex(next)
       marks[next]?.classList.add('current')

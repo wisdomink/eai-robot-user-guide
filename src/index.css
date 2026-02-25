@@ -271,6 +271,30 @@ mark.hl.current {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   SEMANTIC SEARCH SECTION HIGHLIGHT
+   Applied via JS when navigating from a semantic search result.
+   Fades out after 3 seconds.
+══════════════════════════════════════════════════════════════ */
+.semantic-highlight,
+.semantic-highlight-heading {
+  background-color: rgba(105, 101, 224, 0.08);
+  box-shadow: inset 3px 0 0 var(--color-purple);
+  border-radius: 0 4px 4px 0;
+  animation: semantic-fade 3s ease-out forwards;
+}
+
+@keyframes semantic-fade {
+  0%, 60% {
+    background-color: rgba(105, 101, 224, 0.08);
+    box-shadow: inset 3px 0 0 var(--color-purple);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    PRINT / PDF STYLES
 ══════════════════════════════════════════════════════════════ */
 @media print {
@@ -288,6 +312,11 @@ mark.hl.current {
   }
   mark.hl, mark.hl.current {
     background: #ffe082 !important;
+    box-shadow: none !important;
+  }
+  .semantic-highlight, .semantic-highlight-heading {
+    animation: none !important;
+    background: none !important;
     box-shadow: none !important;
   }
   @page {

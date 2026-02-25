@@ -9,6 +9,8 @@ export default function SearchBar() {
     results,
     isDropdownOpen,
     setIsDropdownOpen,
+    isSearching,
+    searchError,
     navigateToResult,
     applyInPageSearch,
     clearSearch,
@@ -39,7 +41,8 @@ export default function SearchBar() {
       }
       if (e.key === 'Enter' && results.length > 0) {
         e.preventDefault()
-        navigateToResult(results[0].slug, query)
+        const first = results[0]
+        navigateToResult(first.slug, query, first.headingAnchor, first.matchType)
       }
     },
     [clearSearch, results, navigateToResult, query]
@@ -49,10 +52,9 @@ export default function SearchBar() {
     if (query.trim()) setIsDropdownOpen(true)
   }, [query, setIsDropdownOpen])
 
-  // Close dropdown when clicking outside
   const handleResultClick = useCallback(
-    (slug: string) => {
-      navigateToResult(slug, query)
+    (slug: string, headingAnchor: string, matchType: 'exact' | 'semantic') => {
+      navigateToResult(slug, query, headingAnchor, matchType)
     },
     [navigateToResult, query]
   )
@@ -60,10 +62,17 @@ export default function SearchBar() {
   return (
     <div ref={wrapRef} className="relative">
       <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 bg-gray-50 focus-within:border-purple focus-within:ring-2 focus-within:ring-purple/15 focus-within:bg-white transition-all">
-        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 16 16">
-          <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        {/* Search icon / loading spinner */}
+        {isSearching ? (
+          <svg className="w-4 h-4 text-purple flex-shrink-0 animate-spin" fill="none" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 16 16">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        )}
         <input
           ref={inputRef}
           type="text"
@@ -71,7 +80,7 @@ export default function SearchBar() {
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          placeholder="Search..."
+          placeholder="AI Search..."
           className="bg-transparent text-sm text-navy outline-none w-full placeholder-gray-400 font-roboto"
           autoComplete="off"
           spellCheck={false}
@@ -90,6 +99,8 @@ export default function SearchBar() {
         <SearchDropdown
           results={results}
           query={query}
+          isSearching={isSearching}
+          searchError={searchError}
           onSelect={handleResultClick}
           onClose={() => setIsDropdownOpen(false)}
         />

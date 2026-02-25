@@ -4,8 +4,22 @@ import { marked, type Tokens } from 'marked'
 // Configure marked
 marked.setOptions({ breaks: true, gfm: true })
 
-// Custom renderer for internal links (SPA navigation)
+// Custom renderer for internal links (SPA navigation) + heading anchors
 const renderer = new marked.Renderer()
+
+// Generate slug-style anchor IDs for headings (must match toAnchor in chunks.ts)
+function toAnchor(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+renderer.heading = function (token: Tokens.Heading) {
+  const anchor = toAnchor(token.text)
+  return `<h${token.depth} id="${anchor}">${token.text}</h${token.depth}>\n`
+}
 
 renderer.link = function (token: Tokens.Link) {
   const { href, title, text } = token

@@ -10,6 +10,8 @@
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "prerender": "node scripts/prerender.mjs",
     "preview": "vite preview",
+    "generate:embeddings": "node scripts/generate-embeddings.mjs",
+    "dev:embed": "node scripts/dev-embed-server.mjs",
     "convert": "node scripts/convert.mjs",
     "convert:text": "node scripts/convert.mjs --text-only",
     "convert:images": "node scripts/convert.mjs --images-only"

@@ -17,22 +17,29 @@ export function getPageContent(filename: string): string {
 }
 
 /**
+ * Strip markdown syntax from raw text for plain-text indexing.
+ */
+export function stripMarkdown(raw: string): string {
+  return raw
+    .replace(/^#{1,6}\s+/gm, '')       // headings
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '') // images
+    .replace(/\*\*([^*]+)\*\*/g, '$1')  // bold
+    .replace(/\*([^*]+)\*/g, '$1')      // italic
+    .replace(/`([^`]+)`/g, '$1')        // inline code
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links
+    .replace(/[>|!\-]/g, '')            // blockquote, table, image, list markers
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
  * Get all pages with their raw text (markdown stripped) for search indexing.
  */
 export function getAllPagesForSearch() {
   return sidebarConfig.sections.flatMap(section =>
     section.pages.map(page => {
       const raw = getPageContent(page.file)
-      // Strip markdown syntax for search
-      const text = raw
-        .replace(/^#{1,6}\s+/gm, '')       // headings
-        .replace(/\*\*([^*]+)\*\*/g, '$1')  // bold
-        .replace(/\*([^*]+)\*/g, '$1')      // italic
-        .replace(/`([^`]+)`/g, '$1')        // inline code
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links
-        .replace(/[>|!\-]/g, '')            // blockquote, table, image, list markers
-        .replace(/\s+/g, ' ')
-        .trim()
+      const text = stripMarkdown(raw)
       return {
         title: page.title,
         section: section.title,
