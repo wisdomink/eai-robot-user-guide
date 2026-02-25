@@ -6,19 +6,17 @@ marked.setOptions({ breaks: true, gfm: true })
 
 // Custom renderer for internal links (SPA navigation)
 const renderer = new marked.Renderer()
-const origLink = renderer.link.bind(renderer)
 
 renderer.link = function (token: Tokens.Link) {
   const { href, title, text } = token
+  const safeHref = (href || '').replace(/"/g, '&quot;')
+  const safeTitle = title ? ` title="${title.replace(/"/g, '&quot;')}"` : ''
   // Internal links starting with / → use data-spa-link for React Router integration
   if (href && href.startsWith('/') && !href.startsWith('//')) {
-    const safeHref = href.replace(/"/g, '&quot;')
-    const safeTitle = title ? ` title="${title.replace(/"/g, '&quot;')}"` : ''
     return `<a href="${safeHref}" data-spa-link${safeTitle}>${text}</a>`
   }
   // External links → open in new tab
-  const out = origLink(token)
-  return out.replace('<a ', '<a target="_blank" rel="noopener" ')
+  return `<a href="${safeHref}" target="_blank" rel="noopener"${safeTitle}>${text}</a>`
 }
 
 marked.use({ renderer })
