@@ -19,7 +19,7 @@ export default function ContentLayout({ children, fullWidth }: ContentLayoutProp
   const close = () => setSidebarOpen(false)
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-[var(--header-height)]">
       <Header onMenuToggle={toggle} />
 
       {/* Desktop sidebar */}
