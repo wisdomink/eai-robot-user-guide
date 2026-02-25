@@ -18,13 +18,19 @@ Remote Control Mode Precautions：
 2. Off-Road Mode (Beta):
 ￮ Operation Limitation: When pushing the remote-control joysticks, avoid pushing them to the maximum extent. It is recommended to gradually adjust the joystick amplitude in sequence.
 ￮ Environmental Requirement: Operate only in open and unobstructed environments. Avoid stairs higher than 5 cm, slopes steeper than 10°, or rough terrain with elevation changes greater than ±5 cm.
-￮ Safety Reminder: During operation, continuously monitor the robot’s balance status and adjust control actions in real time.
+￮ Safety Reminder: During operation, continuously monitor the robot's balance status and adjust control actions in real time.
 3. Mode Trigger Limitation: Unless necessary, do not trigger Emergency-Stop Mode (Zero-Torque Mode) or Damping Mode, as these modes may cause joint unloading and could result in the robot falling.
 4. Control Priority: The control source priority order is: Remote Controller > App (Under development, will release soon) > Voice Interaction. When operating, pay attention to priority differences to avoid command conflicts.
 
 ## Remote Control Instructions
 
 ### Remote Control Button Positions
+
+![Remote Control Button Positions](/images/docx/remote-buttons-1.png)
+
+![Remote Control Side View — L1, L2, R1, R2 Buttons](/images/docx/remote-buttons-2.png)
+
+![Remote Control Sticks and Additional Buttons](/images/docx/remote-buttons-3.png)
 
 | Button Position | Name and Meaning |
 | --- | --- |
@@ -58,18 +64,14 @@ Remote Control Mode Precautions：
 2. Charging Time: Typical battery life is about 5 hours of continuous use, and it takes approximately 3–4 hours to fully charge. The actual duration for PS5 controllers may vary depending on usage conditions.
 3. Notes: Avoid using fast-charging cables or adapters. It is recommended to use a 5V 1A or 5V 2A charger. The controller may become slightly warm during charging—avoid overcharging to prevent overheating damage.
 Remote Controller Usage Precautions
-1. When using the remote controller to operate the robot, pay attention to the controller’s battery level. Insufficient power may prevent mode switching, which could cause the robot to lose balance or fall unexpectedly.
+1. When using the remote controller to operate the robot, pay attention to the controller's battery level. Insufficient power may prevent mode switching, which could cause the robot to lose balance or fall unexpectedly.
 2. Always use certified safe chargers when charging the remote controller. Using third-party fast chargers that only support 9V/12V (no 5V mode) may result in damage to the controller.
-
-![](/images/docx/remote-buttons-1.png)
-
-![](/images/docx/remote-buttons-2.png)
-
-![](/images/docx/remote-buttons-3.png)
 
 ## Mode Switching and Remote Control
 
 ### Description of Mode Switching Logic
+
+![Mode Switching Logic](/images/docx/mode-switching-logic-1.jpeg)
 
 Notes on Controller Mode Switching：
 1. The robot includes multiple operation modes. Different modes support different state transitions, and switching must follow the logic described above.
@@ -102,8 +104,6 @@ Notes on Controller Mode Switching：
 | Hoisted Shutdown | Standing Preparation Mode: L2 + X → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Hoist feet off ground → Power off. |
 | Assisted Lying-Down Shutdown | Standing Preparation Mode: L2 + X → Manually assist robot to lie down → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Power off. |
 | Sitting-Position Shutdown | Sit Down: L2 + ← → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Power off. |
-
-![](/images/docx/mode-switching-logic-1.jpeg)
 
 ## Interaction Action Library Control
 

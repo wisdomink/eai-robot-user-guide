@@ -3,7 +3,7 @@
 ## Robot Interaction Precautions
 
 1. During voice-controlled walking or upper-limb motion commands, it is recommended to maintain a clear space with at least a 1-meter radius around the robot. This ensures a safe operating area and allows the robot to move freely within its active range.
-2. During voice-controlled walking or motion execution, please pay close attention to the robot’s safety to avoid any risk of falling.
+2. During voice-controlled walking or motion execution, please pay close attention to the robot's safety to avoid any risk of falling.
 3. It is recommended to perform motion commands on hard flooring. Avoid using voice control on soft surfaces such as grass or carpets, as this may affect stability.
 4. For customized speech corpus configuration, please contact FF EAI Robotic technical support. In later versions, this feature will be available for self-configuration via the Intellectual & Interactive Platform (Under development, will release soon).
 
@@ -17,7 +17,7 @@
 
 ￮ The built-in microphone interaction feature will be introduced through a future OTA update. Please pay attention to version upgrade notifications in the FF Robotic app (Under development, will release soon) for detailed update instructions.
 ￮ Function Switching: After the update, users can manually switch between the built-in and external microphones within the app (Under development, will release soon).
-￮ Built-in Microphone Interaction: When using the built-in microphone, the robot must be activated with a wake word before interaction. ▪ English wake word: “Hey, Master”
+￮ Built-in Microphone Interaction: When using the built-in microphone, the robot must be activated with a wake word before interaction. ▪ English wake word: "Hey, Master"
 
 ### Voice Chat
 
@@ -30,9 +30,9 @@
 - In future updates, additional languages can be customized and switched via the Intellectual & Interactive Platform (Under development, will release soon), enabling flexible adaptation to various use scenarios.
 3. Voice Skill Commands
 - Singing Skill：
- i. Supported songs include Bingo, Happy Birthday, Little Star, London Bridge, Row Row Row Your Boat, The Wheels on the Bus, Jingle Bells, etc. ii. Example commands: “Sing me a song.” / “Can you sing?”
+ i. Supported songs include Bingo, Happy Birthday, Little Star, London Bridge, Row Row Row Your Boat, The Wheels on the Bus, Jingle Bells, etc. ii. Example commands: "Sing me a song." / "Can you sing?"
 - Rap Singing Skill：
- i. Example commands: “Sing me a rap.” / “Can you do a rap?”
+ i. Example commands: "Sing me a rap." / "Can you do a rap?"
 
 ### Multimodal Interaction
 
@@ -61,7 +61,7 @@ You can converse with the robot using voice commands to trigger physical actions
 
 ### Head Pat Interaction
 
-You can gently touch the head touch sensor of FF Master. The robot will respond by nodding pleasantly and saying: “Friendly touch signal detected — energy +100%!”
+You can gently touch the head touch sensor of FF Master. The robot will respond by nodding pleasantly and saying: "Friendly touch signal detected — energy +100%!"
 
 ### Robot Interaction Customization (under development, will release soon)
 
@@ -74,18 +74,15 @@ You may contact the sales representative to submit your knowledge base customiza
 | Voice Tone Selection | Future customization available through the Intellectual & Interactive Platform. | Allows customization or replication of the robot's voice tone. |
 | Wake Word Customization | Future customization available through the Intellectual & Interactive Platform. | Enables defining personalized wake words for robot activation. |
 
-Facial Supports facial data entry and Enables personalized Registration customization of greeting greetings and welcome dialogues for specific messages for registered individuals. Future faces. customization will be available on the Intellectual & Interactive Platform (under development, will release soon).
-Voice Tone Future customization available Allows customization or Selection through the Intellectual & replication of the robot’s voice Interactive Platform (under tone. development, will release soon).
-Wake Word Future customization available Enables defining personalized Customization through the Intellectual & wake words for robot Interactive Platform (under activation. development, will release soon).
-
 ## External Microphone Pairing and Connection
 
 1. Press the power button on the microphone to turn it on and ensure the device is active.
-2. The external microphone receiver is integrated into the robot’s head, and the microphone will automatically pair with the robot. A solid green light indicates a successful connection.
+2. The external microphone receiver is integrated into the robot's head, and the microphone will automatically pair with the robot. A solid green light indicates a successful connection.
  a. If the green light is flashing, it means the microphone is still attempting to pair. In this case, restart the robot to automatically complete the pairing process.
- b. If pairing still fails after restarting, insert a toothpick or thin tool into the round hole on the back of the robot’s head and press gently while holding the microphone’s pairing button to manually complete the pairing.
+ b. If pairing still fails after restarting, insert a toothpick or thin tool into the round hole on the back of the robot's head and press gently while holding the microphone's pairing button to manually complete the pairing.
+
+![External Microphone Pairing](/images/docx/microphone-pairing-1.png)
+
 External Microphone Transmitter Indicator Light Meanings
 
-![](/images/docx/microphone-pairing-1.png)
-
-![](/images/docx/microphone-pairing-2.png)
+![External Microphone Transmitter Indicator Light Meanings](/images/docx/microphone-pairing-2.png)
