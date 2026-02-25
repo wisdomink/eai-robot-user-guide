@@ -27,7 +27,16 @@
     {
       "id": "operation",
       "title": "Operation Guide",
-      "pages": []
+      "pages": [
+        { "title": "Safety Precautions", "slug": "/safety-precautions", "file": "safety-precautions.md" },
+        { "title": "Start-Up Guide", "slug": "/startup-guide", "file": "startup-guide.md" },
+        { "title": "Shutdown Guide", "slug": "/shutdown-guide", "file": "shutdown-guide.md" },
+        { "title": "Charging Procedure", "slug": "/charging-procedure", "file": "charging-procedure.md" },
+        { "title": "Remote Control User Guide", "slug": "/remote-control", "file": "remote-control.md" },
+        { "title": "Robot Interaction Procedures Guide", "slug": "/robot-interaction", "file": "robot-interaction.md" },
+        { "title": "FF Robotic APP Manual", "slug": "/ff-robotic-app", "file": "ff-robotic-app.md" },
+        { "title": "Others", "slug": "/others", "file": "others.md" }
+      ]
     },
     {
       "id": "locomotion",

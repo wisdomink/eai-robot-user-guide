@@ -337,6 +337,221 @@ const SECTIONS = [
       },
     ],
   },
+
+  // ── Chapter 3: Operation Guide ────────────────────────────────────────────
+  {
+    chapter: 3,
+    file: 'safety-precautions.md',
+    title: 'Safety Precautions',
+    pattern: /^3\.1\s+Safety Precautions\s*$/m,
+    endBefore: /^3\.2\s/m,
+  },
+  {
+    chapter: 3,
+    file: 'startup-guide.md',
+    title: 'Start-Up Guide',
+    pattern: /^3\.2\s+Start-Up Guide\s*$/m,
+    endBefore: /^3\.3\s/m,
+    images: [
+      { position: 'end', headingId: 'heading_24', endHeadingId: 'heading_25', name: 'startup-hoisting' },
+      { position: 'end', headingId: 'heading_25', endHeadingId: 'heading_27', name: 'startup-supine' },
+      { position: 'end', headingId: 'heading_27', endHeadingId: 'heading_28', name: 'startup-prone' },
+      { position: 'end', headingId: 'heading_28', endHeadingId: 'heading_29', name: 'startup-sitting' },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'shutdown-guide.md',
+    title: 'Shutdown Guide',
+    pattern: /^3\.3\s+Shutdown Guide\s*$/m,
+    endBefore: /^3\.4\s/m,
+    images: [
+      { position: 'end', headingId: 'heading_30', endHeadingId: 'heading_31', name: 'shutdown-hoisted' },
+      { position: 'end', headingId: 'heading_31', endHeadingId: 'heading_32', name: 'shutdown-lyingdown' },
+      { position: 'end', headingId: 'heading_32', endHeadingId: 'heading_33', name: 'shutdown-sitting' },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'charging-procedure.md',
+    title: 'Charging Procedure',
+    pattern: /^3\.4\s+Charging Procedure\s*$/m,
+    endBefore: /^3\.5\s/m,
+    images: [
+      { position: 'end', headingId: 'heading_34', endHeadingId: 'heading_35', name: 'charging' },
+      { position: 'end', headingId: 'heading_35', endHeadingId: 'heading_36', name: 'battery-replacement' },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'remote-control.md',
+    title: 'Remote Control User Guide',
+    pattern: /^3\.5\s+Remote Control User Guide\s*$/m,
+    endBefore: /^3\.6\s/m,
+    images: [
+      { after: '## Remote Control Button Positions', headingId: 'heading_39', name: 'remote-buttons' },
+      { after: '## Description of Mode Switching Logic', headingId: 'heading_44', name: 'mode-switching-logic' },
+    ],
+    tables: [
+      {
+        headerPattern: /Concept\s{2,}Description/,
+        replaceToEnd: false,
+        hardcoded: [
+          '| Concept | Description |',
+          '| --- | --- |',
+          '| Zero-Torque Mode | The default state after the robot is powered on. All motors stop active motion, and there is no damping sensation when the body is swung. Note: In zero-torque mode the robot will fall over and there is a risk of tipping. Switch to this mode with caution. |',
+          '| Damping Mode | The robot is powered on, and the main controller is operating normally. All joints enter a damping state, with a clear damping feel when the body is swung. Changing joint positions is resisted; joints cannot actively change position or hold a position. Note: In damping mode, the robot will slowly collapse and there is a risk of falling. Switch with caution. |',
+          '| Standing Preparation (Position-Controlled Standing) Mode | The robot is powered on, and the main controller is operating normally. The robot stands in a position-controlled posture and maintains it; the joints are locked at their current positions. In this mode, body motion cannot be commanded. It is commonly used for hoisting/lowering and is a safe posture. (The robot does not self-balance in this mode.) |',
+          '| Sitting Preparation (Position-Controlled Sitting) Mode | The robot is powered on, and the main controller is operating normally. The robot enters a sitting posture and maintains it; the joints are locked at their current positions. In this mode, the robot\'s body motion cannot be commanded. It is typically used for starting up from a sitting or Supine Position and represents a safe posture. (The robot does not self-balance in this mode.) |',
+          '| Stable Standing (Force-Controlled Standing) Mode | The robot is powered on, and the main controller is operating normally. The robot stands and maintains posture. If joint positions are disturbed, there will be strong resistance, and the robot will actively recover to the standing posture. The robot has a certain balancing capability. In this mode, body motions can be commanded; while standing the robot can perform upper-limb actions such as waving or handshaking. It is recommended to perform stable standing on flat, hard surfaces. Avoid standing on soft or uneven surfaces such as carpets or grass. |',
+          '| Locomotion Mode | The robot is powered on, and the main controller is operating normally. The robot enters the walking mode and can move forward/backward/left/right and rotate clockwise or counterclockwise as commanded. Speed and gait can be adjusted via the joystick; start with a slow gait and then gradually increase the speed. To maintain balance, preset upper-limb actions are not supported in Locomotion mode. It is recommended to perform road tests on flat, hard surfaces and to avoid stairs, rough/uneven ground, and high-curvature ramps. |',
+          '| Emergency-Stop Mode | In this mode, the robot stops safely and may fall softly to the ground. Please pay close attention to the robot\'s safety during this state. It is recommended to use a protective frame to safeguard the robot when operating in this mode. |',
+          '| Off-Road Mode (Beta) | In this mode, the robot enters a fast-running control state with enhanced adaptability to rough terrain. To maintain balance, the robot\'s upper-limb preset motions are temporarily disabled during Off-Road Mode. |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /Button position\s{2,}FF MASTER/,
+        hardcoded: [
+          '| Button Position | Name and Meaning |',
+          '| --- | --- |',
+          '| B: Left Button/Trigger | L1, L2 Buttons (PS5 side view) |',
+          '| A: Right Button/Trigger | R1, R2 Buttons (PS5 side view) |',
+          '| A: Arrow Button | The left cross key, ↑, ↓, ←, → four direction buttons |',
+          '| B: Create Button | Create Button |',
+          '| C: Touchpad | Touchpad |',
+          '| D: Options Button | Options Button |',
+          '| E: Four Action Buttons | △, □, ○ and × Four Action Buttons |',
+          '| I & F: Sticks | I: Left Stick (controls forward/backward and left/right). F: Right Stick (controls rotation). |',
+          '| "PS" Button | G |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /Status Description\s{2,}LED Color/,
+        hardcoded: [
+          '| Status Description | LED Color/Behaviour |',
+          '| --- | --- |',
+          '| Controller power-on / connected | Solid blue |',
+          '| Controller waiting to pair | Fast-blinking blue |',
+          '| Pairing successful | Solid white |',
+          '| Normal startup | Breathing white |',
+          '| Battery level ≤10% | Solid amber |',
+          '| Charging (0–20%) | Fast blink amber |',
+          '| Charging (20–100%) | Slow blink amber |',
+          '| Charging complete | Amber off |',
+          '| Firmware update | Fast-blinking white |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /\s{2,}Name\s{2,}Details/,
+        hardcoded: [
+          '| Name | Details |',
+          '| --- | --- |',
+          '| Hoisted Start-Up | Process: Power on (hoisted position) → Position-Controlled Standing → Force-Controlled Standing → Remove hoisting ring → Enter Locomotion Mode. Standing Preparation Mode: L2 + X (short press). Stable Standing Mode: R2 + X (short press). "Stick-to-Move": The robot automatically enters Locomotion Mode when the joystick is pushed forward. |',
+          '| Start-Up from Supine Position | Process: Power on (ensure the robot\'s hips are level with the ground and the torso is facing upward) → Supine start-up → Locomotion Mode. Supine Start-Up: Press ↑ + △ simultaneously (short press). "Stick-to-Move": joystick forward to enter Locomotion Mode. |',
+          '| Start-up from Prone Position | Process: Power on (ensure the robot\'s hips are level with the ground and the torso is facing downward) → Prone start-up → Locomotion Mode. Prone Start-Up: Press ↑ + △ simultaneously (short press). "Stick-to-Move": joystick forward to enter Locomotion Mode. |',
+          '| Start-up from Sitting Position | Process: Power on (sitting standby) → Enter sitting posture → Sit-to-stand → Locomotion Mode. Sitting Preparation Mode: Press ↑ + X (short press). Sitting Start-Up: Press ↑ + □ (short press). "Stick-to-Move": joystick forward to enter Locomotion Mode. |',
+          '| Standing Preparation (Position-Controlled Standing) Mode | Press L2 + X simultaneously (short press). This mode can also be switched from Zero-Torque Mode. |',
+          '| Sitting Preparation (Position-Controlled Sitting) Mode | Press ↑ + X simultaneously (short press). This mode can also be switched from Zero-Torque Mode. |',
+          '| Stable Standing (Force-Controlled Standing) Mode | Press R2 + X simultaneously (short press). |',
+          '| Zero-Torque Mode | Press L1 + R1 + Create simultaneously (short press). The robot can enter this mode from any other mode. |',
+          '| Damping Mode | Press L2 + R2 + Create simultaneously (short press). The robot can enter this mode from any other mode. |',
+          '| Locomotion Mode | In Stable Standing Mode, push joystick to move. Forward/Backward: left joystick up/down. Turn Left/Right: right joystick left/right. Strafe Left/Right: left joystick left/right. |',
+          '| Off-Road Mode (Beta) | When in Locomotion Mode, press R2 + ↑ simultaneously (short press) to switch to Off-Road Mode. |',
+          '| Sit Down / Stand Up from Sitting | In Stable Standing Mode: Sit Down: Press L2 + ← (short press). Stand Up: Press ↑ + □ (short press). |',
+          '| Crouch Down / Stand Up from Crouching | In Stable Standing Mode, press △ + Left Joystick to control crouching depth. Push joystick up to stand, down to crouch. |',
+          '| Emergency-Stop Mode | Press L1 + R1 + Create simultaneously (short press). The robot will slowly collapse. To exit, press L2 + X to switch to Standing Preparation Mode. |',
+          '| Hoisted Shutdown | Standing Preparation Mode: L2 + X → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Hoist feet off ground → Power off. |',
+          '| Assisted Lying-Down Shutdown | Standing Preparation Mode: L2 + X → Manually assist robot to lie down → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Power off. |',
+          '| Sitting-Position Shutdown | Sit Down: L2 + ← → Damping Mode: L2 + R2 + Create → Zero-Torque Mode: L1 + R1 + Create → Power off. |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /Action\s{2,}Action\s{2,}Button Instruction/,
+        hardcoded: [
+          '| Action Type | Action Name | Button Instruction |',
+          '| --- | --- | --- |',
+          '| Head Movements | Clockwise Rotation | L1 + push left joystick right. Release to return to neutral. Hold to fix angle; press again to unlock. |',
+          '| | Counterclockwise Rotation | L1 + push left joystick left. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| | Downward Tilt | L1 + push left joystick down. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| | Upward Tilt | L1 + push left joystick up. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| Upper-Limb Movements | Wave (Left) | Create + L1 + tap △ |',
+          '| | Wave (Right) | Create + R1 + tap △ |',
+          '| | Handshake (Left) | Create + L1 + tap ✕ |',
+          '| | Handshake (Right) | Create + R1 + tap ✕ |',
+          '| | Flying Kiss (Left) | Create + L1 + tap ○ |',
+          '| | Flying Kiss (Right) | Create + R1 + tap ○ |',
+          '| | Salute (Left) | Create + L1 + tap □ |',
+          '| | Salute (Right) | Create + R1 + tap □ |',
+          '| | Fist Strike (Left) | Options + L1 + tap ↓ |',
+          '| | Fist Strike (Right) | Options + R1 + tap ↓ |',
+          '| | Palm Strike (Left) | Options + L1 + tap → |',
+          '| | Palm Strike (Right) | Options + R1 + tap → |',
+          '| | Raise Hand (Left) | Options + L1 + tap ↑ |',
+          '| | Raise Hand (Right) | Options + R1 + tap ↑ |',
+          '| Waist Movements | Clockwise Rotation | L1 + push right joystick right. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| | Counterclockwise Rotation | L1 + push right joystick left. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| | Bend Forward | L1 + push right joystick down. Release to return to neutral. Hold to fix; press again to unlock. |',
+          '| | Straighten Waist | L1 + push right joystick up. Release to return to neutral. Hold to fix; press again to unlock. |',
+        ].join('\n'),
+      },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'robot-interaction.md',
+    title: 'Robot Interaction Procedures Guide',
+    pattern: /^3\.6\s+Robot Interaction Procedures? Guide\s*$/m,
+    endBefore: /^3\.7\s/m,
+    images: [
+      { position: 'end', headingId: 'heading_57', endHeadingId: 'heading_58', name: 'microphone-pairing' },
+    ],
+    tables: [
+      {
+        headerPattern: /Category\s{2,}Supported Range\s{2,}Example Voice/,
+        hardcoded: [
+          '| Category | Supported Range | Example Voice Command |',
+          '| --- | --- | --- |',
+          '| Upper Limb + Prosthetic Hand Actions | Left/Right wave, Left/Right chest-front wave, Cross arms, Left/Right raise hand, Left/Right salute, Left/Right handshake, Double-hand heart, Left/Right single-hand heart, Dynamic energy beam, Hug, High five, Cheering, Double-hand lift, Left/Right single-hand lift, Left/Right fist bump, Left/Right thumbs up, Left/Right "V" gesture | "Perform an XXX action." |',
+          '| Upper Limb + Dexterous Hand Actions | Left/Right dexterous hand thumbs up, Peace gesture, Fist bump, Cheering motion; also includes all prosthetic hand actions above | "Perform an XXX action." |',
+          '| Head Movements | Look left, look right, Nod, Shake head | "Look left / Look right / Nod / Shake head." |',
+          '| Walking Actions | Move forward, backward, left, or right | "Walk two steps forward/backward/left/right." |',
+          '| Waist Movements | Turn waist left and return, Turn waist right and return | "Turn your waist left/right." |',
+          '| Expressive Actions | Head scratching, Butt scratching | "Do a head-scratch/butt-scratch action." |',
+          '| Facial Screen Expressions | Blinking, Laughing, Sad/Crying, Bored, Thinking, Sleepy, Confused/Surprised, Angry, Adoring, Coquettish, Sympathetic expressions | "Show a XXX expression." |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /^Type\s{2,}Required Content\s{2,}Description/m,
+        hardcoded: [
+          '| Type | Required Content | Description |',
+          '| --- | --- | --- |',
+          '| Character Customization | Character profile (optional), desired company/business knowledge (optional). Limit: within 300 characters. Currently supported via sales representative submission; future support through the Intellectual & Interactive Platform. | Customize a corporate-specific persona, enabling the robot to understand core company knowledge. |',
+          '| Q&A Customization | Question: User utterances, up to 20 characters each, with 2–5 high-frequency variations. Answer: Robot response, up to 50 characters. Currently supported via sales representative submission. | Designed for high-frequency Q&A scenarios — allows the robot to accurately answer company-specific questions. |',
+          '| Facial Registration | Supports facial data entry and customization of greeting dialogues for specific individuals. | Enables personalized greetings and welcome messages for registered faces. |',
+          '| Voice Tone Selection | Future customization available through the Intellectual & Interactive Platform. | Allows customization or replication of the robot\'s voice tone. |',
+          '| Wake Word Customization | Future customization available through the Intellectual & Interactive Platform. | Enables defining personalized wake words for robot activation. |',
+        ].join('\n'),
+      },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'ff-robotic-app.md',
+    title: 'FF Robotic APP Manual',
+    pattern: /^3\.7\s+FF Robotic APP Manual/m,
+    endBefore: /^3\.8\s/m,
+    images: [
+      { position: 'end', headingId: 'heading_59', endHeadingId: 'heading_61', name: 'app-download' },
+      { position: 'end', headingId: 'heading_61', endHeadingId: 'heading_62', name: 'controller-operations' },
+    ],
+  },
+  {
+    chapter: 3,
+    file: 'others.md',
+    title: 'Others',
+    pattern: /^3\.8\s+Others\s*$/m,
+    endBefore: /^4\.\s{1,2}[A-Z]/m,
+  },
 ]
 
 // ─── Table Parsing Helpers ──────────────────────────────────────────────────
@@ -782,14 +997,38 @@ function extractText(sections) {
   /** @type {Map<string, string>} file → markdown */
   const textMap = new Map()
 
+  // Find chapter heading positions to skip the Table of Contents.
+  // The TOC at the beginning of the PDF can contain entries that match
+  // section patterns (e.g. "3.3 Shutdown Guide" appears both in the TOC
+  // and in the actual content). We skip past the chapter heading to avoid
+  // matching TOC entries.
+  const chapterOffsets = new Map()
+  for (const ch of [1, 2, 3, 4, 5]) {
+    const chPattern = new RegExp(`^${ch}\\.\\s{1,2}[A-Z]`, 'm')
+    // Find the LAST occurrence (actual content, not TOC)
+    let lastMatch = null
+    let searchFrom = 0
+    while (true) {
+      const remaining = fullText.substring(searchFrom)
+      const m = remaining.match(chPattern)
+      if (!m) break
+      lastMatch = { index: searchFrom + m.index }
+      searchFrom = searchFrom + m.index + m[0].length
+    }
+    if (lastMatch) chapterOffsets.set(ch, lastMatch.index)
+  }
+
   for (const section of sections) {
-    const headingMatch = section.pattern.exec(fullText)
+    // Start searching from the chapter's actual heading position (skip TOC)
+    const chapterStart = chapterOffsets.get(section.chapter) || 0
+    const searchRegion = fullText.substring(chapterStart)
+    const headingMatch = section.pattern.exec(searchRegion)
     if (!headingMatch) {
       console.warn(`  Warning: "${section.title}" not found, skipping ${section.file}`)
       continue
     }
 
-    const startPos = headingMatch.index + headingMatch[0].length
+    const startPos = chapterStart + headingMatch.index + headingMatch[0].length
     const endPos = findPatternPos(fullText, startPos, section.endBefore)
     const rawContent = fullText.substring(startPos, endPos)
 
