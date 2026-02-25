@@ -54,7 +54,7 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  'block py-2 px-3 pl-10 text-[var(--fs-sidebar)] rounded-md transition-colors',
+                  'block py-2 px-3 pl-10 text-[var(--fs-sidebar)] transition-colors',
                   isActive
                     ? 'bg-purple/10 text-purple font-medium'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-navy'
