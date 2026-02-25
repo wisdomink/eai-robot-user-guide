@@ -41,12 +41,16 @@
     {
       "id": "locomotion",
       "title": "Locomotion & Manipulation Platform Manual",
-      "pages": []
+      "pages": [
+        { "title": "Locomotion & Manipulation Platform Manual", "slug": "/locomotion-platform", "file": "locomotion-platform.md" }
+      ]
     },
     {
       "id": "contact",
       "title": "Contact Information",
-      "pages": []
+      "pages": [
+        { "title": "Contact Information", "slug": "/contact-information", "file": "contact-information.md" }
+      ]
     }
   ]
 }

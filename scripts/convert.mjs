@@ -552,6 +552,24 @@ const SECTIONS = [
     pattern: /^3\.8\s+Others\s*$/m,
     endBefore: /^4\.\s{1,2}[A-Z]/m,
   },
+
+  // ── Chapter 4: Locomotion & Manipulation Platform Manual ──────────────────
+  {
+    chapter: 4,
+    file: 'locomotion-platform.md',
+    title: 'Locomotion & Manipulation Platform Manual',
+    pattern: /^4\.\s+Locomotion & Manipulation Platform Manual/m,
+    endBefore: /^5\.\s{1,2}[A-Z]/m,
+  },
+
+  // ── Chapter 5: Contact Information ────────────────────────────────────────
+  {
+    chapter: 5,
+    file: 'contact-information.md',
+    title: 'Contact Information',
+    pattern: /^5\.\s+Contact Information\s*$/m,
+    endBefore: /^6\.\s{1,2}[A-Z]/m,  // no chapter 6, so matches to end of file
+  },
 ]
 
 // ─── Table Parsing Helpers ──────────────────────────────────────────────────
