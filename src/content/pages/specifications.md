@@ -1,35 +1,42 @@
 # Specifications
 
-Item FF Master FF Master Edu FF Master Ultra Overa Dimensio 1310 （ H ） *460 1310 （ H ） *460 1310 （ H ） *460 ll ns （W）*210（L）mm （W）*210（L）mm （W）*210（L）mm
-Height Approx. 1.31 m Approx. 1.31 m Approx. 1.31 m
-Weight Approx. 35 kg Approx. 35 kg Approx. 37 kg
-Total 27 27 31 actuated DoF
-Neck DoF 2 2 2
-Single- 5 5 7 arm DoF
-Waist 3 3 3 DoF
-Single-leg 6 6 6 DoF
-Single- 437mm 437mm 558mm arm reach (without end- effector)
-Operating -10℃~40℃ -10℃~40℃ -10℃~40℃ temperat ure
-Perce RGB RGB camera RGB camera Interactive RGB ption camera camera; front dual Syste RGB cameras; rear m RGB camera
-Head Equipped Equipped Equipped touch sensor
-RGB-D / / Equipped camera 3D LiDAR / / Equipped
-Com Interface Wi-Fi, Bluetooth Wi-Fi, Bluetooth, Wi-Fi, Bluetooth, muni 4G/5G module 4G/5G module catio n
-Intera Voice Microphone array, Microphone array, Microphone array, ction mini wireless mini wireless mini wireless Modu microphone, speaker microphone, speaker microphone, speaker le
-Display Interactive screen; Interactive screen; Interactive screen; lighting effects lighting effects lighting effects
-Perfo Peak joint 120N·m 120N·m 120N·m rman torque ce Para Speed Max 1.5 m/s; Max 1.5 m/s; Max 1.5 m/s; meter recommended ≤ 0.8 recommended ≤ 0.8 recommended ≤ 0.8 s m/s for daily use m/s for daily use m/s for daily use
-Payload Payload (specific Payload (specific Payload (specific posture): Max 3 kg posture): Max 3 kg posture): Max 3 kg (excluding end- (excluding end- (excluding end- effector) effector) effector) Payload (full Payload (full Payload (full workspace): ≤ 1 kg workspace): ≤ 1 kg workspace): ≤ 1 kg (excluding end- (excluding end- (excluding end- effector) effector) effector)
-Obstacle ≤50mm ≤50mm ≤50mm clearance capability
-Climbing ≤15° ≤15° ≤15° capability
-Powe Battery Approx. 500 Wh Approx. 500 Wh Approx. 500 Wh r capacity Syste Enduranc ~2 h continuous ~2 h continuous ~2 h continuous m e walking at 0.5 m/s walking at 0.5 m/s walking at 0.5 m/s
-Energy Supports direct Supports direct Supports direct replenish charging and battery charging and battery charging and battery ment swap swap swap; optional automatic charging dock
-Charging ≤1.5h ≤1.5h ≤1.5h time
-Charger 100~220V 100~220V 100~220V input voltage
-Charger 54.6V 10A 54.6V 10A 54.6V 10A output
-Contr Base RK3588*2 RK3588*2 RK3588*2 ol & compute Comp board ute High- / / Orin NX 16GB 157 performa TOPS nce compute / secondar y dev. board
-Hard USB Host USB Type-A*1 USB Type-A*1 USB Type-A*2 ware USB Type-C*1 USB Type-C*1 USB Type-C*2 Interf aces
-Ethernet RJ45*2 RJ45*2 RJ45*2
-Audio/Vid / / miniDP*1 eo output
-Power / / 12 V/3A *1 input 48V/5A*1 ports Other Smart Equipped Equipped Equipped s OTA upgrade
-Handheld Equipped Equipped Equipped remote controller
-Mobile Under development, Under development, Under development, app will release soon will release soon will release soon
-Secondar / / Equipped y developm ent (SDK)
+| Item | Sub-item | FF Master | FF Master Edu | FF Master Ultra |
+| --- | --- | --- | --- | --- |
+| Overall | Dimensions | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm |
+| | Height | Approx. 1.31 m | Approx. 1.31 m | Approx. 1.31 m |
+| | Weight | Approx. 35 kg | Approx. 35 kg | Approx. 37 kg |
+| | Total actuated DoF | 27 | 27 | 31 |
+| | Neck DoF | 2 | 2 | 2 |
+| | Single-arm DoF | 5 | 5 | 7 |
+| | Waist DoF | 3 | 3 | 3 |
+| | Single-leg DoF | 6 | 6 | 6 |
+| | Single-arm reach (without end-effector) | 437mm | 437mm | 558mm |
+| | Operating temperature | -10℃~40℃ | -10℃~40℃ | -10℃~40℃ |
+| Perception System | RGB camera | RGB camera | RGB camera | Interactive RGB camera; front dual RGB cameras; rear RGB camera |
+| | Head touch sensor | Equipped | Equipped | Equipped |
+| | RGB-D camera | / | / | Equipped |
+| | 3D LiDAR | / | / | Equipped |
+| Communication | Interface | Wi-Fi, Bluetooth | Wi-Fi, Bluetooth, 4G/5G module | Wi-Fi, Bluetooth, 4G/5G module |
+| Interaction Module | Voice | Microphone array, mini wireless microphone, speaker | Microphone array, mini wireless microphone, speaker | Microphone array, mini wireless microphone, speaker |
+| | Display | Interactive screen; lighting effects | Interactive screen; lighting effects | Interactive screen; lighting effects |
+| Performance | Peak joint torque | 120N·m | 120N·m | 120N·m |
+| Parameters | Speed | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use |
+| | Payload | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) |
+| | Obstacle clearance capability | ≤50mm | ≤50mm | ≤50mm |
+| | Climbing capability | ≤15° | ≤15° | ≤15° |
+| Power System | Battery capacity | Approx. 500 Wh | Approx. 500 Wh | Approx. 500 Wh |
+| | Endurance | ~2 h continuous walking at 0.5 m/s | ~2 h continuous walking at 0.5 m/s | ~2 h continuous walking at 0.5 m/s |
+| | Energy replenishment | Supports direct charging and battery swap | Supports direct charging and battery swap | Supports direct charging and battery swap; optional automatic charging dock |
+| | Charging time | ≤1.5h | ≤1.5h | ≤1.5h |
+| | Charger input voltage | 100~220V | 100~220V | 100~220V |
+| | Charger output | 54.6V 10A | 54.6V 10A | 54.6V 10A |
+| Control & Compute | Base compute board | RK3588*2 | RK3588*2 | RK3588*2 |
+| | High-performance compute / secondary dev. board | / | / | Orin NX 16GB 157 TOPS |
+| Hardware Interfaces | USB Host | USB Type-A*1, USB Type-C*1 | USB Type-A*1, USB Type-C*1 | USB Type-A*2, USB Type-C*2 |
+| | Ethernet | RJ45*2 | RJ45*2 | RJ45*2 |
+| | Audio/Video output | / | / | miniDP*1 |
+| | Power input ports | / | / | 12V/3A*1, 48V/5A*1 |
+| Others | Smart OTA upgrade | Equipped | Equipped | Equipped |
+| | Handheld remote controller | Equipped | Equipped | Equipped |
+| | Mobile app | Under development, will release soon | Under development, will release soon | Under development, will release soon |
+| | Secondary development (SDK) | / | / | Equipped |

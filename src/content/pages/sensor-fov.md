@@ -1,16 +1,9 @@
 # Sensor Field of View
 
-Item Perception Configuration Perception Ability
-FF Interactive RGB Camera • Precision environmental MASTE data in real time R / FF MASTE R EDU
-FF LiDAR • LiDAR： MASTE RGB-D Depth Camera a. Captures high-precision R Ultra Front Stereo RGB Cameras environmental data in real time； Front Interactive RGB Camera
- b. Rapidly detects and Rear RGB Camera measures surrounding objects；
- c. Outputs high-resolution point-cloud data as the core foundation for environmental perception。
-- Additional Camera Suite：
- a. RGB-D Depth Camera Provides accurate 3-D spatial information of surroundings；
- b. Stereo RGB Cameras Enhances 3-D perception and distance-estimation precision；
- c. Rear RGB Camera: Covers rear field eliminating blind spots；
- d. Interactive Cameras Enable visual recognition and response during human-robot interaction scenarios.
-Lidar-FOV RGBD-FOV Interactive RGB Interactive RGB Camera-FOV- Camera-FOV- Virtical Horizontal
+| Item | Perception Configuration | Perception Ability |
+| --- | --- | --- |
+| FF Master / FF Master EDU | Interactive RGB Camera | Precision environmental data in real time |
+| FF Master Ultra | LiDAR; RGB-D Depth Camera; Front Stereo RGB Cameras; Front Interactive RGB Camera; Rear RGB Camera | LiDAR: a. Captures high-precision environmental data in real time; b. Rapidly detects and measures surrounding objects; c. Outputs high-resolution point-cloud data. Additional Camera Suite: a. RGB-D Depth Camera provides accurate 3-D spatial information; b. Stereo RGB Cameras enhances 3-D perception and distance-estimation precision; c. Rear RGB Camera covers rear field eliminating blind spots; d. Interactive Cameras enable visual recognition and response during human-robot interaction. |
 
 ![Lidar-FOV](/images/docx/sensor-fov-1.png)
 

@@ -30,22 +30,24 @@ The following diagram illustrates the main components of the FF Master Ultra.
 
 ## User Debugging Interface (FF Master Ultra)
 
-No. Interface Interface Interface Type Name Description
-1 RK3588 USB Supports USB USB Type-A 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth.
-2 RK3588 USB Supports USB USB Type-C 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth.
-3 Orin NX USB Supports USB USB Type-A 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth.
-4 Orin NX USB Supports USB USB Type-C 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth.
-5 SIM card SIM card 5G module SIM slot slot card slot.
+| No. | Interface Type | Interface Name | Interface Description |
+| --- | --- | --- | --- |
+| 1 | RK3588 USB | USB Type-A | Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth. |
+| 2 | RK3588 USB | USB Type-C | Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth. |
+| 3 | Orin NX USB | USB Type-A | Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth. |
+| 4 | Orin NX USB | USB Type-C | Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth. |
+| 5 | SIM card slot | SIM card slot | 5G module SIM card slot. |
 
 ![](/images/docx/debugging-interface-1.png)
 
 ## Software Development Kit
 
 Interface
-No. Interface Interface Interface Type Name Description
-1 RJ45 1000 Gigabit Ethernet, Base-T accessible by both Orin NX and RK3588
-2 RJ45 1000 Gigabit Ethernet, Base-T accessible by both Orin NX and RK3588
-3 XT30UPB 12V 12V/3A Power -F Power Output Port
-4 XT30UPB 48V 48V/5A Power -F Power Output Port
+| No. | Interface Type | Interface Name | Interface Description |
+| --- | --- | --- | --- |
+| 1 | RJ45 | 1000 Base-T | Gigabit Ethernet, accessible by both Orin NX and RK3588 |
+| 2 | RJ45 | 1000 Base-T | Gigabit Ethernet, accessible by both Orin NX and RK3588 |
+| 3 | XT30UPB-F | 12V Power | 12V/3A Power Output Port |
+| 4 | XT30UPB-F | 48V Power | 48V/5A Power Output Port |
 
 ![](/images/docx/sdk-interface-1.png)

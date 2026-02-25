@@ -98,6 +98,33 @@ const SECTIONS = [
       { after: '## User Debugging Interface', headingId: 'heading_8', name: 'debugging-interface' },
       { position: 'end', headingId: 'heading_9', name: 'sdk-interface' },
     ],
+    tables: [
+      {
+        headerPattern: /No\.\s{2,}Interface\s{2,}Interface\s{2,}Interface/,
+        matchIndex: 0,
+        hardcoded: [
+          '| No. | Interface Type | Interface Name | Interface Description |',
+          '| --- | --- | --- | --- |',
+          '| 1 | RK3588 USB | USB Type-A | Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth. |',
+          '| 2 | RK3588 USB | USB Type-C | Supports USB 3.0 host, 5V/1.5A power output; RK3588 USB Type-A and Type-C ports share 5 Gbps bandwidth. |',
+          '| 3 | Orin NX USB | USB Type-A | Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth. |',
+          '| 4 | Orin NX USB | USB Type-C | Supports USB 3.0 host, 5V/1.5A power output; Orin NX USB Type-A and Type-C ports share 10 Gbps bandwidth. |',
+          '| 5 | SIM card slot | SIM card slot | 5G module SIM card slot. |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /No\.\s{2,}Interface\s{2,}Interface\s{2,}Interface/,
+        matchIndex: 1,
+        hardcoded: [
+          '| No. | Interface Type | Interface Name | Interface Description |',
+          '| --- | --- | --- | --- |',
+          '| 1 | RJ45 | 1000 Base-T | Gigabit Ethernet, accessible by both Orin NX and RK3588 |',
+          '| 2 | RJ45 | 1000 Base-T | Gigabit Ethernet, accessible by both Orin NX and RK3588 |',
+          '| 3 | XT30UPB-F | 12V Power | 12V/3A Power Output Port |',
+          '| 4 | XT30UPB-F | 48V Power | 48V/5A Power Output Port |',
+        ].join('\n'),
+      },
+    ],
   },
   {
     chapter: 2,
@@ -105,6 +132,33 @@ const SECTIONS = [
     title: 'Computational Unit',
     pattern: /^2\.3\s+Computational Unit\s*$/m,
     endBefore: /^2\.4\s/m,
+    tables: [
+      {
+        headerPattern: /^\s*Type\s{10,}On-board/,
+        hardcoded: [
+          '| Configuration | Description |',
+          '| --- | --- |',
+          '| Type | On-board computer |',
+          '| FF Master / FF Master Edu | One operation and control computing unit (PC1) and one interactive computing unit (PC3) |',
+          '| FF Master Ultra | One operation and control computing unit (PC1), one interactive computing unit (PC3) and one development computing unit (PC2) |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /Parameter\s{10,}Development Computing Unit/,
+        hardcoded: [
+          '| Parameter | Development Computing Unit (PC2) |',
+          '| --- | --- |',
+          '| Processor | Jetson Orin NX |',
+          '| AI Performance | 157Tops |',
+          '| GPU | 1,024-core NVIDIA Ampere architecture GPU with 32 Tensor Cores |',
+          '| CPU | 8-core Arm® Cortex®-A78AE v8.2 64-bit CPU |',
+          '| Cache | 2MB L2 + 4MB L3 |',
+          '| VRAM (Graphics Memory) | 16G |',
+          '| System Memory (RAM) | 16G |',
+          '| Storage | 512GB |',
+        ].join('\n'),
+      },
+    ],
   },
   {
     chapter: 2,
@@ -114,6 +168,45 @@ const SECTIONS = [
     endBefore: /^2\.5\s/m,
     images: [
       { after: '## Battery Indicator Location', headingId: 'heading_11', endHeadingId: 'heading_17', name: 'battery-indicator' },
+    ],
+    tables: [
+      {
+        headerPattern: /Battery Indicator Status\s{2,}Battery Level\s{2,}Status Description/,
+        matchIndex: 0,
+        hardcoded: [
+          '| Battery Indicator Status (Discharging) | Battery Level Description | Status Description |',
+          '| --- | --- | --- |',
+          '| LEDs 1–4 steady on | 75%≤SOC＜100% | Fully charged |',
+          '| LEDs 1–3 steady on, remaining off | 50%≤SOC＜75% | Battery level sufficient, no action required |',
+          '| LEDs 1–2 steady on, remaining off | 25%≤SOC＜50% | Normal battery level, no action required |',
+          '| LED 1 steady on, remaining off | 15%≤SOC＜25% | Low battery, recharge soon |',
+          '| LED 1 flashing, remaining off | SOC＜15% | Critically low power, charge immediately |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /Battery Indicator Status\s{2,}Battery Level\s{2,}Status Description/,
+        matchIndex: 1,
+        hardcoded: [
+          '| Battery Indicator Status (Charging) | Battery Level Description | Status Description |',
+          '| --- | --- | --- |',
+          '| LED1 breathing, LEDs 2–4 off | SOC＜25% | Initial charging stage, low battery |',
+          '| LED1 steady on, LED2 breathing, LEDs 3–4 off | 25%≤SOC＜50% | Low battery, not recommended to disconnect power during use |',
+          '| LEDs 1–2 steady on, LED3 breathing, LED4 off | 50%≤SOC＜75% | Medium battery level, can be used normally, recommended to continue charging until full |',
+          '| LEDs 1–3 steady on, LED4 breathing | 75%≤SOC＜100% | Battery nearly full, can be used normally, recommended to continue charging until full |',
+          '| LEDs 1–4 steady on | SOC=100% | Fully charged, power can be disconnected |',
+        ].join('\n'),
+      },
+      {
+        headerPattern: /No\.\s{2,}Col/,
+        hardcoded: [
+          '| No. | Color | LED1 | LED2 | LED3 | LED4 | Status Description |',
+          '| --- | --- | --- | --- | --- | --- | --- |',
+          '| 1 | Green | Displays according to SOC status | | | | Normal |',
+          '| 2 | - | Flashes once per second | Flashes once per second | Flashes once per second | Flashes once per second | Protection mode (overtemperature, overcurrent, or overvoltage) |',
+          '| 3 | Red | Flashes once per second | | | | Fault (requires return for repair) |',
+          '| 4 | - | All LEDs off | | | | Power-off (deep sleep) or very low SOC (< 39V) |',
+        ].join('\n'),
+      },
     ],
   },
   {
@@ -126,6 +219,18 @@ const SECTIONS = [
       {
         position: 'end', headingId: 'heading_17', name: 'sensor-fov',
         alts: ['Lidar-FOV', 'RGBD-FOV', 'Interactive RGB Camera-FOV-Vertical', 'Interactive RGB Camera-FOV-Horizontal'],
+      },
+    ],
+    tables: [
+      {
+        headerPattern: /Item\s{2,}Perception Configuration\s{2,}Perception Ability/,
+        replaceToEnd: true,
+        hardcoded: [
+          '| Item | Perception Configuration | Perception Ability |',
+          '| --- | --- | --- |',
+          '| FF Master / FF Master EDU | Interactive RGB Camera | Precision environmental data in real time |',
+          '| FF Master Ultra | LiDAR; RGB-D Depth Camera; Front Stereo RGB Cameras; Front Interactive RGB Camera; Rear RGB Camera | LiDAR: a. Captures high-precision environmental data in real time; b. Rapidly detects and measures surrounding objects; c. Outputs high-resolution point-cloud data. Additional Camera Suite: a. RGB-D Depth Camera provides accurate 3-D spatial information; b. Stereo RGB Cameras enhances 3-D perception and distance-estimation precision; c. Rear RGB Camera covers rear field eliminating blind spots; d. Interactive Cameras enable visual recognition and response during human-robot interaction. |',
+        ].join('\n'),
       },
     ],
   },
@@ -155,8 +260,241 @@ const SECTIONS = [
     title: 'Specifications',
     pattern: /^2\.8\s+Specifications\s*$/m,
     endBefore: /^3\.\s{1,2}[A-Z]/m,
+    tables: [
+      {
+        headerPattern: /Item\s{2,}FF Master\s{2,}FF Master Edu\s{2,}FF Master Ultra/,
+        replaceToEnd: true,
+        hardcoded: [
+          '| Item | Sub-item | FF Master | FF Master Edu | FF Master Ultra |',
+          '| --- | --- | --- | --- | --- |',
+          '| Overall | Dimensions | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm |',
+          '| | Height | Approx. 1.31 m | Approx. 1.31 m | Approx. 1.31 m |',
+          '| | Weight | Approx. 35 kg | Approx. 35 kg | Approx. 37 kg |',
+          '| | Total actuated DoF | 27 | 27 | 31 |',
+          '| | Neck DoF | 2 | 2 | 2 |',
+          '| | Single-arm DoF | 5 | 5 | 7 |',
+          '| | Waist DoF | 3 | 3 | 3 |',
+          '| | Single-leg DoF | 6 | 6 | 6 |',
+          '| | Single-arm reach (without end-effector) | 437mm | 437mm | 558mm |',
+          '| | Operating temperature | -10℃~40℃ | -10℃~40℃ | -10℃~40℃ |',
+          '| Perception System | RGB camera | RGB camera | RGB camera | Interactive RGB camera; front dual RGB cameras; rear RGB camera |',
+          '| | Head touch sensor | Equipped | Equipped | Equipped |',
+          '| | RGB-D camera | / | / | Equipped |',
+          '| | 3D LiDAR | / | / | Equipped |',
+          '| Communication | Interface | Wi-Fi, Bluetooth | Wi-Fi, Bluetooth, 4G/5G module | Wi-Fi, Bluetooth, 4G/5G module |',
+          '| Interaction Module | Voice | Microphone array, mini wireless microphone, speaker | Microphone array, mini wireless microphone, speaker | Microphone array, mini wireless microphone, speaker |',
+          '| | Display | Interactive screen; lighting effects | Interactive screen; lighting effects | Interactive screen; lighting effects |',
+          '| Performance | Peak joint torque | 120N·m | 120N·m | 120N·m |',
+          '| Parameters | Speed | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use | Max 1.5 m/s; recommended ≤ 0.8 m/s for daily use |',
+          '| | Payload | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) | Specific posture: Max 3 kg (excl. end-effector); Full workspace: ≤ 1 kg (excl. end-effector) |',
+          '| | Obstacle clearance capability | ≤50mm | ≤50mm | ≤50mm |',
+          '| | Climbing capability | ≤15° | ≤15° | ≤15° |',
+          '| Power System | Battery capacity | Approx. 500 Wh | Approx. 500 Wh | Approx. 500 Wh |',
+          '| | Endurance | ~2 h continuous walking at 0.5 m/s | ~2 h continuous walking at 0.5 m/s | ~2 h continuous walking at 0.5 m/s |',
+          '| | Energy replenishment | Supports direct charging and battery swap | Supports direct charging and battery swap | Supports direct charging and battery swap; optional automatic charging dock |',
+          '| | Charging time | ≤1.5h | ≤1.5h | ≤1.5h |',
+          '| | Charger input voltage | 100~220V | 100~220V | 100~220V |',
+          '| | Charger output | 54.6V 10A | 54.6V 10A | 54.6V 10A |',
+          '| Control & Compute | Base compute board | RK3588*2 | RK3588*2 | RK3588*2 |',
+          '| | High-performance compute / secondary dev. board | / | / | Orin NX 16GB 157 TOPS |',
+          '| Hardware Interfaces | USB Host | USB Type-A*1, USB Type-C*1 | USB Type-A*1, USB Type-C*1 | USB Type-A*2, USB Type-C*2 |',
+          '| | Ethernet | RJ45*2 | RJ45*2 | RJ45*2 |',
+          '| | Audio/Video output | / | / | miniDP*1 |',
+          '| | Power input ports | / | / | 12V/3A*1, 48V/5A*1 |',
+          '| Others | Smart OTA upgrade | Equipped | Equipped | Equipped |',
+          '| | Handheld remote controller | Equipped | Equipped | Equipped |',
+          '| | Mobile app | Under development, will release soon | Under development, will release soon | Under development, will release soon |',
+          '| | Secondary development (SDK) | / | / | Equipped |',
+        ].join('\n'),
+      },
+    ],
   },
 ]
+
+// ─── Table Parsing Helpers ──────────────────────────────────────────────────
+
+/**
+ * Detect column start positions from a table header line.
+ * Columns are separated by 2+ consecutive spaces.
+ * The first column always starts at position 0.
+ */
+function detectColumnPositions(headerLine) {
+  const positions = []
+  let i = 0
+  const len = headerLine.length
+
+  // Find the first text character
+  while (i < len && headerLine[i] === ' ') i++
+  if (i >= len) return [0]
+  positions.push(i)
+
+  while (i < len) {
+    while (i < len && headerLine[i] !== ' ') i++
+    const spaceStart = i
+    while (i < len && headerLine[i] === ' ') i++
+    const spaceLen = i - spaceStart
+    if (i < len && spaceLen >= 2) {
+      positions.push(i)
+    }
+  }
+
+  // First column always starts at 0 to capture data that may start before header text
+  positions[0] = 0
+  return positions
+}
+
+/**
+ * Parse raw table data lines into rows of cell arrays.
+ * Multi-line cells are joined with spaces.
+ * A new row starts when the first column has non-empty content.
+ */
+function parseTableRows(dataLines, colPositions) {
+  const numCols = colPositions.length
+  const rows = []
+  let currentRow = null
+
+  for (const line of dataLines) {
+    if (line.trim() === '') {
+      if (currentRow) {
+        rows.push(currentRow)
+        currentRow = null
+      }
+      continue
+    }
+
+    const cells = []
+    for (let c = 0; c < numCols; c++) {
+      const start = colPositions[c]
+      const end = c + 1 < numCols ? colPositions[c + 1] : line.length
+      const text = start < line.length ? line.substring(start, Math.min(end, line.length)).trim() : ''
+      cells.push(text)
+    }
+
+    const firstColHasContent = cells[0] !== ''
+
+    if (firstColHasContent && currentRow) {
+      rows.push(currentRow)
+      currentRow = null
+    }
+
+    if (!currentRow) {
+      currentRow = cells.slice()
+    } else {
+      for (let c = 0; c < numCols; c++) {
+        if (cells[c]) {
+          currentRow[c] = currentRow[c] ? currentRow[c] + ' ' + cells[c] : cells[c]
+        }
+      }
+    }
+  }
+
+  if (currentRow) rows.push(currentRow)
+  return rows
+}
+
+/**
+ * Format rows as a markdown table string.
+ */
+function formatMarkdownTable(columns, rows) {
+  const lines = []
+  lines.push('| ' + columns.join(' | ') + ' |')
+  lines.push('| ' + columns.map(() => '---').join(' | ') + ' |')
+  for (const row of rows) {
+    const paddedRow = [...row]
+    while (paddedRow.length < columns.length) paddedRow.push('')
+    // Escape pipe characters in cell content
+    const escaped = paddedRow.map(cell => cell.replace(/\|/g, '\\|'))
+    lines.push('| ' + escaped.join(' | ') + ' |')
+  }
+  return lines.join('\n')
+}
+
+/**
+ * Find where a table region ends in the raw text lines.
+ * Ends at: next sub-heading, or 3+ blank lines, or end of text.
+ */
+function findTableEnd(lines, startLine) {
+  let blanks = 0
+  for (let j = startLine; j < lines.length; j++) {
+    if (lines[j].trim() === '') {
+      blanks++
+      if (blanks >= 3) return j - blanks + 1
+    } else {
+      blanks = 0
+      if (/^\d+\.\d+(\.\d+)*\s/.test(lines[j].trim())) {
+        return j
+      }
+    }
+  }
+  return lines.length
+}
+
+/**
+ * Process raw section text to detect and convert tables to markdown format.
+ * Returns modified text with table regions replaced by markdown tables.
+ */
+function processTablesInRawText(rawText, tableDefs) {
+  if (!tableDefs || tableDefs.length === 0) return rawText
+
+  const lines = rawText.split('\n')
+  const replacements = []
+
+  for (const def of tableDefs) {
+    // Handle hardcoded tables (matchIndex selects which occurrence, default 0)
+    if (def.hardcoded) {
+      let matchCount = 0
+      const targetIndex = def.matchIndex || 0
+      for (let i = 0; i < lines.length; i++) {
+        if (!def.headerPattern.test(lines[i])) continue
+        // Count ALL pattern matches, even those already covered by a prior replacement
+        if (replacements.some(r => i >= r.startLine && i < r.endLine)) {
+          matchCount++
+          continue
+        }
+        if (matchCount === targetIndex) {
+          const endLine = def.replaceToEnd ? lines.length : findTableEnd(lines, i)
+          replacements.push({ startLine: i, endLine, replacement: def.hardcoded })
+          break
+        }
+        matchCount++
+      }
+      continue
+    }
+
+    // Auto-parse tables
+    for (let i = 0; i < lines.length; i++) {
+      if (replacements.some(r => i >= r.startLine && i < r.endLine)) continue
+      if (!def.headerPattern.test(lines[i])) continue
+
+      const colPositions = def.colPositions || detectColumnPositions(lines[i])
+
+      // Find header extent (skip non-blank continuation lines, then blank lines)
+      let headerEnd = i + 1
+      while (headerEnd < lines.length && lines[headerEnd].trim() !== '') headerEnd++
+      while (headerEnd < lines.length && lines[headerEnd].trim() === '') headerEnd++
+
+      const dataEnd = findTableEnd(lines, headerEnd)
+
+      // Data lines: optionally include header as first data row
+      const dataLines = lines.slice(def.includeHeaderAsData ? i : headerEnd, dataEnd)
+      const rows = parseTableRows(dataLines, colPositions)
+
+      if (rows.length > 0) {
+        const mdTable = formatMarkdownTable(def.columns, rows)
+        replacements.push({ startLine: i, endLine: dataEnd, replacement: mdTable })
+      }
+    }
+  }
+
+  // Apply replacements in reverse order to preserve line numbers
+  replacements.sort((a, b) => b.startLine - a.startLine)
+  const result = [...lines]
+  for (const rep of replacements) {
+    result.splice(rep.startLine, rep.endLine - rep.startLine, ...rep.replacement.split('\n'))
+  }
+
+  return result.join('\n')
+}
 
 // ─── Step 1: Image Extraction (Word → images) ──────────────────────────────
 
@@ -311,8 +649,21 @@ function convertToMarkdown(rawText) {
     const trimmed = line.trim()
     const indent = leadingSpaces(line)
 
-    // Empty lines flush current block
-    if (!trimmed) { flush(); continue }
+    // Empty lines flush current block and preserve separation after tables
+    if (!trimmed) {
+      flush()
+      if (mdLines.length > 0 && mdLines[mdLines.length - 1].startsWith('|')) {
+        mdLines.push('')
+      }
+      continue
+    }
+
+    // Preserve markdown table lines (already formatted by table parser)
+    if (trimmed.startsWith('|')) {
+      flush()
+      mdLines.push(trimmed)
+      continue
+    }
 
     // Skip standalone page numbers
     if (/^\d+$/.test(trimmed)) continue
@@ -413,7 +764,10 @@ function extractText(sections) {
     const startPos = headingMatch.index + headingMatch[0].length
     const endPos = findPatternPos(fullText, startPos, section.endBefore)
     const rawContent = fullText.substring(startPos, endPos)
-    const mdContent = convertToMarkdown(rawContent)
+
+    // Pre-process tables before general markdown conversion
+    const tableProcessed = processTablesInRawText(rawContent, section.tables)
+    const mdContent = convertToMarkdown(tableProcessed)
 
     textMap.set(section.file, `# ${section.title}\n\n${mdContent}\n`)
     console.log(`  ${section.file}: ${mdContent.length} chars`)
