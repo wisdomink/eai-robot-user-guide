@@ -23,11 +23,12 @@ h5-test/
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.app.json
+├── scripts/
+│   └── convert.mjs            ← 源文档 → Markdown 转换脚本
 ├── public/
-│   └── images/                ← Markdown 引用的静态图片
-│       ├── home-hero.png
-│       ├── packing-list-content.png
-│       └── product-structure.png
+│   └── images/
+│       ├── home-hero.png      ← 首页封面图
+│       └── docx/              ← convert 脚本从 Word 提取的图片
 └── src/
     ├── main.tsx               ← 应用入口
     ├── App.tsx                ← 路由配置（从 sidebar.json 自动生成）
@@ -36,18 +37,22 @@ h5-test/
     ├── content/               ← 📝 内容管理（核心）
     │   ├── sidebar.json       ← 导航树配置
     │   ├── index.ts           ← 内容注册表（import.meta.glob）
-    │   └── pages/             ← Markdown 页面内容
+    │   ├── source/            ← 原始文档（转换输入）
+    │   │   ├── manual.pdf     ← 文本提取源
+    │   │   └── manual.docx    ← 图片提取源
+    │   └── pages/             ← Markdown 页面内容（转换输出）
     │       ├── home.md
     │       ├── safety-instructions.md
     │       ├── safety-guidelines.md
     │       ├── maintenance.md
     │       ├── packing-list.md
     │       ├── product-overview.md
-    │       ├── product-structure.md
-    │       ├── debugging-interface.md
-    │       ├── sdk-interface.md
     │       ├── computational-unit.md
-    │       └── battery-indicator.md
+    │       ├── battery-indicator.md
+    │       ├── sensor-fov.md
+    │       ├── joint-limits.md
+    │       ├── coordinate-systems.md
+    │       └── specifications.md
     │
     ├── components/
     │   ├── layout/            ← 布局组件
@@ -91,6 +96,65 @@ npm run build
 
 # 预览构建结果
 npm run preview
+```
+
+## 内容转换管道（convert）
+
+项目使用混合策略从源文档生成 Markdown 页面：**PDF 提取文本**（`pdftotext -layout`），**Word 提取图片**（`mammoth`），最终合并为带图片引用的 Markdown 文件。
+
+### 前置依赖
+
+```bash
+brew install poppler   # 提供 pdftotext 命令
+npm install            # mammoth 等 Node 依赖
+```
+
+### 源文件
+
+| 文件 | 用途 |
+|------|------|
+| `src/content/source/manual.pdf` | 文本提取源 |
+| `src/content/source/manual.docx` | 图片提取源 |
+
+### 运行命令
+
+```bash
+npm run convert              # 完整管道：文本 + 图片提取 → 合并
+npm run convert:text         # 仅提取文本（不处理图片）
+npm run convert:images       # 仅提取图片（不重新生成文本）
+```
+
+支持按章节过滤：
+
+```bash
+npm run convert -- --chapter 2          # 仅处理第 2 章
+npm run convert:text -- --chapter 1     # 仅处理第 1 章文本
+```
+
+### 管道流程
+
+1. **图片提取** — 从 Word 按 heading anchor 定位，提取 base64 图片保存到 `public/images/docx/`
+2. **文本提取** — 从 PDF 按正则匹配章节边界，转换缩进/列表/表格为 Markdown
+3. **合并输出** — 按 `SECTIONS` 配置中的 `images` 规则，将图片引用插入到 Markdown 指定位置
+
+### 添加新章节到转换管道
+
+在 `scripts/convert.mjs` 的 `SECTIONS` 数组中添加配置：
+
+```js
+{
+  chapter: 3,
+  file: 'new-section.md',
+  title: 'New Section Title',
+  pattern: /^3\.1\s+New Section Title\s*$/m,   // PDF 中的章节起始标记
+  endBefore: /^3\.2\s/m,                        // 下一章节的起始标记
+  images: [                                      // 可选：图片提取规则
+    { position: 'start', headingId: 'heading_20', name: 'new-image' },
+  ],
+  tables: [                                      // 可选：表格替换规则
+    { headerPattern: /Header.*Pattern/, hardcoded: '| ... |' },
+  ],
+}
 ```
 
 ## 日常维护
@@ -166,6 +230,7 @@ See also: [Safety Guidelines](/safety-guidelines)
 | 🖨️ 打印友好 | `@media print` 优化，链接自动显示 URL |
 | 📝 Markdown 驱动 | 内容与代码完全分离，非技术人员可编辑 |
 | ⚡ 构建时打包 | 所有 .md 通过 `import.meta.glob` 在构建时内联 |
+| 🔄 源文档转换 | PDF + Word → Markdown 自动化管道（`npm run convert`） |
 
 ## 设计系统
 
