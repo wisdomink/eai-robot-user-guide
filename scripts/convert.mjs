@@ -94,7 +94,7 @@ const SECTIONS = [
     pattern: /^2\.2\s+Product Overview\s*$/m,
     endBefore: /^2\.3\s/m,
     images: [
-      { after: 'Note: The following diagram', headingId: 'heading_7', name: 'product-structure' },
+      { after: '## Product Structure Diagram', headingId: 'heading_7', name: 'product-structure' },
       { after: '## User Debugging Interface', headingId: 'heading_8', name: 'debugging-interface' },
       { position: 'end', headingId: 'heading_9', name: 'sdk-interface' },
     ],
@@ -351,6 +351,18 @@ function convertToMarkdown(rawText) {
       flush()
       current = `- ${bulletMatch[1]}`
       currentType = 'bullet'
+      continue
+    }
+
+    // Label lines: standalone labels like "FF Master:", "Type:", "Parameter"
+    // Short lines at col 0 ending with ":" that aren't numbered items.
+    // These must NOT be merged into the previous paragraph.
+    // A blank line before the label ensures markdown renders it as a new paragraph
+    // (otherwise it gets swallowed into the preceding list).
+    if (trimmed.endsWith(':') && trimmed.length < 50 && indent < 4 && !/^\d/.test(trimmed)) {
+      flush()
+      mdLines.push('')
+      mdLines.push(trimmed)
       continue
     }
 
