@@ -29,14 +29,26 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </svg>
       </button>
 
-      {/* Right: Company Logo */}
-      <Link to="/" className="p-[clamp(2px,0.3vw,6px)]">
-        <img
-          src={logoDark}
-          alt="EAI Robot"
-          className="h-[var(--icon-md)] w-[var(--icon-md)]"
-        />
-      </Link>
+      {/* Right: Chat + Company Logo */}
+      <div className="flex items-center gap-2">
+        <button className="chat-btn" id="chatToggleBtn" title="Ask AI">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M14 1H2a1 1 0 00-1 1v8a1 1 0 001 1h2v3l3-3h7a1 1 0 001-1V2a1 1 0 00-1-1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+            <circle cx="5" cy="6" r="0.8" fill="currentColor"/>
+            <circle cx="8" cy="6" r="0.8" fill="currentColor"/>
+            <circle cx="11" cy="6" r="0.8" fill="currentColor"/>
+          </svg>
+          Ask AI
+          <span className="chat-btn-dot" id="chatBtnDot"></span>
+        </button>
+        <Link to="/" className="p-[clamp(2px,0.3vw,6px)]">
+          <img
+            src={logoDark}
+            alt="EAI Robot"
+            className="h-[var(--icon-md)] w-[var(--icon-md)]"
+          />
+        </Link>
+      </div>
     </header>
   )
 }

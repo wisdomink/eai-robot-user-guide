@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { sidebarConfig } from '@/content'
 import MarkdownPage from '@/pages/MarkdownPage'
+import ChatPanel from '@/components/chat/ChatPanel'
 
 export function AppRoutes() {
   const firstPageSlug = sidebarConfig.sections[0]?.pages[0]?.slug || '/'
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
+      <ChatPanel />
     </BrowserRouter>
   )
 }

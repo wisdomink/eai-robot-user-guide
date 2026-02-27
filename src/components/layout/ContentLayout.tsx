@@ -42,7 +42,7 @@ export default function ContentLayout({ children, fullWidth }: ContentLayoutProp
       {/* Main content */}
       <main
         className={clsx(
-          'min-h-[calc(100vh-var(--header-height))] transition-[margin] duration-200',
+          'main min-h-[calc(100vh-var(--header-height))] transition-[margin] duration-200',
           isDesktop && sidebarOpen ? 'ml-[var(--sidebar-width)]' : 'ml-0'
         )}
       >

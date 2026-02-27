@@ -1,6 +1,46 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 *.tsbuildinfo
-.DS_Store
+
+# Environment variables
+.env
+.env.*
+!.env.example
 *.local
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE - JetBrains (WebStorm, IntelliJ)
+.idea/
+
+# IDE - VS Code / Cursor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# IDE - Cursor personal configs
+.cursor/*
+!.cursor/rules/
+
+# Editor temp / swap files
+*~
+*.swp
+*.swo
+*.bak
+
+# AI tool configs (personal)
 .mcp.json
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
