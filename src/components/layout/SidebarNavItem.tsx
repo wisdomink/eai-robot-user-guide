@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import type { SectionConfig } from '@/content'
@@ -14,6 +14,12 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
 
   const isChildActive = section.pages.some(page => page.slug === location.pathname)
   const [isExpanded, setIsExpanded] = useState(isChildActive)
+
+  useEffect(() => {
+    if (isChildActive) {
+      setIsExpanded(true)
+    }
+  }, [isChildActive])
 
   const hasPages = section.pages.length > 0
   const isSinglePage = section.pages.length === 1

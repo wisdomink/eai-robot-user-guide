@@ -1,10 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPageContent, sidebarConfig } from '@/content'
 
 type ChatRole = 'user' | 'assistant'
 
 type ChatMessage = { role: ChatRole; content: string }
+
+interface RAGSource {
+  title: string
+  section: string
+  header_path: string
+  url_path: string
+  file_path: string
+}
+
+const CHAT_API_URL = import.meta.env.VITE_CHAT_API_URL || 'http://localhost:8000'
 
 export default function ChatPanel() {
   const navigate = useNavigate()
@@ -16,11 +25,6 @@ export default function ChatPanel() {
     const chatToggleBtn = document.getElementById('chatToggleBtn')
     const chatCloseBtn = document.getElementById('chatCloseBtn')
     const chatClearBtn = document.getElementById('chatClearBtn')
-    const chatSettingsBtn = document.getElementById('chatSettingsBtn')
-    const chatSetup = document.getElementById('chatSetup')
-    const chatInterface = document.getElementById('chatInterface')
-    const chatApiKeyInput = document.getElementById('chatApiKeyInput') as HTMLInputElement | null
-    const chatSaveKeyBtn = document.getElementById('chatSaveKeyBtn')
     const chatMessages = document.getElementById('chatMessages')
     const chatTextarea = document.getElementById('chatTextarea') as HTMLTextAreaElement | null
     const chatSendBtn = document.getElementById('chatSendBtn') as HTMLButtonElement | null
@@ -32,11 +36,6 @@ export default function ChatPanel() {
       !chatToggleBtn ||
       !chatCloseBtn ||
       !chatClearBtn ||
-      !chatSettingsBtn ||
-      !chatSetup ||
-      !chatInterface ||
-      !chatApiKeyInput ||
-      !chatSaveKeyBtn ||
       !chatMessages ||
       !chatTextarea ||
       !chatSendBtn ||
@@ -49,10 +48,6 @@ export default function ChatPanel() {
     let chatOpen = false
     let chatHistory: ChatMessage[] = []
     let chatLoading = false
-    let docsContext = ''
-
-    const getChatApiKey = () => localStorage.getItem('openai-api-key') || ''
-    const setChatApiKey = (k: string) => localStorage.setItem('openai-api-key', k.trim())
 
     const escHTML = (s: string) =>
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -64,58 +59,7 @@ export default function ChatPanel() {
       mainEl.classList.toggle('chat-open', chatOpen)
     }
 
-    const showChatSetup = () => {
-      chatSetup.style.display = ''
-      chatInterface.style.display = 'none'
-      chatApiKeyInput.value = ''
-    }
-
-    const showChatInterface = () => {
-      chatSetup.style.display = 'none'
-      chatInterface.style.display = 'flex'
-      chatBtnDot.classList.add('show')
-    }
-
-    const buildDocsContext = async () => {
-      if (docsContext) return
-      const parts: string[] = []
-      for (const section of sidebarConfig.sections) {
-        parts.push(`\n## ${section.title}\n`)
-        for (const page of section.pages) {
-          const raw = getPageContent(page.file)
-          parts.push(`### ${page.title}\n[FILE: pages/${page.file}]\n${raw}\n`)
-        }
-      }
-      docsContext = parts.join('\n')
-    }
-
-    const parseSources = (content: string) => {
-      const sources: string[] = []
-      const clean = content
-        .replace(/\[SOURCE:([^\]]+)\]/g, (_, file) => {
-          sources.push(String(file).trim())
-          return ''
-        })
-        .trim()
-      return { clean, sources: Array.from(new Set(sources)) }
-    }
-
-    const fileToPageInfo = (file: string) => {
-      const normalized = file.replace(/^pages\//, '')
-      for (const section of sidebarConfig.sections) {
-        for (const page of section.pages) {
-          if (page.file === normalized) {
-            return { section: section.title, page: page.title, slug: page.slug }
-          }
-        }
-      }
-      return { section: '', page: normalized, slug: '' }
-    }
-
-    const loadPage = (file: string) => {
-      const info = fileToPageInfo(file)
-      if (info.slug) navigateRef.current(info.slug)
-    }
+    chatBtnDot.classList.add('show')
 
     const renderChatMarkdown = (text: string) => {
       return text
@@ -130,49 +74,22 @@ export default function ChatPanel() {
         .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
         .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
         .replace(/\n{2,}/g, '</p><p>')
-        .replace(/^(?!<[uo]l|<pre|<li)(.+)$/gm, (m, p) => (p ? `<p>${p}</p>` : ''))
+        .replace(/^(?!<[uo]l|<pre|<li)(.+)$/gm, (_, p) => (p ? `<p>${p}</p>` : ''))
         .replace(/<p><\/p>/g, '')
         .replace(/\n/g, '<br>')
     }
 
-    const appendMessage = (role: ChatRole, content: string) => {
+    const appendUserMessage = (content: string) => {
       const welcomeEl = document.getElementById('chatWelcome')
       if (welcomeEl) welcomeEl.style.display = 'none'
 
       const wrap = document.createElement('div')
-      wrap.className = `chat-msg ${role}`
+      wrap.className = 'chat-msg user'
 
       const bubble = document.createElement('div')
       bubble.className = 'chat-bubble'
-
-      if (role === 'assistant') {
-        const { clean, sources } = parseSources(content)
-        bubble.innerHTML = renderChatMarkdown(clean)
-
-        if (sources.length > 0) {
-          const citationWrap = document.createElement('div')
-          citationWrap.className = 'chat-citations'
-          sources.forEach(file => {
-            const info = fileToPageInfo(file)
-            const btn = document.createElement('button')
-            btn.className = 'chat-citation-btn'
-            btn.title = `Go to: ${info.section} › ${info.page}`
-            btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> ${escHTML(info.page)}`
-            btn.addEventListener('click', () => {
-              loadPage(file)
-              if (window.innerWidth <= 768) toggleChat(false)
-            })
-            citationWrap.appendChild(btn)
-          })
-          wrap.appendChild(bubble)
-          wrap.appendChild(citationWrap)
-        } else {
-          wrap.appendChild(bubble)
-        }
-      } else {
-        bubble.textContent = content
-        wrap.appendChild(bubble)
-      }
+      bubble.textContent = content
+      wrap.appendChild(bubble)
 
       const time = document.createElement('div')
       time.className = 'chat-msg-time'
@@ -181,7 +98,6 @@ export default function ChatPanel() {
 
       chatMessages.appendChild(wrap)
       chatMessages.scrollTop = chatMessages.scrollHeight
-      return bubble
     }
 
     const appendTyping = () => {
@@ -209,73 +125,119 @@ export default function ChatPanel() {
       chatMessages.scrollTop = chatMessages.scrollHeight
     }
 
+    const addCitations = (wrap: HTMLDivElement, sources: RAGSource[]) => {
+      if (sources.length === 0) return
+
+      const citationWrap = document.createElement('div')
+      citationWrap.className = 'chat-citations'
+      sources.forEach(src => {
+        const btn = document.createElement('button')
+        btn.className = 'chat-citation-btn'
+        btn.title = `${src.section} › ${src.title}`
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 9L9 1M9 1H3M9 1v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> ${escHTML(src.title)}`
+        btn.addEventListener('click', () => {
+          if (src.url_path) navigateRef.current(src.url_path)
+          if (window.innerWidth <= 768) toggleChat(false)
+        })
+        citationWrap.appendChild(btn)
+      })
+      wrap.appendChild(citationWrap)
+    }
+
+    const addTimestamp = (wrap: HTMLDivElement) => {
+      const time = document.createElement('div')
+      time.className = 'chat-msg-time'
+      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      wrap.appendChild(time)
+    }
+
     const sendChatMessage = async (userText: string) => {
       if (!userText.trim() || chatLoading) return
-
-      const apiKey = getChatApiKey()
-      if (!apiKey) {
-        showChatSetup()
-        return
-      }
-
-      await buildDocsContext()
 
       chatLoading = true
       chatSendBtn.disabled = true
       chatTextarea.disabled = true
 
-      appendMessage('user', userText)
+      appendUserMessage(userText)
       chatHistory.push({ role: 'user', content: userText })
 
       appendTyping()
 
-      const systemPrompt = `You are a documentation assistant for the FF Master Ultra Edition robot.
-
-Your ONLY knowledge source is the documentation provided below. You must:
-1. Answer questions SOLELY based on the documentation content.
-2. If the answer is not found in the documentation, respond: "I don't see that information in the documentation. Please check the relevant section or contact support."
-3. Do NOT use general knowledge, training data, or make assumptions beyond what the docs state.
-4. Keep answers concise and accurate. Use bullet points or numbered lists when helpful.
-5. At the end of every answer, on a new line, list the source page(s) you drew from using EXACTLY this format (one per line, no extra text):
-   [SOURCE:pages/filename.md]
-   Each section in the documentation below has a [FILE: pages/filename.md] marker right after the heading — you MUST use that exact path in your [SOURCE:...] tags. Do NOT invent or guess filenames.
-
-<documentation>
-${docsContext}
-</documentation>`
-
       try {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        const res = await fetch(`${CHAT_API_URL}/chat`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            max_tokens: 1024,
-            messages: [{ role: 'system', content: systemPrompt }, ...chatHistory],
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: userText }),
         })
 
-        removeTyping()
-
         if (!res.ok) {
+          removeTyping()
           const err = await res.json().catch(() => ({}))
-          const msg = err?.error?.message || `API error ${res.status}`
-          if (res.status === 401) {
-            appendError('Invalid API key. Click the settings icon to update it.')
-            localStorage.removeItem('openai-api-key')
-            chatBtnDot.classList.remove('show')
-          } else {
-            appendError(`Error: ${msg}`)
-          }
+          appendError(`Error: ${err?.detail || `API error ${res.status}`}`)
           chatHistory.pop()
+          chatLoading = false
+          chatSendBtn.disabled = false
+          chatTextarea.disabled = false
+          chatTextarea.focus()
+          return
+        }
+
+        const reader = res.body!.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let fullContent = ''
+        let sources: RAGSource[] = []
+        let wrap: HTMLDivElement | null = null
+        let bubble: HTMLDivElement | null = null
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const parts = buffer.split('\n\n')
+          buffer = parts.pop() || ''
+
+          for (const part of parts) {
+            const match = part.match(/^data:\s*(.+)$/m)
+            if (!match) continue
+
+            try {
+              const event = JSON.parse(match[1])
+
+              if (event.type === 'token') {
+                if (!bubble) {
+                  removeTyping()
+                  const welcomeEl = document.getElementById('chatWelcome')
+                  if (welcomeEl) welcomeEl.style.display = 'none'
+
+                  wrap = document.createElement('div')
+                  wrap.className = 'chat-msg assistant'
+                  bubble = document.createElement('div')
+                  bubble.className = 'chat-bubble'
+                  wrap.appendChild(bubble)
+                  chatMessages.appendChild(wrap)
+                }
+                fullContent += event.content
+                bubble.innerHTML = renderChatMarkdown(fullContent)
+                chatMessages.scrollTop = chatMessages.scrollHeight
+              } else if (event.type === 'sources') {
+                sources = event.sources || []
+              }
+            } catch {
+              /* ignore malformed SSE lines */
+            }
+          }
+        }
+
+        if (wrap) {
+          addCitations(wrap, sources)
+          addTimestamp(wrap)
+          chatHistory.push({ role: 'assistant', content: fullContent })
         } else {
-          const data = await res.json()
-          const reply = data.choices?.[0]?.message?.content || '(empty response)'
-          chatHistory.push({ role: 'assistant', content: reply })
-          appendMessage('assistant', reply)
+          removeTyping()
+          appendError('No response received from server.')
+          chatHistory.pop()
         }
       } catch (e) {
         removeTyping()
@@ -292,25 +254,6 @@ ${docsContext}
 
     const onToggle = () => toggleChat()
     const onClose = () => toggleChat(false)
-    const onSaveKey = () => {
-      const key = chatApiKeyInput.value.trim()
-      if (!key.startsWith('sk-')) {
-        chatApiKeyInput.style.borderColor = '#c0392b'
-        chatApiKeyInput.placeholder = 'Key must start with sk-…'
-        return
-      }
-      setChatApiKey(key)
-      showChatInterface()
-      buildDocsContext()
-    }
-    const onApiKeyEnter = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') onSaveKey()
-      chatApiKeyInput.style.borderColor = ''
-    }
-    const onSettings = () => {
-      showChatSetup()
-      chatBtnDot.classList.remove('show')
-    }
     const onTextareaInput = () => {
       chatTextarea.style.height = 'auto'
       chatTextarea.style.height = Math.min(chatTextarea.scrollHeight, 120) + 'px'
@@ -365,27 +308,15 @@ ${docsContext}
 
     chatToggleBtn.addEventListener('click', onToggle)
     chatCloseBtn.addEventListener('click', onClose)
-    chatSaveKeyBtn.addEventListener('click', onSaveKey)
-    chatApiKeyInput.addEventListener('keydown', onApiKeyEnter)
-    chatSettingsBtn.addEventListener('click', onSettings)
     chatTextarea.addEventListener('input', onTextareaInput)
     chatTextarea.addEventListener('keydown', onTextareaKeydown)
     chatSendBtn.addEventListener('click', onSendClick)
     chatMessages.addEventListener('click', onMessagesClick)
     chatClearBtn.addEventListener('click', onClear)
 
-    if (getChatApiKey()) {
-      showChatInterface()
-    } else {
-      showChatSetup()
-    }
-
     return () => {
       chatToggleBtn.removeEventListener('click', onToggle)
       chatCloseBtn.removeEventListener('click', onClose)
-      chatSaveKeyBtn.removeEventListener('click', onSaveKey)
-      chatApiKeyInput.removeEventListener('keydown', onApiKeyEnter)
-      chatSettingsBtn.removeEventListener('click', onSettings)
       chatTextarea.removeEventListener('input', onTextareaInput)
       chatTextarea.removeEventListener('keydown', onTextareaKeydown)
       chatSendBtn.removeEventListener('click', onSendClick)
@@ -424,17 +355,6 @@ ${docsContext}
               />
             </svg>
           </button>
-          <button className="icon-btn" id="chatSettingsBtn" title="API key settings" style={{ width: 28, height: 28 }}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
-              <path
-                d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
           <button className="icon-btn" id="chatCloseBtn" title="Close" style={{ width: 28, height: 28 }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -443,39 +363,7 @@ ${docsContext}
         </div>
       </div>
 
-      <div className="chat-setup" id="chatSetup">
-        <div className="chat-setup-icon">
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <rect x="1" y="1" width="34" height="34" rx="10" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M10 14h16M10 18h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="26" cy="26" r="6" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M26 23v3.5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h3>Connect your API key</h3>
-        <p>Enter your OpenAI API key to enable AI-powered Q&amp;A grounded in this documentation.</p>
-        <input
-          type="password"
-          className="chat-setup-input"
-          id="chatApiKeyInput"
-          placeholder="sk-…"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button className="chat-setup-btn" id="chatSaveKeyBtn">
-          Save &amp; Start
-        </button>
-        <p className="chat-setup-hint">
-          Your key is saved only in this browser (<code>localStorage</code>) and never sent anywhere except OpenAI&apos;s API.
-          <br />
-          Get a key at{' '}
-          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">
-            platform.openai.com
-          </a>
-        </p>
-      </div>
-
-      <div id="chatInterface" style={{ display: 'none', flex: 1, flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+      <div id="chatInterface" style={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
         <div className="chat-messages" id="chatMessages">
           <div className="chat-welcome" id="chatWelcome">
             <div className="chat-welcome-icon">
