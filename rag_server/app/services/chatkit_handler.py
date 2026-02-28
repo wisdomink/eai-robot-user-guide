@@ -17,8 +17,10 @@ from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_res
 from chatkit.server import ChatKitServer
 from chatkit.store import NotFoundError, Store
 from chatkit.types import (
+    Annotation,
     AssistantMessageItem,
     Attachment,
+    EntitySource,
     Page,
     ThreadItem,
     ThreadItemDoneEvent,
@@ -205,20 +207,21 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
     def _append_source_links(
         item: AssistantMessageItem, context: dict
     ) -> None:
-        """Append deduplicated source references as markdown links.
+        """Attach deduplicated source references as ChatKit entity annotations.
 
-        Uses standard ``[title](url)`` syntax so ChatKit's markdown
-        renderer produces native ``<a>`` tags.  The frontend intercepts
-        clicks via event delegation for SPA navigation.
+        ChatKit renders these as clickable inline citations and a
+        collapsed Sources list beneath the message.  The frontend
+        ``entities.onClick`` handler performs SPA navigation.
         """
         sources = context.get("_sources", [])
         if not sources:
             return
 
         text = item.content[0].text or ""
+        end_index = max(0, len(text) - 1)
 
+        annotations: list[Annotation] = []
         seen_slugs: set[str] = set()
-        entries: list[str] = []
         for src in sources:
             slug = src.get("url_path", "")
             title = src.get("title", "")
@@ -226,12 +229,21 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 continue
             seen_slugs.add(slug)
             url = src.get("url_with_anchor", slug)
-            entries.append(f"[{title}]({url})")
-
-        if entries:
-            item.content[0].text = (
-                text + "\n\n---\n**参考来源：**\n\n" + " ".join(entries)
+            annotations.append(
+                Annotation(
+                    source=EntitySource(
+                        id=slug,
+                        title=title,
+                        interactive=True,
+                        data={"slug": url},
+                    ),
+                    index=end_index,
+                )
             )
+
+        if annotations:
+            existing = getattr(item.content[0], "annotations", None) or []
+            item.content[0].annotations = list(existing) + annotations
 
 
 def create_chatkit_server() -> FFRobotChatKitServer:

@@ -38,6 +38,11 @@ Desktop.ini
 .mcp.json
 .claude/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Logs
 *.log
 npm-debug.log*

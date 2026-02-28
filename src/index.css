@@ -402,27 +402,6 @@ mark.hl.current {
 
 .chat-btn-dot.show { display: block; }
 
-.chatkit-body a[href^="/"] {
-  display: inline-block;
-  padding: 4px 14px;
-  margin: 3px 4px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--accent);
-  background: rgba(105, 101, 224, 0.08);
-  border: 1px solid rgba(105, 101, 224, 0.25);
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.chatkit-body a[href^="/"]:hover {
-  background: rgba(105, 101, 224, 0.16);
-  border-color: var(--accent);
-}
-
 @media (max-width: 768px) {
   .chat-panel { width: 100%; }
   .main.chat-open { margin-right: 0; }
