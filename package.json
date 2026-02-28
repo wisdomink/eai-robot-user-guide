@@ -17,6 +17,7 @@
     "convert:images": "node scripts/convert.mjs --images-only"
   },
   "dependencies": {
+    "@openai/chatkit-react": "^1.5.0",
     "clsx": "^2.1.1",
     "marked": "^17.0.3",
     "react": "^19.2.4",

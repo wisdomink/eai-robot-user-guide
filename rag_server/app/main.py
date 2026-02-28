@@ -6,14 +6,15 @@ FastAPI entry-point for the FF Robot RAG service.
 
 from __future__ import annotations
 
-import json
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
+from chatkit.server import StreamingResult
+
+from app.services.chatkit_handler import create_chatkit_server
 from app.services.rag_engine import rag_engine
 
 
@@ -28,7 +29,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="FF Robot RAG Service",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -41,59 +42,22 @@ app.add_middleware(
 )
 
 
-# ── Schemas ───────────────────────────────────────────────────────────────
+# ── ChatKit ───────────────────────────────────────────────────────────────
+
+chatkit_server = create_chatkit_server()
 
 
-class ChatRequest(BaseModel):
-    query: str
+@app.post("/chatkit")
+async def chatkit_endpoint(request: Request):
+    """Single endpoint that handles all ChatKit protocol requests
+    (threads, messages, streaming responses)."""
+    result = await chatkit_server.process(await request.body(), context={})
+    if isinstance(result, StreamingResult):
+        return StreamingResponse(result, media_type="text/event-stream")
+    return Response(content=result.json, media_type="application/json")
 
 
-class SourceItem(BaseModel):
-    title: str
-    section: str
-    header_path: str
-    url_path: str
-    file_path: str
-
-
-class ChatResponse(BaseModel):
-    answer: str
-    sources: list[SourceItem]
-
-
-# ── Routes ────────────────────────────────────────────────────────────────
-
-
-@app.post("/chat")
-async def chat_stream(request: ChatRequest):
-    """
-    Streaming chat endpoint (SSE).
-
-    Event types:
-      - {"type": "token",   "content": "..."}   incremental answer token
-      - {"type": "sources", "sources": [...]}    deduplicated reference list
-      - {"type": "done"}                         stream finished
-    """
-
-    async def event_stream():
-        async for event in rag_engine.query_stream(request.query):
-            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
-    )
-
-
-@app.post("/chat/sync", response_model=ChatResponse)
-async def chat_sync(request: ChatRequest):
-    """Non-streaming chat — returns the full answer in one JSON response."""
-    result = await rag_engine.query(request.query)
-    return result
+# ── Management Routes ─────────────────────────────────────────────────────
 
 
 @app.post("/reindex")
