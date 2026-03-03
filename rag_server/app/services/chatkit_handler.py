@@ -1,16 +1,16 @@
 """
-ChatKit server: OpenAI Assistants API + RAG retrieval via ChromaDB.
+ChatKit server: OpenAI Assistants API with built-in File Search (hosted RAG).
 
 Bridges the ChatKit protocol (threads, messages, streaming) with the
-OpenAI Assistants API.  The Assistant is created/managed on the OpenAI
-Dashboard; this module only handles runtime execution and local tool calls.
+OpenAI Assistants API.  Document retrieval is handled entirely by OpenAI's
+hosted file_search tool — no local vector database needed.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
+import re
 from collections import defaultdict
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
@@ -39,14 +39,44 @@ from chatkit.types import (
     UserMessageItem,
 )
 
-from app.core.config import OPENAI_API_KEY, OPENAI_ASSISTANT_ID
-from app.services.rag_engine import rag_engine
+from app.core.config import OPENAI_API_KEY, OPENAI_ASSISTANT_ID, SIDEBAR_PATH
 
 logger = logging.getLogger(__name__)
+
+# ── Regex to strip OpenAI file-citation markers (e.g. 【4:1†source】) ─────
+
+CITATION_RE = re.compile(r"【[^】]*†[^】]*】")
 
 # ── OpenAI client ────────────────────────────────────────────────────────
 
 oai = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+# ── File name → slug mapping (for source navigation links) ──────────────
+
+
+def _build_file_slug_map() -> dict[str, dict]:
+    """Build {filename: {slug, title}} from sidebar.json."""
+    try:
+        with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            sidebar = json.load(f)
+    except FileNotFoundError:
+        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
+        return {}
+
+    result: dict[str, dict] = {}
+    for section in sidebar.get("sections", []):
+        for page in section.get("pages", []):
+            result[page["file"]] = {
+                "slug": page["slug"],
+                "title": page["title"],
+            }
+    return result
+
+
+FILE_SLUG_MAP = _build_file_slug_map()
+
+# file_id → filename cache (populated lazily via OpenAI Files API)
+_file_id_cache: dict[str, str] = {}
 
 
 # ── In-memory Store ──────────────────────────────────────────────────────
@@ -156,9 +186,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
     """Bridges ChatKit protocol to the OpenAI Assistants API.
 
     Each ChatKit thread is mapped to an Assistants API thread via
-    ``thread.metadata["oai_thread_id"]``.  The Assistant's instructions,
-    model, and tool schema are all managed on the OpenAI Dashboard —
-    the only local execution is the ``search_manual`` RAG retrieval.
+    ``thread.metadata["oai_thread_id"]``.  The assistant uses OpenAI's
+    hosted file_search tool for RAG — no local tool execution needed.
     """
 
     async def respond(
@@ -167,7 +196,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         input_user_message: UserMessageItem | None,
         context: dict,
     ) -> AsyncIterator[ThreadStreamEvent]:
-        context["_sources"] = []
+        context["_file_citations"] = []
 
         # ── Map ChatKit thread → Assistants API thread ────────────
         oai_thread_id = (thread.metadata or {}).get("oai_thread_id")
@@ -194,7 +223,6 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         full_text = ""
         content_part_added = False
 
-        # Announce a new assistant message
         yield ThreadItemAddedEvent(
             item=AssistantMessageItem(
                 thread_id=thread.id,
@@ -204,11 +232,11 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             )
         )
 
-        # ── Stream the Assistants API run ─────────────────────────
-        async for delta_text, event_type in self._run_with_tools(
+        # ── Stream the Assistants API run (file_search is server-side) ──
+        async for delta_text, event_type in self._stream_run(
             oai_thread_id, context
         ):
-            if event_type == "tool_start":
+            if event_type == "search_start":
                 yield ProgressUpdateEvent(
                     icon="search",
                     text="正在搜索文档…",
@@ -216,6 +244,10 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 continue
 
             if event_type == "delta":
+                cleaned = CITATION_RE.sub("", delta_text)
+                if not cleaned:
+                    continue
+
                 if not content_part_added:
                     yield ProgressUpdateEvent(text="")
                     yield ThreadItemUpdatedEvent(
@@ -227,24 +259,25 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     )
                     content_part_added = True
 
-                full_text += delta_text
+                full_text += cleaned
                 yield ThreadItemUpdatedEvent(
                     item_id=item_id,
                     update=AssistantMessageContentPartTextDelta(
                         content_index=0,
-                        delta=delta_text,
+                        delta=cleaned,
                     ),
                 )
 
         # ── Finalize ──────────────────────────────────────────────
-        final_content = AssistantMessageContent(text=full_text)
+        clean_text = CITATION_RE.sub("", full_text).strip()
+        final_content = AssistantMessageContent(text=clean_text)
         final_item = AssistantMessageItem(
             thread_id=thread.id,
             id=item_id,
             created_at=now,
             content=[final_content],
         )
-        self._append_source_links(final_item, context)
+        await self._append_source_links(final_item, context)
 
         if content_part_added:
             yield ThreadItemUpdatedEvent(
@@ -257,97 +290,66 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         yield ThreadItemDoneEvent(item=final_item)
 
-    # ── Assistants API streaming with tool-call loop ─────────────
+    # ── Assistants API streaming (no local tool loop) ─────────────
 
-    async def _run_with_tools(
+    async def _stream_run(
         self, thread_id: str, context: dict
     ) -> AsyncIterator[tuple[str, str]]:
         """Yield ``(text, event_type)`` tuples from an Assistants run.
 
-        Handles the ``requires_action`` → local tool execution →
-        ``submit_tool_outputs_stream`` loop transparently.
-
-        ``event_type`` is one of ``"delta"`` or ``"tool_start"``.
+        With file_search, retrieval runs entirely on OpenAI's side.
+        No ``requires_action`` / ``submit_tool_outputs`` loop is needed.
         """
-        requires_action = None
-        run_id: str | None = None
-
         async with oai.beta.threads.runs.stream(
             thread_id=thread_id,
             assistant_id=OPENAI_ASSISTANT_ID,
         ) as stream:
             async for event in stream:
                 ev = event.event
-                if ev == "thread.message.delta":
+
+                if ev == "thread.run.step.created":
+                    if event.data.type == "tool_calls":
+                        yield ("", "search_start")
+
+                elif ev == "thread.message.delta":
                     for part in event.data.delta.content or []:
                         if hasattr(part, "text") and part.text:
-                            yield (part.text.value, "delta")
-                elif ev == "thread.run.requires_action":
-                    requires_action = event.data.required_action
-                    run_id = event.data.id
+                            yield (part.text.value or "", "delta")
 
-        while requires_action:
-            yield ("", "tool_start")
-            tool_outputs = await self._execute_tool_calls(
-                requires_action, context
-            )
-            requires_action = None
+                elif ev == "thread.message.completed":
+                    # Collect file citations for source link annotations
+                    for content in event.data.content:
+                        if content.type == "text":
+                            for ann in (content.text.annotations or []):
+                                if ann.type == "file_citation":
+                                    context["_file_citations"].append(
+                                        ann.file_citation.file_id
+                                    )
 
-            async with oai.beta.threads.runs.submit_tool_outputs_stream(
-                thread_id=thread_id,
-                run_id=run_id,
-                tool_outputs=tool_outputs,
-            ) as stream:
-                async for event in stream:
-                    ev = event.event
-                    if ev == "thread.message.delta":
-                        for part in event.data.delta.content or []:
-                            if hasattr(part, "text") and part.text:
-                                yield (part.text.value, "delta")
-                    elif ev == "thread.run.requires_action":
-                        requires_action = event.data.required_action
-                        run_id = event.data.id
+    # ── Source annotations (file_citation → ChatKit EntitySource) ─
 
-    # ── Local tool execution ─────────────────────────────────────
+    async def _resolve_filename(self, file_id: str) -> str:
+        """Resolve an OpenAI file_id to its original filename (cached)."""
+        if file_id in _file_id_cache:
+            return _file_id_cache[file_id]
+        try:
+            file_obj = await oai.files.retrieve(file_id)
+            _file_id_cache[file_id] = file_obj.filename
+            return file_obj.filename
+        except Exception:
+            logger.warning("Failed to resolve file_id %s", file_id)
+            return ""
 
-    @staticmethod
-    async def _execute_tool_calls(
-        required_action, context: dict
-    ) -> list[dict]:
-        tool_outputs: list[dict] = []
-        for tc in required_action.submit_tool_outputs.tool_calls:
-            if tc.function.name == "search_manual":
-                args = json.loads(tc.function.arguments)
-                context_text, sources = await asyncio.to_thread(
-                    rag_engine.retrieve, args["query"]
-                )
-                context.setdefault("_sources", []).extend(sources)
-                tool_outputs.append({
-                    "tool_call_id": tc.id,
-                    "output": context_text,
-                })
-            else:
-                logger.warning("Unknown tool call: %s", tc.function.name)
-                tool_outputs.append({
-                    "tool_call_id": tc.id,
-                    "output": json.dumps({"error": f"Unknown tool: {tc.function.name}"}),
-                })
-        return tool_outputs
-
-    # ── Source annotations ────────────────────────────────────────
-
-    @staticmethod
-    def _append_source_links(
-        item: AssistantMessageItem, context: dict
+    async def _append_source_links(
+        self, item: AssistantMessageItem, context: dict
     ) -> None:
-        """Attach deduplicated source references as ChatKit entity annotations.
+        """Map OpenAI file citations to ChatKit entity annotations.
 
-        ChatKit renders these as clickable inline citations and a
-        collapsed Sources list beneath the message.  The frontend
-        ``entities.onClick`` handler performs SPA navigation.
+        Resolves file_id → filename → sidebar slug so the frontend
+        ``entities.onClick`` handler can perform SPA navigation.
         """
-        sources = context.get("_sources", [])
-        if not sources:
+        file_ids = list(set(context.get("_file_citations", [])))
+        if not file_ids:
             return
 
         text = item.content[0].text or ""
@@ -355,20 +357,25 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         annotations: list[Annotation] = []
         seen_slugs: set[str] = set()
-        for src in sources:
-            slug = src.get("url_path", "")
-            title = src.get("title", "")
-            if not slug or not title or slug in seen_slugs:
+
+        for fid in file_ids:
+            filename = await self._resolve_filename(fid)
+            page_info = FILE_SLUG_MAP.get(filename)
+            if not page_info:
+                continue
+
+            slug = page_info["slug"]
+            if slug in seen_slugs:
                 continue
             seen_slugs.add(slug)
-            url = src.get("url_with_anchor", slug)
+
             annotations.append(
                 Annotation(
                     source=EntitySource(
                         id=slug,
-                        title=title,
+                        title=page_info["title"],
                         interactive=True,
-                        data={"slug": url},
+                        data={"slug": slug},
                     ),
                     index=end_index,
                 )

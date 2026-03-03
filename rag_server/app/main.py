@@ -1,12 +1,13 @@
 """
-FastAPI entry-point for the FF Robot RAG service.
+FastAPI entry-point for the FF Robot ChatKit service.
+
+RAG retrieval is handled by OpenAI's hosted file_search tool.
+This server only bridges the ChatKit protocol to the Assistants API.
 
     uvicorn app.main:app --reload --port 8000
 """
 
 from __future__ import annotations
-
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,22 +16,11 @@ from fastapi.responses import StreamingResponse
 from chatkit.server import StreamingResult
 
 from app.services.chatkit_handler import create_chatkit_server
-from app.services.rag_engine import rag_engine
-
-
-# ── Lifespan ──────────────────────────────────────────────────────────────
-
-
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    rag_engine.initialize()
-    yield
 
 
 app = FastAPI(
-    title="FF Robot RAG Service",
-    version="2.0.0",
-    lifespan=lifespan,
+    title="FF Robot ChatKit Service",
+    version="3.0.0",
 )
 
 app.add_middleware(
@@ -55,16 +45,6 @@ async def chatkit_endpoint(request: Request):
     if isinstance(result, StreamingResult):
         return StreamingResponse(result, media_type="text/event-stream")
     return Response(content=result.json, media_type="application/json")
-
-
-# ── Management Routes ─────────────────────────────────────────────────────
-
-
-@app.post("/reindex")
-async def reindex():
-    """Force rebuild the vector index from current Markdown files."""
-    rag_engine.reindex()
-    return {"status": "ok", "message": "Index rebuilt successfully."}
 
 
 @app.get("/health")
