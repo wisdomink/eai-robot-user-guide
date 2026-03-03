@@ -1,26 +1,27 @@
 """
-FastAPI entry-point for the FF Robot ChatKit service.
+FastAPI entry-point for the FF Robot ChatKit session service.
 
-RAG retrieval is handled by OpenAI's hosted file_search tool.
-This server only bridges the ChatKit protocol to the Assistants API.
+Creates ChatKit sessions backed by an Agent Builder workflow.
+The OpenAI platform hosts inference; this server only mints sessions.
 
     uvicorn app.main:app --reload --port 8000
 """
 
 from __future__ import annotations
 
-from fastapi import FastAPI, Request, Response
+import logging
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from openai import OpenAI
 
-from chatkit.server import StreamingResult
+from app.core.config import OPENAI_API_KEY, OPENAI_WORKFLOW_ID
 
-from app.services.chatkit_handler import create_chatkit_server
-
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="FF Robot ChatKit Service",
-    version="3.0.0",
+    title="FF Robot ChatKit Session Service",
+    version="4.0.0",
 )
 
 app.add_middleware(
@@ -31,20 +32,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ── ChatKit ───────────────────────────────────────────────────────────────
-
-chatkit_server = create_chatkit_server()
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-@app.post("/chatkit")
-async def chatkit_endpoint(request: Request):
-    """Single endpoint that handles all ChatKit protocol requests
-    (threads, messages, streaming responses)."""
-    result = await chatkit_server.process(await request.body(), context={})
-    if isinstance(result, StreamingResult):
-        return StreamingResponse(result, media_type="text/event-stream")
-    return Response(content=result.json, media_type="application/json")
+@app.post("/api/chatkit/session")
+async def create_session():
+    """Create a ChatKit session and return its client_secret.
+
+    The frontend uses this secret to communicate directly with
+    OpenAI's hosted ChatKit endpoint (no proxy needed).
+    """
+    try:
+        session = client.beta.chatkit.sessions.create(
+            user="anonymous",
+            workflow={"id": OPENAI_WORKFLOW_ID},
+        )
+        return {"client_secret": session.client_secret}
+    except Exception as e:
+        logger.exception("Failed to create ChatKit session")
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 @app.get("/health")

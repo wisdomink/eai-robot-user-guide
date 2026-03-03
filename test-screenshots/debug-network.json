@@ -1,0 +1,1146 @@
+[
+  {
+    "time": "2026-03-05T06:06:19.360Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/",
+    "resourceType": "document"
+  },
+  {
+    "time": "2026-03-05T06:06:19.371Z",
+    "type": "response",
+    "url": "http://localhost:5173/",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.381Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/@vite/client",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.381Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap",
+    "resourceType": "stylesheet"
+  },
+  {
+    "time": "2026-03-05T06:06:19.381Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/deployments/chatkit/chatkit.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.381Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/main.tsx?t=1772690565612",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.384Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/@react-refresh",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.389Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/main.tsx?t=1772690565612",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/index.css?t=1772690565612",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/App.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "response",
+    "url": "http://localhost:5173/@vite/client",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.390Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/vite/dist/client/env.mjs",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.391Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.392Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.392Z",
+    "type": "response",
+    "url": "http://localhost:5173/@react-refresh",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.392Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-FCVBRA66.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.392Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-5WRI5ZAA.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.395Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/vite/dist/client/env.mjs",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.396Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-FCVBRA66.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.396Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-5WRI5ZAA.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/index.css?t=1772690565612",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/App.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/index.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/pages/MarkdownPage.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.397Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/chat/ChatPanel.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.399Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/index.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.399Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/pages/MarkdownPage.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.400Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/battery-indicator.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/charging-procedure.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/computational-unit.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/contact-information.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/coordinate-systems.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/debugging-interface.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/ff-robotic-app.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/home.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/joint-limits.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/locomotion-platform.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/maintenance.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/others.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.401Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/packing-list.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/product-overview.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/product-structure.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/remote-control.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/robot-interaction.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/safety-guidelines.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/safety-instructions.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/safety-precautions.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/sdk-interface.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/sensor-fov.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/shutdown-guide.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/specifications.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/pages/startup-guide.md?import&raw",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/sidebar.json?import",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/layout/ContentLayout.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/markdown/MarkdownRenderer.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/chat/ChatPanel.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/@openai_chatkit-react.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-2FPZR2W6.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.402Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/battery-indicator.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/charging-procedure.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/contact-information.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/coordinate-systems.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/computational-unit.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/debugging-interface.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/ff-robotic-app.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/home.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/locomotion-platform.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/joint-limits.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/others.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/maintenance.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.403Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/product-overview.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.404Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/product-structure.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.404Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/packing-list.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.404Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/safety-instructions.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.404Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/safety-precautions.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.405Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/remote-control.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.405Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/robot-interaction.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.406Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/safety-guidelines.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.406Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/sensor-fov.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.406Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/shutdown-guide.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.406Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/specifications.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.406Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/sdk-interface.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/layout/ContentLayout.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/markdown/MarkdownRenderer.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/hooks/useMediaQuery.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/layout/Header.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/layout/Sidebar.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/layout/MobileMenuDrawer.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/search/SearchInfoBar.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/clsx.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/marked.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.407Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/sidebar.json?import",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/pages/startup-guide.md?import&raw",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/layout/Header.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/assets/icons/logo-dark.svg?import",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/hooks/useMediaQuery.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/@openai_chatkit-react.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.408Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-2FPZR2W6.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-ZXQMO2NG.js?v=2f26f891",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/layout/Sidebar.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/layout/MobileMenuDrawer.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/layout/SidebarNavItem.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/search/SearchBar.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/assets/icons/icon-close.svg?import",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/search/SearchInfoBar.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/hooks/useSearch.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.409Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/clsx.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/assets/icons/logo-dark.svg?import",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/chunk-ZXQMO2NG.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/layout/SidebarNavItem.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/search/SearchBar.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/assets/icons/icon-close.svg?import",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/components/search/SearchDropdown.tsx",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/hooks/useSearch.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/hooks/useSemanticSearch.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/content/chunks.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.410Z",
+    "type": "response",
+    "url": "http://localhost:5173/node_modules/.vite/deps/marked.js?v=2f26f891",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.411Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/components/search/SearchDropdown.tsx",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.411Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/hooks/useSemanticSearch.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.411Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/lib/cosine-similarity.ts",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:19.411Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/content/chunks.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.411Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/lib/cosine-similarity.ts",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:19.808Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/deployments/chatkit/chatkit.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.265Z",
+    "type": "response",
+    "url": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.349Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/deployments/chatkit/index-tqRbWvTskM.html",
+    "resourceType": "document"
+  },
+  {
+    "time": "2026-03-05T06:06:20.350Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/images/home-hero.png",
+    "resourceType": "image"
+  },
+  {
+    "time": "2026-03-05T06:06:20.350Z",
+    "type": "request",
+    "method": "GET",
+    "url": "http://localhost:5173/src/assets/icons/logo-dark.svg",
+    "resourceType": "image"
+  },
+  {
+    "time": "2026-03-05T06:06:20.362Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2",
+    "resourceType": "font"
+  },
+  {
+    "time": "2026-03-05T06:06:20.364Z",
+    "type": "response",
+    "url": "http://localhost:5173/src/assets/icons/logo-dark.svg",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.365Z",
+    "type": "response",
+    "url": "http://localhost:5173/images/home-hero.png",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.474Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/deployments/chatkit/index-tqRbWvTskM.html",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.498Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-JVhgKQ9g.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:20.498Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-3-4eIS6i.css",
+    "resourceType": "stylesheet"
+  },
+  {
+    "time": "2026-03-05T06:06:20.610Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-3-4eIS6i.css",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:20.929Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-JVhgKQ9g.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:21.014Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-D8ioZjl7.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:21.014Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:21.015Z",
+    "type": "request",
+    "method": "POST",
+    "url": "http://localhost:8000/api/chatkit/session",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:21.127Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+    "status": 302
+  },
+  {
+    "time": "2026-03-05T06:06:21.127Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:21.135Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/assets/ck1/index-D8ioZjl7.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:21.136Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://chatgpt.com/ces/v1/projects/oai/settings",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:21.249Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:21.252Z",
+    "type": "response",
+    "url": "https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:21.398Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/ea2d291c0fdc/0.020632200933125174:1772687069:jBn5IMIooZ839i2PEojnC5Bgieyhlp8gmFOQSvM_vyM/9d76ef223dc7f553",
+    "resourceType": "xhr"
+  },
+  {
+    "time": "2026-03-05T06:06:21.504Z",
+    "type": "failed",
+    "url": "https://chatgpt.com/ces/v1/projects/oai/settings",
+    "error": "net::ERR_FAILED"
+  },
+  {
+    "time": "2026-03-05T06:06:21.545Z",
+    "type": "response",
+    "url": "http://localhost:8000/api/chatkit/session",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:21.546Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://api.openai.com/v1/chatkit/conversation",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:21.555Z",
+    "type": "response",
+    "url": "https://cdn.platform.openai.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/ea2d291c0fdc/0.020632200933125174:1772687069:jBn5IMIooZ839i2PEojnC5Bgieyhlp8gmFOQSvM_vyM/9d76ef223dc7f553",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:22.335Z",
+    "type": "response",
+    "url": "https://api.openai.com/v1/chatkit/conversation",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:22.929Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/sdk.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:23.269Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/sdk.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:23.269Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/sentinel/20260124ceb8/sdk.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:23.445Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/sentinel/20260124ceb8/sdk.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:23.445Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/frame.html",
+    "resourceType": "document"
+  },
+  {
+    "time": "2026-03-05T06:06:23.586Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/frame.html",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:23.591Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/sentinel/20260124ceb8/sdk.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:23.724Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/sentinel/20260124ceb8/sdk.js",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:23.727Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:23.729Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/req",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:23.835Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+    "status": 302
+  },
+  {
+    "time": "2026-03-05T06:06:23.835Z",
+    "type": "request",
+    "method": "GET",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+    "resourceType": "script"
+  },
+  {
+    "time": "2026-03-05T06:06:23.955Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:23.982Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/ea2d291c0fdc/0.020632200933125174:1772687069:jBn5IMIooZ839i2PEojnC5Bgieyhlp8gmFOQSvM_vyM/9d76ef35a2adeff8",
+    "resourceType": "xhr"
+  },
+  {
+    "time": "2026-03-05T06:06:23.984Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/req",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:24.108Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/ea2d291c0fdc/0.020632200933125174:1772687069:jBn5IMIooZ839i2PEojnC5Bgieyhlp8gmFOQSvM_vyM/9d76ef35a2adeff8",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:25.875Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://api.openai.com/v1/chatkit/conversation",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:26.572Z",
+    "type": "response",
+    "url": "https://api.openai.com/v1/chatkit/conversation",
+    "status": 200
+  },
+  {
+    "time": "2026-03-05T06:06:30.876Z",
+    "type": "request",
+    "method": "POST",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/req",
+    "resourceType": "fetch"
+  },
+  {
+    "time": "2026-03-05T06:06:31.118Z",
+    "type": "response",
+    "url": "https://sentinel.openai.com/backend-api/sentinel/req",
+    "status": 200
+  }
+]

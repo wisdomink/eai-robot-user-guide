@@ -57,9 +57,9 @@ fi
 
 # ── Launch ────────────────────────────────────────────────────────────
 echo ""
-echo "🚀 启动 ChatKit RAG Server (port $PORT)"
-echo "   ChatKit 端点: http://localhost:$PORT/chatkit"
-echo "   健康检查:     http://localhost:$PORT/health"
-echo "   LLM 模型:     ${LLM_MODEL:-gpt-4o-mini}"
+echo "🚀 启动 ChatKit Session Server (port $PORT)"
+echo "   Session 端点:  http://localhost:$PORT/api/chatkit/session"
+echo "   健康检查:      http://localhost:$PORT/health"
+echo "   Workflow ID:   ${OPENAI_WORKFLOW_ID:-未设置}"
 echo ""
 exec uvicorn app.main:app --reload --host 0.0.0.0 --port "$PORT"

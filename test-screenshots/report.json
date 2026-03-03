@@ -1,0 +1,16 @@
+{
+  "chatPanelOpens": true,
+  "canSendMessage": true,
+  "receivedResponse": false,
+  "consoleErrors": [
+    "Access to fetch at 'https://chatgpt.com/ces/v1/projects/oai/settings' from origin 'https://cdn.platform.openai.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to fetch"
+  ],
+  "networkErrors": [
+    {
+      "url": "https://chatgpt.com/ces/v1/projects/oai/settings",
+      "failure": "net::ERR_FAILED"
+    }
+  ]
+}

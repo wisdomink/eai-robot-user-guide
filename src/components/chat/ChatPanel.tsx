@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 
-const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || 'http://localhost:8000/chatkit'
-const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
+const SESSION_API_URL = import.meta.env.VITE_SESSION_API_URL || 'http://localhost:8000/api/chatkit/session'
 
 export default function ChatPanel() {
   const [isOpen, setIsOpen] = useState(false)
@@ -12,10 +11,35 @@ export default function ChatPanel() {
 
   const handleClose = useCallback(() => setIsOpen(false), [])
 
+  // Intercept internal link clicks for SPA navigation
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+
+    const handleLinkClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest('a')
+      if (!anchor) return
+
+      const href = anchor.getAttribute('href')
+      if (!href || !href.startsWith('/')) return
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return
+
+      e.preventDefault()
+      navigate(href)
+    }
+
+    panel.addEventListener('click', handleLinkClick)
+    return () => panel.removeEventListener('click', handleLinkClick)
+  }, [navigate])
+
   const { control } = useChatKit({
     api: {
-      url: CHATKIT_API_URL,
-      domainKey: CHATKIT_DOMAIN_KEY,
+      async getClientSecret() {
+        const res = await fetch(SESSION_API_URL, { method: 'POST' })
+        if (!res.ok) throw new Error(`Session creation failed: ${res.status}`)
+        const { client_secret } = await res.json()
+        return client_secret
+      },
     },
     header: {
       title: { text: 'Ask AI' },

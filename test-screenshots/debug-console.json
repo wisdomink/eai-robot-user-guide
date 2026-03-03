@@ -1,0 +1,30 @@
+[
+  {
+    "type": "debug",
+    "text": "[vite] connecting..."
+  },
+  {
+    "type": "info",
+    "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  },
+  {
+    "type": "debug",
+    "text": "[vite] connected."
+  },
+  {
+    "type": "warning",
+    "text": "Domain verification skipped for http://localhost:5173 - this check is required in production. To allow your domain, register it at https://platform.openai.com/settings/organization/security/domain-allowlist."
+  },
+  {
+    "type": "error",
+    "text": "Access to fetch at 'https://chatgpt.com/ces/v1/projects/oai/settings' from origin 'https://cdn.platform.openai.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: net::ERR_FAILED"
+  },
+  {
+    "type": "error",
+    "text": "Failed to fetch"
+  }
+]
