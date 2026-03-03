@@ -3,4 +3,4 @@ uvicorn[standard]>=0.34.0
 chromadb>=0.6.0
 python-dotenv>=1.0.0
 openai-chatkit>=1.1.0
-openai-agents>=0.1.0
+openai>=2.0.0

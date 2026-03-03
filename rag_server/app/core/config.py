@@ -15,6 +15,7 @@ VECTOR_STORAGE_PATH = RAG_SERVER_ROOT / "vector_storage"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENAI_ASSISTANT_ID: str = os.getenv("OPENAI_ASSISTANT_ID", "")
 EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 
 # ── RAG ──────────────────────────────────────────────────────────────────

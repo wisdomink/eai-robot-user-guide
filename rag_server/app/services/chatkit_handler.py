@@ -1,77 +1,55 @@
 """
-ChatKit server: OpenAI Agents SDK + RAG retrieval via ChromaDB.
+ChatKit server: OpenAI Assistants API + RAG retrieval via ChromaDB.
 
-Handles the ChatKit protocol (threads, messages, streaming) through a
-single /chatkit FastAPI endpoint.
+Bridges the ChatKit protocol (threads, messages, streaming) with the
+OpenAI Assistants API.  The Assistant is created/managed on the OpenAI
+Dashboard; this module only handles runtime execution and local tool calls.
 """
 
 from __future__ import annotations
 
 import asyncio
-import os
+import json
+import logging
 from collections import defaultdict
 from collections.abc import AsyncIterator
+from datetime import datetime, timezone
 
-from agents import Agent, Runner, RunContextWrapper, function_tool
-from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
+from openai import AsyncOpenAI
+
 from chatkit.server import ChatKitServer
 from chatkit.store import NotFoundError, Store
 from chatkit.types import (
     Annotation,
+    AssistantMessageContent,
     AssistantMessageItem,
     Attachment,
+    AssistantMessageContentPartAdded,
+    AssistantMessageContentPartDone,
+    AssistantMessageContentPartTextDelta,
     EntitySource,
     Page,
+    ProgressUpdateEvent,
     ThreadItem,
+    ThreadItemAddedEvent,
     ThreadItemDoneEvent,
+    ThreadItemUpdatedEvent,
     ThreadMetadata,
     ThreadStreamEvent,
     UserMessageItem,
 )
 
+from app.core.config import OPENAI_API_KEY, OPENAI_ASSISTANT_ID
 from app.services.rag_engine import rag_engine
 
-# ── RAG Tool ──────────────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
+
+# ── OpenAI client ────────────────────────────────────────────────────────
+
+oai = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 
-@function_tool()
-async def search_manual(
-    ctx: RunContextWrapper[AgentContext], query: str
-) -> str:
-    """Search the FF Master robot user manual for relevant documentation.
-    Always use this tool before answering any user question about the robot.
-    """
-    context_text, sources = await asyncio.to_thread(
-        rag_engine.retrieve, query
-    )
-    # Store sources in the shared request context for annotation later
-    ctx.context.request_context.setdefault("_sources", []).extend(sources)
-    return context_text
-
-
-# ── Agent ─────────────────────────────────────────────────────────────────
-
-AGENT_INSTRUCTIONS = """\
-你是一名专业的技术支持工程师，专门负责 FF Master Ultra Edition 机器人的用户支持。
-
-规则：
-1. 收到用户问题后，必须先使用 search_manual 工具搜索相关文档。
-2. 仅根据搜索结果回答用户问题，不要使用任何外部知识。
-3. 如果搜索结果中未提及相关信息，请直接回答："抱歉，说明书中未找到相关信息。"
-4. 保持回答简洁、专业、结构化，使用中文回答。
-5. 如果搜索结果中包含图片链接，请在回答中保留图片的 Markdown 语法。
-6. 不要在回答中附加参考来源或引用链接，系统会自动在回答末尾添加。
-"""
-
-assistant = Agent(
-    name="FF Master Support",
-    instructions=AGENT_INSTRUCTIONS,
-    model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
-    tools=[search_manual],
-)
-
-
-# ── In-memory Store ───────────────────────────────────────────────────────
+# ── In-memory Store ──────────────────────────────────────────────────────
 
 
 class InMemoryStore(Store[dict]):
@@ -171,10 +149,18 @@ class InMemoryStore(Store[dict]):
         raise NotImplementedError()
 
 
-# ── ChatKit Server ────────────────────────────────────────────────────────
+# ── ChatKit Server ───────────────────────────────────────────────────────
 
 
 class FFRobotChatKitServer(ChatKitServer[dict]):
+    """Bridges ChatKit protocol to the OpenAI Assistants API.
+
+    Each ChatKit thread is mapped to an Assistants API thread via
+    ``thread.metadata["oai_thread_id"]``.  The Assistant's instructions,
+    model, and tool schema are all managed on the OpenAI Dashboard —
+    the only local execution is the ``search_manual`` RAG retrieval.
+    """
+
     async def respond(
         self,
         thread: ThreadMetadata,
@@ -183,25 +169,172 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
     ) -> AsyncIterator[ThreadStreamEvent]:
         context["_sources"] = []
 
-        items_page = await self.store.load_thread_items(
-            thread.id, after=None, limit=20, order="asc", context=context,
-        )
-        input_items = await simple_to_agent_input(items_page.data)
+        # ── Map ChatKit thread → Assistants API thread ────────────
+        oai_thread_id = (thread.metadata or {}).get("oai_thread_id")
+        if not oai_thread_id:
+            oai_thread = await oai.beta.threads.create()
+            oai_thread_id = oai_thread.id
+            if thread.metadata is None:
+                thread.metadata = {}
+            thread.metadata["oai_thread_id"] = oai_thread_id
+            await self.store.save_thread(thread, context)
 
-        agent_context = AgentContext(
-            thread=thread, store=self.store, request_context=context,
+        # ── Forward user message to the Assistants thread ─────────
+        if input_user_message and input_user_message.content:
+            user_text = input_user_message.content[0].text
+            await oai.beta.threads.messages.create(
+                thread_id=oai_thread_id,
+                role="user",
+                content=user_text,
+            )
+
+        # ── Prepare ChatKit streaming events ──────────────────────
+        item_id = self.store.generate_item_id("message", thread, context)
+        now = datetime.now(timezone.utc)
+        full_text = ""
+        content_part_added = False
+
+        # Announce a new assistant message
+        yield ThreadItemAddedEvent(
+            item=AssistantMessageItem(
+                thread_id=thread.id,
+                id=item_id,
+                created_at=now,
+                content=[],
+            )
         )
-        result = Runner.run_streamed(
-            assistant, input_items, context=agent_context,
+
+        # ── Stream the Assistants API run ─────────────────────────
+        async for delta_text, event_type in self._run_with_tools(
+            oai_thread_id, context
+        ):
+            if event_type == "tool_start":
+                yield ProgressUpdateEvent(
+                    icon="search",
+                    text="正在搜索文档…",
+                )
+                continue
+
+            if event_type == "delta":
+                if not content_part_added:
+                    yield ProgressUpdateEvent(text="")
+                    yield ThreadItemUpdatedEvent(
+                        item_id=item_id,
+                        update=AssistantMessageContentPartAdded(
+                            content_index=0,
+                            content=AssistantMessageContent(text=""),
+                        ),
+                    )
+                    content_part_added = True
+
+                full_text += delta_text
+                yield ThreadItemUpdatedEvent(
+                    item_id=item_id,
+                    update=AssistantMessageContentPartTextDelta(
+                        content_index=0,
+                        delta=delta_text,
+                    ),
+                )
+
+        # ── Finalize ──────────────────────────────────────────────
+        final_content = AssistantMessageContent(text=full_text)
+        final_item = AssistantMessageItem(
+            thread_id=thread.id,
+            id=item_id,
+            created_at=now,
+            content=[final_content],
         )
-        async for event in stream_agent_response(agent_context, result):
-            if (
-                isinstance(event, ThreadItemDoneEvent)
-                and isinstance(event.item, AssistantMessageItem)
-                and event.item.content
-            ):
-                self._append_source_links(event.item, context)
-            yield event
+        self._append_source_links(final_item, context)
+
+        if content_part_added:
+            yield ThreadItemUpdatedEvent(
+                item_id=item_id,
+                update=AssistantMessageContentPartDone(
+                    content_index=0,
+                    content=final_item.content[0],
+                ),
+            )
+
+        yield ThreadItemDoneEvent(item=final_item)
+
+    # ── Assistants API streaming with tool-call loop ─────────────
+
+    async def _run_with_tools(
+        self, thread_id: str, context: dict
+    ) -> AsyncIterator[tuple[str, str]]:
+        """Yield ``(text, event_type)`` tuples from an Assistants run.
+
+        Handles the ``requires_action`` → local tool execution →
+        ``submit_tool_outputs_stream`` loop transparently.
+
+        ``event_type`` is one of ``"delta"`` or ``"tool_start"``.
+        """
+        requires_action = None
+        run_id: str | None = None
+
+        async with oai.beta.threads.runs.stream(
+            thread_id=thread_id,
+            assistant_id=OPENAI_ASSISTANT_ID,
+        ) as stream:
+            async for event in stream:
+                ev = event.event
+                if ev == "thread.message.delta":
+                    for part in event.data.delta.content or []:
+                        if hasattr(part, "text") and part.text:
+                            yield (part.text.value, "delta")
+                elif ev == "thread.run.requires_action":
+                    requires_action = event.data.required_action
+                    run_id = event.data.id
+
+        while requires_action:
+            yield ("", "tool_start")
+            tool_outputs = await self._execute_tool_calls(
+                requires_action, context
+            )
+            requires_action = None
+
+            async with oai.beta.threads.runs.submit_tool_outputs_stream(
+                thread_id=thread_id,
+                run_id=run_id,
+                tool_outputs=tool_outputs,
+            ) as stream:
+                async for event in stream:
+                    ev = event.event
+                    if ev == "thread.message.delta":
+                        for part in event.data.delta.content or []:
+                            if hasattr(part, "text") and part.text:
+                                yield (part.text.value, "delta")
+                    elif ev == "thread.run.requires_action":
+                        requires_action = event.data.required_action
+                        run_id = event.data.id
+
+    # ── Local tool execution ─────────────────────────────────────
+
+    @staticmethod
+    async def _execute_tool_calls(
+        required_action, context: dict
+    ) -> list[dict]:
+        tool_outputs: list[dict] = []
+        for tc in required_action.submit_tool_outputs.tool_calls:
+            if tc.function.name == "search_manual":
+                args = json.loads(tc.function.arguments)
+                context_text, sources = await asyncio.to_thread(
+                    rag_engine.retrieve, args["query"]
+                )
+                context.setdefault("_sources", []).extend(sources)
+                tool_outputs.append({
+                    "tool_call_id": tc.id,
+                    "output": context_text,
+                })
+            else:
+                logger.warning("Unknown tool call: %s", tc.function.name)
+                tool_outputs.append({
+                    "tool_call_id": tc.id,
+                    "output": json.dumps({"error": f"Unknown tool: {tc.function.name}"}),
+                })
+        return tool_outputs
+
+    # ── Source annotations ────────────────────────────────────────
 
     @staticmethod
     def _append_source_links(
