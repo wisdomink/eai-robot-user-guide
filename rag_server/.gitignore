@@ -12,9 +12,6 @@ env/
 # Environment variables
 .env
 
-# Vector storage (runtime generated)
-vector_storage/
-
 # IDE
 .vscode/
 .idea/

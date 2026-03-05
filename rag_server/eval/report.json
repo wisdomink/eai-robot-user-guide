@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "timestamp": "2026-03-04T07:26:52.307353+00:00",
+    "assistant_id": "asst_V4jhdbF3IpYFzCo7aJ556Kbq",
+    "judge_model": "gpt-4o"
+  },
+  "summary": {
+    "total_cases": 1,
+    "pass_count_gte7": 1,
+    "warning_count_5to7": 0,
+    "fail_count_lt5": 0,
+    "pass_rate": "100.0%",
+    "avg_overall": 10.0,
+    "avg_accuracy": 10.0,
+    "avg_completeness": 10.0,
+    "avg_relevance": 10.0,
+    "total_query_time_s": 13.7
+  },
+  "category_breakdown": {
+    "safety": {
+      "count": 1,
+      "avg_overall": 10.0
+    }
+  },
+  "results": [
+    {
+      "id": 3,
+      "category": "safety",
+      "question": "What is the operating temperature range for the FF Master robot?",
+      "expected_answer": "The operating temperature range is -10°C to 40°C.",
+      "actual_answer": "FF Master 系列机器人的工作温度范围为 **-10℃ 到 40℃**，适用于 FF Master、FF Master Edu 和 FF Master Ultra 版本【4:0†specifications】。",
+      "scores": {
+        "accuracy": 10,
+        "completeness": 10,
+        "relevance": 10,
+        "overall": 10.0,
+        "comment": "实际答案准确地提供了工作温度范围，并且补充了适用的机器人版本信息，信息完整且相关。"
+      },
+      "query_time_s": 13.66,
+      "judge_time_s": 1.91
+    }
+  ]
+}

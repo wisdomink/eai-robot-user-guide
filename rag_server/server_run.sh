@@ -35,6 +35,12 @@ if [ -z "${OPENAI_API_KEY:-}" ] || [ "$OPENAI_API_KEY" = "sk-your-openai-key-her
     exit 1
 fi
 
+if [ -z "${OPENAI_ASSISTANT_ID:-}" ]; then
+    echo "❌ 请在 $ENV_FILE 中设置 OPENAI_ASSISTANT_ID"
+    echo "   如尚未创建 Assistant，请先运行: python create_assistant.py"
+    exit 1
+fi
+
 # ── Virtual environment ───────────────────────────────────────────────
 if [ ! -d "$VENV_DIR" ]; then
     echo "🔧 虚拟环境不存在，正在创建 ..."
@@ -58,8 +64,8 @@ fi
 # ── Launch ────────────────────────────────────────────────────────────
 echo ""
 echo "🚀 启动 ChatKit RAG Server (port $PORT)"
-echo "   ChatKit 端点: http://localhost:$PORT/chatkit"
-echo "   健康检查:     http://localhost:$PORT/health"
-echo "   LLM 模型:     ${LLM_MODEL:-gpt-4o-mini}"
+echo "   ChatKit 端点:  http://localhost:$PORT/chatkit"
+echo "   健康检查:      http://localhost:$PORT/health"
+echo "   Assistant ID: $OPENAI_ASSISTANT_ID"
 echo ""
 exec uvicorn app.main:app --reload --host 0.0.0.0 --port "$PORT"

@@ -1,0 +1,359 @@
+{
+  "meta": {
+    "description": "FF Master Robot RAG evaluation test cases",
+    "version": "1.0.0",
+    "total": 50
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "category": "safety",
+      "question": "What is the minimum safety distance that should be maintained around the FF Master robot during operation?",
+      "expected_answer": "A safety distance of at least 50 cm should be maintained according to safety guidelines, and a safety radius of at least 1 meter should be maintained around the robot according to safety precautions.",
+      "source_file": "safety-guidelines.md, safety-precautions.md"
+    },
+    {
+      "id": 2,
+      "category": "safety",
+      "question": "What happens when the emergency stop is activated on the FF Master robot?",
+      "expected_answer": "When the emergency stop is activated, all joints lose torque (zero-torque state), and the robot may collapse or fall. A protective cage should be used to prevent damage.",
+      "source_file": "safety-instructions.md"
+    },
+    {
+      "id": 3,
+      "category": "safety",
+      "question": "What is the operating temperature range for the FF Master robot?",
+      "expected_answer": "The operating temperature range is -10°C to 40°C.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 4,
+      "category": "safety",
+      "question": "What is the minimum static friction coefficient required for the operating surface?",
+      "expected_answer": "The operating surface must have a static friction coefficient greater than 0.4. The surface should be hard, flat, and non-slip.",
+      "source_file": "safety-precautions.md"
+    },
+    {
+      "id": 5,
+      "category": "safety",
+      "question": "Under what conditions is manual intervention on the robot allowed?",
+      "expected_answer": "Manual intervention is only allowed when the robot is fully stopped and powered off. Manual intervention while the robot is moving or powered on is prohibited.",
+      "source_file": "safety-guidelines.md"
+    },
+    {
+      "id": 6,
+      "category": "safety",
+      "question": "What should you do if the robot experiences a short circuit or overheating?",
+      "expected_answer": "Disconnect the power immediately if there is a short circuit or overheating.",
+      "source_file": "safety-instructions.md"
+    },
+    {
+      "id": 7,
+      "category": "safety",
+      "question": "What precautions should be taken for remote operation of the robot?",
+      "expected_answer": "A secure network should be used for remote operation, and operators need to maintain real-time monitoring of the robot.",
+      "source_file": "safety-guidelines.md"
+    },
+    {
+      "id": 8,
+      "category": "specifications",
+      "question": "How many degrees of freedom (DOF) does the FF Master Ultra have?",
+      "expected_answer": "The FF Master Ultra has 31 degrees of freedom (DOF). This includes 2 head DOF, 7 per arm (14 total), 6 per leg (12 total), and 3 waist DOF.",
+      "source_file": "product-overview.md"
+    },
+    {
+      "id": 9,
+      "category": "specifications",
+      "question": "What is the weight difference between FF Master and FF Master Ultra?",
+      "expected_answer": "The FF Master and FF Master Edu weigh approximately 35 kg, while the FF Master Ultra weighs approximately 37 kg.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 10,
+      "category": "specifications",
+      "question": "What is the height of the FF Master robot?",
+      "expected_answer": "The FF Master robot is 1310 mm (approximately 1.31 meters) tall. Its dimensions are 1310(H) × 460(W) × 210(L) mm.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 11,
+      "category": "specifications",
+      "question": "What is the maximum walking speed of the FF Master robot?",
+      "expected_answer": "The maximum walking speed is 1.5 m/s, but the recommended walking speed is no more than 0.8 m/s.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 12,
+      "category": "specifications",
+      "question": "What is the payload capacity of the FF Master robot?",
+      "expected_answer": "The maximum payload is 3 kg in a specific pose, and no more than 1 kg across the full workspace.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 13,
+      "category": "specifications",
+      "question": "What is the battery capacity and walking endurance of the FF Master?",
+      "expected_answer": "The battery capacity is approximately 500 Wh. At a walking speed of 0.5 m/s, the endurance is approximately 2 hours.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 14,
+      "category": "specifications",
+      "question": "What is the arm reach of the FF Master Ultra compared to the FF Master?",
+      "expected_answer": "The FF Master Ultra has an arm reach of 558 mm, while the FF Master and FF Master Edu have an arm reach of 437 mm.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 15,
+      "category": "specifications",
+      "question": "What is the peak joint torque of the FF Master robot?",
+      "expected_answer": "The peak joint torque is 120 N·m.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 16,
+      "category": "specifications",
+      "question": "What is the maximum obstacle height the robot can step over, and the maximum slope it can climb?",
+      "expected_answer": "The robot can step over obstacles up to 50 mm in height and climb slopes up to 15 degrees.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 17,
+      "category": "computational",
+      "question": "What is the computational unit (PC2) used in the FF Master Ultra?",
+      "expected_answer": "The FF Master Ultra uses a Jetson Orin NX as its PC2 (development computational unit). It has 157 TOPS of computing power, a 1024-core Ampere GPU with 32 Tensor Cores, 8-core Arm Cortex-A78AE, 16GB VRAM, 16GB RAM, and 512GB storage.",
+      "source_file": "computational-unit.md"
+    },
+    {
+      "id": 18,
+      "category": "computational",
+      "question": "How many computational units does the FF Master Ultra have, and what are their roles?",
+      "expected_answer": "The FF Master Ultra has three computational units: PC1 for operations and control, PC2 (Jetson Orin NX) for development, and PC3 for interactive functions. The FF Master and FF Master Edu only have PC1 and PC3.",
+      "source_file": "computational-unit.md"
+    },
+    {
+      "id": 19,
+      "category": "computational",
+      "question": "What processor does the FF Master (non-Ultra) use?",
+      "expected_answer": "The FF Master uses the RK3588 as the main processor (PC1) and RK3588s as the interactive processor (PC3).",
+      "source_file": "product-overview.md"
+    },
+    {
+      "id": 20,
+      "category": "product_comparison",
+      "question": "What are the DOF differences between FF Master, FF Master Edu, and FF Master Ultra?",
+      "expected_answer": "The FF Master and FF Master Edu have 27 DOF each, with 5 DOF per arm. The FF Master Ultra has 31 DOF, with 7 DOF per arm (adding wrist pitch and wrist roll joints).",
+      "source_file": "product-overview.md"
+    },
+    {
+      "id": 21,
+      "category": "product_comparison",
+      "question": "Which FF Master models support secondary development?",
+      "expected_answer": "The FF Master does not support secondary development. The FF Master Edu supports limited secondary development. The FF Master Ultra supports full secondary development.",
+      "source_file": "product-overview.md"
+    },
+    {
+      "id": 22,
+      "category": "product_comparison",
+      "question": "Which models are compatible with the Locomotion & Manipulation Platform?",
+      "expected_answer": "The FF Master Edu and FF Master Ultra are compatible with the Locomotion & Manipulation Platform. The FF Master is not compatible. The platform is currently under development.",
+      "source_file": "product-overview.md"
+    },
+    {
+      "id": 23,
+      "category": "sensors",
+      "question": "What sensors are equipped on the FF Master Ultra?",
+      "expected_answer": "The FF Master Ultra is equipped with LiDAR, RGB-D camera, front stereo RGB cameras, front interactive RGB camera, and rear RGB camera.",
+      "source_file": "sensor-fov.md"
+    },
+    {
+      "id": 24,
+      "category": "sensors",
+      "question": "What sensors do the FF Master and FF Master Edu have?",
+      "expected_answer": "The FF Master and FF Master Edu are equipped with an interactive RGB camera only.",
+      "source_file": "sensor-fov.md"
+    },
+    {
+      "id": 25,
+      "category": "joints",
+      "question": "What is the range of motion for the head joints?",
+      "expected_answer": "The head has 2 DOF: pitch and yaw, each with a range of ±20 degrees.",
+      "source_file": "joint-limits.md"
+    },
+    {
+      "id": 26,
+      "category": "joints",
+      "question": "What additional arm joints does the FF Master Ultra have compared to the FF Master?",
+      "expected_answer": "The FF Master Ultra has two additional arm joints: J6 (Wrist pitch) with a range of ±32 degrees, and J7 (Wrist roll) with a range of ±88.5 degrees.",
+      "source_file": "joint-limits.md"
+    },
+    {
+      "id": 27,
+      "category": "joints",
+      "question": "What is the waist joint range of motion?",
+      "expected_answer": "The waist has 3 DOF: Yaw with a range of -196.5° to 136.5°, Pitch with a range of ±18°, and Roll with a range of ±28°.",
+      "source_file": "joint-limits.md"
+    },
+    {
+      "id": 28,
+      "category": "battery",
+      "question": "How do the battery indicator lights show when the battery level is below 15%?",
+      "expected_answer": "When the battery level is below 15%, only LED1 flashes (1 LED flashing). When between 15-25%, LED1 is steady (1 LED on). The robot may collapse suddenly when only one bar remains.",
+      "source_file": "battery-indicator.md"
+    },
+    {
+      "id": 29,
+      "category": "battery",
+      "question": "How do the battery indicator lights display during charging?",
+      "expected_answer": "During charging: LED1 breathing means <25%, LED2 breathing means 25-50%, LED3 breathing means 50-75%, LED4 breathing means 75-100%. When all 4 LEDs are steady, the battery is fully charged at 100%.",
+      "source_file": "battery-indicator.md"
+    },
+    {
+      "id": 30,
+      "category": "battery",
+      "question": "What does it mean when all 4 battery indicator LEDs are flashing simultaneously?",
+      "expected_answer": "When all 4 LEDs are flashing simultaneously, it indicates a battery protection mode has been triggered due to overtemperature, overcurrent, or overvoltage conditions.",
+      "source_file": "battery-indicator.md"
+    },
+    {
+      "id": 31,
+      "category": "startup",
+      "question": "How do you power on the FF Master robot?",
+      "expected_answer": "To power on: first short press the power button to wake it up, then long press for 5 seconds. The LEDs 1-4 will light up sequentially in about 2 seconds. The battery should be at least 50% (at least two bars) before startup.",
+      "source_file": "startup-guide.md"
+    },
+    {
+      "id": 32,
+      "category": "startup",
+      "question": "What is the button combination for starting the robot from a hoisted position?",
+      "expected_answer": "From a hoisted position: press [L2 + X] for standing preparation, then press [R2 + X] for stable standing.",
+      "source_file": "startup-guide.md"
+    },
+    {
+      "id": 33,
+      "category": "startup",
+      "question": "How do you start the robot from a supine (lying on back) position?",
+      "expected_answer": "Press [↑ + △] to execute the supine-to-stand procedure. A safety radius of at least 0.5 meters must be maintained. This method should not be used with end-effectors attached.",
+      "source_file": "startup-guide.md"
+    },
+    {
+      "id": 34,
+      "category": "startup",
+      "question": "What is required for starting the robot from a sitting position?",
+      "expected_answer": "The robot needs a platform 35-40 cm high. Press [↑ + X] for sitting preparation, then press [↑ + □] for sit-to-stand.",
+      "source_file": "startup-guide.md"
+    },
+    {
+      "id": 35,
+      "category": "shutdown",
+      "question": "How do you power off the FF Master robot?",
+      "expected_answer": "To power off: short press the power button to wake the display, then long press for about 5 seconds. The LEDs will turn off sequentially.",
+      "source_file": "shutdown-guide.md"
+    },
+    {
+      "id": 36,
+      "category": "shutdown",
+      "question": "What is the button combination to enter Damping Mode?",
+      "expected_answer": "Press [L2 + R2 + Create] to enter Damping Mode.",
+      "source_file": "shutdown-guide.md"
+    },
+    {
+      "id": 37,
+      "category": "shutdown",
+      "question": "What is the button combination to enter Zero-Torque Mode?",
+      "expected_answer": "Press [L1 + R1 + Create] to enter Zero-Torque Mode.",
+      "source_file": "shutdown-guide.md"
+    },
+    {
+      "id": 38,
+      "category": "shutdown",
+      "question": "How do you shut down the robot from a standing position to sitting?",
+      "expected_answer": "Press [L2 + ←] to make the robot sit down, then enter Damping Mode [L2 + R2 + Create], then Zero-Torque Mode [L1 + R1 + Create], then power off.",
+      "source_file": "shutdown-guide.md"
+    },
+    {
+      "id": 39,
+      "category": "charging",
+      "question": "What are the two methods for charging the FF Master robot?",
+      "expected_answer": "Method 1: Power off the robot and plug the charger directly into the robot's charging port. Method 2: Power off, remove the battery, and plug the charger into the battery's charging port. The charging port is magnetic and auto-aligns.",
+      "source_file": "charging-procedure.md"
+    },
+    {
+      "id": 40,
+      "category": "charging",
+      "question": "Can you charge the FF Master robot while it is powered on?",
+      "expected_answer": "No, the robot must be powered off before charging. Do not charge while powered on.",
+      "source_file": "charging-procedure.md"
+    },
+    {
+      "id": 41,
+      "category": "charging",
+      "question": "What is the charger specification for the FF Master robot?",
+      "expected_answer": "The charger accepts 100-220V input and outputs 54.6V at 10A. Full charging takes no more than 1.5 hours.",
+      "source_file": "specifications.md"
+    },
+    {
+      "id": 42,
+      "category": "remote_control",
+      "question": "What are the available control modes on the FF Master remote controller?",
+      "expected_answer": "The available modes are: Zero-Torque, Damping, Standing Prep, Sitting Prep, Stable Standing, Locomotion, Emergency-Stop, and Off-Road (Beta).",
+      "source_file": "remote-control.md"
+    },
+    {
+      "id": 43,
+      "category": "remote_control",
+      "question": "What is the button combination for emergency stop on the remote controller?",
+      "expected_answer": "Press [L1 + R1 + Create] for emergency stop. To exit emergency stop, press [L2 + X].",
+      "source_file": "remote-control.md"
+    },
+    {
+      "id": 44,
+      "category": "remote_control",
+      "question": "What are the limitations of Off-Road mode?",
+      "expected_answer": "In Off-Road mode (Beta), avoid stairs higher than 5 cm, slopes greater than 10 degrees, and elevation changes greater than ±5 cm.",
+      "source_file": "remote-control.md"
+    },
+    {
+      "id": 45,
+      "category": "remote_control",
+      "question": "What is the control priority order when multiple control methods are used simultaneously?",
+      "expected_answer": "The control priority order is: Remote Controller > App > Voice. The remote controller has the highest priority.",
+      "source_file": "remote-control.md"
+    },
+    {
+      "id": 46,
+      "category": "remote_control",
+      "question": "How long does the remote controller battery last, and how long does it take to charge?",
+      "expected_answer": "The remote controller battery lasts approximately 5 hours of use and takes approximately 3-4 hours to charge. Use a 5V 1A or 2A charger; avoid fast charging.",
+      "source_file": "remote-control.md"
+    },
+    {
+      "id": 47,
+      "category": "interaction",
+      "question": "What is the wake word for voice interaction with the FF Master robot?",
+      "expected_answer": "The upcoming built-in wake word is 'Hey, Master' (in English). Currently, only external microphone is supported and there is no wake word — the feature is under development.",
+      "source_file": "robot-interaction.md"
+    },
+    {
+      "id": 48,
+      "category": "interaction",
+      "question": "What languages are supported for voice interaction?",
+      "expected_answer": "The supported languages for voice interaction are: English, Chinese, Spanish, French, and Italian.",
+      "source_file": "robot-interaction.md"
+    },
+    {
+      "id": 49,
+      "category": "interaction",
+      "question": "What happens when you touch the robot's head?",
+      "expected_answer": "When you touch the robot's head, it nods and responds with 'Friendly touch signal detected — energy +100%!'",
+      "source_file": "robot-interaction.md"
+    },
+    {
+      "id": 50,
+      "category": "interaction",
+      "question": "What are the character customization limits for voice interaction?",
+      "expected_answer": "The character description is limited to 300 characters or less. For custom Q&A pairs, questions are limited to 20 characters and answers to 50 characters.",
+      "source_file": "robot-interaction.md"
+    }
+  ]
+}
