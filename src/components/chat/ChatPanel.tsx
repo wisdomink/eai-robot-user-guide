@@ -24,6 +24,9 @@ export default function ChatPanel() {
         onClick: handleClose,
       },
     },
+    history: {
+      enabled: false,
+    },
     startScreen: {
       greeting: 'Ask anything about FF Master — I\'ll answer based on the documentation.',
       prompts: [

@@ -47,9 +47,15 @@ function ResultItem({
       className="w-full text-left px-4 py-3 border-b border-gray-50 last:border-b-0 hover:bg-purple/5 transition-colors"
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xs font-bold text-purple">{result.title}</span>
+        <span
+          className="text-xs font-bold text-purple"
+          dangerouslySetInnerHTML={{ __html: highlightSnippet(result.title, query) }}
+        />
         {result.sectionTitle !== result.title && (
-          <span className="text-[10px] text-gray-400">› {result.sectionTitle}</span>
+          <span
+            className="text-[10px] text-gray-400"
+            dangerouslySetInnerHTML={{ __html: '› ' + highlightSnippet(result.sectionTitle, query) }}
+          />
         )}
         {result.matchType === 'semantic' && (
           <span className="ml-auto text-[10px] text-purple/40 font-mono">
@@ -121,24 +127,17 @@ export default function SearchDropdown({ results, query, isSearching, searchErro
         </div>
       )}
 
-      {/* ── Exact matches group ── */}
-      {exactGroup.length > 0 && (
-        <>
-          <div className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
-            精确匹配
-          </div>
-          {exactGroup.map((result, idx) => (
-            <ResultItem
-              key={`exact-${result.slug}-${result.headingAnchor}-${idx}`}
-              result={result}
-              query={query}
-              onSelect={onSelect}
-            />
-          ))}
-        </>
+      {/* Inline loading: semantic still searching, exact results shown below */}
+      {isSearching && semanticGroup.length === 0 && (
+        <div className="px-4 py-2.5 text-center text-xs flex items-center justify-center gap-2 bg-purple/4 border-b border-gray-100">
+          <svg className="w-3 h-3 animate-spin text-purple/50" fill="none" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+          </svg>
+          <span className="text-purple/60">AI 语义搜索中...</span>
+        </div>
       )}
 
-      {/* ── Semantic matches group ── */}
+      {/* ── Semantic matches group (primary) ── */}
       {semanticGroup.length > 0 && (
         <>
           <div className="px-4 py-1.5 text-[10px] font-semibold text-purple/60 uppercase tracking-wider bg-purple/4 border-b border-gray-100 sticky top-0 z-10">
@@ -160,14 +159,21 @@ export default function SearchDropdown({ results, query, isSearching, searchErro
         </>
       )}
 
-      {/* Inline loading: exact results shown, semantic still loading */}
-      {isSearching && exactGroup.length > 0 && semanticGroup.length === 0 && (
-        <div className="px-4 py-3 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
-          <svg className="w-3 h-3 animate-spin text-purple/50" fill="none" viewBox="0 0 16 16">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
-          </svg>
-          AI searching...
-        </div>
+      {/* ── Exact matches group (supplementary) ── */}
+      {exactGroup.length > 0 && (
+        <>
+          <div className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
+            精确匹配
+          </div>
+          {exactGroup.map((result, idx) => (
+            <ResultItem
+              key={`exact-${result.slug}-${result.headingAnchor}-${idx}`}
+              result={result}
+              query={query}
+              onSelect={onSelect}
+            />
+          ))}
+        </>
       )}
     </div>
   )

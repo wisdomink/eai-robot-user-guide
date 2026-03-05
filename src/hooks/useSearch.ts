@@ -86,7 +86,7 @@ function semanticToSearchResult(r: SemanticResult): SearchResult {
     sectionTitle: r.sectionTitle,
     slug: r.pageSlug,
     snippet: r.textPreview,
-    headingAnchor: r.headingAnchor,
+    headingAnchor: r.headingAnchor || '',
     similarity: r.similarity,
     matchType: 'semantic',
   }
@@ -139,15 +139,24 @@ export function useSearch() {
     }
   }, [query, searchSemantic])
 
-  // Merge: exact first → deduplicate → semantic after
+  // Merge: semantic results take priority; remove exact duplicates
   const results = useMemo(() => {
-    const exactKeys = new Set(
-      exactResults.map((r) => `${r.slug}#${r.headingAnchor}`)
+    const semanticBySection = new Set(
+      semanticResults.map((r) => `${r.slug}#${r.headingAnchor}`)
     )
-    const dedupedSemantic = semanticResults.filter(
-      (r) => !exactKeys.has(`${r.slug}#${r.headingAnchor}`)
+    const semanticByPage = new Set(
+      semanticResults.map((r) => r.slug)
     )
-    return [...exactResults, ...dedupedSemantic]
+    const dedupedExact = exactResults.filter((r) => {
+      // If semantic has a broad match (no anchor) for this page, skip exact
+      if (semanticByPage.has(r.slug) && semanticResults.some(
+        (s) => s.slug === r.slug && !s.headingAnchor
+      )) {
+        return false
+      }
+      return !semanticBySection.has(`${r.slug}#${r.headingAnchor}`)
+    })
+    return [...semanticResults, ...dedupedExact]
   }, [exactResults, semanticResults])
 
   // Navigate to a search result page with highlight + section anchor
