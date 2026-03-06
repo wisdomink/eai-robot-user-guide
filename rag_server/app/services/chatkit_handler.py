@@ -1,57 +1,112 @@
 """
-ChatKit server: OpenAI Assistants API with built-in File Search (hosted RAG).
+ChatKit server: OpenAI Agents SDK with built-in File Search (方案 B).
 
-Bridges the ChatKit protocol (threads, messages, streaming) with the
-OpenAI Assistants API.  Document retrieval is handled entirely by OpenAI's
-hosted file_search tool — no local vector database needed.
+Agent definition exported from AgentBuilder (translated from TS to Python).
+Uses a custom ResponseStreamConverter to map file_citation → EntitySource,
+enabling SPA navigation via the frontend entities.onClick handler.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-import re
 from collections import defaultdict
 from collections.abc import AsyncIterator
-from datetime import datetime, timezone
 
-from openai import AsyncOpenAI
+from agents import Agent, FileSearchTool, ModelSettings, Runner
+from openai.types.shared import Reasoning
 
+from chatkit.agents import (
+    AgentContext,
+    ResponseStreamConverter,
+    simple_to_agent_input,
+    stream_agent_response,
+)
 from chatkit.server import ChatKitServer
 from chatkit.store import NotFoundError, Store
 from chatkit.types import (
     Annotation,
-    AssistantMessageContent,
-    AssistantMessageItem,
     Attachment,
-    AssistantMessageContentPartAdded,
-    AssistantMessageContentPartDone,
-    AssistantMessageContentPartTextDelta,
     EntitySource,
     Page,
-    ProgressUpdateEvent,
     ThreadItem,
-    ThreadItemAddedEvent,
-    ThreadItemDoneEvent,
-    ThreadItemUpdatedEvent,
     ThreadMetadata,
     ThreadStreamEvent,
     UserMessageItem,
 )
 
-from app.core.config import OPENAI_API_KEY, OPENAI_ASSISTANT_ID, SIDEBAR_PATH
+from app.core.config import LLM_MODEL, OPENAI_VECTOR_STORE_ID, SIDEBAR_PATH
 
 logger = logging.getLogger(__name__)
 
-# ── Regex to strip OpenAI file-citation markers (e.g. 【4:1†source】) ─────
+# ── Agent Instructions (from AgentBuilder export) ────────────────────
 
-CITATION_RE = re.compile(r"【[^】]*†[^】]*】")
+INSTRUCTIONS = """\
+你是一名专业的技术支持工程师，专门负责 FF Master 系列机器人（FF Master / FF Master Edu / FF Master Ultra Edition）的用户支持。
 
-# ── OpenAI client ────────────────────────────────────────────────────────
+## 你的知识来源
 
-oai = AsyncOpenAI(api_key=OPENAI_API_KEY)
+你的全部知识来自上传到 Vector Store 的用户手册文档（Markdown 文件）。这些文档涵盖：
 
-# ── File name → slug mapping (for source navigation links) ──────────────
+| 分类 | 内容 |
+|------|------|
+| 安全须知 | 安全指南、安全注意事项、维护管理指南 |
+| 产品介绍 | 装箱清单、产品概述（三个版本对比）、产品结构图、计算单元、电池指示灯、传感器视野、关节名称与限位、坐标系、规格参数 |
+| 操作指南 | 安全预防措施、开机指南、关机指南、充电流程、遥控器使用指南、机器人交互流程、FF Robotic APP 手册、其他操作 |
+| 运动平台 | 运动与操控平台手册 |
+| 联系方式 | 联系信息 |
+
+## 文档文件名 → 页面路径映射
+
+当你引用文档内容时，以下映射关系用于前端页面导航。请在回答末尾标注所引用的文档来源文件名：
+
+```
+safety-instructions.md    → /safety-instructions
+safety-guidelines.md      → /safety-guidelines
+maintenance.md            → /maintenance-guidelines
+packing-list.md           → /packing-list
+product-overview.md       → /product-overview
+computational-unit.md     → /computational-unit
+battery-indicator.md      → /battery-indicator-lights
+sensor-fov.md             → /sensor-fov
+joint-limits.md           → /joint-limits
+coordinate-systems.md     → /coordinate-systems
+specifications.md         → /specifications
+safety-precautions.md     → /safety-precautions
+startup-guide.md          → /startup-guide
+shutdown-guide.md         → /shutdown-guide
+charging-procedure.md     → /charging-procedure
+remote-control.md         → /remote-control
+robot-interaction.md      → /robot-interaction
+ff-robotic-app.md         → /ff-robotic-app
+others.md                 → /others
+locomotion-platform.md    → /locomotion-platform
+contact-information.md    → /contact-information
+```
+
+## 回答规则
+
+1. 收到用户问题后，判断问题语言是中文还是英文，如果是中文则首先将问题翻译成英文，然后再调用系统，系统会自动搜索相关文档（file_search）。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. 如果文档中未找到相关信息，直接回答："抱歉，说明书中未找到相关信息。"
+3. 使用**问题语言**回答，保持简洁、专业、结构化（适当使用列表、表格）。
+4. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+5. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。
+"""
+
+# ── Agent Definition (translated from AgentBuilder TS export) ────────
+
+assistant_agent = Agent(
+    name="FF Master Support",
+    instructions=INSTRUCTIONS,
+    model=LLM_MODEL,
+    tools=[FileSearchTool(vector_store_ids=[OPENAI_VECTOR_STORE_ID])],
+    model_settings=ModelSettings(
+        reasoning=Reasoning(effort="medium", summary="auto"),
+        store=True,
+    ),
+)
+
+# ── File name → slug mapping (for source navigation links) ──────────
 
 
 def _build_file_slug_map() -> dict[str, dict]:
@@ -75,11 +130,37 @@ def _build_file_slug_map() -> dict[str, dict]:
 
 FILE_SLUG_MAP = _build_file_slug_map()
 
-# file_id → filename cache (populated lazily via OpenAI Files API)
-_file_id_cache: dict[str, str] = {}
+
+# ── Custom ResponseStreamConverter ───────────────────────────────────
 
 
-# ── In-memory Store ──────────────────────────────────────────────────────
+class FFRobotConverter(ResponseStreamConverter):
+    """Override file_citation_to_annotation to produce EntitySource
+    instead of the default FileSource, enabling SPA navigation via
+    the frontend entities.onClick handler."""
+
+    async def file_citation_to_annotation(self, file_citation) -> Annotation | None:
+        filename = file_citation.filename
+        if not filename:
+            return None
+
+        page_info = FILE_SLUG_MAP.get(filename)
+        if not page_info:
+            return None
+
+        slug = page_info["slug"]
+        return Annotation(
+            source=EntitySource(
+                id=slug,
+                title=page_info["title"],
+                interactive=True,
+                data={"slug": slug},
+            ),
+            index=file_citation.index,
+        )
+
+
+# ── In-memory Store ──────────────────────────────────────────────────
 
 
 class InMemoryStore(Store[dict]):
@@ -179,15 +260,15 @@ class InMemoryStore(Store[dict]):
         raise NotImplementedError()
 
 
-# ── ChatKit Server ───────────────────────────────────────────────────────
+# ── ChatKit Server ───────────────────────────────────────────────────
 
 
 class FFRobotChatKitServer(ChatKitServer[dict]):
-    """Bridges ChatKit protocol to the OpenAI Assistants API.
+    """Bridges ChatKit protocol to the OpenAI Agents SDK.
 
-    Each ChatKit thread is mapped to an Assistants API thread via
-    ``thread.metadata["oai_thread_id"]``.  The assistant uses OpenAI's
-    hosted file_search tool for RAG — no local tool execution needed.
+    Uses Runner.run_streamed() to execute the Agent, and
+    stream_agent_response() with a custom FFRobotConverter to
+    automatically handle streaming events and file citation mapping.
     """
 
     async def respond(
@@ -196,194 +277,35 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         input_user_message: UserMessageItem | None,
         context: dict,
     ) -> AsyncIterator[ThreadStreamEvent]:
-        context["_file_citations"] = []
+        # Load conversation history
+        items_page = await self.store.load_thread_items(
+            thread.id, after=None, limit=20, order="desc", context=context
+        )
+        items = list(reversed(items_page.data))
 
-        # ── Map ChatKit thread → Assistants API thread ────────────
-        oai_thread_id = (thread.metadata or {}).get("oai_thread_id")
-        if not oai_thread_id:
-            oai_thread = await oai.beta.threads.create()
-            oai_thread_id = oai_thread.id
-            if thread.metadata is None:
-                thread.metadata = {}
-            thread.metadata["oai_thread_id"] = oai_thread_id
-            await self.store.save_thread(thread, context)
+        # Convert to Agent SDK input format
+        input_items = await simple_to_agent_input(items)
 
-        # ── Forward user message to the Assistants thread ─────────
-        if input_user_message and input_user_message.content:
-            user_text = input_user_message.content[0].text
-            await oai.beta.threads.messages.create(
-                thread_id=oai_thread_id,
-                role="user",
-                content=user_text,
-            )
-
-        # ── Prepare ChatKit streaming events ──────────────────────
-        item_id = self.store.generate_item_id("message", thread, context)
-        now = datetime.now(timezone.utc)
-        full_text = ""
-        content_part_added = False
-
-        yield ThreadItemAddedEvent(
-            item=AssistantMessageItem(
-                thread_id=thread.id,
-                id=item_id,
-                created_at=now,
-                content=[],
-            )
+        # Build AgentContext (bridges ChatKit store ↔ Agents SDK)
+        agent_context = AgentContext(
+            thread=thread,
+            store=self.store,
+            request_context=context,
         )
 
-        # ── Stream the Assistants API run (file_search is server-side) ──
-        async for delta_text, event_type in self._stream_run(
-            oai_thread_id, context
+        # Run the Agent (streaming)
+        result = Runner.run_streamed(
+            assistant_agent,
+            input_items,
+            context=agent_context,
+        )
+
+        # stream_agent_response handles all event conversion automatically;
+        # FFRobotConverter ensures file_citation → EntitySource (not FileSource)
+        async for event in stream_agent_response(
+            agent_context, result, converter=FFRobotConverter()
         ):
-            if event_type == "search_start":
-                yield ProgressUpdateEvent(
-                    icon="search",
-                    text="正在搜索文档…",
-                )
-                continue
-
-            if event_type == "delta":
-                cleaned = CITATION_RE.sub("", delta_text)
-                if not cleaned:
-                    continue
-
-                if not content_part_added:
-                    yield ProgressUpdateEvent(text="")
-                    yield ThreadItemUpdatedEvent(
-                        item_id=item_id,
-                        update=AssistantMessageContentPartAdded(
-                            content_index=0,
-                            content=AssistantMessageContent(text=""),
-                        ),
-                    )
-                    content_part_added = True
-
-                full_text += cleaned
-                yield ThreadItemUpdatedEvent(
-                    item_id=item_id,
-                    update=AssistantMessageContentPartTextDelta(
-                        content_index=0,
-                        delta=cleaned,
-                    ),
-                )
-
-        # ── Finalize ──────────────────────────────────────────────
-        clean_text = CITATION_RE.sub("", full_text).strip()
-        final_content = AssistantMessageContent(text=clean_text)
-        final_item = AssistantMessageItem(
-            thread_id=thread.id,
-            id=item_id,
-            created_at=now,
-            content=[final_content],
-        )
-        await self._append_source_links(final_item, context)
-
-        if content_part_added:
-            yield ThreadItemUpdatedEvent(
-                item_id=item_id,
-                update=AssistantMessageContentPartDone(
-                    content_index=0,
-                    content=final_item.content[0],
-                ),
-            )
-
-        yield ThreadItemDoneEvent(item=final_item)
-
-    # ── Assistants API streaming (no local tool loop) ─────────────
-
-    async def _stream_run(
-        self, thread_id: str, context: dict
-    ) -> AsyncIterator[tuple[str, str]]:
-        """Yield ``(text, event_type)`` tuples from an Assistants run.
-
-        With file_search, retrieval runs entirely on OpenAI's side.
-        No ``requires_action`` / ``submit_tool_outputs`` loop is needed.
-        """
-        async with oai.beta.threads.runs.stream(
-            thread_id=thread_id,
-            assistant_id=OPENAI_ASSISTANT_ID,
-        ) as stream:
-            async for event in stream:
-                ev = event.event
-
-                if ev == "thread.run.step.created":
-                    if event.data.type == "tool_calls":
-                        yield ("", "search_start")
-
-                elif ev == "thread.message.delta":
-                    for part in event.data.delta.content or []:
-                        if hasattr(part, "text") and part.text:
-                            yield (part.text.value or "", "delta")
-
-                elif ev == "thread.message.completed":
-                    # Collect file citations for source link annotations
-                    for content in event.data.content:
-                        if content.type == "text":
-                            for ann in (content.text.annotations or []):
-                                if ann.type == "file_citation":
-                                    context["_file_citations"].append(
-                                        ann.file_citation.file_id
-                                    )
-
-    # ── Source annotations (file_citation → ChatKit EntitySource) ─
-
-    async def _resolve_filename(self, file_id: str) -> str:
-        """Resolve an OpenAI file_id to its original filename (cached)."""
-        if file_id in _file_id_cache:
-            return _file_id_cache[file_id]
-        try:
-            file_obj = await oai.files.retrieve(file_id)
-            _file_id_cache[file_id] = file_obj.filename
-            return file_obj.filename
-        except Exception:
-            logger.warning("Failed to resolve file_id %s", file_id)
-            return ""
-
-    async def _append_source_links(
-        self, item: AssistantMessageItem, context: dict
-    ) -> None:
-        """Map OpenAI file citations to ChatKit entity annotations.
-
-        Resolves file_id → filename → sidebar slug so the frontend
-        ``entities.onClick`` handler can perform SPA navigation.
-        """
-        file_ids = list(set(context.get("_file_citations", [])))
-        if not file_ids:
-            return
-
-        text = item.content[0].text or ""
-        end_index = max(0, len(text) - 1)
-
-        annotations: list[Annotation] = []
-        seen_slugs: set[str] = set()
-
-        for fid in file_ids:
-            filename = await self._resolve_filename(fid)
-            page_info = FILE_SLUG_MAP.get(filename)
-            if not page_info:
-                continue
-
-            slug = page_info["slug"]
-            if slug in seen_slugs:
-                continue
-            seen_slugs.add(slug)
-
-            annotations.append(
-                Annotation(
-                    source=EntitySource(
-                        id=slug,
-                        title=page_info["title"],
-                        interactive=True,
-                        data={"slug": slug},
-                    ),
-                    index=end_index,
-                )
-            )
-
-        if annotations:
-            existing = getattr(item.content[0], "annotations", None) or []
-            item.content[0].annotations = list(existing) + annotations
+            yield event
 
 
 def create_chatkit_server() -> FFRobotChatKitServer:

@@ -3,7 +3,7 @@
 # 测试环境部署脚本 (Ubuntu)
 #
 # 自动安装依赖、配置环境、启动前端 + RAG 后端两个服务。
-# 使用 Vite 开发服务器（包含热更新和 Agent Builder 端点）。
+# 前端使用 Vite 开发服务器（含热更新），后端使用 Uvicorn（含 auto-reload）。
 #
 # Usage:
 #   chmod +x deploy.sh
@@ -45,11 +45,23 @@ stop_service() {
     local pid_file="$1" name="$2"
     if is_running "$pid_file"; then
         local pid=$(cat "$pid_file")
-        kill "$pid" 2>/dev/null && echo "   ⏹  $name (PID $pid) 已停止" || true
-        rm -f "$pid_file"
+        # 先杀整个进程组（setsid 创建的会话），再杀主进程兜底
+        kill -- -"$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
+        echo "   ⏹  $name (PID $pid) 已停止"
     else
         echo "   ○  $name 未在运行"
-        rm -f "$pid_file"
+    fi
+    rm -f "$pid_file"
+}
+
+kill_port() {
+    local port="$1" name="$2"
+    local pids
+    pids=$(lsof -ti :"$port" 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        echo "$pids" | xargs kill -9 2>/dev/null || true
+        echo "   ⏹  清理端口 $port 上的残留进程 ($name)"
+        sleep 1
     fi
 }
 
@@ -74,6 +86,8 @@ if [ "$ACTION" = "stop" ]; then
     echo "⏹  停止服务..."
     stop_service "$FRONTEND_PID" "前端 (Vite)"
     stop_service "$RAG_PID" "RAG Server"
+    kill_port "$CLIENT_PORT" "前端"
+    kill_port "$RAG_PORT" "RAG Server"
     echo ""
     exit 0
 fi
@@ -129,25 +143,19 @@ if ! command -v python3 &>/dev/null; then
 fi
 echo "✅ $(python3 --version)"
 
-# ── 3. Check .env files ──────────────────────────────────────────────
+# ── 3. Check .env file ───────────────────────────────────────────────
 
-if [ ! -f "$SCRIPT_DIR/.env" ]; then
-    if [ -f "$SCRIPT_DIR/.env.example" ]; then
-        cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-    fi
-    echo "⚠️  请编辑 $SCRIPT_DIR/.env 填入 OPENAI_API_KEY 后重新运行"
-    exit 1
-fi
+RAG_ENV="$SCRIPT_DIR/rag_server/.env"
 
-if [ ! -f "$SCRIPT_DIR/rag_server/.env" ]; then
+if [ ! -f "$RAG_ENV" ]; then
     if [ -f "$SCRIPT_DIR/rag_server/.env.example" ]; then
-        cp "$SCRIPT_DIR/rag_server/.env.example" "$SCRIPT_DIR/rag_server/.env"
+        cp "$SCRIPT_DIR/rag_server/.env.example" "$RAG_ENV"
     fi
     echo "⚠️  请编辑 rag_server/.env 填入 OPENAI_API_KEY 后重新运行"
     exit 1
 fi
 
-echo "✅ .env 配置就绪"
+echo "✅ .env 配置就绪 ($RAG_ENV)"
 
 # ── 4. Install frontend dependencies ─────────────────────────────────
 
@@ -185,6 +193,8 @@ echo ""
 
 stop_service "$RAG_PID" "旧 RAG Server"
 stop_service "$FRONTEND_PID" "旧 Vite 前端"
+kill_port "$RAG_PORT" "RAG Server"
+kill_port "$CLIENT_PORT" "前端"
 
 # ── 7. Start RAG server ──────────────────────────────────────────────
 

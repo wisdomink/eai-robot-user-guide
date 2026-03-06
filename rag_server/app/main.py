@@ -1,7 +1,7 @@
 """
 FastAPI entry-point for the FF Robot ChatKit + Search service.
 
-- ChatKit: bridges the ChatKit protocol to the Assistants API.
+- ChatKit: bridges the ChatKit protocol to the Agents SDK.
 - Search:  semantic search via OpenAI Vector Store Search API.
 
     uvicorn app.main:app --reload --port 8000

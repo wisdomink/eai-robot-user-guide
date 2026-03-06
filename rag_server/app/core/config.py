@@ -13,5 +13,5 @@ SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-OPENAI_ASSISTANT_ID: str = os.getenv("OPENAI_ASSISTANT_ID", "")
 OPENAI_VECTOR_STORE_ID: str = os.getenv("OPENAI_VECTOR_STORE_ID", "")
+LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-5")

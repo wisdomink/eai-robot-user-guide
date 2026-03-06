@@ -1,9 +1,13 @@
 """
 FF Master RAG Evaluation Script
 
-Sends test questions to the OpenAI Assistants API (same pipeline as the
-RAG service), collects streaming responses, then uses GPT to score each
-answer against the expected reference.
+Sends test questions to the OpenAI Assistants API, collects streaming
+responses, then uses GPT to score each answer against the expected reference.
+
+NOTE: This script uses the Assistants API directly for evaluation purposes,
+independent of the main ChatKit service (which uses the Agents SDK).
+Requires OPENAI_ASSISTANT_ID in .env — create one via the OpenAI Dashboard
+or use create_assistant.py (legacy).
 
 Usage:
     cd rag_server
@@ -18,6 +22,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -29,7 +34,8 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from openai import AsyncOpenAI
 
-from app.core.config import OPENAI_API_KEY, OPENAI_ASSISTANT_ID
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENAI_ASSISTANT_ID: str = os.getenv("OPENAI_ASSISTANT_ID", "")
 
 EVAL_DIR = Path(__file__).resolve().parent
 TEST_CASES_PATH = EVAL_DIR / "test_cases.json"
@@ -188,6 +194,11 @@ async def main(
     report_path: Path = DEFAULT_REPORT_PATH,
     concurrency: int = 3,
 ):
+    if not OPENAI_ASSISTANT_ID:
+        print("❌ 评测需要 OPENAI_ASSISTANT_ID，请在 .env 中设置。")
+        print("   可通过 OpenAI Dashboard 创建 Assistant，或运行 create_assistant.py（旧方案）。")
+        sys.exit(1)
+
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
     all_cases = data["test_cases"]

@@ -1,0 +1,107 @@
+import { fileSearchTool, Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
+
+
+// Tool definitions
+const fileSearch = fileSearchTool([
+  "vs_69a722dc52dc8191aea4f30fd977662f"
+])
+const ffMasterSupport = new Agent({
+  name: "FF Master Support",
+  instructions: `你是一名专业的技术支持工程师，专门负责 FF Master 系列机器人（FF Master / FF Master Edu / FF Master Ultra Edition）的用户支持。
+
+## 你的知识来源
+
+你的全部知识来自上传到 Vector Store 的用户手册文档（Markdown 文件）。这些文档涵盖：
+
+| 分类 | 内容 |
+|------|------|
+| 安全须知 | 安全指南、安全注意事项、维护管理指南 |
+| 产品介绍 | 装箱清单、产品概述（三个版本对比）、产品结构图、计算单元、电池指示灯、传感器视野、关节名称与限位、坐标系、规格参数 |
+| 操作指南 | 安全预防措施、开机指南、关机指南、充电流程、遥控器使用指南、机器人交互流程、FF Robotic APP 手册、其他操作 |
+| 运动平台 | 运动与操控平台手册 |
+| 联系方式 | 联系信息 |
+
+## 文档文件名 → 页面路径映射
+
+当你引用文档内容时，以下映射关系用于前端页面导航。请在回答末尾标注所引用的文档来源文件名：
+
+```
+safety-instructions.md    → /safety-instructions
+safety-guidelines.md      → /safety-guidelines
+maintenance.md            → /maintenance-guidelines
+packing-list.md           → /packing-list
+product-overview.md       → /product-overview
+computational-unit.md     → /computational-unit
+battery-indicator.md      → /battery-indicator-lights
+sensor-fov.md             → /sensor-fov
+joint-limits.md           → /joint-limits
+coordinate-systems.md     → /coordinate-systems
+specifications.md         → /specifications
+safety-precautions.md     → /safety-precautions
+startup-guide.md          → /startup-guide
+shutdown-guide.md         → /shutdown-guide
+charging-procedure.md     → /charging-procedure
+remote-control.md         → /remote-control
+robot-interaction.md      → /robot-interaction
+ff-robotic-app.md         → /ff-robotic-app
+others.md                 → /others
+locomotion-platform.md    → /locomotion-platform
+contact-information.md    → /contact-information
+```
+
+## 回答规则
+
+1. 收到用户问题后，判断问题语言是中文还是英文，如果是中文则首先将问题翻译成英文，然后再调用系统，系统会自动搜索相关文档（file_search）。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. 如果文档中未找到相关信息，直接回答：\"抱歉，说明书中未找到相关信息。\"
+3. 使用**问题语言**回答，保持简洁、专业、结构化（适当使用列表、表格）。
+4. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+5. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。
+`,
+  model: "gpt-5",
+  tools: [
+    fileSearch
+  ],
+  modelSettings: {
+    reasoning: {
+      effort: "medium",
+      summary: "auto"
+    },
+    store: true
+  }
+});
+
+type WorkflowInput = { input_as_text: string };
+
+
+// Main code entrypoint
+export const runWorkflow = async (workflow: WorkflowInput) => {
+  return await withTrace("AI Robot User Guide Agent", async () => {
+    const state = {
+
+    };
+    const conversationHistory: AgentInputItem[] = [
+      { role: "user", content: [{ type: "input_text", text: workflow.input_as_text }] }
+    ];
+    const runner = new Runner({
+      traceMetadata: {
+        __trace_source__: "agent-builder",
+        workflow_id: "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+      }
+    });
+    const ffMasterSupportResultTemp = await runner.run(
+      ffMasterSupport,
+      [
+        ...conversationHistory
+      ]
+    );
+    conversationHistory.push(...ffMasterSupportResultTemp.newItems.map((item) => item.rawItem));
+
+    if (!ffMasterSupportResultTemp.finalOutput) {
+        throw new Error("Agent result is undefined");
+    }
+
+    const ffMasterSupportResult = {
+      output_text: ffMasterSupportResultTemp.finalOutput ?? ""
+    };
+  });
+}

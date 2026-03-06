@@ -3,3 +3,4 @@ uvicorn[standard]>=0.34.0
 python-dotenv>=1.0.0
 openai-chatkit>=1.6.0
 openai>=2.0.0
+openai-agents>=0.1.0

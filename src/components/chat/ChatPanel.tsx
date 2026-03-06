@@ -13,6 +13,7 @@ export default function ChatPanel() {
   const handleClose = useCallback(() => setIsOpen(false), [])
 
   const { control } = useChatKit({
+    locale: 'en',
     api: {
       url: CHATKIT_API_URL,
       domainKey: CHATKIT_DOMAIN_KEY,
