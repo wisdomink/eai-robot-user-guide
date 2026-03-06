@@ -10,8 +10,9 @@ const app = (
   </StrictMode>
 )
 
-// If the root has pre-rendered content (SSG), hydrate; otherwise create fresh
-if (root.innerHTML.trim()) {
+const hasSSRContent = root.innerHTML.replace(/<!--.*?-->/g, '').trim().length > 0
+
+if (hasSSRContent) {
   hydrateRoot(root, app)
 } else {
   createRoot(root).render(app)

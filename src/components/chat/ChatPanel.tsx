@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 
-const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || 'http://localhost:8000/chatkit'
+const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || '/chatkit'
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
 
 export default function ChatPanel() {
