@@ -33,7 +33,7 @@
         { "title": "Shutdown Guide", "slug": "/shutdown-guide", "file": "shutdown-guide.md" },
         { "title": "Charging Procedure", "slug": "/charging-procedure", "file": "charging-procedure.md" },
         { "title": "Remote Control User Guide", "slug": "/remote-control", "file": "remote-control.md" },
-        { "title": "Robot Interaction Procedures Guide", "slug": "/robot-interaction", "file": "robot-interaction.md" },
+        { "title": "Robot Interaction Procedure Guide", "slug": "/robot-interaction", "file": "robot-interaction.md" },
         { "title": "FF Robotic APP Manual", "slug": "/ff-robotic-app", "file": "ff-robotic-app.md" },
         { "title": "Others", "slug": "/others", "file": "others.md" }
       ]

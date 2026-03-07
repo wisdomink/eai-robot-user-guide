@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections import defaultdict
 from collections.abc import AsyncIterator
 
@@ -35,9 +36,86 @@ from chatkit.types import (
     UserMessageItem,
 )
 
-from app.core.config import LLM_MODEL, OPENAI_VECTOR_STORE_ID, SIDEBAR_PATH
+from app.core.config import LLM_MODEL, OPENAI_VECTOR_STORE_ID, PUBLIC_BASE_URL, SIDEBAR_PATH
 
 logger = logging.getLogger(__name__)
+
+# ── Image URL rewriting (ChatKit iframe can't resolve relative paths) ─
+
+_MD_IMG_RE = re.compile(r"(!\[[^\]]*\]\()(/images/[^)]+)(\))")
+_HTML_IMG_RE = re.compile(r"""(<img[^>]*\ssrc=["'])(/images/[^"']+)(["'])""")
+
+
+def _rewrite_image_urls(text: str) -> str:
+    """Convert relative /images/… paths to absolute URLs so that images
+    render correctly inside the ChatKit iframe (hosted on cdn.platform.openai.com)."""
+    if not PUBLIC_BASE_URL:
+        return text
+    text = _MD_IMG_RE.sub(rf"\g<1>{PUBLIC_BASE_URL}\2\3", text)
+    text = _HTML_IMG_RE.sub(rf"\g<1>{PUBLIC_BASE_URL}\2\3", text)
+    return text
+
+
+def _compute_rewrite_offset(original_text: str, position: int) -> int:
+    """Calculate how many extra characters URL rewriting inserts before *position*."""
+    if not PUBLIC_BASE_URL:
+        return 0
+    offset = 0
+    prefix_len = len(PUBLIC_BASE_URL)
+    for pattern in (_MD_IMG_RE, _HTML_IMG_RE):
+        for m in pattern.finditer(original_text):
+            if m.start(2) < position:
+                offset += prefix_len
+    return offset
+
+
+class _EventStreamRewriter:
+    """Stateful processor that rewrites image URLs in text events **and**
+    adjusts annotation character-position indices by the same offset so
+    citations never land inside an expanded URL."""
+
+    def __init__(self) -> None:
+        self._text_buf: dict[tuple[str, int], str] = {}
+
+    def process(self, event: ThreadStreamEvent) -> ThreadStreamEvent:
+        if not PUBLIC_BASE_URL:
+            return event
+
+        if event.type in ("thread.item.added", "thread.item.done"):
+            item = event.item
+            if hasattr(item, "content") and isinstance(item.content, list):
+                for part in item.content:
+                    if hasattr(part, "text") and isinstance(part.text, str):
+                        part.text = _rewrite_image_urls(part.text)
+
+        elif event.type == "thread.item.updated":
+            update = event.update
+
+            # Text delta — accumulate original text, rewrite the delta
+            if hasattr(update, "delta") and isinstance(update.delta, str):
+                item_id = event.item_id
+                ci = getattr(update, "content_index", 0)
+                key = (item_id, ci)
+                self._text_buf.setdefault(key, "")
+                self._text_buf[key] += update.delta
+                update.delta = _rewrite_image_urls(update.delta)
+
+            # content_part.done — rewrite complete text
+            if hasattr(update, "content") and hasattr(update.content, "text"):
+                update.content.text = _rewrite_image_urls(update.content.text)
+
+            # Annotation added — shift index by accumulated URL expansion
+            if hasattr(update, "annotation"):
+                ann = update.annotation
+                if ann is not None and ann.index is not None:
+                    item_id = event.item_id
+                    ci = getattr(update, "content_index", 0)
+                    key = (item_id, ci)
+                    original = self._text_buf.get(key, "")
+                    ann.index += _compute_rewrite_offset(original, ann.index)
+
+        return event
+
 
 # ── Agent Instructions (from AgentBuilder export) ────────────────────
 
@@ -301,11 +379,14 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         # stream_agent_response handles all event conversion automatically;
-        # FFRobotConverter ensures file_citation → EntitySource (not FileSource)
+        # FFRobotConverter ensures file_citation → EntitySource (not FileSource).
+        # _EventStreamRewriter rewrites image URLs while keeping annotation
+        # indices in sync so citations never split an expanded URL.
+        rewriter = _EventStreamRewriter()
         async for event in stream_agent_response(
             agent_context, result, converter=FFRobotConverter()
         ):
-            yield event
+            yield rewriter.process(event)
 
 
 def create_chatkit_server() -> FFRobotChatKitServer:
