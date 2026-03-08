@@ -37,16 +37,16 @@
 ## Project Architecture
 
 ### Content Management
-- Navigation structure: `src/content/sidebar.json`
+- Navigation structure: `src/content/sidebar-{product}.json` (e.g. `sidebar-master-ultra.json`)
 - Page content: `src/content/pages/*.md` (Markdown files)
 - Content registry: `src/content/index.ts` (imports all .md via `import.meta.glob`)
-- To add a new page: (1) create `.md` file, (2) add entry to `sidebar.json`
+- To add a new page: (1) create `.md` file, (2) add entry to the corresponding `sidebar-{product}.json`
 
 ### Component Structure
 ```
 src/
 ├── content/           ← Markdown content + config
-│   ├── sidebar.json   ← Navigation tree
+│   ├── sidebar-*.json ← Navigation tree (per product)
 │   ├── index.ts       ← Content registry
 │   └── pages/*.md     ← Page content
 ├── components/

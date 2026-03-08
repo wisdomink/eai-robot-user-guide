@@ -188,12 +188,12 @@ assistant_agent = Agent(
 
 
 def _build_file_slug_map() -> dict[str, dict]:
-    """Build {filename: {slug, title}} from sidebar.json."""
+    """Build {filename: {slug, title}} from sidebar-master-ultra.json."""
     try:
         with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
             sidebar = json.load(f)
     except FileNotFoundError:
-        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
+        logger.warning("sidebar-master-ultra.json not found at %s", SIDEBAR_PATH)
         return {}
 
     result: dict[str, dict] = {}

@@ -1,15 +1,38 @@
-import sidebarConfig from './sidebar.json'
+import sidebarConfig from './sidebar-master-ultra.json'
+import futuristSidebarConfig from './sidebar-futurist-ultra.json'
+import aegiseduSidebarConfig from './sidebar-aegis-edu.json'
+import aegisSidebarConfig from './sidebar-aegis-ultra.json'
 
 // Eagerly import all markdown files at build time
-const mdModules = import.meta.glob('./pages/*.md', {
+const masterModules = import.meta.glob('./pages/master-ultra/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
+const futuristModules = import.meta.glob('./pages/futurist-ultra/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const aegiseduModules = import.meta.glob('./pages/aegis-edu/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const aegisModules = import.meta.glob('./pages/aegis-ultra/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const mdModules: Record<string, string> = { ...masterModules, ...futuristModules, ...aegiseduModules, ...aegisModules }
+
 /**
  * Get raw markdown content for a page by filename.
- * @param filename - e.g. "safety-instructions.md"
+ * @param filename - e.g. "master-ultra/safety-instructions.md" or "futurist-ultra/foreword.md"
  */
 export function getPageContent(filename: string): string {
   const key = `./pages/${filename}`
@@ -34,20 +57,24 @@ export function stripMarkdown(raw: string): string {
 
 /**
  * Get all pages with their raw text (markdown stripped) for search indexing.
+ * Includes pages from all product sidebars.
  */
 export function getAllPagesForSearch() {
-  return sidebarConfig.sections.flatMap(section =>
-    section.pages.map(page => {
-      const raw = getPageContent(page.file)
-      const text = stripMarkdown(raw)
-      return {
-        title: page.title,
-        section: section.title,
-        slug: page.slug,
-        file: page.file,
-        text,
-      }
-    })
+  const allSidebars = [sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig]
+  return allSidebars.flatMap(sidebar =>
+    sidebar.sections.flatMap(section =>
+      section.pages.map(page => {
+        const raw = getPageContent(page.file)
+        const text = stripMarkdown(raw)
+        return {
+          title: page.title,
+          section: section.title,
+          slug: page.slug,
+          file: page.file,
+          text,
+        }
+      })
+    )
   )
 }
 
@@ -55,4 +82,4 @@ export type SidebarConfig = typeof sidebarConfig
 export type SectionConfig = SidebarConfig['sections'][number]
 export type PageConfig = SectionConfig['pages'][number]
 
-export { sidebarConfig }
+export { sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig }

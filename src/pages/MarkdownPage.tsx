@@ -33,7 +33,7 @@ export default function MarkdownPage({ file, title }: MarkdownPageProps) {
   )
 
   const content = getPageContent(file)
-  const isHome = file === 'home.md'
+  const isHome = file.endsWith('/home.md')
 
   return (
     <ContentLayout fullWidth={isHome}>

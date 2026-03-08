@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { sidebarConfig } from '@/content'
+import { useProduct } from '@/hooks/useProductContext'
 import SidebarNavItem from './SidebarNavItem'
 import SearchBar from '@/components/search/SearchBar'
 
@@ -8,6 +8,9 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
+  const { current } = useProduct()
+  const sidebarConfig = current.sidebar
+
   return (
     <nav className="py-4 px-3 space-y-1" aria-label="Manual navigation">
       {/* Search */}
@@ -18,7 +21,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
       {/* Clickable title → cover page */}
       <div className="px-3 pb-2">
         <Link
-          to="/"
+          to={current.homeRoute}
           onClick={onNavigate}
           className="font-roboto font-semibold text-navy text-[var(--fs-sidebar-title)] leading-tight hover:text-ios-blue transition-colors"
         >

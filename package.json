@@ -12,7 +12,16 @@
     "preview": "vite preview",
     "convert": "node scripts/convert.mjs",
     "convert:text": "node scripts/convert.mjs --text-only",
-    "convert:images": "node scripts/convert.mjs --images-only"
+    "convert:images": "node scripts/convert.mjs --images-only",
+    "convert:futurist": "node scripts/convert-futurist.mjs",
+    "convert:futurist:text": "node scripts/convert-futurist.mjs --text-only",
+    "convert:futurist:images": "node scripts/convert-futurist.mjs --images-only",
+    "convert:aegisedu": "node scripts/convert-aegisedu.mjs",
+    "convert:aegisedu:text": "node scripts/convert-aegisedu.mjs --text-only",
+    "convert:aegisedu:images": "node scripts/convert-aegisedu.mjs --images-only",
+    "convert:aegis": "node scripts/convert-aegis.mjs",
+    "convert:aegis:text": "node scripts/convert-aegis.mjs --text-only",
+    "convert:aegis:images": "node scripts/convert-aegis.mjs --images-only"
   },
   "dependencies": {
     "@openai/chatkit-react": "^1.5.0",

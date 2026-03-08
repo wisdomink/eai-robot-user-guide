@@ -9,7 +9,7 @@ load_dotenv()
 RAG_SERVER_ROOT = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = RAG_SERVER_ROOT.parent
 CONTENT_DIR = PROJECT_ROOT / "src" / "content"
-SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
+SIDEBAR_PATH = CONTENT_DIR / "sidebar-master-ultra.json"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

@@ -1,0 +1,56 @@
+{
+  "title": "FF Master Ultra Edition",
+  "sections": [
+    {
+      "id": "preliminary",
+      "title": "Preliminary Notice",
+      "pages": [
+        { "title": "Safety Instructions", "slug": "/master-ultra/safety-instructions", "file": "master-ultra/safety-instructions.md" },
+        { "title": "Safety Guidelines", "slug": "/master-ultra/safety-guidelines", "file": "master-ultra/safety-guidelines.md" },
+        { "title": "Maintenance and Management Guidelines", "slug": "/master-ultra/maintenance-guidelines", "file": "master-ultra/maintenance.md" }
+      ]
+    },
+    {
+      "id": "about",
+      "title": "About FF Master",
+      "pages": [
+        { "title": "Packing List", "slug": "/master-ultra/packing-list", "file": "master-ultra/packing-list.md" },
+        { "title": "Product Overview", "slug": "/master-ultra/product-overview", "file": "master-ultra/product-overview.md" },
+        { "title": "Computational Unit", "slug": "/master-ultra/computational-unit", "file": "master-ultra/computational-unit.md" },
+        { "title": "Battery Indicator Lights", "slug": "/master-ultra/battery-indicator-lights", "file": "master-ultra/battery-indicator.md" },
+        { "title": "Sensor Field of View", "slug": "/master-ultra/sensor-fov", "file": "master-ultra/sensor-fov.md" },
+        { "title": "Joint Name and Joint Limit", "slug": "/master-ultra/joint-limits", "file": "master-ultra/joint-limits.md" },
+        { "title": "Coordinate Systems", "slug": "/master-ultra/coordinate-systems", "file": "master-ultra/coordinate-systems.md" },
+        { "title": "Specifications", "slug": "/master-ultra/specifications", "file": "master-ultra/specifications.md" }
+      ]
+    },
+    {
+      "id": "operation",
+      "title": "Operation Guide",
+      "pages": [
+        { "title": "Safety Precautions", "slug": "/master-ultra/safety-precautions", "file": "master-ultra/safety-precautions.md" },
+        { "title": "Start-Up Guide", "slug": "/master-ultra/startup-guide", "file": "master-ultra/startup-guide.md" },
+        { "title": "Shutdown Guide", "slug": "/master-ultra/shutdown-guide", "file": "master-ultra/shutdown-guide.md" },
+        { "title": "Charging Procedure", "slug": "/master-ultra/charging-procedure", "file": "master-ultra/charging-procedure.md" },
+        { "title": "Remote Control User Guide", "slug": "/master-ultra/remote-control", "file": "master-ultra/remote-control.md" },
+        { "title": "Robot Interaction Procedure Guide", "slug": "/master-ultra/robot-interaction", "file": "master-ultra/robot-interaction.md" },
+        { "title": "FF Robotic APP Manual", "slug": "/master-ultra/ff-robotic-app", "file": "master-ultra/ff-robotic-app.md" },
+        { "title": "Others", "slug": "/master-ultra/others", "file": "master-ultra/others.md" }
+      ]
+    },
+    {
+      "id": "locomotion",
+      "title": "Locomotion & Manipulation Platform Manual",
+      "pages": [
+        { "title": "Locomotion & Manipulation Platform Manual", "slug": "/master-ultra/locomotion-platform", "file": "master-ultra/locomotion-platform.md" }
+      ]
+    },
+    {
+      "id": "contact",
+      "title": "Contact Information",
+      "pages": [
+        { "title": "Contact Information", "slug": "/master-ultra/contact-information", "file": "master-ultra/contact-information.md" }
+      ]
+    }
+  ]
+}

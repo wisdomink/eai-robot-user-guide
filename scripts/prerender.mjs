@@ -8,7 +8,7 @@ const dist = path.resolve(root, 'dist')
 
 // Read sidebar config to get all routes
 const sidebar = JSON.parse(
-  fs.readFileSync(path.resolve(root, 'src/content/sidebar.json'), 'utf-8')
+  fs.readFileSync(path.resolve(root, 'src/content/sidebar-master-ultra.json'), 'utf-8')
 )
 
 // Collect all routes: home + all section pages

@@ -71,11 +71,11 @@ eai-robot-user-guide/
 └── src/
     ├── main.tsx                 ← 客户端入口
     ├── entry-server.tsx         ← SSG 服务端入口（renderToString）
-    ├── App.tsx                  ← 路由配置（从 sidebar.json 自动生成）
+    ├── App.tsx                  ← 路由配置（从 sidebar-*.json 自动生成）
     ├── index.css                ← Tailwind + .md-body 样式 + 搜索高亮
     │
     ├── content/                 ← 内容管理（核心）
-    │   ├── sidebar.json         ← 导航树配置
+    │   ├── sidebar-*.json       ← 导航树配置（按产品划分）
     │   ├── index.ts             ← 内容注册表（import.meta.glob）
     │   ├── chunks.ts            ← 内容分块（按 ## 标题切分，用于本地搜索）
     │   └── pages/               ← Markdown 页面
@@ -194,7 +194,7 @@ cd rag_server
 
 **第 1 步** — 创建 Markdown 文件 `src/content/pages/new-topic.md`
 
-**第 2 步** — 在 `src/content/sidebar.json` 的对应 section 中添加条目：
+**第 2 步** — 在对应产品的 `src/content/sidebar-{product}.json` 中添加条目：
 
 ```json
 {
@@ -246,7 +246,7 @@ npm run convert:images       # 仅提取图片
 项目通过 SSG（Static Site Generation）预渲染实现 SEO 优化：
 
 - `src/entry-server.tsx` — 使用 `renderToString` 在服务端渲染每个路由
-- `scripts/prerender.mjs` — 构建后遍历 `sidebar.json` 中的所有路由，生成静态 HTML
+- `scripts/prerender.mjs` — 构建后遍历 `sidebar-master-ultra.json` 中的所有路由，生成静态 HTML
 - 每个页面通过 `document.title` 动态设置 SEO 友好的标题
 
 构建时 `npm run build` 会自动完成预渲染，无需额外配置。

@@ -25,7 +25,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONTENT_DIR = PROJECT_ROOT / "src" / "content"
-SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
+SIDEBAR_PATH = CONTENT_DIR / "sidebar-master-ultra.json"
 PAGES_DIR = CONTENT_DIR / "pages"
 
 # ── Instructions ──────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ contact-information.md    → /contact-information
 
 
 def build_file_list() -> list[Path]:
-    """Collect all page markdown files referenced in sidebar.json."""
+    """Collect all page markdown files referenced in sidebar-master-ultra.json."""
     with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
         sidebar = json.load(f)
 

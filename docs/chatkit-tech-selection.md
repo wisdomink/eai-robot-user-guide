@@ -129,13 +129,13 @@ async for event in stream_agent_response(context, result, converter=CustomConver
 │  (prompt/model/     │      │  + file_citation → Entity-   │      │  .onClick    │
 │   file_search)      │      │    Source 映射               │      │  (SPA 导航)   │
 │                     │      │                              │      │              │
-│  Vector Store       │      │  sidebar.json 映射表         │      │  React       │
+│  Vector Store       │      │  sidebar-*.json 映射表       │      │  React       │
 │  (文档知识库)        │      │  (filename → page slug)     │      │  Router      │
 └─────────────────────┘      └─────────────────────────────┘      └──────────────┘
       配置层（免部署）               运行层（桥接 + 映射）              展示层
 ```
 
-**引用处理：** 服务端收集 Assistants API 返回的 `file_citation`，通过 `sidebar.json` 映射为页面 slug，输出 `EntitySource`：
+**引用处理：** 服务端收集 Assistants API 返回的 `file_citation`，通过 `sidebar-master-ultra.json` 映射为页面 slug，输出 `EntitySource`：
 
 ```python
 # file_citation.file_id → filename → sidebar slug → EntitySource

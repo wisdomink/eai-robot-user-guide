@@ -1,0 +1,6 @@
+# Legal Statement
+
+Before using this product, users must carefully read the Manual; the quadruped robot is here referred to as the "robot dog", and strictly follow the operating instructions provided herein.
+The company shall not be held liable for any property damage or personal injury resulting from misuse or failure to adhere to the guidelines in this Manual. This product consists of multiple components-please ensure that it is kept out of reach of children to prevent accidents. This product is intended for use by individuals aged 18 and above only.
+To prolong the service life of the product, do not use it in environments with high temperature or high pressure.
+This Manual is intended to provide comprehensive information on the product's functions and usage. However, due to continuous improvements and design updates, there may be discrepancies between the actual product and the descriptions in this Manual. In case of any differences in color, appearance, or other aspects, the actual product shall prevail.
