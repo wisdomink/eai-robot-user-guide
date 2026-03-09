@@ -1,7 +1,4 @@
-import sidebarConfig from './sidebar-master-ultra.json'
-import futuristSidebarConfig from './sidebar-futurist-ultra.json'
-import aegiseduSidebarConfig from './sidebar-aegis-edu.json'
-import aegisSidebarConfig from './sidebar-aegis-ultra.json'
+import allSidebars from './sidebar.json'
 
 // Eagerly import all markdown files at build time
 const masterModules = import.meta.glob('./pages/master-ultra/*.md', {
@@ -60,8 +57,7 @@ export function stripMarkdown(raw: string): string {
  * Includes pages from all product sidebars.
  */
 export function getAllPagesForSearch() {
-  const allSidebars = [sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig]
-  return allSidebars.flatMap(sidebar =>
+  return Object.values(allSidebars).flatMap(sidebar =>
     sidebar.sections.flatMap(section =>
       section.pages.map(page => {
         const raw = getPageContent(page.file)
@@ -78,8 +74,6 @@ export function getAllPagesForSearch() {
   )
 }
 
-export type SidebarConfig = typeof sidebarConfig
+export type SidebarConfig = (typeof allSidebars)[keyof typeof allSidebars]
 export type SectionConfig = SidebarConfig['sections'][number]
 export type PageConfig = SectionConfig['pages'][number]
-
-export { sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig }

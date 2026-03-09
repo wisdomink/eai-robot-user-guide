@@ -6,16 +6,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 const dist = path.resolve(root, 'dist')
 
-// Read sidebar config to get all routes
-const sidebar = JSON.parse(
-  fs.readFileSync(path.resolve(root, 'src/content/sidebar-master-ultra.json'), 'utf-8')
+// Read merged sidebar config to get all routes
+const allSidebars = JSON.parse(
+  fs.readFileSync(path.resolve(root, 'src/content/sidebar.json'), 'utf-8')
 )
 
-// Collect all routes: home + all section pages
+// Collect all routes: home + all section pages from every product
 const routes = [
-  { slug: '/', title: 'FF Master Ultra Edition' },
-  ...sidebar.sections.flatMap(section =>
-    section.pages.map(page => ({ slug: page.slug, title: page.title }))
+  { slug: '/', title: 'EAI Robot - User Manual' },
+  ...Object.values(allSidebars).flatMap(sidebar =>
+    sidebar.sections.flatMap(section =>
+      section.pages.map(page => ({ slug: page.slug, title: page.title }))
+    )
   ),
 ]
 

@@ -1,19 +1,15 @@
 import { Link } from 'react-router-dom'
 import logoDark from '@/assets/icons/logo-dark.svg'
-import { useProduct, ALL_PRODUCTS, type ProductId } from '@/hooks/useProductContext'
-import clsx from 'clsx'
 
 interface HeaderProps {
   onMenuToggle: () => void
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
-  const { current, switchProduct } = useProduct()
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[var(--header-height)] px-[clamp(12px,1.2vw,24px)] bg-white border-b border-gray-200">
-      {/* Left: Hamburger + Product tabs */}
-      <div className="flex items-center gap-1">
+      {/* Left: Hamburger */}
+      <div className="flex items-center">
         <button
           onClick={onMenuToggle}
           className="p-[clamp(4px,0.5vw,10px)] text-navy hover:bg-gray-100 rounded-md transition-colors"
@@ -33,23 +29,6 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-
-        <div className="flex items-center ml-1 gap-0.5 bg-gray-100 rounded-lg p-0.5">
-          {ALL_PRODUCTS.map(product => (
-            <button
-              key={product.id}
-              onClick={() => switchProduct(product.id as ProductId)}
-              className={clsx(
-                'px-3 py-1 text-xs font-semibold rounded-md transition-all font-roboto',
-                current.id === product.id
-                  ? 'bg-white text-navy shadow-sm'
-                  : 'text-gray-500 hover:text-navy'
-              )}
-            >
-              {product.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Right: Chat + Company Logo */}

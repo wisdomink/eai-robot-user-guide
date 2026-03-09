@@ -139,7 +139,7 @@ uvicorn app.main:app --reload --port 8000
 AI 回答中的引用来源支持点击跳转到对应手册页面，实现原理：
 
 1. `FileSearchTool` 检索文档后，模型回答会包含 `file_citation`（引用了哪个文件）
-2. `FFRobotConverter` 将 `file_citation` 中的文件名通过 `sidebar-master-ultra.json` 映射为页面 slug
+2. `FFRobotConverter` 将 `file_citation` 中的文件名通过 `sidebar.json` 映射为页面 slug
 3. 输出 `EntitySource`（而非默认的 `FileSource`），前端 `entities.onClick` 可拦截
 4. 前端通过 React Router 执行 SPA 导航到对应页面
 

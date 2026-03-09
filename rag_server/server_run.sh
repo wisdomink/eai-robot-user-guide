@@ -35,8 +35,18 @@ if [ -z "${OPENAI_API_KEY:-}" ] || [ "$OPENAI_API_KEY" = "sk-your-openai-key-her
     exit 1
 fi
 
-if [ -z "${OPENAI_VECTOR_STORE_ID:-}" ] || [ "$OPENAI_VECTOR_STORE_ID" = "vs_your-vector-store-id-here" ]; then
-    echo "❌ 请在 $ENV_FILE 中设置 OPENAI_VECTOR_STORE_ID"
+VS_COUNT=0
+for vs_var in OPENAI_VECTOR_STORE_MASTER_ULTRA_ID OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID \
+              OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID OPENAI_VECTOR_STORE_AEGIS_EDU_ID \
+              OPENAI_VECTOR_STORE_ROBOT_ALL_ID; do
+    val="${!vs_var:-}"
+    if [ -n "$val" ] && [ "$val" != "vs_xxx" ]; then
+        VS_COUNT=$((VS_COUNT + 1))
+    fi
+done
+
+if [ "$VS_COUNT" -eq 0 ]; then
+    echo "⚠️  未在 $ENV_FILE 中检测到任何有效的 Vector Store ID"
     echo "   如尚未创建 Vector Store，请先运行: python create_vector_store.py"
     exit 1
 fi
@@ -68,6 +78,6 @@ echo "   ChatKit 端点:    http://localhost:$PORT/chatkit"
 echo "   语义搜索端点:    http://localhost:$PORT/search"
 echo "   健康检查:        http://localhost:$PORT/health"
 echo "   Model:          ${LLM_MODEL:-gpt-5}"
-echo "   Vector Store:   $OPENAI_VECTOR_STORE_ID"
+echo "   Vector Stores:  $VS_COUNT configured"
 echo ""
 exec uvicorn app.main:app --reload --host 0.0.0.0 --port "$PORT"

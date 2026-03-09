@@ -1,107 +1,600 @@
-import { fileSearchTool, Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
+from agents import FileSearchTool, Agent, ModelSettings, TResponseInputItem, Runner, RunConfig, trace
+from pydantic import BaseModel
+from openai.types.shared.reasoning import Reasoning
+
+# Tool definitions
+file_search = FileSearchTool(
+  vector_store_ids=[
+    "vs_69aea51913888191a902bfe4022c7081"
+  ]
+)
+file_search1 = FileSearchTool(
+  vector_store_ids=[
+    "vs_69aea44a8068819181d19714f1becad5"
+  ]
+)
+file_search2 = FileSearchTool(
+  vector_store_ids=[
+    "vs_69aea56b0b788191bd7c1c3f3c3a4e63"
+  ]
+)
+file_search3 = FileSearchTool(
+  vector_store_ids=[
+    "vs_69aea59c82708191b12682d984c32342"
+  ]
+)
+file_search4 = FileSearchTool(
+  vector_store_ids=[
+    "vs_69aea5d44fbc8191a819aa1245d7d50d"
+  ]
+)
+class FfRobotTriageSchema(BaseModel):
+  input_lang: str
+  query_type: str
+  query_text: str
 
 
-// Tool definitions
-const fileSearch = fileSearchTool([
-  "vs_69a722dc52dc8191aea4f30fd977662f"
-])
-const ffMasterSupport = new Agent({
-  name: "FF Master Support",
-  instructions: `你是一名专业的技术支持工程师，专门负责 FF Master 系列机器人（FF Master / FF Master Edu / FF Master Ultra Edition）的用户支持。
+ff_robot_triage = Agent(
+  name="FF Robot Triage",
+  instructions="""你是 FF Robot 系列产品的智能客服预处理器。你的任务是对用户输入进行语言检测、翻译、产品识别和查询扩写，然后输出 JSON 结果。你不回答任何技术问题。
 
-## 你的知识来源
+## 处理步骤
 
-你的全部知识来自上传到 Vector Store 的用户手册文档（Markdown 文件）。这些文档涵盖：
+### Step 1：语言检测
+判断用户输入的语言：
+- 中文 → input_lang = \"cn\"
+- 英文 → input_lang = \"en\"
+
+### Step 2：翻译为英文
+- 如果 input_lang = \"en\"，将用户原始输入直接作为 query_text 的基础
+- 如果 input_lang = \"cn\"，将用户输入翻译为准确的英文，作为 query_text 的基础
+
+### Step 3：产品识别
+根据用户问题中的关键词，判断涉及的产品，输出对应的 query_type 值：
+
+#### query_type = \"master-ultra\"
+关键词：Master Ultra、Master、超级版、master-ultra、人形机器人（双足行走）、关节限位、坐标系、传感器视野、计算单元、运动平台、locomotion
+
+#### query_type = \"futurist-ultra\"
+关键词：Futurist Ultra、Futurist、未来者、futurist-ultra、轮式机器人、运动控制、motion control
+
+#### query_type = \"aegis-ultra\"
+关键词：Aegis Ultra、Aegis、盾卫超级版、aegis-ultra、灯效、扩展接口、expansion interface
+
+#### query_type = \"aegis-edu\"
+关键词：Aegis EDU、EDU、教育版、aegis-edu、OTA 升级、APP 使用指南、尾灯
+
+#### query_type = \"general\"
+以下情况使用 general：
+- 用户同时提到多个产品（如 \"Master 和 Aegis 有什么区别？\"）
+- 用户未指定具体产品（如 \"怎么充电？\"\"遥控器怎么用？\"）
+- 用户的问题是关于公司、售后、联系方式等通用信息
+- 无法确定是哪个产品
+
+### Step 4：查询扩写
+确定产品后，对 query_text 进行扩写以提高文档检索质量：
+- 补充该产品的相关同义词、技术术语
+- 增加可能的上下文关键词
+- 保持英文，保持简洁（不要超过 3 句话）
+
+示例：
+- 用户输入：\"Master Ultra 怎么充电？\"
+- query_text：\"How to charge FF Master Ultra? Charging procedure, battery charging steps, power supply connection\"
+
+## 行为规则
+
+1. **不要回答任何技术问题**，你只负责预处理
+2. **不要向用户询问产品型号**，根据上下文直接判断，无法判断时输出 \"general\"
+3. 只输出 JSON，不要输出任何其他文字""",
+  model="gpt-5",
+  output_type=FfRobotTriageSchema,
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="low"
+    )
+  )
+)
+
+
+futurist_ultra_support = Agent(
+  name="Futurist Ultra Support",
+  instructions="""你是 FF Futurist Ultra 机器人的专业技术支持工程师。
+
+回答语言：{{input_lang}}（cn=中文，en=英文）
+搜索查询：{{query_text}}
+
+## 知识来源
+
+你的全部知识来自上传到 Vector Store 的 FF Futurist Ultra 用户手册文档（Markdown 文件）。涵盖：
+
+| 分类 | 内容 |
+|------|------|
+| 前言 | 产品前言 |
+| 安全防护 | 安全指南、使用注意事项、维护管理指南 |
+| 产品概述 | 产品介绍 |
+| 快速入门 | 开机、关机、运动控制、充电与换电 |
+| 维护建议 | 日常维护、电池维护 |
+| 产品规格 | 产品组成、基本参数、工作空间 |
+| 标签说明 | 产品标签描述 |
+| 射频规格 | RF 规格参数 |
+
+## 文档文件名 → 页面路径映射
+
+futurist-ultra-foreword.md                → /futurist-ultra/foreword
+futurist-ultra-safety-guide.md            → /futurist-ultra/safety-guide
+futurist-ultra-precautions.md             → /futurist-ultra/precautions
+futurist-ultra-maintenance-guidelines.md  → /futurist-ultra/maintenance-guidelines
+futurist-ultra-product-introduction.md    → /futurist-ultra/product-introduction
+futurist-ultra-startup.md                 → /futurist-ultra/startup
+futurist-ultra-shutdown.md                → /futurist-ultra/shutdown
+futurist-ultra-motion-control.md          → /futurist-ultra/motion-control
+futurist-ultra-charging.md                → /futurist-ultra/charging
+futurist-ultra-routine-maintenance.md     → /futurist-ultra/routine-maintenance
+futurist-ultra-battery-maintenance.md     → /futurist-ultra/battery-maintenance
+futurist-ultra-product-composition.md     → /futurist-ultra/product-composition
+futurist-ultra-basic-parameters.md        → /futurist-ultra/basic-parameters
+futurist-ultra-workspace.md               → /futurist-ultra/workspace
+futurist-ultra-product-labels.md          → /futurist-ultra/product-labels
+futurist-ultra-rf-specifications.md       → /futurist-ultra/rf-specifications
+
+## 搜索与回答规则
+
+1. **搜索**：使用上方提供的 {{query_text}}（已翻译为英文并扩写）调用 file_search。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. **回答语言**：根据 {{input_lang}} 决定回答语言。\"cn\" → 中文，\"en\" → 英文。
+3. 如果文档中未找到相关信息，直接回答：\"抱歉，FF Futurist Ultra 说明书中未找到相关信息。\"（或对应英文）
+4. 保持简洁、专业、结构化（适当使用列表、表格）。
+5. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+6. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。""",
+  model="gpt-5",
+  tools=[
+    file_search
+  ],
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="medium",
+      summary="auto"
+    )
+  )
+)
+
+
+master_ultra_support = Agent(
+  name="Master Ultra Support",
+  instructions="""你是 FF Master Ultra 人形机器人的专业技术支持工程师。
+
+回答语言：{{input_lang}}（cn=中文，en=英文）
+搜索查询：{{query_text}}
+
+## 知识来源
+
+你的全部知识来自上传到 Vector Store 的 FF Master Ultra 用户手册文档（Markdown 文件）。涵盖：
 
 | 分类 | 内容 |
 |------|------|
 | 安全须知 | 安全指南、安全注意事项、维护管理指南 |
-| 产品介绍 | 装箱清单、产品概述（三个版本对比）、产品结构图、计算单元、电池指示灯、传感器视野、关节名称与限位、坐标系、规格参数 |
-| 操作指南 | 安全预防措施、开机指南、关机指南、充电流程、遥控器使用指南、机器人交互流程、FF Robotic APP 手册、其他操作 |
+| 产品介绍 | 装箱清单、产品概述、产品结构图、计算单元、电池指示灯、传感器视野、关节名称与限位、坐标系、规格参数 |
+| 操作指南 | 安全预防措施、开机指南、关机指南、充电流程、遥控器使用、机器人交互流程、FF Robotic APP 手册、其他操作 |
 | 运动平台 | 运动与操控平台手册 |
 | 联系方式 | 联系信息 |
 
 ## 文档文件名 → 页面路径映射
 
-当你引用文档内容时，以下映射关系用于前端页面导航。请在回答末尾标注所引用的文档来源文件名：
+master-ultra-safety-instructions.md    → /master-ultra/safety-instructions
+master-ultra-safety-guidelines.md      → /master-ultra/safety-guidelines
+master-ultra-maintenance.md            → /master-ultra/maintenance-guidelines
+master-ultra-packing-list.md           → /master-ultra/packing-list
+master-ultra-product-overview.md       → /master-ultra/product-overview
+master-ultra-computational-unit.md     → /master-ultra/computational-unit
+master-ultra-battery-indicator.md      → /master-ultra/battery-indicator-lights
+master-ultra-sensor-fov.md            → /master-ultra/sensor-fov
+master-ultra-joint-limits.md           → /master-ultra/joint-limits
+master-ultra-coordinate-systems.md     → /master-ultra/coordinate-systems
+master-ultra-specifications.md         → /master-ultra/specifications
+master-ultra-safety-precautions.md     → /master-ultra/safety-precautions
+master-ultra-startup-guide.md          → /master-ultra/startup-guide
+master-ultra-shutdown-guide.md         → /master-ultra/shutdown-guide
+master-ultra-charging-procedure.md     → /master-ultra/charging-procedure
+master-ultra-remote-control.md         → /master-ultra/remote-control
+master-ultra-robot-interaction.md      → /master-ultra/robot-interaction
+master-ultra-ff-robotic-app.md         → /master-ultra/ff-robotic-app
+master-ultra-others.md                 → /master-ultra/others
+master-ultra-locomotion-platform.md    → /master-ultra/locomotion-platform
+master-ultra-contact-information.md    → /master-ultra/contact-information
 
-```
-safety-instructions.md    → /safety-instructions
-safety-guidelines.md      → /safety-guidelines
-maintenance.md            → /maintenance-guidelines
-packing-list.md           → /packing-list
-product-overview.md       → /product-overview
-computational-unit.md     → /computational-unit
-battery-indicator.md      → /battery-indicator-lights
-sensor-fov.md             → /sensor-fov
-joint-limits.md           → /joint-limits
-coordinate-systems.md     → /coordinate-systems
-specifications.md         → /specifications
-safety-precautions.md     → /safety-precautions
-startup-guide.md          → /startup-guide
-shutdown-guide.md         → /shutdown-guide
-charging-procedure.md     → /charging-procedure
-remote-control.md         → /remote-control
-robot-interaction.md      → /robot-interaction
-ff-robotic-app.md         → /ff-robotic-app
-others.md                 → /others
-locomotion-platform.md    → /locomotion-platform
-contact-information.md    → /contact-information
-```
+## 搜索与回答规则
 
-## 回答规则
-
-1. 收到用户问题后，判断问题语言是中文还是英文，如果是中文则首先将问题翻译成英文，然后再调用系统，系统会自动搜索相关文档（file_search）。仅根据搜索结果回答，**不要使用任何外部知识**。
-2. 如果文档中未找到相关信息，直接回答：\"抱歉，说明书中未找到相关信息。\"
-3. 使用**问题语言**回答，保持简洁、专业、结构化（适当使用列表、表格）。
-4. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
-5. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。
-`,
-  model: "gpt-5",
-  tools: [
-    fileSearch
+1. **搜索**：使用上方提供的 {{query_text}}（已翻译为英文并扩写）调用 file_search。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. **回答语言**：根据 {{input_lang}} 决定回答语言。\"cn\" → 中文，\"en\" → 英文。
+3. 如果文档中未找到相关信息，直接回答：\"抱歉，FF Master Ultra 说明书中未找到相关信息。\"（或对应英文）
+4. 保持简洁、专业、结构化（适当使用列表、表格）。
+5. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+6. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。""",
+  model="gpt-5",
+  tools=[
+    file_search1
   ],
-  modelSettings: {
-    reasoning: {
-      effort: "medium",
-      summary: "auto"
-    },
-    store: true
-  }
-});
-
-type WorkflowInput = { input_as_text: string };
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="medium",
+      summary="auto"
+    )
+  )
+)
 
 
-// Main code entrypoint
-export const runWorkflow = async (workflow: WorkflowInput) => {
-  return await withTrace("AI Robot User Guide Agent", async () => {
-    const state = {
+aegis_ultra_support = Agent(
+  name="Aegis Ultra Support",
+  instructions="""你是 FF Aegis Ultra 机器人的专业技术支持工程师。
 
-    };
-    const conversationHistory: AgentInputItem[] = [
-      { role: "user", content: [{ type: "input_text", text: workflow.input_as_text }] }
-    ];
-    const runner = new Runner({
-      traceMetadata: {
-        __trace_source__: "agent-builder",
-        workflow_id: "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
-      }
-    });
-    const ffMasterSupportResultTemp = await runner.run(
-      ffMasterSupport,
-      [
-        ...conversationHistory
-      ]
-    );
-    conversationHistory.push(...ffMasterSupportResultTemp.newItems.map((item) => item.rawItem));
+回答语言：{{input_lang}}（cn=中文，en=英文）
+搜索查询：{{query_text}}
 
-    if (!ffMasterSupportResultTemp.finalOutput) {
-        throw new Error("Agent result is undefined");
+## 知识来源
+
+你的全部知识来自上传到 Vector Store 的 FF Aegis Ultra 用户手册文档（Markdown 文件）。涵盖：
+
+| 分类 | 内容 |
+|------|------|
+| 法律与安全 | 法律声明、使用限制与安全注意事项、电池与充电注意事项 |
+| 产品描述 | 产品概述与组件、扩展接口端口、灯效说明、电源介绍 |
+| 操作指南 | 首次使用准备、遥控器使用指南 |
+| 产品参数 | 产品参数 |
+| 故障排除 | 故障排除 |
+| 运输存储 | 运输与存储 |
+| 有害物质 | 有害物质信息 |
+| 保修信息 | 保修信息 |
+
+## 文档文件名 → 页面路径映射
+
+aegis-ultra-legal-statement.md        → /aegis-ultra/legal-statement
+aegis-ultra-usage-restrictions.md     → /aegis-ultra/usage-restrictions
+aegis-ultra-battery-charging.md       → /aegis-ultra/battery-charging
+aegis-ultra-product-overview.md       → /aegis-ultra/product-overview
+aegis-ultra-expansion-interface.md    → /aegis-ultra/expansion-interface
+aegis-ultra-lighting-effects.md       → /aegis-ultra/lighting-effects
+aegis-ultra-power-supply.md           → /aegis-ultra/power-supply
+aegis-ultra-first-use.md              → /aegis-ultra/first-use
+aegis-ultra-remote-control.md         → /aegis-ultra/remote-control
+aegis-ultra-product-parameters.md     → /aegis-ultra/product-parameters
+aegis-ultra-troubleshooting.md        → /aegis-ultra/troubleshooting
+aegis-ultra-transportation-storage.md → /aegis-ultra/transportation-storage
+aegis-ultra-hazardous-substances.md   → /aegis-ultra/hazardous-substances
+aegis-ultra-warranty.md               → /aegis-ultra/warranty
+
+## 搜索与回答规则
+
+1. **搜索**：使用上方提供的 {{query_text}}（已翻译为英文并扩写）调用 file_search。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. **回答语言**：根据 {{input_lang}} 决定回答语言。\"cn\" → 中文，\"en\" → 英文。
+3. 如果文档中未找到相关信息，直接回答：\"抱歉，FF Aegis Ultra 说明书中未找到相关信息。\"（或对应英文）
+4. 保持简洁、专业、结构化（适当使用列表、表格）。
+5. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+6. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。""",
+  model="gpt-5",
+  tools=[
+    file_search2
+  ],
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="medium",
+      summary="auto"
+    )
+  )
+)
+
+
+aegis_edu_support = Agent(
+  name="Aegis EDU Support",
+  instructions="""你是 FF Aegis EDU（教育版）机器人的专业技术支持工程师。
+
+回答语言：{{input_lang}}（cn=中文，en=英文）
+搜索查询：{{query_text}}
+
+## 知识来源
+
+你的全部知识来自上传到 Vector Store 的 FF Aegis EDU 用户手册文档（Markdown 文件）。涵盖：
+
+| 分类 | 内容 |
+|------|------|
+| 版本声明 | 法律声明、使用注意事项、电池与充电注意事项 |
+| 产品描述 | 产品概述、尾灯介绍、电源介绍 |
+| 产品使用 | 首次使用准备、遥控器使用指南、APP 使用指南、OTA 升级 |
+| 产品参数 | 产品参数、故障排除、产品运输、存储环境、电池注意事项、轻拿轻放 |
+| 有害物质 | 有害物质信息 |
+| 保修信息 | 保修说明 |
+
+## 文档文件名 → 页面路径映射
+
+aegis-edu-legal-statement.md              → /aegis-edu/legal-statement
+aegis-edu-notes.md                        → /aegis-edu/notes
+aegis-edu-battery-charging-precautions.md → /aegis-edu/battery-charging-precautions
+aegis-edu-product-overview.md             → /aegis-edu/product-overview
+aegis-edu-tail-lights.md                  → /aegis-edu/tail-lights
+aegis-edu-power-supply.md                 → /aegis-edu/power-supply
+aegis-edu-first-use.md                    → /aegis-edu/first-use
+aegis-edu-remote-control.md               → /aegis-edu/remote-control
+aegis-edu-app-guide.md                    → /aegis-edu/app-guide
+aegis-edu-ota-upgrade.md                  → /aegis-edu/ota-upgrade
+aegis-edu-product-parameters.md           → /aegis-edu/product-parameters
+aegis-edu-troubleshooting.md              → /aegis-edu/troubleshooting
+aegis-edu-transportation.md               → /aegis-edu/transportation
+aegis-edu-storage.md                      → /aegis-edu/storage
+aegis-edu-battery-precautions-storage.md  → /aegis-edu/battery-precautions-storage
+aegis-edu-handle-with-care.md             → /aegis-edu/handle-with-care
+aegis-edu-hazardous-substances.md         → /aegis-edu/hazardous-substances
+aegis-edu-warranty.md                     → /aegis-edu/warranty
+
+## 搜索与回答规则
+
+1. **搜索**：使用上方提供的 {{query_text}}（已翻译为英文并扩写）调用 file_search。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. **回答语言**：根据 {{input_lang}} 决定回答语言。\"cn\" → 中文，\"en\" → 英文。
+3. 如果文档中未找到相关信息，直接回答：\"抱歉，FF Aegis EDU 说明书中未找到相关信息。\"（或对应英文）
+4. 保持简洁、专业、结构化（适当使用列表、表格）。
+5. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+6. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。""",
+  model="gpt-5",
+  tools=[
+    file_search3
+  ],
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="medium",
+      summary="auto"
+    )
+  )
+)
+
+
+general_support = Agent(
+  name="General Support",
+  instructions="""你是 FF Robot 全系列产品的综合技术支持工程师，负责处理跨产品比较和通用问题。
+
+回答语言：{{input_lang}}（cn=中文，en=英文）
+搜索查询：{{query_text}}
+
+你支持的产品线包括：
+- **FF Master Ultra** — 人形双足机器人
+- **FF Futurist Ultra** — 轮式机器人
+- **FF Aegis Ultra** — 四足机器人（高端版）
+- **FF Aegis EDU** — 四足机器人（教育版）
+
+## 知识来源
+
+你的全部知识来自上传到 Vector Store 的四个产品的完整用户手册文档（共 59 个 Markdown 文件）。
+
+## 文档文件名 → 页面路径映射
+
+### Master Ultra
+master-ultra-safety-instructions.md    → /master-ultra/safety-instructions
+master-ultra-safety-guidelines.md      → /master-ultra/safety-guidelines
+master-ultra-maintenance.md            → /master-ultra/maintenance-guidelines
+master-ultra-packing-list.md           → /master-ultra/packing-list
+master-ultra-product-overview.md       → /master-ultra/product-overview
+master-ultra-computational-unit.md     → /master-ultra/computational-unit
+master-ultra-battery-indicator.md      → /master-ultra/battery-indicator-lights
+master-ultra-sensor-fov.md            → /master-ultra/sensor-fov
+master-ultra-joint-limits.md           → /master-ultra/joint-limits
+master-ultra-coordinate-systems.md     → /master-ultra/coordinate-systems
+master-ultra-specifications.md         → /master-ultra/specifications
+master-ultra-safety-precautions.md     → /master-ultra/safety-precautions
+master-ultra-startup-guide.md          → /master-ultra/startup-guide
+master-ultra-shutdown-guide.md         → /master-ultra/shutdown-guide
+master-ultra-charging-procedure.md     → /master-ultra/charging-procedure
+master-ultra-remote-control.md         → /master-ultra/remote-control
+master-ultra-robot-interaction.md      → /master-ultra/robot-interaction
+master-ultra-ff-robotic-app.md         → /master-ultra/ff-robotic-app
+master-ultra-others.md                 → /master-ultra/others
+master-ultra-locomotion-platform.md    → /master-ultra/locomotion-platform
+master-ultra-contact-information.md    → /master-ultra/contact-information
+
+### Futurist Ultra
+futurist-ultra-foreword.md                → /futurist-ultra/foreword
+futurist-ultra-safety-guide.md            → /futurist-ultra/safety-guide
+futurist-ultra-precautions.md             → /futurist-ultra/precautions
+futurist-ultra-maintenance-guidelines.md  → /futurist-ultra/maintenance-guidelines
+futurist-ultra-product-introduction.md    → /futurist-ultra/product-introduction
+futurist-ultra-startup.md                 → /futurist-ultra/startup
+futurist-ultra-shutdown.md                → /futurist-ultra/shutdown
+futurist-ultra-motion-control.md          → /futurist-ultra/motion-control
+futurist-ultra-charging.md                → /futurist-ultra/charging
+futurist-ultra-routine-maintenance.md     → /futurist-ultra/routine-maintenance
+futurist-ultra-battery-maintenance.md     → /futurist-ultra/battery-maintenance
+futurist-ultra-product-composition.md     → /futurist-ultra/product-composition
+futurist-ultra-basic-parameters.md        → /futurist-ultra/basic-parameters
+futurist-ultra-workspace.md               → /futurist-ultra/workspace
+futurist-ultra-product-labels.md          → /futurist-ultra/product-labels
+futurist-ultra-rf-specifications.md       → /futurist-ultra/rf-specifications
+
+### Aegis Ultra
+aegis-ultra-legal-statement.md        → /aegis-ultra/legal-statement
+aegis-ultra-usage-restrictions.md     → /aegis-ultra/usage-restrictions
+aegis-ultra-battery-charging.md       → /aegis-ultra/battery-charging
+aegis-ultra-product-overview.md       → /aegis-ultra/product-overview
+aegis-ultra-expansion-interface.md    → /aegis-ultra/expansion-interface
+aegis-ultra-lighting-effects.md       → /aegis-ultra/lighting-effects
+aegis-ultra-power-supply.md           → /aegis-ultra/power-supply
+aegis-ultra-first-use.md              → /aegis-ultra/first-use
+aegis-ultra-remote-control.md         → /aegis-ultra/remote-control
+aegis-ultra-product-parameters.md     → /aegis-ultra/product-parameters
+aegis-ultra-troubleshooting.md        → /aegis-ultra/troubleshooting
+aegis-ultra-transportation-storage.md → /aegis-ultra/transportation-storage
+aegis-ultra-hazardous-substances.md   → /aegis-ultra/hazardous-substances
+aegis-ultra-warranty.md               → /aegis-ultra/warranty
+
+### Aegis EDU
+aegis-edu-legal-statement.md              → /aegis-edu/legal-statement
+aegis-edu-notes.md                        → /aegis-edu/notes
+aegis-edu-battery-charging-precautions.md → /aegis-edu/battery-charging-precautions
+aegis-edu-product-overview.md             → /aegis-edu/product-overview
+aegis-edu-tail-lights.md                  → /aegis-edu/tail-lights
+aegis-edu-power-supply.md                 → /aegis-edu/power-supply
+aegis-edu-first-use.md                    → /aegis-edu/first-use
+aegis-edu-remote-control.md               → /aegis-edu/remote-control
+aegis-edu-app-guide.md                    → /aegis-edu/app-guide
+aegis-edu-ota-upgrade.md                  → /aegis-edu/ota-upgrade
+aegis-edu-product-parameters.md           → /aegis-edu/product-parameters
+aegis-edu-troubleshooting.md              → /aegis-edu/troubleshooting
+aegis-edu-transportation.md               → /aegis-edu/transportation
+aegis-edu-storage.md                      → /aegis-edu/storage
+aegis-edu-battery-precautions-storage.md  → /aegis-edu/battery-precautions-storage
+aegis-edu-handle-with-care.md             → /aegis-edu/handle-with-care
+aegis-edu-hazardous-substances.md         → /aegis-edu/hazardous-substances
+aegis-edu-warranty.md                     → /aegis-edu/warranty
+
+## 搜索与回答规则
+
+1. **搜索**：使用上方提供的 {{query_text}}（已翻译为英文并扩写）调用 file_search。仅根据搜索结果回答，**不要使用任何外部知识**。
+2. **回答语言**：根据 {{input_lang}} 决定回答语言。\"cn\" → 中文，\"en\" → 英文。
+3. 如果文档中未找到相关信息，直接回答：\"抱歉，说明书中未找到相关信息。\"（或对应英文）
+4. 保持简洁、专业、结构化（适当使用列表、表格）。
+5. 回答中**明确标注信息来源于哪个产品**，避免混淆。例如：\"根据 FF Master Ultra 的说明书……\"
+6. 如果用户在比较多个产品，分产品列出各自的信息，使用表格对比。
+7. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
+8. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。""",
+  model="gpt-5",
+  tools=[
+    file_search4
+  ],
+  model_settings=ModelSettings(
+    store=True,
+    reasoning=Reasoning(
+      effort="medium",
+      summary="auto"
+    )
+  )
+)
+
+
+class WorkflowInput(BaseModel):
+  input_as_text: str
+
+
+# Main code entrypoint
+async def run_workflow(workflow_input: WorkflowInput):
+  with trace("AI Robot User Guide Agent"):
+    state = {
+      "input_lang": "en",
+      "query_text": None,
+      "query_type": "general"
     }
+    workflow = workflow_input.model_dump()
+    conversation_history: list[TResponseInputItem] = [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": workflow["input_as_text"]
+          }
+        ]
+      }
+    ]
+    ff_robot_triage_result_temp = await Runner.run(
+      ff_robot_triage,
+      input=[
+        *conversation_history
+      ],
+      run_config=RunConfig(trace_metadata={
+        "__trace_source__": "agent-builder",
+        "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+      })
+    )
 
-    const ffMasterSupportResult = {
-      output_text: ffMasterSupportResultTemp.finalOutput ?? ""
-    };
-  });
-}
+    conversation_history.extend([item.to_input_item() for item in ff_robot_triage_result_temp.new_items])
+
+    ff_robot_triage_result = {
+      "output_text": ff_robot_triage_result_temp.final_output.json(),
+      "output_parsed": ff_robot_triage_result_temp.final_output.model_dump()
+    }
+    state["input_lang"] = ff_robot_triage_result["output_parsed"]["input_lang"]
+    state["query_type"] = ff_robot_triage_result["output_parsed"]["query_type"]
+    state["query_text"] = ff_robot_triage_result["output_parsed"]["query_text"]
+    if state["query_type"] == "master-ultra":
+      master_ultra_support_result_temp = await Runner.run(
+        master_ultra_support,
+        input=[
+          *conversation_history
+        ],
+        run_config=RunConfig(trace_metadata={
+          "__trace_source__": "agent-builder",
+          "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+        })
+      )
+
+      conversation_history.extend([item.to_input_item() for item in master_ultra_support_result_temp.new_items])
+
+      master_ultra_support_result = {
+        "output_text": master_ultra_support_result_temp.final_output_as(str)
+      }
+    elif state["query_type"] == "futurist-ultra":
+      futurist_ultra_support_result_temp = await Runner.run(
+        futurist_ultra_support,
+        input=[
+          *conversation_history
+        ],
+        run_config=RunConfig(trace_metadata={
+          "__trace_source__": "agent-builder",
+          "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+        })
+      )
+
+      conversation_history.extend([item.to_input_item() for item in futurist_ultra_support_result_temp.new_items])
+
+      futurist_ultra_support_result = {
+        "output_text": futurist_ultra_support_result_temp.final_output_as(str)
+      }
+    elif state["query_type"] == "aegis-ultra":
+      aegis_ultra_support_result_temp = await Runner.run(
+        aegis_ultra_support,
+        input=[
+          *conversation_history
+        ],
+        run_config=RunConfig(trace_metadata={
+          "__trace_source__": "agent-builder",
+          "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+        })
+      )
+
+      conversation_history.extend([item.to_input_item() for item in aegis_ultra_support_result_temp.new_items])
+
+      aegis_ultra_support_result = {
+        "output_text": aegis_ultra_support_result_temp.final_output_as(str)
+      }
+    elif state["query_type"] == "aegis-edu":
+      aegis_edu_support_result_temp = await Runner.run(
+        aegis_edu_support,
+        input=[
+          *conversation_history
+        ],
+        run_config=RunConfig(trace_metadata={
+          "__trace_source__": "agent-builder",
+          "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+        })
+      )
+
+      conversation_history.extend([item.to_input_item() for item in aegis_edu_support_result_temp.new_items])
+
+      aegis_edu_support_result = {
+        "output_text": aegis_edu_support_result_temp.final_output_as(str)
+      }
+    else:
+      general_support_result_temp = await Runner.run(
+        general_support,
+        input=[
+          *conversation_history
+        ],
+        run_config=RunConfig(trace_metadata={
+          "__trace_source__": "agent-builder",
+          "workflow_id": "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e"
+        })
+      )
+
+      conversation_history.extend([item.to_input_item() for item in general_support_result_temp.new_items])
+
+      general_support_result = {
+        "output_text": general_support_result_temp.final_output_as(str)
+      }

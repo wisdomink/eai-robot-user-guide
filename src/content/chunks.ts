@@ -1,7 +1,4 @@
-import sidebarConfig from './sidebar-master-ultra.json'
-import futuristSidebarConfig from './sidebar-futurist-ultra.json'
-import aegiseduSidebarConfig from './sidebar-aegis-edu.json'
-import aegisSidebarConfig from './sidebar-aegis-ultra.json'
+import allSidebars from './sidebar.json'
 import { getPageContent, stripMarkdown } from './index'
 
 export interface ContentChunk {
@@ -30,9 +27,8 @@ function toAnchor(heading: string): string {
  */
 export function getAllChunksForSearch(): ContentChunk[] {
   const chunks: ContentChunk[] = []
-  const allSidebars = [sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig]
 
-  for (const sidebar of allSidebars) {
+  for (const sidebar of Object.values(allSidebars)) {
     for (const section of sidebar.sections) {
       for (const page of section.pages) {
         const raw = getPageContent(page.file)

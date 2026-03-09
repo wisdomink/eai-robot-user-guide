@@ -22,11 +22,12 @@ from chatkit.server import StreamingResult
 
 from app.core.config import (
     OPENAI_API_KEY,
-    OPENAI_VECTOR_STORE_ID,
+    OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     SIDEBAR_PATH,
 )
 from app.services.chatkit_handler import create_chatkit_server
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -73,22 +74,26 @@ def _to_anchor(heading: str) -> str:
 
 
 def _build_file_info_map() -> dict[str, dict]:
-    """Build {filename: {slug, title, sectionId}} from sidebar-master-ultra.json."""
+    """Build {filename: {slug, title, sectionId}} from sidebar.json."""
     try:
         with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
-            sidebar = json.load(f)
+            all_sidebars = json.load(f)
     except FileNotFoundError:
-        logger.warning("sidebar-master-ultra.json not found at %s", SIDEBAR_PATH)
+        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
         return {}
 
     result: dict[str, dict] = {}
-    for section in sidebar.get("sections", []):
-        for page in section.get("pages", []):
-            result[page["file"]] = {
-                "slug": page["slug"],
-                "title": page["title"],
-                "sectionId": section["id"],
-            }
+    for product_sidebar in all_sidebars.values():
+        for section in product_sidebar.get("sections", []):
+            for page in section.get("pages", []):
+                info = {
+                    "slug": page["slug"],
+                    "title": page["title"],
+                    "sectionId": section["id"],
+                }
+                result[page["file"]] = info
+                basename = page["file"].rsplit("/", 1)[-1]
+                result[basename] = info
     return result
 
 
@@ -114,12 +119,12 @@ async def search_endpoint(
     if not q.strip():
         return {"results": []}
 
-    if not OPENAI_VECTOR_STORE_ID:
-        return {"results": [], "error": "OPENAI_VECTOR_STORE_ID not configured"}
+    if not OPENAI_VECTOR_STORE_ROBOT_ALL_ID:
+        return {"results": [], "error": "OPENAI_VECTOR_STORE_ROBOT_ALL_ID not configured"}
 
     try:
         page = await _oai.vector_stores.search(
-            vector_store_id=OPENAI_VECTOR_STORE_ID,
+            vector_store_id=OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
             query=q.strip(),
             max_num_results=limit,
             rewrite_query=True,
@@ -132,6 +137,8 @@ async def search_endpoint(
     for item in page.data:
         file_info = _FILE_INFO_MAP.get(item.filename)
         if not file_info:
+            logger.warning("No mapping for filename=%r (score=%.4f). Available keys sample: %s",
+                           item.filename, item.score, list(_FILE_INFO_MAP.keys())[:5])
             continue
 
         full_text = " ".join(c.text for c in item.content if c.type == "text")
@@ -153,7 +160,9 @@ async def search_endpoint(
             "similarity": round(item.score, 4),
         })
 
-    return {"results": results}
+    response = {"results": results}
+    logger.info("Search q=%r → %d results: %s", q, len(results), json.dumps(response, ensure_ascii=False, indent=2))
+    return response
 
 
 # ── Health ────────────────────────────────────────────────────────────────

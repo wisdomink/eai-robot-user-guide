@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Create an OpenAI Vector Store and upload all manual Markdown pages.
+Sync all manual Markdown pages to an OpenAI Vector Store.
 
-The Vector Store is used by:
-  - The Agents SDK (FileSearchTool) for AI-powered Q&A
-  - The /search endpoint (Vector Store Search API) for semantic search
+Reads sidebar.json, collects every referenced .md file, then:
+  1. Deletes ALL existing files from the target vector store
+  2. Uploads the current set of .md files
+
+The target vector store is identified by OPENAI_VECTOR_STORE_ROBOT_ALL_ID in .env.
 
 Usage:
     cd rag_server
@@ -14,6 +16,7 @@ Usage:
 
 import json
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -25,39 +28,31 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONTENT_DIR = PROJECT_ROOT / "src" / "content"
-SIDEBAR_PATH = CONTENT_DIR / "sidebar-master-ultra.json"
+SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
 PAGES_DIR = CONTENT_DIR / "pages"
+
+VECTOR_STORE_ENV_KEY = "OPENAI_VECTOR_STORE_ROBOT_ALL_ID"
 
 
 def build_file_list() -> list[Path]:
-    """Collect all page markdown files referenced in sidebar-master-ultra.json."""
+    """Collect all page markdown files referenced in sidebar.json."""
     with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
-        sidebar = json.load(f)
+        all_sidebars: dict = json.load(f)
 
     files: list[Path] = []
-    for section in sidebar.get("sections", []):
-        for page in section.get("pages", []):
-            filepath = PAGES_DIR / page["file"]
-            if filepath.exists():
-                files.append(filepath)
-            else:
-                print(f"⚠️  {page['file']} not found, skipping")
+    for product_id, product_sidebar in all_sidebars.items():
+        for section in product_sidebar.get("sections", []):
+            for page in section.get("pages", []):
+                filepath = PAGES_DIR / page["file"]
+                if filepath.exists():
+                    files.append(filepath)
+                else:
+                    print(f"⚠️  [{product_id}] {page['file']} not found, skipping")
     return files
 
 
-def get_existing_vector_store(store_id: str):
-    """Try to retrieve an existing vector store by ID. Returns None if not found."""
-    if not store_id:
-        return None
-    try:
-        vs = client.vector_stores.retrieve(store_id)
-        return vs
-    except Exception:
-        return None
-
-
-def delete_old_files(store_id: str):
-    """Delete all files from an existing vector store."""
+def delete_all_files(store_id: str) -> int:
+    """Delete every file from the vector store, return count deleted."""
     deleted = 0
     file_list = client.vector_stores.files.list(vector_store_id=store_id)
     for vs_file in file_list:
@@ -69,26 +64,12 @@ def delete_old_files(store_id: str):
     return deleted
 
 
-def main():
-    md_files = build_file_list()
-    print(f"📁 Found {len(md_files)} markdown files to upload\n")
-
-    existing_id = os.getenv("OPENAI_VECTOR_STORE_ID", "")
-    vector_store = get_existing_vector_store(existing_id)
-
-    if vector_store:
-        print(f"📦 Existing Vector Store found: {vector_store.id}")
-        deleted = delete_old_files(vector_store.id)
-        print(f"🗑  Deleted {deleted} old file(s) from the store")
-    else:
-        vector_store = client.vector_stores.create(name="FF Robot User Manual")
-        print(f"📦 New Vector Store created: {vector_store.id}")
-
-    # Upload files in batch
+def upload_files(store_id: str, md_files: list[Path]):
+    """Batch-upload markdown files to the vector store."""
     file_streams = [open(f, "rb") for f in md_files]
     try:
         batch = client.vector_stores.file_batches.upload_and_poll(
-            vector_store_id=vector_store.id,
+            vector_store_id=store_id,
             files=file_streams,
         )
         print(
@@ -100,13 +81,36 @@ def main():
         for f in file_streams:
             f.close()
 
-    print(f"\n{'='*50}")
-    print(f"✅ Vector Store ready!")
-    print(f"   ID: {vector_store.id}")
-    print(f"{'='*50}")
-    if vector_store.id != existing_id:
-        print(f"\n👉 Add to your .env file:")
-        print(f"   OPENAI_VECTOR_STORE_ID={vector_store.id}\n")
+
+def main():
+    store_id = os.getenv(VECTOR_STORE_ENV_KEY, "").strip()
+    if not store_id:
+        print(f"❌ {VECTOR_STORE_ENV_KEY} is not set in .env")
+        sys.exit(1)
+
+    try:
+        vs = client.vector_stores.retrieve(store_id)
+    except Exception as exc:
+        print(f"❌ Cannot retrieve vector store {store_id}: {exc}")
+        sys.exit(1)
+
+    print(f"📦 Vector Store: {vs.name} ({vs.id})")
+
+    md_files = build_file_list()
+    print(f"📁 Found {len(md_files)} markdown files in sidebar.json\n")
+
+    # Step 1 — purge old files
+    print("🗑  Deleting old files …")
+    deleted = delete_all_files(store_id)
+    print(f"   Deleted {deleted} file(s)\n")
+
+    # Step 2 — upload current files
+    print(f"📤 Uploading {len(md_files)} file(s) …")
+    upload_files(store_id, md_files)
+
+    print(f"\n{'=' * 50}")
+    print(f"✅ Sync complete!  Vector Store: {vs.id}")
+    print(f"{'=' * 50}")
 
 
 if __name__ == "__main__":

@@ -246,7 +246,7 @@ npm run convert:images       # 仅提取图片
 项目通过 SSG（Static Site Generation）预渲染实现 SEO 优化：
 
 - `src/entry-server.tsx` — 使用 `renderToString` 在服务端渲染每个路由
-- `scripts/prerender.mjs` — 构建后遍历 `sidebar-master-ultra.json` 中的所有路由，生成静态 HTML
+- `scripts/prerender.mjs` — 构建后遍历 `sidebar.json` 中的所有路由，生成静态 HTML
 - 每个页面通过 `document.title` 动态设置 SEO 友好的标题
 
 构建时 `npm run build` 会自动完成预渲染，无需额外配置。

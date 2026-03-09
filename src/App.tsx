@@ -1,25 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { sidebarConfig, futuristSidebarConfig, aegiseduSidebarConfig, aegisSidebarConfig } from '@/content'
+import { ALL_PRODUCTS } from '@/hooks/useProductContext'
 import MarkdownPage from '@/pages/MarkdownPage'
 import ChatPanel from '@/components/chat/ChatPanel'
-import { ProductProvider } from '@/hooks/useProductContext'
-
-const allSidebars = [
-  { sidebar: sidebarConfig, homeRoute: '/master-ultra', homeFile: 'master-ultra/home.md', homeTitle: 'FF Master' },
-  { sidebar: futuristSidebarConfig, homeRoute: '/futurist-ultra', homeFile: 'futurist-ultra/home.md', homeTitle: 'FF Futurist' },
-  { sidebar: aegiseduSidebarConfig, homeRoute: '/aegis-edu', homeFile: 'aegis-edu/home.md', homeTitle: 'FX Aegis EDU' },
-  { sidebar: aegisSidebarConfig, homeRoute: '/aegis-ultra', homeFile: 'aegis-ultra/home.md', homeTitle: 'FX Aegis Ultra' },
-]
 
 export function AppRoutes() {
   return (
     <Routes>
       {/* Home pages for each product */}
-      {allSidebars.map(({ homeRoute, homeFile, homeTitle }) => (
+      {ALL_PRODUCTS.map(product => (
         <Route
-          key={homeRoute}
-          path={homeRoute}
-          element={<MarkdownPage file={homeFile} title={homeTitle} />}
+          key={product.homeRoute}
+          path={product.homeRoute}
+          element={<MarkdownPage file={product.homeFile} title={product.label} />}
         />
       ))}
 
@@ -27,8 +19,8 @@ export function AppRoutes() {
       <Route path="/" element={<Navigate to="/master-ultra" replace />} />
 
       {/* All content pages from all products */}
-      {allSidebars.flatMap(({ sidebar }) =>
-        sidebar.sections.flatMap(section =>
+      {ALL_PRODUCTS.flatMap(product =>
+        product.sidebar.sections.flatMap(section =>
           section.pages.map(page => (
             <Route
               key={page.slug}
@@ -48,10 +40,8 @@ export function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ProductProvider>
-        <AppRoutes />
-        <ChatPanel />
-      </ProductProvider>
+      <AppRoutes />
+      <ChatPanel />
     </BrowserRouter>
   )
 }

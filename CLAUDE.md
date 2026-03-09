@@ -37,7 +37,7 @@
 ## Project Architecture
 
 ### Content Management
-- Navigation structure: `src/content/sidebar-{product}.json` (e.g. `sidebar-master-ultra.json`)
+- Navigation structure: `src/content/sidebar.json` (all products in one file, keyed by product ID)
 - Page content: `src/content/pages/*.md` (Markdown files)
 - Content registry: `src/content/index.ts` (imports all .md via `import.meta.glob`)
 - To add a new page: (1) create `.md` file, (2) add entry to the corresponding `sidebar-{product}.json`

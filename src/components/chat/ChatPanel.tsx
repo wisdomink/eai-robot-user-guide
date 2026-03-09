@@ -5,8 +5,10 @@ import { ChatKit, useChatKit } from '@openai/chatkit-react'
 const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || '/chatkit'
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
 
+const isDesktop = () => window.innerWidth >= 1024
+
 export default function ChatPanel() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(isDesktop)
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -29,12 +31,12 @@ export default function ChatPanel() {
       enabled: false,
     },
     startScreen: {
-      greeting: 'Ask anything about FF Master — I\'ll answer based on the documentation.',
+      greeting: 'Hi! I can help you with any of our robot products. Pick one to get started.',
       prompts: [
-        { label: "What's in the package?", prompt: "What's in the package?" },
-        { label: 'How do I charge?', prompt: 'How do I charge the robot?' },
-        { label: 'Joint limits', prompt: 'What are the joint limits?' },
-        { label: 'Emergency stop', prompt: 'How do I perform an emergency stop?' },
+        { label: 'FF Master Ultra', prompt: 'Tell me about FF Master Ultra. What are its key features, specs, and how do I get started?' },
+        { label: 'FF Futurist Ultra', prompt: 'Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?' },
+        { label: 'FF Aegis Ultra', prompt: 'Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?' },
+        { label: 'FF Aegis EDU', prompt: 'Tell me about FF Aegis EDU. What are its key features, specs, and how do I get started?' },
       ],
     },
     composer: {

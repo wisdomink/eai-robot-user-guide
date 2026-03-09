@@ -1,7 +1,9 @@
 """
-ChatKit server: OpenAI Agents SDK with built-in File Search (方案 B).
+ChatKit server: multi-agent workflow powered by OpenAI Agents SDK.
 
-Agent definition exported from AgentBuilder (translated from TS to Python).
+Workflow: Triage Agent (structured routing) → Product-specific Support Agent (streamed).
+Translated from the AgentBuilder exported code to self-hosted Python.
+
 Uses a custom ResponseStreamConverter to map file_citation → EntitySource,
 enabling SPA navigation via the frontend entities.onClick handler.
 """
@@ -13,9 +15,10 @@ import logging
 import re
 from collections import defaultdict
 from collections.abc import AsyncIterator
+from pathlib import Path
 
-from agents import Agent, FileSearchTool, ModelSettings, Runner
-from openai.types.shared import Reasoning
+from agents import Agent, FileSearchTool, ModelSettings, Runner, RunConfig
+from pydantic import BaseModel
 
 from chatkit.agents import (
     AgentContext,
@@ -36,11 +39,29 @@ from chatkit.types import (
     UserMessageItem,
 )
 
-from app.core.config import LLM_MODEL, OPENAI_VECTOR_STORE_ID, PUBLIC_BASE_URL, SIDEBAR_PATH
+from app.core.config import (
+    LLM_MODEL,
+    OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
+    OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
+    OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
+    OPENAI_VECTOR_STORE_MASTER_ULTRA_ID,
+    OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
+    PUBLIC_BASE_URL,
+    SIDEBAR_PATH,
+)
 
 logger = logging.getLogger(__name__)
 
-# ── Image URL rewriting (ChatKit iframe can't resolve relative paths) ─
+# ── Paths ────────────────────────────────────────────────────────────────
+
+INSTRUCTIONS_DIR = Path(__file__).parent / "instructions"
+
+
+def _load_instructions(name: str) -> str:
+    return (INSTRUCTIONS_DIR / f"{name}.md").read_text(encoding="utf-8")
+
+
+# ── Image URL rewriting (ChatKit iframe can't resolve relative paths) ────
 
 _MD_IMG_RE = re.compile(r"(!\[[^\]]*\]\()(/images/[^)]+)(\))")
 _HTML_IMG_RE = re.compile(r"""(<img[^>]*\ssrc=["'])(/images/[^"']+)(["'])""")
@@ -91,7 +112,6 @@ class _EventStreamRewriter:
         elif event.type == "thread.item.updated":
             update = event.update
 
-            # Text delta — accumulate original text, rewrite the delta
             if hasattr(update, "delta") and isinstance(update.delta, str):
                 item_id = event.item_id
                 ci = getattr(update, "content_index", 0)
@@ -100,11 +120,9 @@ class _EventStreamRewriter:
                 self._text_buf[key] += update.delta
                 update.delta = _rewrite_image_urls(update.delta)
 
-            # content_part.done — rewrite complete text
             if hasattr(update, "content") and hasattr(update.content, "text"):
                 update.content.text = _rewrite_image_urls(update.content.text)
 
-            # Annotation added — shift index by accumulated URL expansion
             if hasattr(update, "annotation"):
                 ann = update.annotation
                 if ann is not None and ann.index is not None:
@@ -117,99 +135,125 @@ class _EventStreamRewriter:
         return event
 
 
-# ── Agent Instructions (from AgentBuilder export) ────────────────────
+# ── Triage output schema ─────────────────────────────────────────────────
 
-INSTRUCTIONS = """\
-你是一名专业的技术支持工程师，专门负责 FF Master 系列机器人（FF Master / FF Master Edu / FF Master Ultra Edition）的用户支持。
 
-## 你的知识来源
+class TriageOutput(BaseModel):
+    input_lang: str
+    query_type: str
+    query_text: str
 
-你的全部知识来自上传到 Vector Store 的用户手册文档（Markdown 文件）。这些文档涵盖：
 
-| 分类 | 内容 |
-|------|------|
-| 安全须知 | 安全指南、安全注意事项、维护管理指南 |
-| 产品介绍 | 装箱清单、产品概述（三个版本对比）、产品结构图、计算单元、电池指示灯、传感器视野、关节名称与限位、坐标系、规格参数 |
-| 操作指南 | 安全预防措施、开机指南、关机指南、充电流程、遥控器使用指南、机器人交互流程、FF Robotic APP 手册、其他操作 |
-| 运动平台 | 运动与操控平台手册 |
-| 联系方式 | 联系信息 |
+# ── Agent definitions ────────────────────────────────────────────────────
 
-## 文档文件名 → 页面路径映射
-
-当你引用文档内容时，以下映射关系用于前端页面导航。请在回答末尾标注所引用的文档来源文件名：
-
-```
-safety-instructions.md    → /safety-instructions
-safety-guidelines.md      → /safety-guidelines
-maintenance.md            → /maintenance-guidelines
-packing-list.md           → /packing-list
-product-overview.md       → /product-overview
-computational-unit.md     → /computational-unit
-battery-indicator.md      → /battery-indicator-lights
-sensor-fov.md             → /sensor-fov
-joint-limits.md           → /joint-limits
-coordinate-systems.md     → /coordinate-systems
-specifications.md         → /specifications
-safety-precautions.md     → /safety-precautions
-startup-guide.md          → /startup-guide
-shutdown-guide.md         → /shutdown-guide
-charging-procedure.md     → /charging-procedure
-remote-control.md         → /remote-control
-robot-interaction.md      → /robot-interaction
-ff-robotic-app.md         → /ff-robotic-app
-others.md                 → /others
-locomotion-platform.md    → /locomotion-platform
-contact-information.md    → /contact-information
-```
-
-## 回答规则
-
-1. 收到用户问题后，判断问题语言是中文还是英文，如果是中文则首先将问题翻译成英文，然后再调用系统，系统会自动搜索相关文档（file_search）。仅根据搜索结果回答，**不要使用任何外部知识**。
-2. 如果文档中未找到相关信息，直接回答："抱歉，说明书中未找到相关信息。"
-3. 使用**问题语言**回答，保持简洁、专业、结构化（适当使用列表、表格）。
-4. 如果文档中包含图片引用（如 `![alt](/images/docx/xxx.png)`），在回答中**保留完整的 Markdown 图片语法**。
-5. **不要**在回答中手动附加引用标记或来源链接，系统会自动处理引用显示。
-"""
-
-# ── Agent Definition (translated from AgentBuilder TS export) ────────
-
-assistant_agent = Agent(
-    name="FF Master Support",
-    instructions=INSTRUCTIONS,
-    model=LLM_MODEL,
-    tools=[FileSearchTool(vector_store_ids=[OPENAI_VECTOR_STORE_ID])],
-    model_settings=ModelSettings(
-        reasoning=Reasoning(effort="medium", summary="auto"),
-        store=True,
-    ),
+_TRIAGE_MODEL_SETTINGS = ModelSettings(
+    store=True,
 )
 
-# ── File name → slug mapping (for source navigation links) ──────────
+_SUPPORT_MODEL_SETTINGS = ModelSettings(
+    store=True,
+)
+
+triage_agent = Agent(
+    name="FF Robot Triage",
+    instructions=_load_instructions("triage"),
+    model=LLM_MODEL,
+    output_type=TriageOutput,
+    model_settings=_TRIAGE_MODEL_SETTINGS,
+)
+
+_SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
+    "master-ultra": {
+        "name": "Master Ultra Support",
+        "instructions_file": "master-ultra",
+        "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ULTRA_ID,
+    },
+    "futurist-ultra": {
+        "name": "Futurist Ultra Support",
+        "instructions_file": "futurist-ultra",
+        "vector_store_id": OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
+    },
+    "aegis-ultra": {
+        "name": "Aegis Ultra Support",
+        "instructions_file": "aegis-ultra",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
+    },
+    "aegis-edu": {
+        "name": "Aegis EDU Support",
+        "instructions_file": "aegis-edu",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
+    },
+    "general": {
+        "name": "General Support",
+        "instructions_file": "general",
+        "vector_store_id": OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
+    },
+}
+
+# Pre-load instruction templates at module level (avoids repeated disk I/O).
+_INSTRUCTION_TEMPLATES: dict[str, str] = {
+    key: _load_instructions(cfg["instructions_file"])
+    for key, cfg in _SUPPORT_AGENT_CONFIGS.items()
+}
+
+
+def _build_support_agent(
+    query_type: str, input_lang: str, query_text: str
+) -> Agent:
+    """Build the appropriate support Agent with triage values interpolated
+    into the instruction template."""
+    cfg = _SUPPORT_AGENT_CONFIGS.get(query_type, _SUPPORT_AGENT_CONFIGS["general"])
+    template = _INSTRUCTION_TEMPLATES.get(query_type, _INSTRUCTION_TEMPLATES["general"])
+
+    instructions = template.replace("{{input_lang}}", input_lang)
+    instructions = instructions.replace("{{query_text}}", query_text)
+
+    return Agent(
+        name=cfg["name"],
+        instructions=instructions,
+        model=LLM_MODEL,
+        tools=[FileSearchTool(vector_store_ids=[cfg["vector_store_id"]])],
+        model_settings=_SUPPORT_MODEL_SETTINGS,
+    )
+
+
+# ── File name → slug mapping (for source navigation links) ──────────────
 
 
 def _build_file_slug_map() -> dict[str, dict]:
-    """Build {filename: {slug, title}} from sidebar-master-ultra.json."""
+    """Build {filename: {slug, title}} from sidebar.json.
+
+    Indexes by both the full relative path (e.g. "master-ultra/foo.md")
+    and the bare filename (e.g. "foo.md") so that OpenAI file_citation
+    lookups succeed regardless of which form the API returns.
+    """
     try:
         with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
-            sidebar = json.load(f)
+            all_sidebars = json.load(f)
     except FileNotFoundError:
-        logger.warning("sidebar-master-ultra.json not found at %s", SIDEBAR_PATH)
+        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
         return {}
 
     result: dict[str, dict] = {}
-    for section in sidebar.get("sections", []):
-        for page in section.get("pages", []):
-            result[page["file"]] = {
-                "slug": page["slug"],
-                "title": page["title"],
-            }
+    for product_sidebar in all_sidebars.values():
+        for section in product_sidebar.get("sections", []):
+            for page in section.get("pages", []):
+                entry = {
+                    "slug": page["slug"],
+                    "title": page["title"],
+                }
+                rel_path = page["file"]
+                result[rel_path] = entry
+                basename = rel_path.rsplit("/", 1)[-1]
+                if basename != rel_path:
+                    result.setdefault(basename, entry)
     return result
 
 
 FILE_SLUG_MAP = _build_file_slug_map()
 
 
-# ── Custom ResponseStreamConverter ───────────────────────────────────
+# ── Custom ResponseStreamConverter ───────────────────────────────────────
 
 
 class FFRobotConverter(ResponseStreamConverter):
@@ -219,11 +263,13 @@ class FFRobotConverter(ResponseStreamConverter):
 
     async def file_citation_to_annotation(self, file_citation) -> Annotation | None:
         filename = file_citation.filename
+        logger.debug("file_citation filename=%r, index=%s", filename, file_citation.index)
         if not filename:
             return None
 
         page_info = FILE_SLUG_MAP.get(filename)
         if not page_info:
+            logger.warning("No slug mapping for citation filename=%r", filename)
             return None
 
         slug = page_info["slug"]
@@ -238,7 +284,7 @@ class FFRobotConverter(ResponseStreamConverter):
         )
 
 
-# ── In-memory Store ──────────────────────────────────────────────────
+# ── In-memory Store ──────────────────────────────────────────────────────
 
 
 class InMemoryStore(Store[dict]):
@@ -338,15 +384,15 @@ class InMemoryStore(Store[dict]):
         raise NotImplementedError()
 
 
-# ── ChatKit Server ───────────────────────────────────────────────────
+# ── ChatKit Server ───────────────────────────────────────────────────────
 
 
 class FFRobotChatKitServer(ChatKitServer[dict]):
-    """Bridges ChatKit protocol to the OpenAI Agents SDK.
+    """Two-phase multi-agent workflow:
 
-    Uses Runner.run_streamed() to execute the Agent, and
-    stream_agent_response() with a custom FFRobotConverter to
-    automatically handle streaming events and file citation mapping.
+    1. **Triage** (non-streamed): detect language, identify product, expand query.
+    2. **Support Agent** (streamed): run the product-specific agent with
+       file_search and stream the response back to ChatKit.
     """
 
     async def respond(
@@ -355,33 +401,68 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         input_user_message: UserMessageItem | None,
         context: dict,
     ) -> AsyncIterator[ThreadStreamEvent]:
-        # Load conversation history
-        items_page = await self.store.load_thread_items(
-            thread.id, after=None, limit=20, order="desc", context=context
+        history_page = await self.store.load_thread_items(
+            thread.id, after=None, limit=100, order="asc", context=context
         )
-        items = list(reversed(items_page.data))
+        history_items: list[ThreadItem] = list(history_page.data)
 
-        # Convert to Agent SDK input format
-        input_items = await simple_to_agent_input(items)
+        if input_user_message:
+            already_in_history = any(
+                item.id == input_user_message.id for item in history_items
+            )
+            if not already_in_history:
+                history_items.append(input_user_message)
 
-        # Build AgentContext (bridges ChatKit store ↔ Agents SDK)
+        input_items = await simple_to_agent_input(history_items)
+
         agent_context = AgentContext(
             thread=thread,
             store=self.store,
             request_context=context,
         )
 
-        # Run the Agent (streaming)
-        result = Runner.run_streamed(
-            assistant_agent,
+        # ── Phase 1: Triage (non-streamed, structured JSON output) ───────
+        logger.info("Running triage agent …")
+        triage_result = await Runner.run(
+            triage_agent,
             input_items,
             context=agent_context,
+            run_config=RunConfig(
+                trace_metadata={"__trace_source__": "agent-builder"},
+            ),
         )
 
-        # stream_agent_response handles all event conversion automatically;
-        # FFRobotConverter ensures file_citation → EntitySource (not FileSource).
-        # _EventStreamRewriter rewrites image URLs while keeping annotation
-        # indices in sync so citations never split an expanded URL.
+        triage_output: TriageOutput = triage_result.final_output
+        logger.info(
+            "Triage → query_type=%s, input_lang=%s, query_text=%s",
+            triage_output.query_type,
+            triage_output.input_lang,
+            triage_output.query_text[:80] if triage_output.query_text else "",
+        )
+
+        # ── Phase 2: Route to product-specific agent (streamed) ──────────
+        support_agent = _build_support_agent(
+            triage_output.query_type,
+            triage_output.input_lang,
+            triage_output.query_text,
+        )
+
+        # Pass original user input + triage conversation to the support agent
+        # so it can see the full context.
+        conversation = list(input_items)
+        conversation.extend(
+            item.to_input_item() for item in triage_result.new_items
+        )
+
+        result = Runner.run_streamed(
+            support_agent,
+            conversation,
+            context=agent_context,
+            run_config=RunConfig(
+                trace_metadata={"__trace_source__": "agent-builder"},
+            ),
+        )
+
         rewriter = _EventStreamRewriter()
         async for event in stream_agent_response(
             agent_context, result, converter=FFRobotConverter()
