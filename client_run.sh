@@ -28,12 +28,19 @@ if [ ! -d "node_modules" ] || [ ! -f "$HASH_FILE" ] || [ "$(cat "$HASH_FILE")" !
 fi
 
 # ── Launch ────────────────────────────────────────────────────────────
+export VITE_CHAT_MODE="${VITE_CHAT_MODE:-backend}"
 export VITE_CHATKIT_API_URL="${VITE_CHATKIT_API_URL:-http://localhost:$RAG_PORT/chatkit}"
+export VITE_CHATKIT_SESSION_URL="${VITE_CHATKIT_SESSION_URL:-http://localhost:$RAG_PORT/api/chatkit/session}"
 
 echo ""
 echo "🚀 启动前端开发服务器 (port $PORT)"
 echo "   前端地址:    https://localhost:$PORT"
+echo "   Chat 模式:   $VITE_CHAT_MODE"
+if [ "$VITE_CHAT_MODE" = "agent-builder" ]; then
+echo "   Session API: $VITE_CHATKIT_SESSION_URL"
+else
 echo "   ChatKit API: $VITE_CHATKIT_API_URL"
+fi
 echo "   搜索 API:    /api/search → http://localhost:$RAG_PORT/search (Vite proxy)"
 echo ""
 exec npx vite --host --port "$PORT"

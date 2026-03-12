@@ -25,6 +25,14 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      '/api/chatkit': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/chat-mode': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
       '/reindex': {
         target: 'http://localhost:8000',
         changeOrigin: true,

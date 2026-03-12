@@ -33,3 +33,5 @@ htmlcov/
 
 # Logs
 *.log
+
+aws-deploy.sh

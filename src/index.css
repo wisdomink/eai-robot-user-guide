@@ -39,7 +39,7 @@
 ══════════════════════════════════════════════════════════════ */
 :root {
   /* Layout dimensions */
-  --header-height: clamp(44px, 3.9vw, 72px);
+  --header-height: clamp(44px, 3.2vw, 56px);
   --sidebar-width: clamp(220px, 20vw, 380px);
 
   /* Icon sizes — ratio ~1:2 matching Figma */
@@ -366,6 +366,7 @@ mark.hl.current {
 }
 
 .chatkit-body {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -406,4 +407,68 @@ mark.hl.current {
 
 @media (max-width: 768px) {
   .chat-panel { width: 100%; }
+}
+
+/* Custom greeting overlay (replaces ChatKit's bold default) */
+.ck-greeting-overlay {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  gap: 20px;
+}
+
+.ck-greeting-text {
+  font-family: var(--font-roboto);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 280px;
+}
+
+.ck-greeting-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.ck-greeting-prompt-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font-roboto);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.ck-greeting-prompt-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.ck-greeting-prompt-ask {
+  margin-top: 4px;
+  border-style: dashed;
+  color: var(--text-3);
 }
