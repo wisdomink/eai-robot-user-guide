@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
+import clsx from 'clsx'
+import { useChatState } from '@/hooks/useChatState'
 
 const CHAT_MODE = import.meta.env.VITE_CHAT_MODE || 'backend'
 const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || '/chatkit'
@@ -29,6 +31,12 @@ function buildApiConfig() {
   }
 }
 
+const BUILD_VERSION = (() => {
+  const d = new Date(__BUILD_TIME__)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+})()
+
 const GREETING = 'Hi! I can help you with any of our robot products. Pick one to get started.'
 const PROMPTS = [
   { label: 'FF Master Ultra', prompt: 'Tell me about FF Master Ultra. What are its key features, specs, and how do I get started?' },
@@ -37,11 +45,12 @@ const PROMPTS = [
   { label: 'FF Aegis EDU', prompt: 'Tell me about FF Aegis EDU. What are its key features, specs, and how do I get started?' },
 ]
 
-const isDesktop = () => window.innerWidth >= 1024
+type OverlayMode = 'buttons' | 'sending' | null
 
 export default function ChatPanel() {
-  const [isOpen, setIsOpen] = useState(isDesktop)
-  const [showGreeting, setShowGreeting] = useState(true)
+  const { isChatOpen } = useChatState()
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('buttons')
+  const [askingOwn, setAskingOwn] = useState(false)
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -49,8 +58,11 @@ export default function ChatPanel() {
 
   const handleNewChat = useCallback(() => {
     setThreadIdRef.current?.(null)
-    setShowGreeting(true)
+    setOverlayMode('buttons')
+    setAskingOwn(false)
   }, [])
+
+  const greetingText = askingOwn ? 'What can I help with today?' : '\u200B'
 
   const { sendUserMessage, focusComposer, setThreadId, control } = useChatKit({
     locale: 'en',
@@ -66,19 +78,19 @@ export default function ChatPanel() {
       enabled: false,
     },
     startScreen: {
-      greeting: ' ',
+      greeting: greetingText,
     },
     composer: {
       placeholder: 'Ask a question…',
     },
-    disclaimer: {
-      text: 'Answers are based solely on the manual content.',
-    },
     onResponseStart: () => {
-      setShowGreeting(false)
+      setOverlayMode(null)
     },
     onThreadChange: ({ threadId }: { threadId: string | null }) => {
-      if (threadId === null) setShowGreeting(true)
+      if (threadId === null) {
+        setOverlayMode('buttons')
+        setAskingOwn(false)
+      }
     },
     entities: {
       onClick: (entity) => {
@@ -107,55 +119,45 @@ export default function ChatPanel() {
   setThreadIdRef.current = setThreadId
 
   const handlePromptClick = useCallback((prompt: string) => {
-    setShowGreeting(false)
+    setOverlayMode('sending')
     sendUserMessage({ text: prompt })
   }, [sendUserMessage])
 
   const handleAskOwn = useCallback(() => {
-    setShowGreeting(false)
+    setAskingOwn(true)
+    setOverlayMode(null)
     focusComposer()
   }, [focusComposer])
 
-  useEffect(() => {
-    const toggleBtn = document.getElementById('chatToggleBtn')
-    const dot = document.getElementById('chatBtnDot')
-    if (dot) dot.classList.add('show')
-    const handleToggle = () => setIsOpen((prev) => !prev)
-    toggleBtn?.addEventListener('click', handleToggle)
-    return () => toggleBtn?.removeEventListener('click', handleToggle)
-  }, [])
-
-  useEffect(() => {
-    const main = document.querySelector('main.main')
-    const toggleBtn = document.getElementById('chatToggleBtn')
-    main?.classList.toggle('chat-open', isOpen)
-    toggleBtn?.classList.toggle('active', isOpen)
-  }, [isOpen])
-
   return (
-    <div ref={panelRef} className={`chat-panel${isOpen ? ' open' : ''}`} id="chatPanel">
+    <div ref={panelRef} className={clsx('chat-panel', isChatOpen && 'open')} id="chatPanel">
       <div className="chatkit-body">
         <ChatKit control={control} />
-        {showGreeting && (
+        {overlayMode && (
           <div className="ck-greeting-overlay">
-            <p className="ck-greeting-text">{GREETING}</p>
-            <div className="ck-greeting-prompts">
-              {PROMPTS.map((p) => (
-                <button
-                  key={p.label}
-                  className="ck-greeting-prompt-btn"
-                  onClick={() => handlePromptClick(p.prompt)}
-                >
-                  {p.label}
-                </button>
-              ))}
-              <button
-                className="ck-greeting-prompt-btn ck-greeting-prompt-ask"
-                onClick={handleAskOwn}
-              >
-                Ask your own question →
-              </button>
-            </div>
+            {overlayMode === 'buttons' && (
+              <>
+                <p className="ck-greeting-text">{GREETING}</p>
+                <div className="ck-greeting-prompts">
+                  {PROMPTS.map((p) => (
+                    <button
+                      key={p.label}
+                      className="ck-greeting-prompt-btn"
+                      onClick={() => handlePromptClick(p.prompt)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                  <button
+                    className="ck-greeting-prompt-btn ck-greeting-prompt-ask"
+                    onClick={handleAskOwn}
+                  >
+                    Ask your own question →
+                  </button>
+                </div>
+                <p className="ck-greeting-version">v{BUILD_VERSION}</p>
+              </>
+            )}
           </div>
         )}
       </div>

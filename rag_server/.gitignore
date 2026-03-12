@@ -33,5 +33,6 @@ htmlcov/
 
 # Logs
 *.log
+logs/
 
 aws-deploy.sh

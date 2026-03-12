@@ -4,6 +4,7 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import MobileMenuDrawer from './MobileMenuDrawer'
 import SearchInfoBar from '@/components/search/SearchInfoBar'
+import { useChatState } from '@/hooks/useChatState'
 import clsx from 'clsx'
 
 interface ContentLayoutProps {
@@ -13,6 +14,7 @@ interface ContentLayoutProps {
 
 export default function ContentLayout({ children, fullWidth }: ContentLayoutProps) {
   const isDesktop = useIsDesktop()
+  const { isChatOpen } = useChatState()
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const toggle = () => setSidebarOpen(prev => !prev)
@@ -43,7 +45,8 @@ export default function ContentLayout({ children, fullWidth }: ContentLayoutProp
       <main
         className={clsx(
           'main min-h-[calc(100vh-var(--header-height))] transition-[margin] duration-200',
-          isDesktop && sidebarOpen ? 'ml-[var(--sidebar-width)]' : 'ml-0'
+          isDesktop && sidebarOpen ? 'ml-[var(--sidebar-width)]' : 'ml-0',
+          isChatOpen && 'chat-open'
         )}
       >
         <SearchInfoBar />

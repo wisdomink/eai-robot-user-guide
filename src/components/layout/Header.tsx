@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
+import clsx from 'clsx'
 import logoDark from '@/assets/icons/logo-dark.svg'
+import { useChatState } from '@/hooks/useChatState'
 
 interface HeaderProps {
   onMenuToggle: () => void
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
+  const { isChatOpen, toggleChat } = useChatState()
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[var(--header-height)] px-[clamp(12px,1.2vw,24px)] bg-white border-b border-gray-200">
       {/* Left: Hamburger */}
@@ -33,7 +37,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
       {/* Right: Chat + Company Logo */}
       <div className="flex items-center gap-2">
-        <button className="chat-btn" id="chatToggleBtn" title="Ask AI">
+        <button
+          className={clsx('chat-btn', isChatOpen && 'active')}
+          onClick={toggleChat}
+          title="Ask AI"
+        >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M14 1H2a1 1 0 00-1 1v8a1 1 0 001 1h2v3l3-3h7a1 1 0 001-1V2a1 1 0 00-1-1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
             <circle cx="5" cy="6" r="0.8" fill="currentColor"/>
@@ -41,7 +49,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <circle cx="11" cy="6" r="0.8" fill="currentColor"/>
           </svg>
           Ask AI
-          <span className="chat-btn-dot" id="chatBtnDot"></span>
+          <span className="chat-btn-dot show" />
         </button>
         <Link to="/" className="p-[clamp(2px,0.3vw,6px)]">
           <img

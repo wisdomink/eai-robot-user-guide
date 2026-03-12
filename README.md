@@ -43,69 +43,74 @@ FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态�
 
 后端详细文档见 [`rag_server/README.md`](rag_server/README.md)。
 
-## 文件结构
+## 项目结构
 
 ```
 eai-robot-user-guide/
 ├── README.md
-├── CLAUDE.md                    ← 项目约定 + Figma MCP 集成规则
-├── index.html                   ← Vite 入口（含 ChatKit JS CDN）
+├── CLAUDE.md                    # 项目约定 + Figma MCP 集成规则
+├── index.html                   # Vite 入口（含 ChatKit JS CDN）
 ├── package.json
-├── vite.config.ts               ← Vite 配置 + 后端代理规则
-├── client_run.sh                ← 前端一键启动脚本
-├── deploy.sh                    ← 测试环境一键部署（前端 + 后端）
+├── vite.config.ts               # Vite 配置 + 后端代理规则
+├── client_run.sh                # 前端一键启动脚本
+├── deploy.sh                    # 测试环境一键部署（前端 + 后端）
+├── aws-deploy.sh                # AWS 部署脚本
+├── docker-build.sh              # Docker 构建脚本
 │
 ├── scripts/
-│   ├── convert.mjs              ← 源文档 → Markdown 转换脚本
-│   └── prerender.mjs            ← SSG 预渲染脚本
+│   ├── convert.mjs              # 源文档 → Markdown 转换（Master Ultra）
+│   ├── convert-futurist.mjs     # Futurist Ultra 转换
+│   ├── convert-aegis.mjs        # Aegis Ultra 转换
+│   ├── convert-aegisedu.mjs     # Aegis EDU 转换
+│   └── prerender.mjs            # SSG 预渲染脚本
 │
-├── rag_server/                  ← AI 后端（独立 Python 服务）
+├── rag_server/                  # AI 后端（独立 Python 服务）
 │   ├── app/
-│   │   ├── main.py              ← 入口：/chatkit、/api/chatkit/session、/search
-│   │   ├── core/config.py       ← 配置（环境变量 + 路径）
+│   │   ├── main.py              # 入口：/chatkit、/api/chatkit/session、/search
+│   │   ├── core/config.py       # 配置（环境变量 + 路径）
 │   │   └── services/
-│   │       ├── chatkit_handler.py  ← 多 Agent 工作流 + ChatKit 桥接
-│   │       └── instructions/*.md   ← 各 Agent 的 Prompt 模板
-│   ├── eval/                    ← RAG 评测脚本
-│   ├── create_vector_store.py   ← Vector Store 创建与文档上传
-│   ├── agent-builder-design.md  ← Agent Builder 编排架构设计文档
-│   ├── server_run.sh            ← 一键启动脚本
+│   │       ├── chatkit_handler.py   # 多 Agent 工作流 + ChatKit 桥接
+│   │       └── instructions/*.md   # 各 Agent 的 Prompt 模板
+│   ├── eval/                    # RAG 评测脚本
+│   ├── create_vector_store.py  # Vector Store 同步（上传手册文档）
+│   ├── agent-builder-design.md # Agent Builder 编排架构设计
+│   ├── server_run.sh           # 一键启动脚本
 │   └── README.md
 │
-├── public/images/               ← 静态图片资源
+├── public/images/               # 静态图片资源
 │
 └── src/
-    ├── main.tsx                 ← 客户端入口
-    ├── entry-server.tsx         ← SSG 服务端入口
-    ├── App.tsx                  ← 路由配置（从 sidebar.json 自动生成）
-    ├── index.css                ← Tailwind + 自定义样式
+    ├── main.tsx                 # 客户端入口
+    ├── entry-server.tsx        # SSG 服务端入口
+    ├── App.tsx                 # 路由配置（从 sidebar.json 自动生成）
+    ├── index.css               # Tailwind + 自定义样式
     │
-    ├── content/                 ← 内容管理
-    │   ├── sidebar.json         ← 导航树配置（所有产品）
-    │   ├── index.ts             ← 内容注册表
-    │   ├── chunks.ts            ← 内容分块（按 ## 标题切分）
-    │   └── pages/               ← Markdown 页面
+    ├── content/                # 内容管理
+    │   ├── sidebar.json        # 导航树配置（所有产品，按 productId 分组）
+    │   ├── index.ts            # 内容注册表
+    │   ├── chunks.ts           # 内容分块（按 ## 标题切分）
+    │   └── pages/              # Markdown 页面
     │       ├── master-ultra/
     │       ├── futurist-ultra/
     │       ├── aegis-ultra/
     │       └── aegis-edu/
     │
     ├── components/
-    │   ├── layout/              ← Header、Sidebar、ContentLayout、MobileMenuDrawer
+    │   ├── layout/             # Header、Sidebar、ContentLayout、MobileMenuDrawer
     │   ├── chat/
-    │   │   └── ChatPanel.tsx    ← ChatKit 对话面板（支持双模式）
+    │   │   └── ChatPanel.tsx   # ChatKit 对话面板（支持双模式）
     │   ├── markdown/
     │   │   └── MarkdownRenderer.tsx
-    │   └── search/              ← SearchBar、SearchDropdown、SearchInfoBar
+    │   └── search/             # SearchBar、SearchDropdown、SearchInfoBar
     │
     ├── pages/
-    │   └── MarkdownPage.tsx     ← 通用 Markdown 页面
+    │   └── MarkdownPage.tsx    # 通用 Markdown 页面
     │
     └── hooks/
-        ├── useSearch.ts         ← 搜索逻辑（精确 + 语义合并）
-        ├── useSemanticSearch.ts ← 语义搜索 Hook
-        ├── useMediaQuery.ts     ← 响应式断点
-        └── useSidebarState.ts   ← 侧边栏开关状态
+        ├── useSearch.ts        # 搜索逻辑（精确 + 语义合并）
+        ├── useSemanticSearch.ts # 语义搜索 Hook
+        ├── useMediaQuery.ts    # 响应式断点
+        └── useSidebarState.ts  # 侧边栏开关状态
 ```
 
 ## 快速开始
@@ -153,7 +158,7 @@ npm run preview   # 预览构建结果
 
 ## AI 智能问答
 
-项目内置了多 Agent 的 AI 对话功能，用户可在页面右侧打开 ChatPanel 提问。系统会自动识别产品、检索手册内容，生成带引用链接的结构化回答。
+项目内置多 Agent 的 AI 对话功能，用户可在页面右侧打开 ChatPanel 提问。系统会自动识别产品、检索手册内容，生成带引用链接的结构化回答。
 
 ### 双模式架构
 
@@ -167,10 +172,10 @@ npm run preview   # 预览构建结果
   ▼
 RAG Server (FastAPI)
   │  Triage Agent → 语言检测 + 产品识别 + 查询扩写
-  │  Support Agent → FileSearchTool + gpt-5 生成回答
+  │  Support Agent → FileSearchTool + LLM 生成回答
   │  FFRobotConverter → file_citation 映射为 SPA 可跳转链接
   ▼
-OpenAI API (gpt-5 + Vector Store)
+OpenAI API (Vector Store + LLM)
 ```
 
 特点：完全自主可控，支持自定义引用跳转、图片 URL 重写等。
@@ -225,7 +230,7 @@ VITE_CHAT_MODE=agent-builder ./client_run.sh
 
 **第 1 步** — 创建 Markdown 文件，如 `src/content/pages/master-ultra/new-topic.md`
 
-**第 2 步** — 在 `src/content/sidebar.json` 对应产品的 sections 中添加条目：
+**第 2 步** — 在 `src/content/sidebar.json` 对应产品的 `sections` 中添加条目：
 
 ```json
 {
@@ -235,7 +240,7 @@ VITE_CHAT_MODE=agent-builder ./client_run.sh
 }
 ```
 
-路由会自动生成，无需修改 `App.tsx`。
+路由会根据 sidebar 自动生成，无需修改 `App.tsx`。
 
 ### 页面间跳转链接
 
@@ -243,7 +248,7 @@ VITE_CHAT_MODE=agent-builder ./client_run.sh
 See also: [Safety Guidelines](/master-ultra/safety-guidelines)
 ```
 
-以 `/` 开头的内部链接会自动通过 React Router 进行 SPA 导航。
+以 `/` 开头的内部链接会通过 React Router 进行 SPA 导航。
 
 ### 添加图片
 
@@ -264,7 +269,7 @@ npm run convert:aegis        # Aegis Ultra
 npm run convert:aegisedu     # Aegis EDU
 ```
 
-每个命令支持 `:text`（仅文本）和 `:images`（仅图片）子命令。
+各命令支持 `:text`（仅文本）和 `:images`（仅图片）子命令。
 
 ## 设计系统
 

@@ -49,8 +49,10 @@ from app.core.config import (
     PUBLIC_BASE_URL,
     SIDEBAR_PATH,
 )
+from app.core.logging_config import CHAT_LOGGER_NAME
 
 logger = logging.getLogger(__name__)
+chat_logger = logging.getLogger(CHAT_LOGGER_NAME)
 
 # ── Paths ────────────────────────────────────────────────────────────────
 
@@ -302,7 +304,10 @@ class InMemoryStore(Store[dict]):
         return self.threads[thread_id]
 
     async def save_thread(self, thread: ThreadMetadata, context: dict) -> None:
+        is_new = thread.id not in self.threads
         self.threads[thread.id] = thread
+        if is_new:
+            chat_logger.info("[thread=%s] new thread created", thread.id)
 
     async def load_threads(
         self, limit: int, after: str | None, order: str, context: dict
@@ -328,6 +333,16 @@ class InMemoryStore(Store[dict]):
         self, thread_id: str, item: ThreadItem, context: dict
     ) -> None:
         self.items[thread_id].append(item)
+        item_type = type(item).__name__
+        preview = ""
+        if hasattr(item, "content") and isinstance(item.content, list):
+            preview = " ".join(
+                getattr(part, "text", "")[:80] for part in item.content[:2]
+            ).strip()
+        chat_logger.debug(
+            "[thread=%s] +item type=%s id=%s preview=%r",
+            thread_id, item_type, getattr(item, "id", "?"), preview[:150],
+        )
 
     async def save_item(
         self, thread_id: str, item: ThreadItem, context: dict
@@ -413,6 +428,17 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             if not already_in_history:
                 history_items.append(input_user_message)
 
+        user_text = ""
+        if input_user_message and hasattr(input_user_message, "content"):
+            user_text = " ".join(
+                getattr(part, "text", "") for part in input_user_message.content
+            ).strip()
+
+        chat_logger.info(
+            "[thread=%s] user_message=%r  history_count=%d",
+            thread.id, user_text[:200], len(history_items),
+        )
+
         input_items = await simple_to_agent_input(history_items)
 
         agent_context = AgentContext(
@@ -433,11 +459,12 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         triage_output: TriageOutput = triage_result.final_output
-        logger.info(
-            "Triage → query_type=%s, input_lang=%s, query_text=%s",
+        chat_logger.info(
+            "[thread=%s] triage → query_type=%s, input_lang=%s, query_text=%s",
+            thread.id,
             triage_output.query_type,
             triage_output.input_lang,
-            triage_output.query_text[:80] if triage_output.query_text else "",
+            triage_output.query_text[:120] if triage_output.query_text else "",
         )
 
         # ── Phase 2: Route to product-specific agent (streamed) ──────────

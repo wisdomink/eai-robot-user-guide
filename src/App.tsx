@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ALL_PRODUCTS } from '@/hooks/useProductContext'
 import MarkdownPage from '@/pages/MarkdownPage'
 import ChatPanel from '@/components/chat/ChatPanel'
+import { ChatContext } from '@/hooks/useChatState'
+
+const isDesktop = () => window.innerWidth >= 1024
 
 export function AppRoutes() {
   return (
@@ -38,10 +42,15 @@ export function AppRoutes() {
 }
 
 export default function App() {
+  const [isChatOpen, setIsChatOpen] = useState(isDesktop)
+  const toggleChat = () => setIsChatOpen(prev => !prev)
+
   return (
     <BrowserRouter>
-      <AppRoutes />
-      <ChatPanel />
+      <ChatContext.Provider value={{ isChatOpen, toggleChat }}>
+        <AppRoutes />
+        <ChatPanel />
+      </ChatContext.Provider>
     </BrowserRouter>
   )
 }

@@ -201,7 +201,7 @@ kill_port "$CLIENT_PORT" "前端"
 echo "🚀 启动 RAG Server (port $RAG_PORT)..."
 cd "$SCRIPT_DIR/rag_server"
 setsid nohup "$RAG_VENV/bin/uvicorn" app.main:app --host 0.0.0.0 --port "$RAG_PORT" \
-    > "$RAG_LOG" 2>&1 < /dev/null &
+    >> "$RAG_LOG" 2>&1 < /dev/null &
 echo $! > "$RAG_PID"
 cd "$SCRIPT_DIR"
 
@@ -209,7 +209,7 @@ cd "$SCRIPT_DIR"
 
 echo "🚀 启动 Vite 前端 (port $CLIENT_PORT)..."
 setsid nohup npx vite --host --port "$CLIENT_PORT" \
-    > "$FRONTEND_LOG" 2>&1 < /dev/null &
+    >> "$FRONTEND_LOG" 2>&1 < /dev/null &
 echo $! > "$FRONTEND_PID"
 
 # Wait for services to start

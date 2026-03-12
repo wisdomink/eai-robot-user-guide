@@ -22,14 +22,34 @@ OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_U
 OPENAI_VECTOR_STORE_AEGIS_EDU_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_EDU_ID", "")
 OPENAI_VECTOR_STORE_ROBOT_ALL_ID: str = os.getenv("OPENAI_VECTOR_STORE_ROBOT_ALL_ID", "")
 
-# ── Chat mode ─────────────────────────────────────────────────────────────
-# "backend"       → self-hosted ChatKit server (openai-chatkit + openai-agents)
-# "agent-builder" → OpenAI-hosted Agent Builder workflow via ChatKit sessions
-CHAT_MODE: str = os.getenv("CHAT_MODE", "backend")
+# ── Agent Builder ─────────────────────────────────────────────────────────
 AGENT_BUILDER_WORKFLOW_ID: str = os.getenv(
     "AGENT_BUILDER_WORKFLOW_ID",
     "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e",
 )
+
+# ── Logging ───────────────────────────────────────────────────────────────
+LOG_DIR: Path = Path(os.getenv("LOG_DIR", str(RAG_SERVER_ROOT / "logs")))
+LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_MAX_BYTES: int = int(os.getenv("LOG_MAX_BYTES", str(10 * 1024 * 1024)))  # 10 MB
+LOG_BACKUP_COUNT: int = int(os.getenv("LOG_BACKUP_COUNT", "5"))
+
+# ── Alert (smart email notifications for errors) ─────────────────────────
+ALERT_ENABLED: bool = os.getenv("ALERT_ENABLED", "false").lower() in ("1", "true", "yes")
+ALERT_SMTP_HOST: str = os.getenv("ALERT_SMTP_HOST", "")
+ALERT_SMTP_PORT: int = int(os.getenv("ALERT_SMTP_PORT", "587"))
+ALERT_SMTP_USE_TLS: bool = os.getenv("ALERT_SMTP_USE_TLS", "true").lower() in ("1", "true", "yes")
+ALERT_SMTP_USER: str = os.getenv("ALERT_SMTP_USER", "")
+ALERT_SMTP_PASSWORD: str = os.getenv("ALERT_SMTP_PASSWORD", "")
+ALERT_FROM_EMAIL: str = os.getenv("ALERT_FROM_EMAIL", "")
+ALERT_TO_EMAILS: list[str] = [
+    e.strip() for e in os.getenv("ALERT_TO_EMAILS", "").split(",") if e.strip()
+]
+ALERT_COOLDOWN_SECONDS: int = int(os.getenv("ALERT_COOLDOWN_SECONDS", "300"))
+ALERT_CONTEXT_LINES: int = int(os.getenv("ALERT_CONTEXT_LINES", "50"))
+ALERT_LEVEL: str = os.getenv("ALERT_LEVEL", "ERROR").upper()
+ALERT_APP_NAME: str = os.getenv("ALERT_APP_NAME", "EAI Robot")
+ALERT_DIGEST_INTERVAL: int = int(os.getenv("ALERT_DIGEST_INTERVAL", "3600"))  # 1 hour
 
 # ── Public URL (for rewriting image paths in ChatKit iframe) ─────────────
 PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")

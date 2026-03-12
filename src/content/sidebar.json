@@ -3,6 +3,13 @@
     "title": "FF Master Ultra",
     "sections": [
       {
+        "id": "master-ultra-home",
+        "title": "Home",
+        "pages": [
+          { "title": "FF Master Ultra", "slug": "/master-ultra", "file": "master-ultra/master-ultra-home.md" }
+        ]
+      },
+      {
         "id": "preliminary",
         "title": "Preliminary Notice",
         "pages": [
@@ -58,6 +65,13 @@
   "futurist-ultra": {
     "title": "FF Futurist Ultra",
     "sections": [
+      {
+        "id": "futurist-ultra-home",
+        "title": "Home",
+        "pages": [
+          { "title": "FF Futurist Ultra", "slug": "/futurist-ultra", "file": "futurist-ultra/futurist-ultra-home.md" }
+        ]
+      },
       {
         "id": "foreword",
         "title": "Foreword",
@@ -128,6 +142,13 @@
     "title": "FF Aegis Ultra",
     "sections": [
       {
+        "id": "aegis-ultra-home",
+        "title": "Home",
+        "pages": [
+          { "title": "FF Aegis Ultra", "slug": "/aegis-ultra", "file": "aegis-ultra/aegis-ultra-home.md" }
+        ]
+      },
+      {
         "id": "legal-safety",
         "title": "Legal & Safety",
         "pages": [
@@ -194,6 +215,13 @@
   "aegis-edu": {
     "title": "FF Aegis EDU",
     "sections": [
+      {
+        "id": "aegis-edu-home",
+        "title": "Home",
+        "pages": [
+          { "title": "FF Aegis EDU", "slug": "/aegis-edu", "file": "aegis-edu/aegis-edu-home.md" }
+        ]
+      },
       {
         "id": "version-statement",
         "title": "Version Statement",

@@ -472,3 +472,13 @@ mark.hl.current {
   border-style: dashed;
   color: var(--text-3);
 }
+
+.ck-greeting-version {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-family: var(--font-roboto);
+  font-size: 11px;
+  color: #b0b0b0;
+  letter-spacing: 0.02em;
+}

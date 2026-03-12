@@ -45,12 +45,17 @@ COPY --from=frontend-builder /build/dist /usr/share/nginx/html
 COPY rag_server/app /app/rag_server/app
 COPY src/content/sidebar.json /app/src/content/sidebar.json
 
+# Log directory (mount as a Docker volume to persist across restarts)
+RUN mkdir -p /app/rag_server/logs
+ENV LOG_DIR=/app/rag_server/logs
+VOLUME ["/app/rag_server/logs"]
+
 # supervisord config
 COPY supervisord.conf /etc/supervisord.conf
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
 
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
