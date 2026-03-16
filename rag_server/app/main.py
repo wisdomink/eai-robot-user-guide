@@ -24,7 +24,7 @@ from openai import AsyncOpenAI
 from chatkit.server import StreamingResult
 
 from app.core.config import (
-    AGENT_BUILDER_WORKFLOW_ID,
+    LOG_DIR,
     OPENAI_API_KEY,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     SIDEBAR_PATH,
@@ -34,7 +34,8 @@ from app.services.chatkit_handler import create_chatkit_server
 
 setup_logging()
 logger = logging.getLogger(__name__)
-api_logger = logging.getLogger("api")
+front_logger = logging.getLogger("front")
+sys_logger = logging.getLogger("system")
 
 _MAX_BODY_LOG = 4000
 
@@ -93,14 +94,14 @@ async def chatkit_endpoint(request: Request):
     body = await request.body()
 
     summary = _summarize_chatkit_body(body)
-    api_logger.info(">>> POST /chatkit  %s", summary)
-    api_logger.debug(">>> POST /chatkit  raw_body=%s", body.decode("utf-8", errors="replace")[:_MAX_BODY_LOG])
+    front_logger.info(">>> POST /chatkit  %s", summary)
+    front_logger.debug(">>> POST /chatkit  raw_body=%s", body.decode("utf-8", errors="replace")[:_MAX_BODY_LOG])
 
     try:
         result = await chatkit_server.process(body, context={})
     except Exception as exc:
         elapsed_ms = (time.perf_counter() - start) * 1000
-        api_logger.error(
+        front_logger.error(
             "<<< POST /chatkit  status=500  elapsed=%.1fms  error=%s\n%s",
             elapsed_ms, exc, traceback.format_exc(),
         )
@@ -109,79 +110,15 @@ async def chatkit_endpoint(request: Request):
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     if isinstance(result, StreamingResult):
-        api_logger.info("<<< POST /chatkit  status=200  response=SSE_STREAM  elapsed=%.1fms", elapsed_ms)
+        front_logger.info("<<< POST /chatkit  status=200  response=SSE_STREAM  elapsed=%.1fms", elapsed_ms)
         return StreamingResponse(result, media_type="text/event-stream")
 
     resp_json = result.json
-    api_logger.info(
+    front_logger.info(
         "<<< POST /chatkit  status=200  response=JSON  elapsed=%.1fms  body=%s",
         elapsed_ms, resp_json[:_MAX_BODY_LOG],
     )
     return Response(content=resp_json, media_type="application/json")
-
-
-# ── ChatKit session (agent-builder mode) ───────────────────────────────────
-
-_oai_sync = None
-
-
-def _get_sync_client():
-    global _oai_sync
-    if _oai_sync is None:
-        import httpx as _httpx_sync
-        from openai import OpenAI
-        _oai_sync = OpenAI(
-            api_key=OPENAI_API_KEY,
-            http_client=_httpx_sync.Client(
-                limits=_httpx_sync.Limits(
-                    max_connections=100,
-                    max_keepalive_connections=20,
-                    keepalive_expiry=60,
-                ),
-                timeout=_httpx_sync.Timeout(timeout=30.0, connect=10.0),
-            ),
-        )
-    return _oai_sync
-
-
-@app.post("/api/chatkit/session")
-async def create_chatkit_session(request: Request):
-    """Create a ChatKit session backed by the Agent Builder workflow.
-    Returns a client_secret for the frontend to connect directly to OpenAI."""
-    start = time.perf_counter()
-
-    body = {}
-    try:
-        body = await request.json()
-    except Exception:
-        pass
-
-    user_id = body.get("user", "anonymous")
-    api_logger.info(">>> POST /api/chatkit/session  user=%s  body=%s", user_id, json.dumps(body))
-
-    try:
-        client = _get_sync_client()
-        session = client.chatkit.sessions.create(
-            workflow={"id": AGENT_BUILDER_WORKFLOW_ID},
-            user=user_id,
-        )
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        api_logger.info(
-            "<<< POST /api/chatkit/session  status=200  user=%s  elapsed=%.1fms  secret_prefix=%s…",
-            user_id, elapsed_ms, session.client_secret[:12],
-        )
-        return {"client_secret": session.client_secret}
-    except Exception as exc:
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        api_logger.error(
-            "<<< POST /api/chatkit/session  status=500  user=%s  elapsed=%.1fms  error=%s",
-            user_id, elapsed_ms, exc,
-        )
-        return Response(
-            content=json.dumps({"error": str(exc)}),
-            status_code=500,
-            media_type="application/json",
-        )
 
 
 # ── Semantic Search (OpenAI Vector Store Search) ──────────────────────────
@@ -252,10 +189,10 @@ async def search_endpoint(
 ):
     """Semantic search via OpenAI Vector Store Search API."""
     start = time.perf_counter()
-    api_logger.info(">>> GET /search  q=%r  limit=%d", q, limit)
+    front_logger.info(">>> GET /search  q=%r  limit=%d", q, limit)
 
     if not q.strip():
-        api_logger.info("<<< GET /search  status=200  q=<empty>  results=0  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
+        front_logger.info("<<< GET /search  status=200  q=<empty>  results=0  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return {"results": []}
 
     if not OPENAI_VECTOR_STORE_ROBOT_ALL_ID:
@@ -269,7 +206,7 @@ async def search_endpoint(
                 "file_info_map_count": len(_FILE_INFO_MAP),
             },
         }
-        api_logger.error("<<< GET /search  status=200  error=vector_store_not_configured  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
+        front_logger.error("<<< GET /search  status=200  error=vector_store_not_configured  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return resp
 
     last_exc: Exception | None = None
@@ -285,10 +222,10 @@ async def search_endpoint(
             break
         except Exception as exc:
             last_exc = exc
-            api_logger.warning("GET /search  vector_store attempt %d failed: %s", attempt + 1, exc)
+            front_logger.warning("GET /search  vector_store attempt %d failed: %s", attempt + 1, exc)
     if page is None:
         elapsed_ms = (time.perf_counter() - start) * 1000
-        api_logger.error(
+        front_logger.error(
             "<<< GET /search  status=200  q=%r  error=%s(%s)  elapsed=%.1fms",
             q, type(last_exc).__name__, last_exc, elapsed_ms,
         )
@@ -308,7 +245,7 @@ async def search_endpoint(
         file_info = _FILE_INFO_MAP.get(item.filename)
         if not file_info:
             skipped.append({"filename": item.filename, "score": round(item.score, 4)})
-            api_logger.warning("GET /search  unmapped filename=%r score=%.4f", item.filename, item.score)
+            front_logger.warning("GET /search  unmapped filename=%r score=%.4f", item.filename, item.score)
             continue
 
         full_text = " ".join(c.text for c in item.content if c.type == "text")
@@ -344,12 +281,163 @@ async def search_endpoint(
     }
 
     elapsed_ms = (time.perf_counter() - start) * 1000
-    api_logger.info(
+    front_logger.info(
         "<<< GET /search  status=200  q=%r  raw=%d  mapped=%d  skipped=%d  elapsed=%.1fms  response=%s",
         q, len(page.data), len(results), len(skipped), elapsed_ms,
         json.dumps(response, ensure_ascii=False)[:_MAX_BODY_LOG],
     )
     return response
+
+
+# ── Chat History API ──────────────────────────────────────────────────────
+
+_ALLOWED_LOGS = {"front.log", "back.log", "system.log"}
+
+
+def _serialize_item(item) -> dict:
+    """Convert a ThreadItem (Pydantic model) to a JSON-friendly dict."""
+    data = item.model_dump(mode="json") if hasattr(item, "model_dump") else {}
+    text_parts = []
+    if hasattr(item, "content") and isinstance(item.content, list):
+        for part in item.content:
+            t = getattr(part, "text", None)
+            if t:
+                text_parts.append(t)
+    if text_parts:
+        data["_text"] = " ".join(text_parts)
+    return data
+
+
+@app.get("/api/chat-history")
+async def list_threads(
+    request: Request,
+    limit: int = Query(50, ge=1, le=200, description="Max threads"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
+):
+    """List all conversation threads (newest first by default)."""
+    base_url = str(request.base_url).rstrip("/")
+    store = chatkit_server.store
+    page = await store.load_threads(limit=limit, after=None, order=order, context={})
+    threads = []
+    for t in page.data:
+        item_count = len(store.items.get(t.id, []))
+        first_msg = ""
+        for item in store.items.get(t.id, []):
+            if getattr(item, "type", None) == "user_message":
+                if hasattr(item, "content") and isinstance(item.content, list):
+                    first_msg = " ".join(
+                        getattr(p, "text", "") for p in item.content
+                    ).strip()[:200]
+                break
+        traces = store.agent_traces.get(t.id, [])
+        last_agents = []
+        if traces:
+            last_agents = [n["agent"] for n in traces[-1].get("nodes", [])]
+        threads.append({
+            "id": t.id,
+            "detail_url": f"{base_url}/api/chat-history/{t.id}",
+            "title": t.title,
+            "created_at": t.created_at.isoformat(),
+            "status": t.status if isinstance(t.status, str) else str(t.status),
+            "item_count": item_count,
+            "first_message": first_msg,
+            "agents": last_agents,
+        })
+    return {"threads": threads, "total": len(threads), "has_more": page.has_more}
+
+
+@app.get("/api/chat-history/{thread_id}")
+async def get_thread_detail(thread_id: str):
+    """Get all messages in a specific thread."""
+    store = chatkit_server.store
+    if thread_id not in store.threads:
+        return Response(
+            content=json.dumps({"error": f"Thread {thread_id} not found"}),
+            status_code=404,
+            media_type="application/json",
+        )
+    thread = store.threads[thread_id]
+    items_page = await store.load_thread_items(
+        thread_id, after=None, limit=500, order="asc", context={}
+    )
+    return {
+        "thread": {
+            "id": thread.id,
+            "title": thread.title,
+            "created_at": thread.created_at.isoformat(),
+            "status": thread.status if isinstance(thread.status, str) else str(thread.status),
+        },
+        "agent_traces": store.agent_traces.get(thread_id, []),
+        "items": [_serialize_item(item) for item in items_page.data],
+    }
+
+
+@app.get("/api/logs")
+async def list_logs(request: Request):
+    """List all available log types with links."""
+    base_url = str(request.base_url).rstrip("/")
+    logs = []
+    for name in sorted(_ALLOWED_LOGS):
+        log_path = LOG_DIR / name
+        exists = log_path.exists()
+        size_bytes = log_path.stat().st_size if exists else 0
+        total_lines = log_path.read_text(encoding="utf-8", errors="replace").count("\n") if exists else 0
+        logs.append({
+            "name": name,
+            "url": f"{base_url}/api/logs/{name}",
+            "exists": exists,
+            "size_bytes": size_bytes,
+            "total_lines": total_lines,
+        })
+    return {"logs": logs}
+
+
+@app.get("/api/logs/all")
+async def read_all_logs(
+    tail: int = Query(200, ge=1, le=5000, description="Number of lines per log file"),
+):
+    """Read the last N lines from every log file, merged and sorted by timestamp."""
+    merged: list[tuple[str, str]] = []
+    for name in sorted(_ALLOWED_LOGS):
+        log_path = LOG_DIR / name
+        if not log_path.exists():
+            continue
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        for line in lines[-tail:]:
+            merged.append((name, line))
+
+    merged.sort(key=lambda x: x[1][:19])
+
+    return {
+        "lines": [{"source": src, "text": text} for src, text in merged],
+        "total": len(merged),
+    }
+
+
+@app.get("/api/logs/{log_name}")
+async def read_log(
+    log_name: str,
+    tail: int = Query(200, ge=1, le=5000, description="Number of lines from the end"),
+):
+    """Read the last N lines of a log file. Persists across container restarts."""
+    if log_name not in _ALLOWED_LOGS:
+        return Response(
+            content=json.dumps({"error": f"Unknown log: {log_name}", "allowed": sorted(_ALLOWED_LOGS)}),
+            status_code=400,
+            media_type="application/json",
+        )
+    log_path = LOG_DIR / log_name
+    if not log_path.exists():
+        return {"log": log_name, "lines": [], "total_lines": 0}
+
+    all_lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    selected = all_lines[-tail:]
+    return {
+        "log": log_name,
+        "lines": selected,
+        "total_lines": len(all_lines),
+        "showing": len(selected),
+    }
 
 
 # ── Startup warmup ────────────────────────────────────────────────────────
@@ -359,11 +447,12 @@ async def search_endpoint(
 async def warmup():
     """Pre-warm external connections so the first real request doesn't pay
     the cold-start penalty (DNS resolution, TLS handshake, etc.)."""
+    sys_logger.info("Application starting — version=%s", app.version)
     try:
         await _oai.models.list()
-        logger.info("Startup warmup: OpenAI connection established")
+        sys_logger.info("Startup warmup: OpenAI connection established")
     except Exception as exc:
-        logger.warning("Startup warmup failed (non-fatal): %s", exc)
+        sys_logger.warning("Startup warmup failed (non-fatal): %s", exc)
 
 
 # ── Health ────────────────────────────────────────────────────────────────
@@ -371,5 +460,5 @@ async def warmup():
 
 @app.get("/health")
 async def health():
-    api_logger.debug("GET /health → 200")
+    front_logger.debug("GET /health → 200")
     return {"status": "ok", "version": app.version}

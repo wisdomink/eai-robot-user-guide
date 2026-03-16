@@ -2,10 +2,7 @@
 
 FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语义搜索能力。
 
-支持两种运行模式：
-
-- **Backend 模式** — 自托管多 Agent 工作流（Triage + 各产品 Support Agent）
-- **Agent Builder 模式** — 前端直连 OpenAI Agent Builder，后端仅创建 ChatKit session
+自托管多 Agent 工作流（Triage + 各产品 Support Agent），聊天流量全部经过后端处理。
 
 ## 技术栈
 
@@ -18,8 +15,6 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
 | 语义搜索 | OpenAI Vector Store Search API | 跨页面中英文语义搜索 |
 
 ## 架构概览
-
-### Backend 模式（默认）
 
 ```
 用户提问 → ChatKit 协议 → POST /chatkit
@@ -48,18 +43,6 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
                     SSE 流式返回 → 前端 ChatPanel
 ```
 
-### Agent Builder 模式
-
-```
-前端 ChatPanel
-  │ ① POST /api/chatkit/session
-  ▼
-后端 → openai.chatkit.sessions.create(workflow_id) → OpenAI
-  │ ② 返回 client_secret
-  ▼
-前端 ←→ OpenAI Agent Builder（聊天直连，不经后端）
-```
-
 ## 项目结构
 
 ```
@@ -82,7 +65,6 @@ rag_server/
 │   ├── run_eval.py                  # RAG 评测脚本
 │   └── test_cases.json              # 测试用例
 ├── create_vector_store.py           # 同步手册文档到 Vector Store（ROBOT_ALL）
-├── agent-builder-design.md          # Agent Builder 编排架构设计
 ├── .env                             # 环境变量（勿提交）
 ├── .env.example                     # 环境变量模板
 ├── requirements.txt                 # Python 依赖
@@ -149,21 +131,14 @@ uvicorn app.main:app --reload --port 8000
 | `OPENAI_API_KEY` | ✅ | — | OpenAI API 密钥 |
 | `LLM_MODEL` | | `gpt-5` | Agent 使用的 LLM 模型 |
 
-### Chat 模式
-
-| 变量 | 必填 | 默认值 | 说明 |
-|------|:----:|--------|------|
-| `CHAT_MODE` | | `backend` | `backend`（自托管）或 `agent-builder`（直连 OpenAI） |
-| `AGENT_BUILDER_WORKFLOW_ID` | | 见 .env.example | Agent Builder 工作流 ID（仅 agent-builder 模式） |
-
 ### Vector Store
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
-| `OPENAI_VECTOR_STORE_MASTER_ULTRA_ID` | backend 时 ✅ | Master Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | backend 时 ✅ | Futurist Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | backend 时 ✅ | Aegis Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_EDU_ID` | backend 时 ✅ | Aegis EDU 产品文档库 |
+| `OPENAI_VECTOR_STORE_MASTER_ULTRA_ID` | ✅ | Master Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | ✅ | Futurist Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_EDU_ID` | ✅ | Aegis EDU 产品文档库 |
 | `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索 + General Agent；`create_vector_store.py` 同步目标） |
 
 ### 其他
@@ -180,14 +155,16 @@ uvicorn app.main:app --reload --port 8000
 
 ## API 接口
 
-| 端点 | 方法 | 模式 | 说明 |
-|------|------|------|------|
-| `/chatkit` | POST | backend | ChatKit 协议端点（线程管理 + 流式对话） |
-| `/api/chatkit/session` | POST | agent-builder | 创建 ChatKit session，返回 `client_secret` |
-| `/api/chat-mode` | GET | 通用 | 返回当前配置的 chat 模式 |
-| `/search` | GET | 通用 | 语义搜索（`?q=查询词&limit=10`） |
-| `/search/debug` | GET | 通用 | 诊断：Vector Store / sidebar 配置（不暴露密钥） |
-| `/health` | GET | 通用 | 健康检查 |
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/chatkit` | POST | ChatKit 协议端点（线程管理 + 流式对话） |
+| `/search` | GET | 语义搜索（`?q=查询词&limit=10`） |
+| `/api/chat-history` | GET | 获取所有对话线程列表（`?limit=50&order=desc`） |
+| `/api/chat-history/{thread_id}` | GET | 获取指定线程的消息和 Agent 追踪记录 |
+| `/api/logs` | GET | 列出所有可用日志类型及访问链接 |
+| `/api/logs/all` | GET | 合并所有日志按时间排序输出（`?tail=200`，每个日志取最后 N 行） |
+| `/api/logs/{log_name}` | GET | 获取指定日志的最后 N 行（`?tail=200`，允许：`front.log`、`back.log`、`system.log`） |
+| `/health` | GET | 健康检查 |
 
 ## 多 Agent 工作流
 
@@ -215,7 +192,7 @@ uvicorn app.main:app --reload --port 8000
 
 模板支持 `{{input_lang}}`、`{{query_text}}` 等变量插值。
 
-## 引用来源跳转（Backend 模式）
+## 引用来源跳转
 
 AI 回答中的引用可点击跳转到对应手册页面：
 
@@ -223,49 +200,6 @@ AI 回答中的引用可点击跳转到对应手册页面：
 2. `FFRobotConverter` 通过 `sidebar.json` 将文件名映射为页面 slug
 3. 输出 `EntitySource`（带 `data.slug`），前端 `entities.onClick` 拦截
 4. 前端通过 React Router 执行 SPA 导航
-
-> Agent Builder 模式下引用使用 OpenAI 默认样式，不支持 SPA 跳转。
-
-## 切换 Chat 模式
-
-### 切换为 Agent Builder 模式
-
-1. 编辑 `rag_server/.env`：
-
-```env
-CHAT_MODE=agent-builder
-```
-
-2. 启动前端时设置环境变量：
-
-```bash
-VITE_CHAT_MODE=agent-builder ./client_run.sh
-```
-
-### 切换回 Backend 模式
-
-1. 编辑 `rag_server/.env`：
-
-```env
-CHAT_MODE=backend
-```
-
-2. 正常启动前端：
-
-```bash
-./client_run.sh
-```
-
-### 两种模式对比
-
-| 特性 | Backend 模式 | Agent Builder 模式 |
-|------|-------------|---------------------|
-| 聊天流量 | 全部经过自托管后端 | 前端直连 OpenAI |
-| 后端职责 | 完整 Agent 工作流 + 流式处理 | 仅创建 session（1 次 API 调用） |
-| 引用跳转 | ✅ SPA 页面内跳转 | ❌ 使用默认引用样式 |
-| 图片 URL 重写 | ✅ 自动转为绝对路径 | ❌ 需 Agent 生成绝对路径 |
-| Agent 配置修改 | 改代码后重启 | 在 Agent Builder 控制台修改 |
-| 调试 | 本地日志 + OpenAI Traces | OpenAI Traces |
 
 ## 评测
 
@@ -284,4 +218,3 @@ python -m eval.run_eval --category safety # 按分类运行
 - Agent 的 Instructions 模板在 `app/services/instructions/*.md`，修改后重启服务即生效。
 - `.env` 含 API Key，已在 `.gitignore` 中排除，切勿提交。
 - `venv/` 为 Python 虚拟环境，已在 `.gitignore` 中排除。
-- Agent Builder 工作流设计见 `agent-builder-design.md`。

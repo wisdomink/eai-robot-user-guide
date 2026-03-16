@@ -28,11 +28,15 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-      '/api/chatkit': {
+      '/api/chat-mode': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-      '/api/chat-mode': {
+      '/api/chat-history': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/logs': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

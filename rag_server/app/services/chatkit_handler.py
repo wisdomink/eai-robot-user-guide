@@ -15,6 +15,7 @@ import logging
 import re
 from collections import defaultdict
 from collections.abc import AsyncIterator
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agents import Agent, FileSearchTool, ModelSettings, Runner, RunConfig
@@ -49,10 +50,10 @@ from app.core.config import (
     PUBLIC_BASE_URL,
     SIDEBAR_PATH,
 )
-from app.core.logging_config import CHAT_LOGGER_NAME
+from app.core.logging_config import FRONT_LOGGER_NAME
 
 logger = logging.getLogger(__name__)
-chat_logger = logging.getLogger(CHAT_LOGGER_NAME)
+front_logger = logging.getLogger(FRONT_LOGGER_NAME)
 
 # ── Paths ────────────────────────────────────────────────────────────────
 
@@ -154,12 +155,13 @@ _TRIAGE_MODEL_SETTINGS = ModelSettings(
 
 _SUPPORT_MODEL_SETTINGS = ModelSettings(
     store=True,
+    tool_choice="required",
 )
 
 triage_agent = Agent(
     name="FF Robot Triage",
     instructions=_load_instructions("triage"),
-    model=LLM_MODEL,
+    model="gpt-4o",
     output_type=TriageOutput,
     model_settings=_TRIAGE_MODEL_SETTINGS,
 )
@@ -297,6 +299,7 @@ class InMemoryStore(Store[dict]):
     def __init__(self) -> None:
         self.threads: dict[str, ThreadMetadata] = {}
         self.items: dict[str, list[ThreadItem]] = defaultdict(list)
+        self.agent_traces: dict[str, list[dict]] = defaultdict(list)
 
     async def load_thread(self, thread_id: str, context: dict) -> ThreadMetadata:
         if thread_id not in self.threads:
@@ -307,7 +310,7 @@ class InMemoryStore(Store[dict]):
         is_new = thread.id not in self.threads
         self.threads[thread.id] = thread
         if is_new:
-            chat_logger.info("[thread=%s] new thread created", thread.id)
+            front_logger.info("[thread=%s] new thread created", thread.id)
 
     async def load_threads(
         self, limit: int, after: str | None, order: str, context: dict
@@ -339,7 +342,7 @@ class InMemoryStore(Store[dict]):
             preview = " ".join(
                 getattr(part, "text", "")[:80] for part in item.content[:2]
             ).strip()
-        chat_logger.debug(
+        front_logger.debug(
             "[thread=%s] +item type=%s id=%s preview=%r",
             thread_id, item_type, getattr(item, "id", "?"), preview[:150],
         )
@@ -434,7 +437,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 getattr(part, "text", "") for part in input_user_message.content
             ).strip()
 
-        chat_logger.info(
+        front_logger.info(
             "[thread=%s] user_message=%r  history_count=%d",
             thread.id, user_text[:200], len(history_items),
         )
@@ -459,7 +462,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         triage_output: TriageOutput = triage_result.final_output
-        chat_logger.info(
+        front_logger.info(
             "[thread=%s] triage → query_type=%s, input_lang=%s, query_text=%s",
             thread.id,
             triage_output.query_type,
@@ -474,12 +477,40 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             triage_output.query_text,
         )
 
-        # Pass original user input + triage conversation to the support agent
-        # so it can see the full context.
-        conversation = list(input_items)
-        conversation.extend(
-            item.to_input_item() for item in triage_result.new_items
+        support_cfg = _SUPPORT_AGENT_CONFIGS.get(
+            triage_output.query_type, _SUPPORT_AGENT_CONFIGS["general"]
         )
+        self.store.agent_traces[thread.id].append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_message": user_text[:300],
+            "nodes": [
+                {
+                    "agent": triage_agent.name,
+                    "model": LLM_MODEL,
+                    "role": "triage",
+                    "output": {
+                        "query_type": triage_output.query_type,
+                        "input_lang": triage_output.input_lang,
+                        "query_text": triage_output.query_text,
+                    },
+                },
+                {
+                    "agent": support_cfg["name"],
+                    "model": LLM_MODEL,
+                    "role": "support",
+                    "routed_by": triage_output.query_type,
+                    "vector_store_id": support_cfg["vector_store_id"],
+                    "tools": ["file_search"],
+                },
+            ],
+        })
+
+        conversation = list(input_items)
+        for i in range(len(conversation) - 1, -1, -1):
+            item = conversation[i]
+            if isinstance(item, dict) and item.get("role") == "user":
+                conversation[i] = {"role": "user", "content": triage_output.query_text}
+                break
 
         result = Runner.run_streamed(
             support_agent,

@@ -17,8 +17,8 @@ set -euo pipefail
 # ══════════════════════════════════════════════════════════
 #  配置（在此填入你的 AWS 凭证）
 # ══════════════════════════════════════════════════════════
-export AWS_ACCESS_KEY_ID="xxxx"
-export AWS_SECRET_ACCESS_KEY="xxxx"
+export AWS_ACCESS_KEY_ID="xxx"
+export AWS_SECRET_ACCESS_KEY="xxx"
 export AWS_DEFAULT_REGION="us-east-1"
 
 APP_NAME="eai-robot"

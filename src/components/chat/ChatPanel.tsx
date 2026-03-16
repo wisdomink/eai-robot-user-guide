@@ -4,27 +4,10 @@ import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
 import { useChatState } from '@/hooks/useChatState'
 
-const CHAT_MODE = import.meta.env.VITE_CHAT_MODE || 'backend'
 const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || '/chatkit'
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
-const SESSION_ENDPOINT = import.meta.env.VITE_CHATKIT_SESSION_URL || '/api/chatkit/session'
 
 function buildApiConfig() {
-  if (CHAT_MODE === 'agent-builder') {
-    return {
-      async getClientSecret(_existing: string | null) {
-        const res = await fetch(SESSION_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user: `web-${crypto.randomUUID?.() ?? Date.now()}`,
-          }),
-        })
-        const { client_secret } = await res.json()
-        return client_secret as string
-      },
-    }
-  }
   return {
     url: CHATKIT_API_URL,
     domainKey: CHATKIT_DOMAIN_KEY,
@@ -45,7 +28,7 @@ const PROMPTS = [
   { label: 'FF Aegis EDU', prompt: 'Tell me about FF Aegis EDU. What are its key features, specs, and how do I get started?' },
 ]
 
-type OverlayMode = 'buttons' | 'sending' | null
+type OverlayMode = 'buttons' | null
 
 export default function ChatPanel() {
   const { isChatOpen } = useChatState()
@@ -56,7 +39,11 @@ export default function ChatPanel() {
 
   const setThreadIdRef = useRef<((id: string | null) => Promise<void>) | null>(null)
 
+  const overlayModeRef = useRef<OverlayMode>(overlayMode)
+  overlayModeRef.current = overlayMode
+
   const handleNewChat = useCallback(() => {
+    if (overlayModeRef.current === 'buttons') return
     setThreadIdRef.current?.(null)
     setOverlayMode('buttons')
     setAskingOwn(false)
@@ -119,7 +106,7 @@ export default function ChatPanel() {
   setThreadIdRef.current = setThreadId
 
   const handlePromptClick = useCallback((prompt: string) => {
-    setOverlayMode('sending')
+    setOverlayMode(null)
     sendUserMessage({ text: prompt })
   }, [sendUserMessage])
 

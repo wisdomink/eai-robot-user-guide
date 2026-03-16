@@ -22,12 +22,6 @@ OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_U
 OPENAI_VECTOR_STORE_AEGIS_EDU_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_EDU_ID", "")
 OPENAI_VECTOR_STORE_ROBOT_ALL_ID: str = os.getenv("OPENAI_VECTOR_STORE_ROBOT_ALL_ID", "")
 
-# ── Agent Builder ─────────────────────────────────────────────────────────
-AGENT_BUILDER_WORKFLOW_ID: str = os.getenv(
-    "AGENT_BUILDER_WORKFLOW_ID",
-    "wf_69aa982ad2f4819098cf22592ff0d7d904a5dc09cc34613e",
-)
-
 # ── Logging ───────────────────────────────────────────────────────────────
 LOG_DIR: Path = Path(os.getenv("LOG_DIR", str(RAG_SERVER_ROOT / "logs")))
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()

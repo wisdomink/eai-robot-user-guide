@@ -10,7 +10,6 @@ FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态�
 |------|------|
 | AI 智能问答 | 多 Agent 对话式问答，自动识别产品、检索手册内容并生成带引用跳转的回答 |
 | AI 语义搜索 | 基于 OpenAI Vector Store Search API 的跨页面语义搜索，支持中英文混合查询 |
-| 双模式 AI 对接 | 可通过环境变量切换「自托管后端」或「OpenAI Agent Builder 直连」两种模式 |
 | 多产品导航 | 按产品线组织的侧边栏导航，支持产品间快速切换 |
 | SPA 内部链接 | Markdown 中写路由路径，自动 SPA 导航 |
 | 响应式布局 | Desktop 侧边栏常驻，Tablet/Mobile 抽屉式菜单 |
@@ -66,14 +65,13 @@ eai-robot-user-guide/
 │
 ├── rag_server/                  # AI 后端（独立 Python 服务）
 │   ├── app/
-│   │   ├── main.py              # 入口：/chatkit、/api/chatkit/session、/search
+│   │   ├── main.py              # 入口：/chatkit、/search、/api/logs
 │   │   ├── core/config.py       # 配置（环境变量 + 路径）
 │   │   └── services/
 │   │       ├── chatkit_handler.py   # 多 Agent 工作流 + ChatKit 桥接
 │   │       └── instructions/*.md   # 各 Agent 的 Prompt 模板
 │   ├── eval/                    # RAG 评测脚本
 │   ├── create_vector_store.py  # Vector Store 同步（上传手册文档）
-│   ├── agent-builder-design.md # Agent Builder 编排架构设计
 │   ├── server_run.sh           # 一键启动脚本
 │   └── README.md
 │
@@ -98,7 +96,7 @@ eai-robot-user-guide/
     ├── components/
     │   ├── layout/             # Header、Sidebar、ContentLayout、MobileMenuDrawer
     │   ├── chat/
-    │   │   └── ChatPanel.tsx   # ChatKit 对话面板（支持双模式）
+    │   │   └── ChatPanel.tsx   # ChatKit 对话面板
     │   ├── markdown/
     │   │   └── MarkdownRenderer.tsx
     │   └── search/             # SearchBar、SearchDropdown、SearchInfoBar
@@ -147,10 +145,8 @@ npm run preview   # 预览构建结果
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `VITE_CHAT_MODE` | `backend` | AI 对话模式：`backend`（自托管）或 `agent-builder`（直连 OpenAI） |
-| `VITE_CHATKIT_API_URL` | `/chatkit` | 后端 ChatKit 端点（仅 backend 模式使用） |
-| `VITE_CHATKIT_SESSION_URL` | `/api/chatkit/session` | Session 创建端点（仅 agent-builder 模式使用） |
-| `VITE_CHATKIT_DOMAIN_KEY` | `local-dev` | ChatKit 域名标识（仅 backend 模式使用） |
+| `VITE_CHATKIT_API_URL` | `/chatkit` | 后端 ChatKit 端点 |
+| `VITE_CHATKIT_DOMAIN_KEY` | `local-dev` | ChatKit 域名标识 |
 
 ### 后端（RAG Server）
 
@@ -160,11 +156,7 @@ npm run preview   # 预览构建结果
 
 项目内置多 Agent 的 AI 对话功能，用户可在页面右侧打开 ChatPanel 提问。系统会自动识别产品、检索手册内容，生成带引用链接的结构化回答。
 
-### 双模式架构
-
-通过环境变量 `VITE_CHAT_MODE` / `CHAT_MODE` 切换两种 AI 对接方式：
-
-**模式一：Backend（自托管后端）** — 默认
+### 架构
 
 ```
 前端 ChatPanel (@openai/chatkit-react)
@@ -178,22 +170,6 @@ RAG Server (FastAPI)
 OpenAI API (Vector Store + LLM)
 ```
 
-特点：完全自主可控，支持自定义引用跳转、图片 URL 重写等。
-
-**模式二：Agent Builder（直连 OpenAI）**
-
-```
-前端 ChatPanel (@openai/chatkit-react)
-  │  ① 请求 client_secret
-  ▼
-RAG Server → POST /api/chatkit/session → OpenAI API
-  │  ② 返回 client_secret
-  ▼
-前端 ←→ OpenAI Agent Builder（聊天流量直连，不经后端）
-```
-
-特点：聊天逻辑由 OpenAI 平台托管，后端仅负责 session 创建。
-
 ### 本地启动
 
 **方式一：分别启动**
@@ -202,11 +178,8 @@ RAG Server → POST /api/chatkit/session → OpenAI API
 # 终端 1：启动后端
 cd rag_server && ./server_run.sh
 
-# 终端 2：启动前端（默认 backend 模式）
+# 终端 2：启动前端
 ./client_run.sh
-
-# 或切换为 agent-builder 模式
-VITE_CHAT_MODE=agent-builder ./client_run.sh
 ```
 
 **方式二：一键部署**

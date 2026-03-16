@@ -207,7 +207,6 @@ docker compose down
 |--------|:----:|------|
 | `OPENAI_API_KEY` | ✅ | OpenAI API Key |
 | `LLM_MODEL` | — | LLM 模型（默认 gpt-5） |
-| `CHAT_MODE` | — | `backend` 或 `agent-builder`（默认 backend） |
 | `OPENAI_VECTOR_STORE_MASTER_ULTRA_ID` | — | Master Ultra 向量库 ID |
 | `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | — | Futurist Ultra 向量库 ID |
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | — | Aegis Ultra 向量库 ID |

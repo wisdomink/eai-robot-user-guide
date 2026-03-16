@@ -3,9 +3,9 @@ Centralized logging configuration with rotating file handlers and smart alerting
 
 Log files are stored in LOG_DIR (default: rag_server/logs/) with automatic
 rotation to prevent unbounded growth:
-  - app.log    — general application log (INFO+)
-  - chat.log   — chat conversation log (user queries, triage results, responses)
-  - error.log  — errors only (WARNING+), useful for quick triage
+  - front.log  — frontend-facing logs (API requests/responses, chat conversations, search)
+  - back.log   — backend processing logs (agent workflows, general app, errors)
+  - system.log — system-level events (startup, shutdown, config, connections)
 
 Each file rotates at LOG_MAX_BYTES (default 10 MB) and keeps LOG_BACKUP_COUNT
 (default 5) compressed backups, giving ~60 MB total per log stream.
@@ -34,8 +34,8 @@ from app.core.config import (
 _LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
 _LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-CHAT_LOGGER_NAME = "chat"
-API_LOGGER_NAME = "api"
+FRONT_LOGGER_NAME = "front"
+SYSTEM_LOGGER_NAME = "system"
 
 
 def _make_rotating_handler(
@@ -60,7 +60,6 @@ def setup_logging() -> None:
     root = logging.getLogger()
     root.setLevel(LOG_LEVEL)
 
-    # Remove any pre-existing handlers (e.g. from basicConfig)
     root.handlers.clear()
 
     # Console — always enabled so Docker/supervisord can still capture stdout
@@ -69,21 +68,18 @@ def setup_logging() -> None:
     console.setFormatter(logging.Formatter(_LOG_FORMAT, datefmt=_LOG_DATE_FORMAT))
     root.addHandler(console)
 
-    # app.log — all application messages
-    root.addHandler(_make_rotating_handler("app.log", level=logging.DEBUG))
+    # back.log — root logger: all application messages (includes propagated front/system)
+    root.addHandler(_make_rotating_handler("back.log", level=logging.DEBUG))
 
-    # error.log — warnings and above for quick triage
-    root.addHandler(_make_rotating_handler("error.log", level=logging.WARNING))
+    # front.log — API requests/responses, chat conversations, search queries
+    front_logger = logging.getLogger(FRONT_LOGGER_NAME)
+    front_logger.propagate = True
+    front_logger.addHandler(_make_rotating_handler("front.log", level=logging.DEBUG))
 
-    # chat.log — dedicated chat conversation logger
-    chat_logger = logging.getLogger(CHAT_LOGGER_NAME)
-    chat_logger.propagate = True  # also appears in app.log
-    chat_logger.addHandler(_make_rotating_handler("chat.log", level=logging.DEBUG))
-
-    # api.log — request / response logger for all API endpoints
-    api_logger = logging.getLogger(API_LOGGER_NAME)
-    api_logger.propagate = True
-    api_logger.addHandler(_make_rotating_handler("api.log", level=logging.DEBUG))
+    # system.log — startup, shutdown, config, connections
+    sys_logger = logging.getLogger(SYSTEM_LOGGER_NAME)
+    sys_logger.propagate = True
+    sys_logger.addHandler(_make_rotating_handler("system.log", level=logging.DEBUG))
 
     # Email alert handler (optional, enabled via ALERT_ENABLED=true)
     if ALERT_ENABLED and ALERT_SMTP_HOST and ALERT_TO_EMAILS:
