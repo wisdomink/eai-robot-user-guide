@@ -34,6 +34,7 @@ from chatkit.types import (
     Attachment,
     EntitySource,
     Page,
+    ProgressUpdateEvent,
     ThreadItem,
     ThreadMetadata,
     ThreadStreamEvent,
@@ -161,7 +162,7 @@ _SUPPORT_MODEL_SETTINGS = ModelSettings(
 triage_agent = Agent(
     name="FF Robot Triage",
     instructions=_load_instructions("triage"),
-    model="gpt-4o",
+    model="gpt-5.4-mini",
     output_type=TriageOutput,
     model_settings=_TRIAGE_MODEL_SETTINGS,
 )
@@ -451,6 +452,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         # ── Phase 1: Triage (non-streamed, structured JSON output) ───────
+        yield ProgressUpdateEvent(icon="sparkle", text="Analyzing your question…")
+
         logger.info("Running triage agent …")
         triage_result = await Runner.run(
             triage_agent,
@@ -471,6 +474,11 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         # ── Phase 2: Route to product-specific agent (streamed) ──────────
+        support_cfg_name = _SUPPORT_AGENT_CONFIGS.get(
+            triage_output.query_type, _SUPPORT_AGENT_CONFIGS["general"]
+        )["name"]
+        yield ProgressUpdateEvent(icon="search", text=f"Searching {support_cfg_name}…")
+
         support_agent = _build_support_agent(
             triage_output.query_type,
             triage_output.input_lang,

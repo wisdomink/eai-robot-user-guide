@@ -421,9 +421,27 @@ mark.hl.current {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 24px;
+}
+
+.ck-greeting-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 32px 24px;
   gap: 20px;
+  width: 100%;
+}
+
+.ck-greeting-bottom {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 0 12px;
+  gap: 6px;
 }
 
 .ck-greeting-text {
@@ -467,15 +485,67 @@ mark.hl.current {
   background: var(--accent-bg);
 }
 
-.ck-greeting-prompt-ask {
-  margin-top: 4px;
-  border-style: dashed;
-  color: var(--text-3);
+.ck-greeting-input-bar {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid #e3e3e3;
+  border-radius: 24px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ck-greeting-input-bar:focus-within {
+  border-color: #c5c5c5;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.ck-greeting-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-roboto);
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+  padding: 4px 0;
+  resize: none;
+}
+
+.ck-greeting-input::placeholder {
+  color: #b4b4b4;
+}
+
+.ck-greeting-send-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #1a1a1a;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.ck-greeting-send-btn:disabled {
+  background: #e0e0e0;
+  color: #b4b4b4;
+  cursor: default;
+}
+
+.ck-greeting-send-btn:not(:disabled):hover {
+  background: #333;
 }
 
 .ck-greeting-version {
-  margin-top: auto;
-  padding-top: 16px;
+  margin: 0;
   text-align: center;
   font-family: var(--font-roboto);
   font-size: 11px;

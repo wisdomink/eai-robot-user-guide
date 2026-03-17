@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
@@ -33,7 +33,7 @@ type OverlayMode = 'buttons' | null
 export default function ChatPanel() {
   const { isChatOpen } = useChatState()
   const [overlayMode, setOverlayMode] = useState<OverlayMode>('buttons')
-  const [askingOwn, setAskingOwn] = useState(false)
+  const [inputValue, setInputValue] = useState('')
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -46,12 +46,10 @@ export default function ChatPanel() {
     if (overlayModeRef.current === 'buttons') return
     setThreadIdRef.current?.(null)
     setOverlayMode('buttons')
-    setAskingOwn(false)
+    setInputValue('')
   }, [])
 
-  const greetingText = askingOwn ? 'What can I help with today?' : '\u200B'
-
-  const { sendUserMessage, focusComposer, setThreadId, control } = useChatKit({
+  const { sendUserMessage, setThreadId, control } = useChatKit({
     locale: 'en',
     api: buildApiConfig(),
     header: {
@@ -65,7 +63,7 @@ export default function ChatPanel() {
       enabled: false,
     },
     startScreen: {
-      greeting: greetingText,
+      greeting: '\u200B',
     },
     composer: {
       placeholder: 'Ask a question…',
@@ -76,7 +74,7 @@ export default function ChatPanel() {
     onThreadChange: ({ threadId }: { threadId: string | null }) => {
       if (threadId === null) {
         setOverlayMode('buttons')
-        setAskingOwn(false)
+        setInputValue('')
       }
     },
     entities: {
@@ -110,11 +108,14 @@ export default function ChatPanel() {
     sendUserMessage({ text: prompt })
   }, [sendUserMessage])
 
-  const handleAskOwn = useCallback(() => {
-    setAskingOwn(true)
+  const handleInputSend = useCallback((e?: FormEvent) => {
+    e?.preventDefault()
+    const text = inputValue.trim()
+    if (!text) return
+    setInputValue('')
     setOverlayMode(null)
-    focusComposer()
-  }, [focusComposer])
+    sendUserMessage({ text })
+  }, [inputValue, sendUserMessage])
 
   return (
     <div ref={panelRef} className={clsx('chat-panel', isChatOpen && 'open')} id="chatPanel">
@@ -124,25 +125,42 @@ export default function ChatPanel() {
           <div className="ck-greeting-overlay">
             {overlayMode === 'buttons' && (
               <>
-                <p className="ck-greeting-text">{GREETING}</p>
-                <div className="ck-greeting-prompts">
-                  {PROMPTS.map((p) => (
-                    <button
-                      key={p.label}
-                      className="ck-greeting-prompt-btn"
-                      onClick={() => handlePromptClick(p.prompt)}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                  <button
-                    className="ck-greeting-prompt-btn ck-greeting-prompt-ask"
-                    onClick={handleAskOwn}
-                  >
-                    Ask your own question →
-                  </button>
+                <div className="ck-greeting-center">
+                  <p className="ck-greeting-text">{GREETING}</p>
+                  <div className="ck-greeting-prompts">
+                    {PROMPTS.map((p) => (
+                      <button
+                        key={p.label}
+                        className="ck-greeting-prompt-btn"
+                        onClick={() => handlePromptClick(p.prompt)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="ck-greeting-version">v{BUILD_VERSION}</p>
+                <div className="ck-greeting-bottom">
+                  <form className="ck-greeting-input-bar" onSubmit={handleInputSend}>
+                    <input
+                      type="text"
+                      className="ck-greeting-input"
+                      placeholder="Ask a question…"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                    />
+                    <button
+                      type="submit"
+                      className="ck-greeting-send-btn"
+                      disabled={!inputValue.trim()}
+                      aria-label="Send"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3a1 1 0 0 1 .707.293l6 6a1 1 0 0 1-1.414 1.414L13 6.414V20a1 1 0 1 1-2 0V6.414l-4.293 4.293a1 1 0 0 1-1.414-1.414l6-6A1 1 0 0 1 12 3z" />
+                      </svg>
+                    </button>
+                  </form>
+                  <p className="ck-greeting-version">v{BUILD_VERSION}</p>
+                </div>
               </>
             )}
           </div>
