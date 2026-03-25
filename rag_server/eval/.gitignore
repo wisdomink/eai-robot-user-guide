@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Eval outputs (generated)
+reports/
+answers/
+history.json
+report.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+
+# OS
+.DS_Store

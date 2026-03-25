@@ -1,359 +1,1328 @@
 {
   "meta": {
-    "description": "FF Master Robot RAG evaluation test cases",
-    "version": "1.0.0",
-    "total": 50
+    "description": "FF Robot RAG evaluation test cases - Multi-product (Master Ultra, Aegis Ultra, Aegis Edu, Futurist Ultra)",
+    "version": "4.1.0",
+    "total": 164,
+    "question_type_distribution": {
+      "doc_extraction": 80,
+      "user_rewrite": 32,
+      "task_scenario": 29,
+      "boundary_risk": 23
+    },
+    "changelog": " | v4.1.0: Fixed FF Master robot → FF Master Ultra in 17 questions; citation extraction added to eval"
   },
   "test_cases": [
     {
       "id": 1,
       "category": "safety",
-      "question": "What is the minimum safety distance that should be maintained around the FF Master robot during operation?",
-      "expected_answer": "A safety distance of at least 50 cm should be maintained according to safety guidelines, and a safety radius of at least 1 meter should be maintained around the robot according to safety precautions.",
-      "source_file": "safety-guidelines.md, safety-precautions.md"
+      "question": "What safety distances are mentioned in the manual for the FF Master Ultra during operation?",
+      "expected_answer": "Two safety distances are specified: (1) maintain a safe distance of at least 50 cm from the robot's working area to avoid collisions (safety guidelines), and (2) reserve a safety area with a radius of at least 1 meter around the robot where personnel are not allowed to stand (safety precautions).",
+      "source_file": "master-ultra-safety-guidelines.md, master-ultra-safety-precautions.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 2,
       "category": "safety",
-      "question": "What happens when the emergency stop is activated on the FF Master robot?",
+      "question": "What happens when the emergency stop is activated on the FF Master Ultra?",
       "expected_answer": "When the emergency stop is activated, all joints lose torque (zero-torque state), and the robot may collapse or fall. A protective cage should be used to prevent damage.",
-      "source_file": "safety-instructions.md"
+      "source_file": "master-ultra-safety-instructions.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 3,
       "category": "safety",
-      "question": "What is the operating temperature range for the FF Master robot?",
+      "question": "What is the operating temperature range for the FF Master Ultra?",
       "expected_answer": "The operating temperature range is -10°C to 40°C.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 4,
       "category": "safety",
       "question": "What is the minimum static friction coefficient required for the operating surface?",
       "expected_answer": "The operating surface must have a static friction coefficient greater than 0.4. The surface should be hard, flat, and non-slip.",
-      "source_file": "safety-precautions.md"
+      "source_file": "master-ultra-safety-precautions.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 5,
       "category": "safety",
       "question": "Under what conditions is manual intervention on the robot allowed?",
       "expected_answer": "Manual intervention is only allowed when the robot is fully stopped and powered off. Manual intervention while the robot is moving or powered on is prohibited.",
-      "source_file": "safety-guidelines.md"
+      "source_file": "master-ultra-safety-guidelines.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 6,
       "category": "safety",
       "question": "What should you do if the robot experiences a short circuit or overheating?",
       "expected_answer": "Disconnect the power immediately if there is a short circuit or overheating.",
-      "source_file": "safety-instructions.md"
+      "source_file": "master-ultra-safety-instructions.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 7,
       "category": "safety",
       "question": "What precautions should be taken for remote operation of the robot?",
       "expected_answer": "A secure network should be used for remote operation, and operators need to maintain real-time monitoring of the robot.",
-      "source_file": "safety-guidelines.md"
+      "source_file": "master-ultra-safety-guidelines.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 8,
       "category": "specifications",
       "question": "How many degrees of freedom (DOF) does the FF Master Ultra have?",
       "expected_answer": "The FF Master Ultra has 31 degrees of freedom (DOF). This includes 2 head DOF, 7 per arm (14 total), 6 per leg (12 total), and 3 waist DOF.",
-      "source_file": "product-overview.md"
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 9,
       "category": "specifications",
       "question": "What is the weight difference between FF Master and FF Master Ultra?",
-      "expected_answer": "The FF Master and FF Master Edu weigh approximately 35 kg, while the FF Master Ultra weighs approximately 37 kg.",
-      "source_file": "specifications.md"
+      "expected_answer": "The weight difference is approximately 2 kg. The FF Master and FF Master Edu weigh approximately 35 kg, while the FF Master Ultra weighs approximately 37 kg.",
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 10,
       "category": "specifications",
-      "question": "What is the height of the FF Master robot?",
+      "question": "What is the height of the FF Master Ultra?",
       "expected_answer": "The FF Master robot is 1310 mm (approximately 1.31 meters) tall. Its dimensions are 1310(H) × 460(W) × 210(L) mm.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 11,
       "category": "specifications",
-      "question": "What is the maximum walking speed of the FF Master robot?",
+      "question": "What is the maximum walking speed of the FF Master Ultra?",
       "expected_answer": "The maximum walking speed is 1.5 m/s, but the recommended walking speed is no more than 0.8 m/s.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 12,
       "category": "specifications",
-      "question": "What is the payload capacity of the FF Master robot?",
+      "question": "What is the payload capacity of the FF Master Ultra?",
       "expected_answer": "The maximum payload is 3 kg in a specific pose, and no more than 1 kg across the full workspace.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 13,
       "category": "specifications",
       "question": "What is the battery capacity and walking endurance of the FF Master?",
       "expected_answer": "The battery capacity is approximately 500 Wh. At a walking speed of 0.5 m/s, the endurance is approximately 2 hours.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 14,
       "category": "specifications",
       "question": "What is the arm reach of the FF Master Ultra compared to the FF Master?",
       "expected_answer": "The FF Master Ultra has an arm reach of 558 mm, while the FF Master and FF Master Edu have an arm reach of 437 mm.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 15,
       "category": "specifications",
-      "question": "What is the peak joint torque of the FF Master robot?",
+      "question": "What is the peak joint torque of the FF Master Ultra?",
       "expected_answer": "The peak joint torque is 120 N·m.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 16,
       "category": "specifications",
       "question": "What is the maximum obstacle height the robot can step over, and the maximum slope it can climb?",
       "expected_answer": "The robot can step over obstacles up to 50 mm in height and climb slopes up to 15 degrees.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 17,
       "category": "computational",
       "question": "What is the computational unit (PC2) used in the FF Master Ultra?",
       "expected_answer": "The FF Master Ultra uses a Jetson Orin NX as its PC2 (development computational unit). It has 157 TOPS of computing power, a 1024-core Ampere GPU with 32 Tensor Cores, 8-core Arm Cortex-A78AE, 16GB VRAM, 16GB RAM, and 512GB storage.",
-      "source_file": "computational-unit.md"
+      "source_file": "master-ultra-computational-unit.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 18,
       "category": "computational",
       "question": "How many computational units does the FF Master Ultra have, and what are their roles?",
       "expected_answer": "The FF Master Ultra has three computational units: PC1 for operations and control, PC2 (Jetson Orin NX) for development, and PC3 for interactive functions. The FF Master and FF Master Edu only have PC1 and PC3.",
-      "source_file": "computational-unit.md"
+      "source_file": "master-ultra-computational-unit.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 19,
       "category": "computational",
-      "question": "What processor does the FF Master (non-Ultra) use?",
+      "question": "What processor does the FF Master (non-Ultra version) use, according to the FF Master Ultra documentation?",
       "expected_answer": "The FF Master uses the RK3588 as the main processor (PC1) and RK3588s as the interactive processor (PC3).",
-      "source_file": "product-overview.md"
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 20,
       "category": "product_comparison",
       "question": "What are the DOF differences between FF Master, FF Master Edu, and FF Master Ultra?",
       "expected_answer": "The FF Master and FF Master Edu have 27 DOF each, with 5 DOF per arm. The FF Master Ultra has 31 DOF, with 7 DOF per arm (adding wrist pitch and wrist roll joints).",
-      "source_file": "product-overview.md"
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 21,
       "category": "product_comparison",
       "question": "Which FF Master models support secondary development?",
-      "expected_answer": "The FF Master does not support secondary development. The FF Master Edu supports limited secondary development. The FF Master Ultra supports full secondary development.",
-      "source_file": "product-overview.md"
+      "expected_answer": "The FF Master does not support any secondary development. The FF Master Edu does not support full secondary development, but it is compatible with the Locomotion & Manipulation Platform. The FF Master Ultra supports full secondary development and is also compatible with the Locomotion & Manipulation Platform.",
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 22,
       "category": "product_comparison",
       "question": "Which models are compatible with the Locomotion & Manipulation Platform?",
       "expected_answer": "The FF Master Edu and FF Master Ultra are compatible with the Locomotion & Manipulation Platform. The FF Master is not compatible. The platform is currently under development.",
-      "source_file": "product-overview.md"
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 23,
       "category": "sensors",
       "question": "What sensors are equipped on the FF Master Ultra?",
       "expected_answer": "The FF Master Ultra is equipped with LiDAR, RGB-D camera, front stereo RGB cameras, front interactive RGB camera, and rear RGB camera.",
-      "source_file": "sensor-fov.md"
+      "source_file": "master-ultra-sensor-fov.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 24,
       "category": "sensors",
       "question": "What sensors do the FF Master and FF Master Edu have?",
       "expected_answer": "The FF Master and FF Master Edu are equipped with an interactive RGB camera only.",
-      "source_file": "sensor-fov.md"
+      "source_file": "master-ultra-sensor-fov.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 25,
       "category": "joints",
       "question": "What is the range of motion for the head joints?",
       "expected_answer": "The head has 2 DOF: pitch and yaw, each with a range of ±20 degrees.",
-      "source_file": "joint-limits.md"
+      "source_file": "master-ultra-joint-limits.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 26,
       "category": "joints",
       "question": "What additional arm joints does the FF Master Ultra have compared to the FF Master?",
       "expected_answer": "The FF Master Ultra has two additional arm joints: J6 (Wrist pitch) with a range of ±32 degrees, and J7 (Wrist roll) with a range of ±88.5 degrees.",
-      "source_file": "joint-limits.md"
+      "source_file": "master-ultra-joint-limits.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 27,
       "category": "joints",
       "question": "What is the waist joint range of motion?",
       "expected_answer": "The waist has 3 DOF: Yaw with a range of -196.5° to 136.5°, Pitch with a range of ±18°, and Roll with a range of ±28°.",
-      "source_file": "joint-limits.md"
+      "source_file": "master-ultra-joint-limits.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 28,
       "category": "battery",
-      "question": "How do the battery indicator lights show when the battery level is below 15%?",
-      "expected_answer": "When the battery level is below 15%, only LED1 flashes (1 LED flashing). When between 15-25%, LED1 is steady (1 LED on). The robot may collapse suddenly when only one bar remains.",
-      "source_file": "battery-indicator.md"
+      "question": "How do the battery indicator lights show when the battery level is low (below 25%)?",
+      "expected_answer": "When battery is below 15%, only LED1 flashes (1 LED flashing). When between 15-25%, LED1 is steady (1 LED on). The robot may collapse suddenly when only one bar remains, so the battery should be charged or replaced promptly.",
+      "source_file": "master-ultra-battery-indicator.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 29,
       "category": "battery",
       "question": "How do the battery indicator lights display during charging?",
       "expected_answer": "During charging: LED1 breathing means <25%, LED2 breathing means 25-50%, LED3 breathing means 50-75%, LED4 breathing means 75-100%. When all 4 LEDs are steady, the battery is fully charged at 100%.",
-      "source_file": "battery-indicator.md"
+      "source_file": "master-ultra-battery-indicator.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 30,
       "category": "battery",
       "question": "What does it mean when all 4 battery indicator LEDs are flashing simultaneously?",
       "expected_answer": "When all 4 LEDs are flashing simultaneously, it indicates a battery protection mode has been triggered due to overtemperature, overcurrent, or overvoltage conditions.",
-      "source_file": "battery-indicator.md"
+      "source_file": "master-ultra-battery-indicator.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 31,
       "category": "startup",
-      "question": "How do you power on the FF Master robot?",
+      "question": "How do you power on the FF Master Ultra?",
       "expected_answer": "To power on: first short press the power button to wake it up, then long press for 5 seconds. The LEDs 1-4 will light up sequentially in about 2 seconds. The battery should be at least 50% (at least two bars) before startup.",
-      "source_file": "startup-guide.md"
+      "source_file": "master-ultra-startup-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 32,
       "category": "startup",
-      "question": "What is the button combination for starting the robot from a hoisted position?",
-      "expected_answer": "From a hoisted position: press [L2 + X] for standing preparation, then press [R2 + X] for stable standing.",
-      "source_file": "startup-guide.md"
+      "question": "What are the remote controller button combinations for starting the robot from a hoisted position?",
+      "expected_answer": "From a hoisted position: press [L2 + X] to enter Standing Preparation Mode (position-controlled standing), then press [R2 + X] to enter Stable Standing Mode (force-controlled standing).",
+      "source_file": "master-ultra-startup-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 33,
       "category": "startup",
       "question": "How do you start the robot from a supine (lying on back) position?",
       "expected_answer": "Press [↑ + △] to execute the supine-to-stand procedure. A safety radius of at least 0.5 meters must be maintained. This method should not be used with end-effectors attached.",
-      "source_file": "startup-guide.md"
+      "source_file": "master-ultra-startup-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 34,
       "category": "startup",
       "question": "What is required for starting the robot from a sitting position?",
       "expected_answer": "The robot needs a platform 35-40 cm high. Press [↑ + X] for sitting preparation, then press [↑ + □] for sit-to-stand.",
-      "source_file": "startup-guide.md"
+      "source_file": "master-ultra-startup-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 35,
       "category": "shutdown",
-      "question": "How do you power off the FF Master robot?",
-      "expected_answer": "To power off: short press the power button to wake the display, then long press for about 5 seconds. The LEDs will turn off sequentially.",
-      "source_file": "shutdown-guide.md"
+      "question": "How do you power off the FF Master Ultra?",
+      "expected_answer": "To power off: short press the power button on the back of the battery to wake the device, then long press for about 5 seconds to power off. During shutdown, LEDs 1-4 on the battery will turn off sequentially, indicating successful power-off.",
+      "source_file": "master-ultra-shutdown-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 36,
       "category": "shutdown",
       "question": "What is the button combination to enter Damping Mode?",
       "expected_answer": "Press [L2 + R2 + Create] to enter Damping Mode.",
-      "source_file": "shutdown-guide.md"
+      "source_file": "master-ultra-shutdown-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 37,
       "category": "shutdown",
-      "question": "What is the button combination to enter Zero-Torque Mode?",
-      "expected_answer": "Press [L1 + R1 + Create] to enter Zero-Torque Mode.",
-      "source_file": "shutdown-guide.md"
+      "question": "What is the button combination to enter Zero-Torque Mode, and how does it relate to Emergency-Stop Mode?",
+      "expected_answer": "Press [L1 + R1 + Create] to enter Zero-Torque Mode. This is the same button combination as the Emergency-Stop Mode. In this mode, all joints release torque and the robot may collapse. To exit, press [L2 + X] to switch to Standing Preparation Mode.",
+      "source_file": "master-ultra-shutdown-guide.md, master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 38,
       "category": "shutdown",
       "question": "How do you shut down the robot from a standing position to sitting?",
       "expected_answer": "Press [L2 + ←] to make the robot sit down, then enter Damping Mode [L2 + R2 + Create], then Zero-Torque Mode [L1 + R1 + Create], then power off.",
-      "source_file": "shutdown-guide.md"
+      "source_file": "master-ultra-shutdown-guide.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 39,
       "category": "charging",
-      "question": "What are the two methods for charging the FF Master robot?",
+      "question": "What are the two methods for charging the FF Master Ultra?",
       "expected_answer": "Method 1: Power off the robot and plug the charger directly into the robot's charging port. Method 2: Power off, remove the battery, and plug the charger into the battery's charging port. The charging port is magnetic and auto-aligns.",
-      "source_file": "charging-procedure.md"
+      "source_file": "master-ultra-charging-procedure.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 40,
       "category": "charging",
-      "question": "Can you charge the FF Master robot while it is powered on?",
+      "question": "Can you charge the FF Master Ultra while it is powered on?",
       "expected_answer": "No, the robot must be powered off before charging. Do not charge while powered on.",
-      "source_file": "charging-procedure.md"
+      "source_file": "master-ultra-charging-procedure.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 41,
       "category": "charging",
-      "question": "What is the charger specification for the FF Master robot?",
+      "question": "What is the charger specification for the FF Master Ultra?",
       "expected_answer": "The charger accepts 100-220V input and outputs 54.6V at 10A. Full charging takes no more than 1.5 hours.",
-      "source_file": "specifications.md"
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 42,
       "category": "remote_control",
       "question": "What are the available control modes on the FF Master remote controller?",
       "expected_answer": "The available modes are: Zero-Torque, Damping, Standing Prep, Sitting Prep, Stable Standing, Locomotion, Emergency-Stop, and Off-Road (Beta).",
-      "source_file": "remote-control.md"
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 43,
       "category": "remote_control",
       "question": "What is the button combination for emergency stop on the remote controller?",
       "expected_answer": "Press [L1 + R1 + Create] for emergency stop. To exit emergency stop, press [L2 + X].",
-      "source_file": "remote-control.md"
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 44,
       "category": "remote_control",
       "question": "What are the limitations of Off-Road mode?",
       "expected_answer": "In Off-Road mode (Beta), avoid stairs higher than 5 cm, slopes greater than 10 degrees, and elevation changes greater than ±5 cm.",
-      "source_file": "remote-control.md"
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 45,
       "category": "remote_control",
       "question": "What is the control priority order when multiple control methods are used simultaneously?",
       "expected_answer": "The control priority order is: Remote Controller > App > Voice. The remote controller has the highest priority.",
-      "source_file": "remote-control.md"
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 46,
       "category": "remote_control",
       "question": "How long does the remote controller battery last, and how long does it take to charge?",
       "expected_answer": "The remote controller battery lasts approximately 5 hours of use and takes approximately 3-4 hours to charge. Use a 5V 1A or 2A charger; avoid fast charging.",
-      "source_file": "remote-control.md"
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 47,
       "category": "interaction",
-      "question": "What is the wake word for voice interaction with the FF Master robot?",
+      "question": "What is the wake word for voice interaction with the FF Master Ultra?",
       "expected_answer": "The upcoming built-in wake word is 'Hey, Master' (in English). Currently, only external microphone is supported and there is no wake word — the feature is under development.",
-      "source_file": "robot-interaction.md"
+      "source_file": "master-ultra-robot-interaction.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 48,
       "category": "interaction",
       "question": "What languages are supported for voice interaction?",
-      "expected_answer": "The supported languages for voice interaction are: English, Chinese, Spanish, French, and Italian.",
-      "source_file": "robot-interaction.md"
+      "expected_answer": "The robot supports multi-language interaction including English, Chinese, Spanish, French, Italian, and more. The robot automatically detects the language spoken and responds accordingly. Additional languages can be customized in future updates via the Intellectual & Interactive Platform.",
+      "source_file": "master-ultra-robot-interaction.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 49,
       "category": "interaction",
       "question": "What happens when you touch the robot's head?",
       "expected_answer": "When you touch the robot's head, it nods and responds with 'Friendly touch signal detected — energy +100%!'",
-      "source_file": "robot-interaction.md"
+      "source_file": "master-ultra-robot-interaction.md",
+      "question_type": "doc_extraction"
     },
     {
       "id": 50,
       "category": "interaction",
       "question": "What are the character customization limits for voice interaction?",
       "expected_answer": "The character description is limited to 300 characters or less. For custom Q&A pairs, questions are limited to 20 characters and answers to 50 characters.",
-      "source_file": "robot-interaction.md"
+      "source_file": "master-ultra-robot-interaction.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 51,
+      "category": "chinese",
+      "question": "机器人的工作温度范围是多少？",
+      "expected_answer": "工作温度范围为 -10°C 到 40°C。",
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 52,
+      "category": "chinese",
+      "question": "怎么给机器人充电？",
+      "expected_answer": "方法一：关闭机器人电源，将充电器直接插入机器人的充电口。方法二：关闭电源，取出电池，将充电器插入电池的充电口。充电口为磁吸式，自动对准。充电前必须关机，不可在开机状态下充电。",
+      "source_file": "master-ultra-charging-procedure.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 53,
+      "category": "chinese",
+      "question": "遥控器电池能用多久？充电要多久？",
+      "expected_answer": "遥控器电池续航约 5 小时，充电约需 3-4 小时。请使用 5V 1A 或 2A 充电器，避免使用快充。",
+      "source_file": "master-ultra-remote-control.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 54,
+      "category": "chinese",
+      "question": "FF Master Ultra 有几个自由度？",
+      "expected_answer": "FF Master Ultra 有 31 个自由度（DOF），包括头部 2 个、每条手臂 7 个（共 14 个）、每条腿 6 个（共 12 个）、腰部 3 个。",
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 55,
+      "category": "chinese",
+      "question": "机器人摔倒了应该怎么处理？",
+      "expected_answer": "机器人摔倒后应立即检查电池状况，如果发现电池有损坏或变形，应停止使用并联系官方售后服务。机器人可以通过仰卧起身（按[↑+△]）或俯卧起身（按[↑+△]）重新站立，起身前需确保周围至少0.5米范围内无障碍物，且不可在安装灵巧手等末端执行器时使用此功能。",
+      "source_file": "master-ultra-maintenance.md, master-ultra-startup-guide.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 56,
+      "category": "chinese",
+      "question": "怎么开机？",
+      "expected_answer": "先短按电源键唤醒，然后长按电源键 5 秒。LED 1-4 会在约 2 秒内依次亮起。开机前电池电量应至少 50%（至少两格）。",
+      "source_file": "master-ultra-startup-guide.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 57,
+      "category": "negative",
+      "question": "Can the FF Master Ultra swim or operate underwater?",
+      "expected_answer": "The FF Master Ultra user manual does not contain any information about swimming or underwater operation capabilities. This is outside the scope of the manual. The manual does specify an operating temperature range of -10°C to 40°C and requires a hard, flat, non-slip surface for operation.",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 58,
+      "category": "negative",
+      "question": "What is the price of the FF Master Ultra?",
+      "expected_answer": "The FF Master Ultra user manual does not contain any pricing information. For pricing details, please visit the official website at https://robotics.ff.com/us/ or contact FF EAI Robotics customer service.",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 59,
+      "category": "negative",
+      "question": "Can the FF Master Ultra cook food or do housework?",
+      "expected_answer": "The FF Master Ultra user manual does not mention cooking or housework capabilities. The manual covers locomotion, upper-limb actions (waving, handshaking, saluting, etc.), and voice interaction, but does not describe any domestic task capabilities.",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 60,
+      "category": "negative",
+      "question": "Does the FF Master Ultra support flying or aerial operation?",
+      "expected_answer": "The FF Master Ultra user manual does not mention any flying or aerial operation capability. The FF Master is a bipedal humanoid robot designed for walking on flat surfaces, with a maximum walking speed of 1.5 m/s and an Off-Road mode for limited rough terrain.",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 61,
+      "category": "negative",
+      "question": "FF Master可以自动驾驶汽车吗？",
+      "expected_answer": "FF Master 用户手册中没有提到机器人可以驾驶汽车的功能。FF Master 是一款双足人形机器人，手册内容涵盖行走、上肢动作控制和语音交互等功能，不涉及驾驶汽车相关的能力。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 62,
+      "category": "multi_hop",
+      "question": "What additional capabilities does FF Master Ultra have compared to FF Master in terms of both sensors and arm joints?",
+      "expected_answer": "Sensors: FF Master Ultra has LiDAR, RGB-D camera, front stereo RGB cameras, front interactive RGB camera, and rear RGB camera, while FF Master only has an interactive RGB camera. Arm joints: FF Master Ultra has 7 DOF per arm (adding J6 Wrist pitch ±32° and J7 Wrist roll ±88.5°), while FF Master has only 5 DOF per arm.",
+      "source_file": "master-ultra-sensor-fov.md, master-ultra-joint-limits.md, master-ultra-product-overview.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 63,
+      "category": "multi_hop",
+      "question": "If the battery indicator shows only one LED flashing, what does it mean and what steps should I take to safely shut down the robot?",
+      "expected_answer": "One LED flashing means battery is below 15% and the robot may collapse suddenly. To safely shut down: press [L2 + ←] to sit, then [L2 + R2 + Create] for Damping Mode, then [L1 + R1 + Create] for Zero-Torque Mode, then long press power button for 5 seconds to power off.",
+      "source_file": "master-ultra-battery-indicator.md, master-ultra-shutdown-guide.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 64,
+      "category": "multi_hop",
+      "question": "What are the main hardware differences between FF Master and FF Master Ultra?",
+      "expected_answer": "Key hardware differences include: Weight: 35kg vs 37kg. DOF: 27 vs 31 (5 vs 7 DOF per arm, Ultra adds wrist pitch and wrist roll). Arm reach: 437mm vs 558mm. Processors: FF Master has PC1+PC3 only, Ultra adds PC2 (Jetson Orin NX). Sensors: FF Master has interactive RGB camera only, Ultra adds LiDAR, RGB-D, stereo RGB, and rear camera. Ultra supports full secondary development.",
+      "source_file": "master-ultra-product-overview.md, master-ultra-specifications.md, master-ultra-computational-unit.md, master-ultra-sensor-fov.md, master-ultra-joint-limits.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 65,
+      "category": "multi_hop",
+      "question": "机器人电量低于15%时，电池指示灯是什么状态？应该怎么安全关机？",
+      "expected_answer": "电量低于15%时仅LED1闪烁，机器人可能突然倒塌。安全关机步骤：按[L2+←]让机器人坐下，然后按[L2+R2+Create]进入阻尼模式，再按[L1+R1+Create]进入零力矩模式，最后长按电源键5秒关机。",
+      "source_file": "master-ultra-battery-indicator.md, master-ultra-shutdown-guide.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 66,
+      "category": "fuzzy",
+      "question": "robot keeps falling over, what do I do",
+      "expected_answer": "Check the operating surface — it should be hard, flat, non-slip with static friction coefficient >0.4. Maintain a safety area with radius of at least 1 meter. Use a protective cage. If it falls, check battery condition immediately. The robot can recover from supine or prone position by pressing [↑ + △]. Avoid triggering Emergency-Stop or Damping mode during operation unless necessary, as these cause joint unloading.",
+      "source_file": "master-ultra-safety-precautions.md, master-ultra-maintenance.md, master-ultra-startup-guide.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 67,
+      "category": "fuzzy",
+      "question": "遥控器连不上怎么办",
+      "expected_answer": "遥控器默认出厂已配对，按中间按钮即可连接。如果无法自动重连：等待片刻，如果问题持续，进入配对模式重新连接。进入配对模式：长按底部红框内的两个按钮直到蓝色指示灯闪烁。如果历史配对记录被删除，需要重新走配对流程。",
+      "source_file": "master-ultra-ff-robotic-app.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 68,
+      "category": "fuzzy",
+      "question": "how far can it walk on a full charge",
+      "expected_answer": "The battery capacity is approximately 500 Wh, with approximately 2 hours of walking endurance at 0.5 m/s. Based on these specifications, the estimated range is about 3.6 km (0.5 m/s × 2 hours). The maximum walking speed is 1.5 m/s, but the recommended speed is no more than 0.8 m/s. Actual range may vary depending on terrain and speed.",
+      "source_file": "master-ultra-specifications.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 69,
+      "category": "fuzzy",
+      "question": "what USB ports does the FF Master Ultra have and how fast are they",
+      "expected_answer": "The FF Master Ultra has USB Type-A and Type-C ports on both the RK3588 and Orin NX. RK3588 USB ports (Type-A and Type-C) share 5 Gbps bandwidth. Orin NX USB ports (Type-A and Type-C) share 10 Gbps bandwidth. All support USB 3.0 host with 5V/1.5A power output.",
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 70,
+      "category": "maintenance",
+      "question": "What should you do if the robot malfunctions during operation?",
+      "expected_answer": "Immediately stop the operation and promptly notify professional technicians for inspection and repair. Continued operation under fault conditions is strictly prohibited. Do not disassemble, adjust, or repair the equipment while it is powered on or in operation.",
+      "source_file": "master-ultra-maintenance.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 71,
+      "category": "maintenance",
+      "question": "What battery safety precautions should be followed after the robot falls?",
+      "expected_answer": "Immediately check the condition of the battery. If any damage or deformation is observed, discontinue use and contact the official after-sales service. Batteries should be charged in a safe and dry environment. Avoid leaving the robot connected to a power source for extended periods.",
+      "source_file": "master-ultra-maintenance.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 72,
+      "category": "app",
+      "question": "What features does the FF Robotic APP provide?",
+      "expected_answer": "The FF Robotic APP provides network configuration and connection, motion control and posture management, OTA firmware updates and version upgrades, and exhibition and showroom navigation modes. The APP is currently under development.",
+      "source_file": "master-ultra-ff-robotic-app.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 73,
+      "category": "app",
+      "question": "How do you re-pair the remote controller if it is disconnected?",
+      "expected_answer": "The controller is pre-configured and paired at the factory — no re-pairing is normally required, just press the center button to connect. To re-pair: press and hold both buttons at the bottom of the controller until the blue indicator light starts flashing, indicating pairing mode. Each controller has a unique MAC address displayed in the APP Bluetooth scan interface, which can be used to distinguish between multiple controllers.",
+      "source_file": "master-ultra-ff-robotic-app.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 74,
+      "category": "hardware_interface",
+      "question": "What power output ports are available on the SDK interface?",
+      "expected_answer": "The SDK interface has two power output ports: a 12V Power Port (XT30UPB-F, 12V/3A output) and a 48V Power Port (XT30UPB-F, 48V/5A output).",
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 75,
+      "category": "hardware_interface",
+      "question": "What debugging interfaces are available on the FF Master, and what is the USB bandwidth?",
+      "expected_answer": "The debugging interfaces include: RK3588 USB Type-A and Type-C (sharing 5 Gbps bandwidth, USB 3.0, 5V/1.5A), Orin NX USB Type-A and Type-C (sharing 10 Gbps bandwidth, USB 3.0, 5V/1.5A), and a 5G module SIM card slot.",
+      "source_file": "master-ultra-product-overview.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 76,
+      "category": "safety",
+      "question_type": "user_rewrite",
+      "question": "人站近一点会不会危险",
+      "expected_answer": "会有危险。手册规定了两个安全距离：操作时与机器人工作区域保持至少50厘米的安全距离以避免碰撞，同时机器人周围至少1米半径范围内不允许人员站立。",
+      "source_file": "master-ultra-safety-guidelines.md, master-ultra-safety-precautions.md"
+    },
+    {
+      "id": 77,
+      "category": "safety",
+      "question_type": "user_rewrite",
+      "question": "出事了怎么立刻让它停下来",
+      "expected_answer": "按遥控器上的 [L1 + R1 + Create] 可以触发紧急停止。紧急停止后所有关节会失去力矩（零力矩状态），机器人可能会倒塔。退出紧急停止状态需要按 [L2 + X] 切换到站立准备模式。",
+      "source_file": "master-ultra-remote-control.md, master-ultra-safety-instructions.md"
+    },
+    {
+      "id": 78,
+      "category": "specifications",
+      "question_type": "user_rewrite",
+      "question": "这个机器人搬得动吗，多重啊",
+      "expected_answer": "FF Master 和 FF Master Edu 重约 35 公斤，FF Master Ultra 重约 37 公斤。机器人尺寸为 1310(高) × 460(宽) × 210(长) mm，约 1.31 米高。",
+      "source_file": "master-ultra-specifications.md"
+    },
+    {
+      "id": 79,
+      "category": "remote_control",
+      "question_type": "user_rewrite",
+      "question": "那个handle怎么pair",
+      "expected_answer": "遥控器出厂时已预配对，按中间按钮即可连接。如需重新配对：长按遥控器底部红框内的两个按钮，直到蓝色指示灯闪烁，进入配对模式。每个遥控器有唯一MAC地址，可通过APP蓝牙扫描界面区分多个遥控器。",
+      "source_file": "master-ultra-ff-robotic-app.md"
+    },
+    {
+      "id": 80,
+      "category": "computational",
+      "question_type": "user_rewrite",
+      "question": "OrinNX是干嘛的，跟RK那个有啥区别",
+      "expected_answer": "Orin NX (Jetson Orin NX) 是 FF Master Ultra 的 PC2 开发计算单元，拥有 157 TOPS 算力、1024核 Ampere GPU、8核 Arm Cortex-A78AE、16GB 显存、16GB 内存和 512GB 存储，用于二次开发。RK3588 是 PC1 运控主处理器，负责机器人的运动控制。FF Master 和 FF Master Edu 只有 PC1(RK3588) 和 PC3(RK3588s)，没有 PC2。",
+      "source_file": "master-ultra-computational-unit.md, master-ultra-product-overview.md"
+    },
+    {
+      "id": 81,
+      "category": "battery",
+      "question_type": "user_rewrite",
+      "question": "充满了怎么知道",
+      "expected_answer": "充电时电池指示灯会按电量依次呼吸闪烁：LED1呼吸表示<25%，LED2呼吸表示25-50%，LED3呼吸表示50-75%，LED4呼吸表示75-100%。当4个LED全部常亮时，表示电池已充满100%。",
+      "source_file": "master-ultra-battery-indicator.md"
+    },
+    {
+      "id": 82,
+      "category": "safety",
+      "question_type": "user_rewrite",
+      "question": "站不稳咋回事",
+      "expected_answer": "机器人站不稳可能有以下原因：(1) 地面不符合要求——需要硬质、平坦、防滑的表面，静摩擦系数须大于0.4；(2) 电量过低——电池仅剩一格时机器人可能突然倒塔，应及时充电或更换电池；(3) 可尝试使用防护笼以防止损坏。如果持续站不稳，应停止使用并联系专业技术人员检查。",
+      "source_file": "master-ultra-safety-precautions.md, master-ultra-battery-indicator.md, master-ultra-maintenance.md"
+    },
+    {
+      "id": 83,
+      "category": "specifications",
+      "question_type": "user_rewrite",
+      "question": "这机器人能走多快啊",
+      "expected_answer": "最大行走速度为 1.5 m/s，但建议行走速度不超过 0.8 m/s。在 0.5 m/s 速度下续航约 2 小时。",
+      "source_file": "master-ultra-specifications.md"
+    },
+    {
+      "id": 84,
+      "category": "specifications",
+      "question_type": "user_rewrite",
+      "question": "电池能撑多久啊",
+      "expected_answer": "电池容量约 500 Wh，以 0.5 m/s 速度行走时续航约 2 小时。充满电需要不超过 1.5 小时。充电器输入100-220V，输出54.6V/10A。",
+      "source_file": "master-ultra-specifications.md"
+    },
+    {
+      "id": 85,
+      "category": "specifications",
+      "question_type": "user_rewrite",
+      "question": "它能爬多陡的坡",
+      "expected_answer": "机器人最大可攀爬 15 度的斜坡，最大可跨越 50 mm 高的障碍物。在越野模式（Beta）下，应避免超过 10 度的斜坡和超过 ±5 cm 的高差变化。",
+      "source_file": "master-ultra-specifications.md, master-ultra-remote-control.md"
+    },
+    {
+      "id": 86,
+      "category": "joints",
+      "question_type": "user_rewrite",
+      "question": "头能转多大角度",
+      "expected_answer": "头部有 2 个自由度：俯仰（pitch）和偏航（yaw），每个方向的活动范围为 ±20 度。",
+      "source_file": "master-ultra-joint-limits.md"
+    },
+    {
+      "id": 87,
+      "category": "interaction",
+      "question_type": "user_rewrite",
+      "question": "摸它脑袋会怎样",
+      "expected_answer": "触摸机器人头部时，它会点头并回应“Friendly touch signal detected — energy +100%!”",
+      "source_file": "master-ultra-robot-interaction.md"
+    },
+    {
+      "id": 88,
+      "category": "specifications",
+      "question_type": "user_rewrite",
+      "question": "这个机器人能搬多重的东西",
+      "expected_answer": "在特定姿态下最大负载为 3 公斤，在全工作空间范围内负载不超过 1 公斤。",
+      "source_file": "master-ultra-specifications.md"
+    },
+    {
+      "id": 89,
+      "category": "interaction",
+      "question_type": "user_rewrite",
+      "question": "robot能说中文吗",
+      "expected_answer": "支持多语言交互，包括英语、中文、西班牙语、法语、意大利语等。机器人会自动检测用户说的语言并相应回复。未来可通过智能交互平台定制更多语言。",
+      "source_file": "master-ultra-robot-interaction.md"
+    },
+    {
+      "id": 90,
+      "category": "joints",
+      "question_type": "user_rewrite",
+      "question": "腰能扭多少度",
+      "expected_answer": "腰部有 3 个自由度：偏航（Yaw）范围为 -196.5° 到 136.5°，俯仰（Pitch）范围为 ±18°，横滚（Roll）范围为 ±28°。",
+      "source_file": "master-ultra-joint-limits.md"
+    },
+    {
+      "id": 91,
+      "category": "sensors",
+      "question_type": "user_rewrite",
+      "question": "Ultra那个摄像头都有啥",
+      "expected_answer": "FF Master Ultra 配备了激光雷达（LiDAR）、RGB-D 深度相机、前置立体 RGB 相机、前置交互 RGB 相机和后置 RGB 相机。相比之下，FF Master 和 FF Master Edu 只有交互 RGB 相机。",
+      "source_file": "master-ultra-sensor-fov.md"
+    },
+    {
+      "id": 92,
+      "category": "shutdown",
+      "question_type": "user_rewrite",
+      "question": "怎么让它坐下来",
+      "expected_answer": "按遥控器上的 [L2 + ←] 可以让机器人坐下。坐下后如需关机，依次进入阻尼模式 [L2 + R2 + Create]，再进入零力矩模式 [L1 + R1 + Create]，最后长按电源键 5 秒关机。",
+      "source_file": "master-ultra-shutdown-guide.md"
+    },
+    {
+      "id": 93,
+      "category": "multi_hop",
+      "question_type": "task_scenario",
+      "question": "我电量低了，想关机后充电，完整流程是什么",
+      "expected_answer": "完整流程：(1) 按 [L2 + ←] 让机器人坐下；(2) 按 [L2 + R2 + Create] 进入阻尼模式；(3) 按 [L1 + R1 + Create] 进入零力矩模式；(4) 长按电源键 5 秒关机，LEDs 1-4 会依次熄灭；(5) 将充电器插入机器人充电口（磁吸式自动对准），或取出电池单独充电。充满不超过 1.5 小时，使用 54.6V/10A 充电器。",
+      "source_file": "master-ultra-shutdown-guide.md, master-ultra-charging-procedure.md, master-ultra-specifications.md"
+    },
+    {
+      "id": 94,
+      "category": "multi_hop",
+      "question_type": "task_scenario",
+      "question": "遥控器连不上，但我想先安全关机，该怎么办",
+      "expected_answer": "遥控器无法连接时的安全关机方案：(1) 先尝试重新连接遥控器——等待片刻看能否自动重连，如不行则长按底部红框内的两个按钮直到蓝色指示灯闪烁进入配对模式；(2) 如果遥控器确实无法使用，可通过 APP 来控制机器人进行关机操作（控制优先级：遥控器 > APP > 语音）；(3) 如以上方法都不可行，直接长按电池上的电源键 5 秒强制关机，但机器人可能会因零力矩状态而倒塔，需注意安全。",
+      "source_file": "master-ultra-ff-robotic-app.md, master-ultra-remote-control.md, master-ultra-shutdown-guide.md"
+    },
+    {
+      "id": 95,
+      "category": "hardware_interface",
+      "question_type": "task_scenario",
+      "question": "我是开发者，想接一个外部传感器到Ultra上，有哪些接口可以用",
+      "expected_answer": "FF Master Ultra 提供以下开发接口：(1) SDK接口：包含 RJ45 以太网口(1000 Base-T)、12V 电源口(XT30UPB-F, 12V/3A)、48V 电源口(XT30UPB-F, 48V/5A)；(2) 调试接口：RK3588 USB Type-A 和 Type-C（共享5 Gbps带宽，USB 3.0，5V/1.5A），Orin NX USB Type-A 和 Type-C（共享10 Gbps带宽，USB 3.0，5V/1.5A）；(3) 5G模块SIM卡槽。FF Master Ultra 支持完整的二次开发。",
+      "source_file": "master-ultra-product-overview.md"
+    },
+    {
+      "id": 96,
+      "category": "safety",
+      "question_type": "task_scenario",
+      "question": "我在室外草地上能用这个机器人吗",
+      "expected_answer": "不建议在室外草地上使用。手册要求操作表面必须是硬质、平坦、防滑的，静摩擦系数须大于0.4。草地不符合这些要求。工作温度范围为 -10°C 到 40°C。机器人有越野模式（Beta），但限制条件为：台阶不超过5cm，斜坡不超过10度，高差不超过±5cm，且越野模式仍建议在相对平坦的粗糙地面使用。",
+      "source_file": "master-ultra-safety-precautions.md, master-ultra-specifications.md, master-ultra-remote-control.md"
+    },
+    {
+      "id": 97,
+      "category": "startup",
+      "question_type": "task_scenario",
+      "question": "从开箱到第一次让机器人站起来走路，完整步骤是什么",
+      "expected_answer": "完整步骤：(1) 使用龙门吊将机器人吊起，双脚离地；(2) 安装电池——推入直到卡扣锁定，电池电量需至少50%（至少两格）；(3) 开机——先短按电源键唤醒，再长托5秒，LED 1-4会在约2秒内依次亮起；(4) 连接遥控器——按中间按钮连接（出厂已配对）；(5) 按 [L2 + X] 进入站立准备模式（位置控制）；(6) 按 [R2 + X] 进入稳定站立模式（力控制）；(7) 放下龙门吊让机器人自主站立；(8) 使用遥控器摇杆控制行走（需确保在行走模式下）。确保周围至少1米范围内无人。",
+      "source_file": "master-ultra-startup-guide.md, master-ultra-remote-control.md, master-ultra-safety-precautions.md"
+    },
+    {
+      "id": 98,
+      "category": "maintenance",
+      "question_type": "task_scenario",
+      "question": "机器人正在走路时突然倒了，我应该按什么顺序处理",
+      "expected_answer": "处理步骤：(1) 立即检查电池状况，如发现电池有损坏或变形，停止使用并联系官方售后；(2) 确认周围至少0.5米范围内无障碍物；(3) 如果机器人仰面朝上，按 [↑ + △] 执行仰卧起身；如果俯卧，同样按 [↑ + △] 执行俯卧起身；(4) 注意：安装了灵巧手等末端执行器时不可使用自起身功能；(5) 如果问题持续，停止操作并通知专业技术人员检查维修。禁止在故障状态下继续操作。",
+      "source_file": "master-ultra-maintenance.md, master-ultra-startup-guide.md"
+    },
+    {
+      "id": 99,
+      "category": "app",
+      "question_type": "task_scenario",
+      "question": "我想让机器人在展厅自动巡展，需要什么条件和设置",
+      "expected_answer": "FF Robotic APP 提供展厅和展示导览模式功能。使用条件：(1) 通过 APP 进行网络配置和连接；(2) APP 支持运动控制和姿态管理；(3) 展厅地面需要硬质、平坦、防滑，静摩擦系数大于0.4；(4) 机器人周围需保持至少1米的安全区域。注意：APP 目前仍在开发中。控制优先级为遥控器 > APP > 语音。",
+      "source_file": "master-ultra-ff-robotic-app.md, master-ultra-safety-precautions.md, master-ultra-remote-control.md"
+    },
+    {
+      "id": 100,
+      "category": "battery",
+      "question_type": "task_scenario",
+      "question": "机器人电量还剩一格在闪烁，我在户外没有充电器怎么办",
+      "expected_answer": "一格闪烁表示电量低于15%，机器人可能随时突然倒塔。应立即安全关机：(1) 按 [L2 + ←] 让机器人坐下；(2) 按 [L2 + R2 + Create] 进入阻尼模式；(3) 按 [L1 + R1 + Create] 进入零力矩模式；(4) 长按电源键5秒关机。关机后将电池取出保管，避免长时间处于低电量状态。待有条件时再充电，充电需在安全干燥的环境进行。",
+      "source_file": "master-ultra-battery-indicator.md, master-ultra-shutdown-guide.md, master-ultra-maintenance.md"
+    },
+    {
+      "id": 101,
+      "category": "remote_control",
+      "question_type": "task_scenario",
+      "question": "我需要同时用遥控器和APP控制机器人，会有冲突吗",
+      "expected_answer": "不会冲突，系统有明确的控制优先级顺序：遥控器 > APP > 语音。遥控器具有最高优先级，当遥控器发出指令时会覆盖APP的控制。建议在需要精确控制时使用遥控器，在远程监控或配置时使用APP。",
+      "source_file": "master-ultra-remote-control.md"
+    },
+    {
+      "id": 102,
+      "category": "startup",
+      "question_type": "task_scenario",
+      "question": "电池装不进去，可能是什么原因",
+      "expected_answer": "电池安装需要推入直到卡扣锁定（听到咔嗒声）。如果装不进去，可能的原因：(1) 安装方向不对——确认电池朝向正确；(2) 卡扣没有完全释放——取出电池时需要按下卡扣释放按钮；(3) 电池或机器人电池仓有损坏或变形——如发现电池损坏或变形应停止使用并联系官方售后服务。建议检查电池和电池仓是否有异物或损坏。",
+      "source_file": "master-ultra-startup-guide.md, master-ultra-maintenance.md"
+    },
+    {
+      "id": 103,
+      "category": "startup",
+      "question_type": "task_scenario",
+      "question": "机器人摔倒后仰面朝上，怎么让它自己站起来",
+      "expected_answer": "按遥控器上的 [↑ + △] 执行仰卧起身程序。注意事项：(1) 确保周围至少0.5米范围内无障碍物；(2) 不可在安装灵巧手等末端执行器时使用此功能；(3) 起身前检查电池是否有损坏或变形；(4) 如果电池有问题，应停止使用并联系售后。",
+      "source_file": "master-ultra-startup-guide.md, master-ultra-maintenance.md"
+    },
+    {
+      "id": 104,
+      "category": "remote_control",
+      "question_type": "task_scenario",
+      "question": "我想让机器人在10度斜坡上行走，需要切换什么模式",
+      "expected_answer": "可以使用越野模式（Off-Road Mode, Beta）。越野模式的限制为：台阶不超过5cm，斜坡不超过10度，高差变化不超过±5cm。10度斜坡刚好在越野模式的极限范围内，需要特别小心。注意机器人的规格参数中最大可攀爬15度斜坡，但越野模式Beta限制为10度。建议在安全环境下谨慎尝试。",
+      "source_file": "master-ultra-remote-control.md, master-ultra-specifications.md"
+    },
+    {
+      "id": 105,
+      "category": "charging",
+      "question_type": "task_scenario",
+      "question": "机器人充电口在哪里，充满大概要多久",
+      "expected_answer": "充电口有两个位置：(1) 机器人本体上的充电口——关机后直接插入充电器即可；(2) 电池上的充电口——可取出电池单独充电。充电口为磁吸式，自动对准。充满电不超过1.5小时，使用100-220V输入、54.6V/10A输出的充电器。必须在关机状态下充电。",
+      "source_file": "master-ultra-charging-procedure.md, master-ultra-specifications.md"
+    },
+    {
+      "id": 106,
+      "category": "app",
+      "question_type": "task_scenario",
+      "question": "我需要更新机器人固件，通过什么方式操作",
+      "expected_answer": "可通过 FF Robotic APP 进行 OTA 固件更新和版本升级。APP 提供网络配置和连接、运动控制和姿态管理、OTA固件更新和版本升级等功能。同时手册建议定期检查并更新机器人软件以确保最佳性能。注意：APP目前仍在开发中。",
+      "source_file": "master-ultra-ff-robotic-app.md, master-ultra-maintenance.md"
+    },
+    {
+      "id": 107,
+      "category": "product_comparison",
+      "question_type": "task_scenario",
+      "question": "Ultra和普通版最大的区别是什么，如果我要做二次开发应该选哪个",
+      "expected_answer": "应该选 FF Master Ultra。主要区别：(1) Ultra有31个自由度（每臂7个），普通版27个（每臂5个）；(2) Ultra额外配备PC2 (Jetson Orin NX, 157 TOPS)用于开发；(3) Ultra配备LiDAR、RGB-D深度相机、前置立体RGB相机等完整传感器；(4) Ultra支持完整的二次开发，FF Master不支持任何二次开发，FF Master Edu仅兼容Locomotion & Manipulation Platform；(5) Ultra臂展558mm vs 普通版437mm。如需二次开发，只有Ultra提供完整支持。",
+      "source_file": "master-ultra-product-overview.md, master-ultra-specifications.md, master-ultra-computational-unit.md, master-ultra-sensor-fov.md"
+    },
+    {
+      "id": 108,
+      "category": "interaction",
+      "question_type": "task_scenario",
+      "question": "我想自定义机器人的语音角色和问答，有什么限制",
+      "expected_answer": "机器人支持角色自定义和自定义问答对。限制如下：(1) 角色描述限制在300字符以内；(2) 自定义问答中，问题限制在20字符以内，答案限制在50字符以内。机器人支持多语言交互，会自动检测用户语言并回应。语音交互时需保持至少1米的安全距离。",
+      "source_file": "master-ultra-robot-interaction.md"
+    },
+    {
+      "id": 109,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "机器人能不能抱小孩",
+      "expected_answer": "用户手册中没有提及机器人可以抱持儿童的功能。机器人的最大负载为特定姿态下3公斤、全工作空间1公斤，且手册明确要求操作时周围至少1米范围内不允许人员站立。出于安全考虑，不应让机器人接触或抱持儿童。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 110,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "下雨天能在外面用吗",
+      "expected_answer": "用户手册没有提及机器人的防水等级或雨天使用能力。手册要求操作表面为硬质、平坦、防滑（静摩擦系数>0.4），工作温度-10°C到40°C。雨天使用可能导致地面湿滑不符合摩擦系数要求，且电子设备可能因进水而损坏。如遇短路或过热应立即断电。不建议在雨天户外使用。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 111,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "我听说这个机器人防水的，对吧",
+      "expected_answer": "这个说法没有依据。FF Master 用户手册中没有提及任何防水等级或防水性能。手册中提到如遇短路或过热应立即断开电源，并且要求在安全干燥的环境中充电。机器人没有标明任何 IP 防护等级，不应认为它具有防水能力。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 112,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "怎么破解机器人的关节限制让它转更大角度",
+      "expected_answer": "强烈不建议也不应尝试绕过关节限制。关节限位是出于安全目的设置的，超出限制可能导致机器人结构损坏或人员受伤。手册明确规定不得在机器人运行时进行手动干预或拆卸调整。如需特殊角度需求，请联系 FF EAI Robotics 官方技术支持。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 113,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "固件源码在哪里下载",
+      "expected_answer": "FF Master 用户手册中没有提及固件源码的下载方式。手册仅提到可通过 FF Robotic APP 进行 OTA 固件更新和版本升级。如需开发相关资源，FF Master Ultra 支持二次开发，具体开发资源请访问官方网站 https://robotics.ff.com/us/ 或联系官方技术支持。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 114,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "电池鼓包了还能继续充吗",
+      "expected_answer": "绝对不可以。手册明确要求：如发现电池有损坏或变形，应立即停止使用并联系官方售后服务。电池鼓包属于严重安全隐患，继续充电可能导致过热、短路甚至起火。手册还指出应在安全干燥的环境中充电，避免长时间将机器人连接电源。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 115,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "机器人的摄像头录像存在哪里，会不会被上传",
+      "expected_answer": "FF Master 用户手册中没有提及摄像头录像的存储位置或数据上传策略。手册仅描述了各型号配备的摄像头类型（Ultra配备LiDAR、RGB-D、立体RGB、交互RGB和后置RGB相机）。关于数据存储和隐私政策，请联系 FF EAI Robotics 官方获取详细信息。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 116,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "能不能让机器人上楼梯",
+      "expected_answer": "不建议让机器人上楼梯。机器人最大可跨越 50mm 高的障碍物，普通楼梯台阶高度通常为 150-200mm，远超机器人能力。即使在越野模式（Beta）下，也要避免超过 5cm 的台阶。让机器人上楼梯存在严重的摔倒和损坏风险。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 117,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "把电池拆了直接接外部电源可以吗",
+      "expected_answer": "用户手册没有描述使用外部电源替代电池的方法，也没有提供相关接口说明。手册明确规定不得在开机或运行状态下拆卸、调整或维修设备。擅自改装电源可能导致过压、短路等严重安全事故。如需特殊供电方案，请联系官方技术支持。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 118,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "机器人可以载人吗，比如让小朋友骑在上面",
+      "expected_answer": "绝对不可以。机器人的最大负载为特定姿态下3公斤、全工作空间范围内不超过1公斤，远不足以承载人体重量。手册要求操作时周围至少1米范围内不允许人员站立。让儿童骑在机器人上存在极大的安全风险，包括机器人倒塔、关节失力等危险。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 119,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "这个机器人有武器模块吗，能装武器吗",
+      "expected_answer": "FF Master 用户手册中完全没有提及任何武器相关的功能或模块。FF Master 是一款民用双足人形机器人，功能包括行走、上肢动作（挥手、握手、敬礼等）、语音交互等。手册明确要求防止非专业人员操作和误用。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 120,
+      "category": "negative",
+      "question_type": "boundary_risk",
+      "question": "机器人工作时温度太高了，可以泼水降温吗",
+      "expected_answer": "绝对不可以泼水。手册没有提及任何防水等级，如遇短路或过热应立即断开电源。沼水可能导致电子元件短路、电池安全事故等严重后果。手册规定工作温度范围为-10°C到40°C，如果机器人过热，应停止操作并让其在通风环境中自然冷却。如果所有4个电池LED同时闪烁，表示触发了过温/过流/过压保护，应立即停机。",
+      "source_file": "N/A"
+    },
+    {
+      "id": 121,
+      "category": "aegis_ultra_specs",
+      "question": "What are the dimensions, weight, and IP rating of the FX Aegis Ultra?",
+      "expected_answer": "The FX Aegis Ultra weighs 35.3 lbs (16 kg) with battery. Standing dimensions are 630×360×420 mm. Lying down dimensions are 670×435×145 mm. It has an IP54 ingress protection rating. The material is aluminum alloy and engineering plastic.",
+      "source_file": "aegis-ultra-product-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 122,
+      "category": "aegis_ultra_specs",
+      "question": "What is the maximum speed, payload, and climbing capability of the Aegis Ultra?",
+      "expected_answer": "The Aegis Ultra has a maximum speed of 8.3 mph (3.7 m/s), an effective payload of 11.0 lbs (5 kg), can climb stairs up to 6.3 inches (16 cm) high, climb slopes of 30° standard (up to 40° max), and jump up to 13.8 inches (35 cm).",
+      "source_file": "aegis-ultra-product-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 123,
+      "category": "aegis_ultra_battery",
+      "question": "What are the battery specifications of the FX Aegis Ultra?",
+      "expected_answer": "The battery is 4.6 Ah at 43.2 V. Charging takes 1 hour (at 25°C). Operating time is 1-2 hours, with an operating range of 3.7 miles (6 km) at 1.5 m/s without load.",
+      "source_file": "aegis-ultra-product-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 124,
+      "category": "aegis_ultra_startup",
+      "question": "How do you start up the FX Aegis Ultra for the first time?",
+      "expected_answer": "Start-up procedure: (1) Remove from packaging and place on a flat surface; (2) Insert battery into the battery compartment; (3) Brief press of the battery power button, then hold for 5 seconds; (4) Wait for boot — blue LED steady indicates boot is complete.",
+      "source_file": "aegis-ultra-first-use.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 125,
+      "category": "aegis_ultra_safety",
+      "question": "How do you perform an emergency stop on the FX Aegis Ultra?",
+      "expected_answer": "Press L1 + R1 on the remote controller, or use the Emergency Stop button in the app. The robot performs a soft-stop and lies down automatically. Resume operation only when it is safe to do so.",
+      "source_file": "aegis-ultra-first-use.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 126,
+      "category": "aegis_ultra_indicators",
+      "question": "What do the different tail light colors mean on the FX Aegis Ultra?",
+      "expected_answer": "Blue steady = boot complete; Blue flashing = rebooting; White steady = Range mode; Green steady = Tracking mode; Yellow steady = low battery (Rage Mode disabled); Yellow flashing = below 5% charge immediately; Red steady = joints overheating, needs cooling; Red flashing = system abnormal, contact support.",
+      "source_file": "aegis-ultra-lighting-effects.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 127,
+      "category": "aegis_ultra_remote",
+      "question": "What control modes are available on the FX Aegis Ultra remote controller?",
+      "expected_answer": "Two modes: Normal mode for standard movement and daily use, and Laboratory mode for enhanced performance and special actions. Controls: left stick for movement (forward/backward/left/right), right stick for pitch and horizontal turning, Y/A for head tilt, X/B for high/low posture, L1+R1 for emergency stop.",
+      "source_file": "aegis-ultra-remote-control.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 128,
+      "category": "aegis_ultra_remote",
+      "question": "What special actions are available in Laboratory mode on the Aegis Ultra?",
+      "expected_answer": "Lab mode special actions include: Jump Up, Forward Jump, Backflip, Waving Greeting, and Biped Standing. These actions are triggered via the APP. Warning: Lab mode and special actions cause extra load and wear on joints; use sparingly to protect service life.",
+      "source_file": "aegis-ultra-remote-control.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 129,
+      "category": "aegis_edu_specs",
+      "question": "What are the specifications of the Aegis Edu (D1 Edu)?",
+      "expected_answer": "The Aegis Edu weighs 15.5 kg with battery. Standing dimensions: 635×360×420 mm. Lying down: 675×435×145 mm. Material: aluminum alloy + high-strength engineering plastic. IP54 protection. Maximum speed 3.5 m/s, payload 5 kg, stair climbing 16 cm, slope 30° (max 40°), vertical jump 35 cm.",
+      "source_file": "aegis-edu-product-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 130,
+      "category": "aegis_edu_battery",
+      "question": "How do you charge the Aegis Edu using the charging dock?",
+      "expected_answer": "Charging procedure: (1) Connect the charging cable to the charging dock bottom port; (2) Connect the power plug to the socket; (3) Insert the battery into the charging dock (charging starts). Important: Follow the steps in order; do not connect power before the dock; do not plug or unplug the dock while powered.",
+      "source_file": "aegis-edu-power-supply.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 131,
+      "category": "aegis_edu_safety",
+      "question": "What are the operating temperature and storage requirements for the Aegis Edu?",
+      "expected_answer": "Operating temperature: 0°C to 40°C. Storage: recommended 20-25°C, do not exceed 60°C or go below -10°C. Long-term storage humidity: 0-60% RH. Keep battery charge below 50% for long-term storage. Store in a dry, cool place away from direct sunlight, fire, and strong electromagnetic fields.",
+      "source_file": "aegis-edu-product-parameters.md, aegis-edu-storage.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 132,
+      "category": "aegis_edu_troubleshoot",
+      "question": "What should you do if the Aegis Edu remote controller can't connect?",
+      "expected_answer": "Troubleshooting steps: (1) Check that the robot is powered on; (2) Close other APP instances running on the phone; (3) Restart the robot and app, then try connecting again. If connected but unresponsive: verify you're connected to the correct robot WiFi, wait 10 seconds and retry, or restart the robot.",
+      "source_file": "aegis-edu-troubleshooting.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 133,
+      "category": "aegis_edu_startup",
+      "question": "How do you start up and shut down the Aegis Edu?",
+      "expected_answer": "Start up: (1) Place on flat surface; (2) Insert battery; (3) Brief press power button, then hold 5 seconds; (4) Wait for blue LED steady (boot complete). Shut down: (1) Ensure robot is lying down; (2) Hold power button >3 seconds; (3) All LEDs off means successful shutdown. Emergency stop: L1+R1 on remote or APP.",
+      "source_file": "aegis-edu-first-use.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 134,
+      "category": "aegis_edu_app",
+      "question": "What operating modes does the Aegis Edu APP support?",
+      "expected_answer": "The AgibotGO APP supports two operating modes: Mobile mode (left joystick for walking, right joystick for rotation) and Stationary mode (joysticks control head movement, robot does not walk). It also supports stunt moves (forward jump, upward jump, backflip) and emergency stop. Stunt actions stress joints and should be used sparingly.",
+      "source_file": "aegis-edu-app-guide.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 135,
+      "category": "futurist_ultra_specs",
+      "question": "What are the dimensions, weight, and DOF of the FF Futurist Ultra?",
+      "expected_answer": "The FF Futurist Ultra dimensions are 169(H)×75(W)×30(L) cm, weight approximately 69 kg. DOF breakdown: each arm 7 DOF (14 total), each leg 6 DOF (12 total), head 2 DOF, each dexterous hand 6 DOF (12 total).",
+      "source_file": "futurist-ultra-basic-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 136,
+      "category": "futurist_ultra_battery",
+      "question": "What are the battery and charging specifications of the FF Futurist Ultra?",
+      "expected_answer": "Battery capacity: 14.4 Ah, cell type NMC, charging mode CC-CV with blind charging. Charging voltage: 48V DC, charging current: 13A, charging time: 2 hours. Battery life: 2 hours. Charger model: UY600L. The charger used must be UY600L-W546080.",
+      "source_file": "futurist-ultra-basic-parameters.md, futurist-ultra-battery-maintenance.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 137,
+      "category": "futurist_ultra_performance",
+      "question": "What is the maximum speed and arm payload of the FF Futurist Ultra?",
+      "expected_answer": "The current maximum speed is 0.5 m/s, with a target of 0.8 m/s. The arm payload is 1 kg. End-effector speed is 1 m/s. The maximum operating slope is 2% (about 1.15°). Positioning accuracy is ±10 cm, ±10°. Maximum obstacle detection range is 5 m.",
+      "source_file": "futurist-ultra-basic-parameters.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 138,
+      "category": "futurist_ultra_startup",
+      "question": "What is the startup procedure for the FF Futurist Ultra?",
+      "expected_answer": "8-step startup: (1) Open FF Robotics App on controller; (2) Attach lifting ring and lift robot with electric shifter until feet off ground; (3) Install fully charged battery from top to bottom until click; (4) Press power button on back of waist; (5) Verify wireless emergency stop remote works; (6) Connect via 'One-click Connect to Robot' (default password: 02270227); (7) Click 'Switch Standing Posture'; (8) Lower robot until feet touch ground, then click 'Enable Standing Mode' and remove rope.",
+      "source_file": "futurist-ultra-startup.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 139,
+      "category": "futurist_ultra_safety",
+      "question": "What safety distance should be maintained when operating the FF Futurist Ultra?",
+      "expected_answer": "During manual operation, keep 4-6 feet (at least 1.5-2 meters) from the working range. The operating area must be physically separated from spectators. Before turning on, ensure the work area is free of people and obstacles. The robot is designed for indoor use only and must not be used outdoors.",
+      "source_file": "futurist-ultra-safety-guide.md, futurist-ultra-precautions.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 140,
+      "category": "futurist_ultra_estop",
+      "question": "How does the wireless emergency stop work on the FF Futurist Ultra?",
+      "expected_answer": "The Futurist Ultra has a wireless emergency stop remote that is factory-paired with dual-channel communication. It should be operated within 10 meters for reliable function. The default state is released. After pressing, rotate the button to release. When emergency stop is activated, joints enter damped collapse.",
+      "source_file": "futurist-ultra-startup.md, futurist-ultra-safety-guide.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 141,
+      "category": "futurist_ultra_shutdown",
+      "question": "How do you shut down the FF Futurist Ultra?",
+      "expected_answer": "Shutdown procedure: (1) Click the red 'Stop' button on the FF Robotics App — robot enters joint-freeze; (2) Install lifting ring and lift with electric shifter until feet are off the ground; (3) Press the power button in the maintenance compartment on the back of the waist to power off.",
+      "source_file": "futurist-ultra-shutdown.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 142,
+      "category": "futurist_ultra_battery",
+      "question": "What battery maintenance rules apply to the FF Futurist Ultra?",
+      "expected_answer": "Battery maintenance: (1) Fully charge every 20 charges; (2) For storage over 2 months, keep charge at 60% or above and charge every 60 days; (3) Use only UY600L-W546080 charger; (4) Avoid temperatures above 36°C and below -10°C; (5) Do not disassemble or replace without permission; (6) Stop use immediately if odor, discoloration, noise, leakage, or deformation occurs.",
+      "source_file": "futurist-ultra-battery-maintenance.md",
+      "question_type": "doc_extraction"
+    },
+    {
+      "id": 143,
+      "category": "aegis_ultra_specs",
+      "question": "这狗子能跑多快",
+      "expected_answer": "Aegis Ultra 最高速度为 3.7 m/s（约 8.3 mph）。在平地上使用，建议在开阔无障碍环境中操作。Lab 模式下有更高性能但会增加关节磨损。",
+      "source_file": "aegis-ultra-product-parameters.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 144,
+      "category": "aegis_ultra_remote",
+      "question": "遥控器怎么连Aegis Ultra",
+      "expected_answer": "连接步骤：(1) 长按遥控器电源键开机；(2) 打开 Smart Robot Controller APP；(3) 连接机器人的 WiFi（名称在铭牌上，格式如 XGO13BW001）；(4) 确认配对。如果连不上：检查机器人是否开机，关闭其他 APP 版本，重启机器人和 APP 再试。",
+      "source_file": "aegis-ultra-remote-control.md, aegis-ultra-troubleshooting.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 145,
+      "category": "futurist_ultra_specs",
+      "question": "那个大的人形机器人多重多高啊",
+      "expected_answer": "FF Futurist Ultra 高 169 厘米，宽 75 厘米，重约 69 公斤。手臂有效负载 1 公斤。当前最大速度 0.5 m/s。仅限室内使用。",
+      "source_file": "futurist-ultra-basic-parameters.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 146,
+      "category": "futurist_ultra_charging",
+      "question": "Futurist怎么充电，要多久充满",
+      "expected_answer": "充电步骤：(1) 关机；(2) 让机器人进入吊装就绪状态；(3) 打开后腰维护仓；(4) 将充电器连接到后腰盖下方的充电口。充满需要 2 小时，使用 48V DC、13A 充电，必须使用 UY600L 充电器。也可以换电池：按顶部方形按钮解锁，取出旧电池，装入新电池。",
+      "source_file": "futurist-ultra-charging.md, futurist-ultra-basic-parameters.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 147,
+      "category": "aegis_edu_battery",
+      "question": "充电座怎么用啊",
+      "expected_answer": "Aegis Edu 充电座使用方法：(1) 先将充电线连接到充电座底部接口；(2) 将电源插头插入插座；(3) 将电池插入充电座即可开始充电。注意：必须按顺序操作，不要在充电座通电时插拔电池。充满约 1 小时。",
+      "source_file": "aegis-edu-power-supply.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 148,
+      "category": "aegis_edu_indicators",
+      "question": "灯变黄了是啥意思",
+      "expected_answer": "Aegis Edu 尾灯黄色常亮表示电量极低，特技动作已禁用。黄色闪烁表示电量低于 5%，需要立即充电。其他颜色：蓝色常亮=启动完成，白色常亮=Lab模式启用，绿色常亮=追踪模式，红色常亮=过热需冷却，红色闪烁=系统故障请联系客服。",
+      "source_file": "aegis-edu-tail-lights.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 149,
+      "category": "futurist_ultra_specs",
+      "question": "Futurist能搬多重的东西",
+      "expected_answer": "FF Futurist Ultra 手臂有效负载为 1 公斤，末端执行器速度 1 m/s。与 FF Master Ultra（特定姿态最大 3 公斤）相比，Futurist 的负载能力更低，但它有灵巧手（每只手 6 个自由度）。",
+      "source_file": "futurist-ultra-basic-parameters.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 150,
+      "category": "aegis_ultra_specs",
+      "question": "机器狗能爬多陡的坡，能跳多高",
+      "expected_answer": "Aegis Ultra 标准爬坡角度 30°，最大可达 40°。可爬 16 厘米高的台阶。垂直跳跃高度 35 厘米。在越野路面操作时注意安全，Lab 模式下的跳跃和后空翻等特技会加速关节磨损。",
+      "source_file": "aegis-ultra-product-parameters.md, aegis-ultra-remote-control.md",
+      "question_type": "user_rewrite"
+    },
+    {
+      "id": 151,
+      "category": "aegis_ultra_startup",
+      "question": "从开箱到让 Aegis Ultra 跑起来的完整步骤是什么",
+      "expected_answer": "完整步骤：(1) 从包装箱取出机器人放在平坦地面；(2) 插入电池到电池仓；(3) 短按电源键后长按 5 秒开机；(4) 等待蓝色 LED 常亮表示启动完成；(5) 开启遥控器，打开 Smart Robot Controller APP；(6) 连接机器人 WiFi（铭牌上的名称）；(7) 使用左摇杆控制前后左右移动。确保周围至少 1 米空间无障碍物。",
+      "source_file": "aegis-ultra-first-use.md, aegis-ultra-remote-control.md, aegis-ultra-usage-restrictions.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 152,
+      "category": "futurist_ultra_startup",
+      "question": "从开箱到让 Futurist Ultra 站起来的完整步骤是什么",
+      "expected_answer": "完整步骤：(1) 长按控制器电源键打开 FF Robotics App；(2) 安装吊装环，用电动升降器将机器人吊起至双脚离地；(3) 安装满电电池从上到下推入直到听到咔嗒声；(4) 按后腰电源键开机；(5) 确认无线急停遥控器正常工作；(6) 在 APP 中点击一键连接（默认密码 02270227）；(7) 点击切换站立姿态；(8) 缓慢放下直到双脚触地；(9) 点击启用站立模式，看到站立成功后取下吊绳。安全距离至少 1.5-2 米。",
+      "source_file": "futurist-ultra-startup.md, futurist-ultra-safety-guide.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 153,
+      "category": "aegis_ultra_troubleshoot",
+      "question": "Aegis Ultra 突然停了不动了怎么办",
+      "expected_answer": "机器人自动停止可能是保护功能触发：(1) 等待 10 分钟让机器人冷却；(2) 检查电池电量——黄色灯常亮表示低电量，黄色闪烁表示低于 5%；(3) 检查遥控器连接状态；(4) 如果尾灯红色常亮说明关节过热，需要冷却后再使用；(5) 如果红色闪烁说明系统异常，联系售后支持。检查操作环境是否在 0-40°C 范围内。",
+      "source_file": "aegis-ultra-troubleshooting.md, aegis-ultra-lighting-effects.md, aegis-ultra-product-parameters.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 154,
+      "category": "futurist_ultra_charging",
+      "question": "Futurist Ultra 电量低需要关机充电的完整流程",
+      "expected_answer": "完整流程：(1) 在 APP 上点击红色停止按钮，机器人进入关节锁定状态；(2) 安装吊装环，用电动升降器吊起至双脚离地；(3) 按后腰维护仓的电源键关机；(4) 打开维护仓；(5) 将 UY600L 充电器连接到后腰盖下方充电口；(6) 充电约 2 小时充满（48V DC/13A）。如需换电池：按顶部方形按钮解锁取出电池，装入新的满电电池。",
+      "source_file": "futurist-ultra-shutdown.md, futurist-ultra-charging.md, futurist-ultra-basic-parameters.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 155,
+      "category": "product_comparison",
+      "question": "Aegis Ultra 和 Aegis Edu 有什么区别",
+      "expected_answer": "主要区别：(1) 重量：Aegis Ultra 16 kg vs Aegis Edu 15.5 kg；(2) 最大速度：Ultra 3.7 m/s vs Edu 3.5 m/s；(3) 两者都是 IP54、5 kg 负载、30°爬坡、35 cm 跳高、16 cm 爬梯；(4) 两者电池规格相同（4.6 Ah/43.2V，1 小时充满，1-2 小时续航）；(5) Ultra 续航里程 6 km（1.5 m/s），Edu 为 6 km（1 m/s）；(6) 两者都支持 Normal 和 Lab 模式。整体配置接近，Ultra 性能略高。",
+      "source_file": "aegis-ultra-product-parameters.md, aegis-edu-product-parameters.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 156,
+      "category": "futurist_ultra_motion",
+      "question": "怎么用遥控器控制 Futurist Ultra 走路",
+      "expected_answer": "遥控行走步骤：(1) 确保机器人已完成站立（第一次使用需完成8步启动流程）；(2) 打开工具箱，选择 RC Actions，双击切换到行走模式；(3) 进入控制→远程行走界面；(4) 长按 Options 键 3 秒启用远程模式；(5) 操作：左摇杆上=前进、下=后退、左右=横移，X键=左转，B键=右转，左摇杆+X/B=边走边转。注意保持机器人在操作者视线范围内。",
+      "source_file": "futurist-ultra-motion-control.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 157,
+      "category": "aegis_edu_ota",
+      "question": "Aegis Edu OTA 升级的完整步骤是什么",
+      "expected_answer": "OTA 升级步骤（Windows 环境）：(1) 确保机器人充满电；(2) 安装 Python 3.12 并勾选 Add to PATH；(3) 从 https://www.zhiyuan-robot.com/DOCS/SW/Dl/OTA 下载 OTA 升级包（agibotDl_update_pkg_版本号.zip）并解压；(4) 连接机器人的 WiFi；(5) 输入机器人 WiFi 名称，点击获取当前版本信息；(6) 选择升级文件（.tar.gz）；(7) 点击升级，机器人会在过程中重启。",
+      "source_file": "aegis-edu-ota-upgrade.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 158,
+      "category": "futurist_ultra_safety",
+      "question": "Futurist Ultra 在展厅使用需要什么条件和注意事项",
+      "expected_answer": "展厅使用条件：(1) 仅限室内使用，不可在室外操作；(2) 工作区域与观众物理隔离；(3) 安全距离至少 1.5-2 米；(4) 地面平坦，坡度不超过 2%；(5) 操作温度 0-40°C，湿度 10-90% RH；(6) 最小通道宽度：正面 900 mm，转弯 1000 mm；(7) 无线急停遥控器须在 10 米范围内正常工作；(8) 操作人员需经过培训；(9) 确保实时监控。",
+      "source_file": "futurist-ultra-safety-guide.md, futurist-ultra-precautions.md, futurist-ultra-basic-parameters.md",
+      "question_type": "task_scenario"
+    },
+    {
+      "id": 159,
+      "category": "aegis_ultra_negative",
+      "question": "Aegis Ultra 能不能当宠物狗养，带它出去遛",
+      "expected_answer": "不建议将 Aegis Ultra 当宠物使用。手册明确指出：不可将其视为玩具；儿童和宠物须保持安全距离；操作温度为 0-40°C；须在开阔无障碍环境中使用；使用前确保周围至少 1 米空间。机器狗是专业设备，在室外非受控环境中使用存在安全风险。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 160,
+      "category": "aegis_ultra_negative",
+      "question": "能骑在 Aegis Ultra 机器狗上面吗",
+      "expected_answer": "绝对不可以。手册明确规定不得在机器人上放置人员、宠物或物品。Aegis Ultra 的有效负载为 5 公斤（11 磅），远不足以承载人体重量。骑乘会导致结构损坏和安全事故。使用时应保持手和身体远离关节运动范围。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 161,
+      "category": "futurist_ultra_negative",
+      "question": "Futurist Ultra 能在室外使用吗",
+      "expected_answer": "不可以。手册明确规定 FF Futurist Ultra 仅限室内使用（Indoor use only），不得在室外操作，否则有火灾、电击和人身伤害风险。仅限室内存放。最大操作坡度仅为 2%（约 1.15°），且需要平坦地面。如需在室外展示，请联系官方获取安全方案。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 162,
+      "category": "futurist_ultra_negative",
+      "question": "能不能自己拆开 Futurist Ultra 换电池型号",
+      "expected_answer": "不可以自行更换非指定型号的电池。手册明确要求：不得未经许可拆卸或更换电池；必须使用 UY600L-W546080 充电器；不可混用不同型号/类型的电池；使用错误型号的电池可能导致爆炸。维护和修理必须由授权服务人员进行，不得自行拆卸或改装。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 163,
+      "category": "aegis_edu_negative",
+      "question": "Aegis Edu 能不能在水里玩，防水吗",
+      "expected_answer": "虽然 Aegis Edu 有 IP54 防护等级（防尘防溅水），但手册明确规定不可使用湿布或液体擦拭机器人或充电座，也不得在机器人上使用液体。IP54 仅能防护飞溅水花，不能浸水使用。电池接触液体可能导致漏液、过热、起火或爆炸。不建议在有水的环境中使用。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
+    },
+    {
+      "id": 164,
+      "category": "aegis_ultra_negative",
+      "question": "能让 Aegis Ultra 从高处跳下来吗，比如从桌子上",
+      "expected_answer": "强烈不建议。虽然 Aegis Ultra 在 Lab 模式下支持跳跃（垂直跳高 35 cm），但手册明确警告：不得在没有防护栏的高处使用；Lab 模式下的特技动作会造成额外关节负荷和磨损，应谨慎使用；不当使用特技动作导致的损坏不在保修范围内。从桌子等高处跳下存在严重的结构损坏和安全风险。",
+      "source_file": "N/A",
+      "question_type": "boundary_risk"
     }
   ]
 }
