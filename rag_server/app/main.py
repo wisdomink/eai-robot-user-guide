@@ -16,14 +16,16 @@ import time
 import traceback
 
 import httpx
-from fastapi import FastAPI, Query, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 
 from chatkit.server import StreamingResult
 
 from app.core.config import (
+    LEADS_DIR,
     LOG_DIR,
     OPENAI_API_KEY,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
@@ -31,6 +33,9 @@ from app.core.config import (
 )
 from app.core.logging_config import setup_logging
 from app.services.chatkit_handler import create_chatkit_server
+from app.services.lead_service import LeadStorage
+from app.services.recommendation_catalog_service import RecommendationCatalogStorage
+from app.services.recommendation_engine import RECOMMENDATIONS_PATH
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -85,24 +90,53 @@ def _summarize_chatkit_body(raw: bytes) -> str:
 # ── ChatKit (backend mode) ─────────────────────────────────────────────────
 
 chatkit_server = create_chatkit_server()
+lead_storage = LeadStorage(LEADS_DIR)
+recommendation_storage = RecommendationCatalogStorage(RECOMMENDATIONS_PATH)
 
 
-@app.post("/chatkit")
+class LeadCreateRequest(BaseModel):
+    product: str = Field("", description="Product ID")
+    contact_name: str = Field("", description="User contact name")
+    email: str = Field("", description="User email")
+    phone: str = Field("", description="User phone number")
+    thread_id: str = Field("", description="Optional chat thread ID")
+
+
+class RecommendationCatalogItemRequest(BaseModel):
+    id: str = Field("", description="Recommendation ID (auto-generated if omitted)")
+    enabled: bool = Field(True, description="Whether this recommendation is enabled")
+    product_name: str = Field("", description="Product name")
+    trigger_scene: str = Field("", description="Trigger scene")
+    recommendation_content_cn: str = Field("", description="Chinese recommendation content")
+    recommendation_content_en: str = Field("", description="English recommendation content")
+
+
+class LeadCaptureTriageConfigPayload(BaseModel):
+    """Merge into recommendations.json: lead_capture fields + optional keyword lists for triage."""
+
+    lead_capture: dict = Field(default_factory=dict)
+    purchase_intent_keywords: dict | None = Field(
+        None,
+        description="If set, replaces purchase_intent_keywords.cn / .en arrays",
+    )
+
+
+@app.post("/api/chatkit")
 async def chatkit_endpoint(request: Request):
     """Self-hosted ChatKit protocol endpoint (used when CHAT_MODE=backend)."""
     start = time.perf_counter()
     body = await request.body()
 
     summary = _summarize_chatkit_body(body)
-    front_logger.info(">>> POST /chatkit  %s", summary)
-    front_logger.debug(">>> POST /chatkit  raw_body=%s", body.decode("utf-8", errors="replace")[:_MAX_BODY_LOG])
+    front_logger.info(">>> POST /api/chatkit  %s", summary)
+    front_logger.debug(">>> POST /api/chatkit  raw_body=%s", body.decode("utf-8", errors="replace")[:_MAX_BODY_LOG])
 
     try:
         result = await chatkit_server.process(body, context={})
     except Exception as exc:
         elapsed_ms = (time.perf_counter() - start) * 1000
         front_logger.error(
-            "<<< POST /chatkit  status=500  elapsed=%.1fms  error=%s\n%s",
+            "<<< POST /api/chatkit  status=500  elapsed=%.1fms  error=%s\n%s",
             elapsed_ms, exc, traceback.format_exc(),
         )
         raise
@@ -110,12 +144,12 @@ async def chatkit_endpoint(request: Request):
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     if isinstance(result, StreamingResult):
-        front_logger.info("<<< POST /chatkit  status=200  response=SSE_STREAM  elapsed=%.1fms", elapsed_ms)
+        front_logger.info("<<< POST /api/chatkit  status=200  response=SSE_STREAM  elapsed=%.1fms", elapsed_ms)
         return StreamingResponse(result, media_type="text/event-stream")
 
     resp_json = result.json
     front_logger.info(
-        "<<< POST /chatkit  status=200  response=JSON  elapsed=%.1fms  body=%s",
+        "<<< POST /api/chatkit  status=200  response=JSON  elapsed=%.1fms  body=%s",
         elapsed_ms, resp_json[:_MAX_BODY_LOG],
     )
     return Response(content=resp_json, media_type="application/json")
@@ -182,17 +216,17 @@ def _extract_heading(text: str) -> tuple[str, str]:
     return "", ""
 
 
-@app.get("/search")
+@app.get("/api/search")
 async def search_endpoint(
     q: str = Query("", description="Search query"),
     limit: int = Query(10, ge=1, le=50, description="Max results"),
 ):
     """Semantic search via OpenAI Vector Store Search API."""
     start = time.perf_counter()
-    front_logger.info(">>> GET /search  q=%r  limit=%d", q, limit)
+    front_logger.info(">>> GET /api/search  q=%r  limit=%d", q, limit)
 
     if not q.strip():
-        front_logger.info("<<< GET /search  status=200  q=<empty>  results=0  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
+        front_logger.info("<<< GET /api/search  status=200  q=<empty>  results=0  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return {"results": []}
 
     if not OPENAI_VECTOR_STORE_ROBOT_ALL_ID:
@@ -206,7 +240,7 @@ async def search_endpoint(
                 "file_info_map_count": len(_FILE_INFO_MAP),
             },
         }
-        front_logger.error("<<< GET /search  status=200  error=vector_store_not_configured  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
+        front_logger.error("<<< GET /api/search  status=200  error=vector_store_not_configured  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return resp
 
     last_exc: Exception | None = None
@@ -222,11 +256,11 @@ async def search_endpoint(
             break
         except Exception as exc:
             last_exc = exc
-            front_logger.warning("GET /search  vector_store attempt %d failed: %s", attempt + 1, exc)
+            front_logger.warning("GET /api/search  vector_store attempt %d failed: %s", attempt + 1, exc)
     if page is None:
         elapsed_ms = (time.perf_counter() - start) * 1000
         front_logger.error(
-            "<<< GET /search  status=200  q=%r  error=%s(%s)  elapsed=%.1fms",
+            "<<< GET /api/search  status=200  q=%r  error=%s(%s)  elapsed=%.1fms",
             q, type(last_exc).__name__, last_exc, elapsed_ms,
         )
         return {
@@ -245,7 +279,7 @@ async def search_endpoint(
         file_info = _FILE_INFO_MAP.get(item.filename)
         if not file_info:
             skipped.append({"filename": item.filename, "score": round(item.score, 4)})
-            front_logger.warning("GET /search  unmapped filename=%r score=%.4f", item.filename, item.score)
+            front_logger.warning("GET /api/search  unmapped filename=%r score=%.4f", item.filename, item.score)
             continue
 
         full_text = " ".join(c.text for c in item.content if c.type == "text")
@@ -282,7 +316,7 @@ async def search_endpoint(
 
     elapsed_ms = (time.perf_counter() - start) * 1000
     front_logger.info(
-        "<<< GET /search  status=200  q=%r  raw=%d  mapped=%d  skipped=%d  elapsed=%.1fms  response=%s",
+        "<<< GET /api/search  status=200  q=%r  raw=%d  mapped=%d  skipped=%d  elapsed=%.1fms  response=%s",
         q, len(page.data), len(results), len(skipped), elapsed_ms,
         json.dumps(response, ensure_ascii=False)[:_MAX_BODY_LOG],
     )
@@ -344,6 +378,102 @@ async def list_threads(
             "agents": last_agents,
         })
     return {"threads": threads, "total": len(threads), "has_more": page.has_more}
+
+
+@app.post("/api/post-lead")
+async def create_lead(payload: LeadCreateRequest):
+    """Persist one lead row to local jsonl file."""
+    lead = lead_storage.save_lead(
+        thread_id=payload.thread_id,
+        payload=payload.model_dump(exclude={"thread_id"}),
+    )
+    front_logger.info(
+        "POST /api/post-lead  product=%s name=%s email=%s",
+        lead.get("product", ""),
+        lead.get("contact_name", ""),
+        lead.get("email", ""),
+    )
+    return {"ok": True, "lead": lead}
+
+
+@app.get("/api/get-leads")
+async def list_leads():
+    """Read all leads from local jsonl file (newest first)."""
+    leads = lead_storage.list_leads()
+    return {"leads": leads, "total": len(leads)}
+
+
+@app.get("/api/get-lead-capture-config")
+async def get_lead_capture_config():
+    """Triage留资触发：lead_capture 文案与 purchase_intent_keywords（写入 recommendations.json）。"""
+    return recommendation_storage.get_lead_capture_triage_config()
+
+
+@app.post("/api/save-lead-capture-config")
+async def save_lead_capture_config(payload: LeadCaptureTriageConfigPayload):
+    """更新留资 Triage 配置（合并 lead_capture，可选全量替换关键词列表）。"""
+    try:
+        config = recommendation_storage.save_lead_capture_triage_config(
+            payload.lead_capture,
+            payload.purchase_intent_keywords,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    front_logger.info(
+        "POST /api/save-lead-capture-config  lead_keys=%s  has_keywords=%s",
+        list((payload.lead_capture or {}).keys()),
+        payload.purchase_intent_keywords is not None,
+    )
+    return {"ok": True, "config": config}
+
+
+@app.get("/api/get-recommendations")
+async def list_recommendations():
+    """Read all recommendation catalog items."""
+    try:
+        recommendations = recommendation_storage.list_recommendations()
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"recommendations": recommendations, "total": len(recommendations)}
+
+
+@app.post("/api/save-recommendation")
+async def save_recommendation(payload: RecommendationCatalogItemRequest):
+    """Create or update a recommendation catalog item by id."""
+    try:
+        recommendation, created = recommendation_storage.save_or_update_recommendation(
+            payload.model_dump()
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    front_logger.info(
+        "POST /api/save-recommendation  id=%s created=%s enabled=%s product_name=%s",
+        recommendation["id"],
+        created,
+        recommendation["enabled"],
+        recommendation["product_name"],
+    )
+    return {"ok": True, "created": created, "recommendation": recommendation}
+
+
+@app.delete("/api/delete-recommendation/{recommendation_id}")
+async def delete_recommendation(recommendation_id: str):
+    """Delete one recommendation catalog item by id."""
+    try:
+        deleted = recommendation_storage.delete_recommendation(recommendation_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if deleted is None:
+        raise HTTPException(status_code=404, detail=f"Recommendation {recommendation_id} not found")
+
+    front_logger.info(
+        "DELETE /api/delete-recommendation/%s  product_name=%s",
+        recommendation_id,
+        deleted.get("product_name", ""),
+    )
+    return {"ok": True, "recommendation": deleted}
 
 
 @app.get("/api/chat-history/{thread_id}")

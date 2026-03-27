@@ -13,13 +13,14 @@ SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-5")
+LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
 # ── Vector Stores (per-product) ──────────────────────────────────────────
 OPENAI_VECTOR_STORE_MASTER_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_MASTER_ULTRA_ID", "")
 OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID", "")
 OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID", "")
 OPENAI_VECTOR_STORE_AEGIS_EDU_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_EDU_ID", "")
+OPENAI_VECTOR_STORE_FF91_ID: str = os.getenv("OPENAI_VECTOR_STORE_FF91_ID", "")
 OPENAI_VECTOR_STORE_ROBOT_ALL_ID: str = os.getenv("OPENAI_VECTOR_STORE_ROBOT_ALL_ID", "")
 
 # ── Logging ───────────────────────────────────────────────────────────────
@@ -44,6 +45,9 @@ ALERT_CONTEXT_LINES: int = int(os.getenv("ALERT_CONTEXT_LINES", "50"))
 ALERT_LEVEL: str = os.getenv("ALERT_LEVEL", "ERROR").upper()
 ALERT_APP_NAME: str = os.getenv("ALERT_APP_NAME", "EAI Robot")
 ALERT_DIGEST_INTERVAL: int = int(os.getenv("ALERT_DIGEST_INTERVAL", "3600"))  # 1 hour
+
+# ── Leads (contact form submissions) ─────────────────────────────────────
+LEADS_DIR: Path = Path(os.getenv("LEADS_DIR", str(RAG_SERVER_ROOT / "data")))
 
 # ── Public URL (for rewriting image paths in ChatKit iframe) ─────────────
 PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")

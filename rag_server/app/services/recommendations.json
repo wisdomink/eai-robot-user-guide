@@ -1,0 +1,91 @@
+{
+  "default_product": {
+    "product_id": "aegis-ultra",
+    "title_cn": "推荐了解 FF Aegis Ultra",
+    "title_en": "Recommended: FF Aegis Ultra",
+    "description_cn": "FF Aegis Ultra 是一款高性能四足机器人，支持扩展接口、智能灯效和遥控操控，适用于巡检、安防等多种场景。",
+    "description_en": "FF Aegis Ultra is a high-performance quadruped robot with expansion ports, smart lighting effects, and remote control — ideal for inspection, security, and more.",
+    "target_slug": "/aegis-ultra"
+  },
+  "lead_capture": {
+    "title_cn": "联系我们",
+    "title_en": "Contact Us",
+    "description_cn": "对我们的产品感兴趣？留下您的联系方式，我们的团队将尽快与您联系。",
+    "description_en": "Interested in our products? Leave your contact info and our team will reach out soon.",
+    "success_title_cn": "提交成功",
+    "success_title_en": "Submitted Successfully",
+    "success_text_cn": "感谢您的留言！我们的团队将尽快与您联系。",
+    "success_text_en": "Thank you! Our team will reach out to you soon.",
+    "trigger_conditions_cn": "当用户表达以下任一类意图时，应将 purchase_intent 判为 \"yes\"：\n1）询价与价格：多少钱、报价、价格表、费用、预算、折扣、付款方式等；\n2）购买与渠道：哪里买、如何下单、订购、预订、现货/交期、发货、经销、代理、区域销售、官方购买链接等；\n3）商务与合作：采购、招标、批量、企业合作、渠道合作、成为合作伙伴、销售对接、商务微信/电话等；\n4）试用与演示：预约演示、上门演示、试用、样机、PoC、参观展厅等。\n\n以下情况一般判为 \"no\"（除非同时出现上述购买/商务诉求）：纯产品功能/参数/使用方法/充电与维护/故障排查/质保政策等技术咨询；与竞品泛泛对比但无购买或商务跟进诉求。\n\n若用户仅问「联系方式」：若语境是寻求销售、采购、合作对接，倾向 \"yes\"；若语境是售后维修、技术支持，倾向 \"no\"。",
+    "trigger_conditions_en": "Set purchase_intent to \"yes\" when the user clearly shows commercial intent, including:\n1) Pricing: how much, quote, pricing, MSRP, budget, payment terms, discounts.\n2) Purchase & channels: where to buy, how to order, pre-order, lead time, shipping, reseller/dealer, regional sales, official purchase link.\n3) Business: procurement, tender/RFP, bulk order, partnership, distributor inquiry, sales contact, business WeChat/phone.\n4) Demo & trials: schedule a demo, on-site demo, trial unit, PoC, showroom visit.\n\nSet purchase_intent to \"no\" for pure technical Q&A (specs, how-to, charging, troubleshooting, warranty policy) unless buying/commercial intent is also present.\n\nIf the user only asks for \"contact\": lean \"yes\" for sales/partnership; lean \"no\" for service/repair/technical support."
+  },
+  "products": [
+    {
+      "value": "aegis-ultra",
+      "label": "FF Aegis Ultra"
+    },
+    {
+      "value": "master-ultra",
+      "label": "FF Master Ultra"
+    },
+    {
+      "value": "futurist-ultra",
+      "label": "FF Futurist Ultra"
+    },
+    {
+      "value": "aegis-edu",
+      "label": "FF Aegis EDU"
+    },
+    {
+      "value": "ff91",
+      "label": "FF 91 2.0"
+    }
+  ],
+  "purchase_intent_keywords": {
+    "cn": [
+      "购买",
+      "买",
+      "价格",
+      "多少钱",
+      "订购",
+      "预订",
+      "预约",
+      "下单",
+      "报价",
+      "怎么买",
+      "哪里买",
+      "渠道",
+      "销售",
+      "经销",
+      "代理",
+      "试用",
+      "采购"
+    ],
+    "en": [
+      "buy",
+      "purchase",
+      "order",
+      "price",
+      "cost",
+      "how much",
+      "quote",
+      "demo",
+      "trial",
+      "pricing",
+      "where to buy",
+      "sales",
+      "dealer",
+      "procurement"
+    ]
+  },
+  "catalog_items": [
+    {
+      "enabled": true,
+      "product_name": "aegis-ultra",
+      "trigger_scene": "用户询问户外巡检、安防巡逻、复杂地形作业、四足机器人在工业或园区场景的应用",
+      "recommendation_content_cn": "FF Aegis Ultra 是一款 IP54 防护等级的四足机器人，支持最大 40° 爬坡和 35cm 垂直跳跃，配备 FPV 摄像头和扩展接口，可搭载自定义传感器与负载（最大 5kg），适合户外巡检、安防巡逻等复杂环境作业场景。",
+      "recommendation_content_en": "FF Aegis Ultra is an IP54-rated quadruped robot capable of climbing slopes up to 40° and jumping 35 cm vertically. Equipped with an FPV camera and expansion interfaces, it supports custom sensor and payload integration (up to 5 kg) — ideal for outdoor inspection, security patrol, and operations in challenging environments.",
+      "id": "aegis_ultra"
+    }
+  ]
+}

@@ -552,3 +552,461 @@ mark.hl.current {
   color: #b0b0b0;
   letter-spacing: 0.02em;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   LEADS PAGE
+══════════════════════════════════════════════════════════════ */
+.lead-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.lead-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px;
+}
+
+.lead-card h1,
+.lead-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-rubik);
+}
+
+.lead-card p {
+  margin: 0 0 12px;
+  color: var(--text-3);
+}
+
+.lead-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.lead-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.lead-form input,
+.lead-form select,
+.lead-form textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.lead-form textarea {
+  min-height: 88px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.lead-form-full {
+  grid-column: 1 / -1;
+}
+
+.lead-form button {
+  grid-column: 1 / -1;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-purple);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lead-form button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.lead-msg {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.lead-msg.success {
+  color: #0f8f47;
+}
+
+.lead-msg.error {
+  color: #d93025;
+}
+
+.lead-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.lead-table-header button {
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.lead-table-wrap {
+  overflow: auto;
+}
+
+.lead-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.lead-table th,
+.lead-table td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RECOMMENDATION STANDALONE PAGE
+   Fully self-contained layout: own header, no sidebar, no chat
+══════════════════════════════════════════════════════════════ */
+
+/* Shell */
+.reco-standalone {
+  min-height: 100vh;
+  background: var(--color-gray-50);
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.reco-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.reco-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reco-header-logo {
+  height: 28px;
+  width: 28px;
+}
+
+.reco-header-title {
+  font-family: var(--font-rubik);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.reco-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reco-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.reco-nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* ── Admin Tabs ────────────────────────────────────────────── */
+.admin-tabs {
+  display: flex;
+  gap: 0;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+  background: var(--color-gray-50);
+}
+
+.admin-tab {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-rubik);
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  margin-bottom: -1px;
+}
+
+.admin-tab:hover {
+  color: var(--text-1);
+  background: #fff;
+}
+
+.admin-tab.active {
+  color: var(--accent);
+  background: #fff;
+  border-color: var(--border);
+  border-bottom-color: #fff;
+  font-weight: 600;
+}
+
+/* ── Body ───────────────────────────────────────────────────── */
+.reco-body {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.reco-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 20px 24px;
+}
+
+.reco-card h1,
+.reco-card h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-rubik);
+  color: var(--color-navy);
+}
+
+.reco-card h1 { font-size: 20px; }
+.reco-card h2 { font-size: 16px; }
+
+.reco-card p {
+  margin: 0 0 12px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* ── Form section ───────────────────────────────────────────── */
+.recommendation-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.recommendation-page-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-link-btn,
+.recommendation-secondary-btn,
+.recommendation-danger-btn,
+.recommendation-row-actions button {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.admin-link-btn,
+.recommendation-secondary-btn,
+.recommendation-row-actions button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.admin-link-btn:hover,
+.recommendation-secondary-btn:hover,
+.recommendation-row-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.recommendation-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.recommendation-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.recommendation-form input,
+.recommendation-form select,
+.recommendation-form textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.recommendation-form input:focus,
+.recommendation-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+.recommendation-form input:disabled {
+  background: var(--color-gray-50);
+  color: var(--text-3);
+}
+
+.recommendation-form textarea {
+  resize: vertical;
+  min-height: 92px;
+}
+
+.recommendation-form-full {
+  grid-column: 1 / -1;
+}
+
+.recommendation-toggle {
+  justify-content: flex-end;
+}
+
+.recommendation-toggle input {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  accent-color: var(--color-purple);
+}
+
+.recommendation-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.recommendation-form-actions button:first-child {
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-purple);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 20px;
+  transition: background 0.15s;
+}
+
+.recommendation-form-actions button:first-child:hover {
+  background: #5650c9;
+}
+
+.recommendation-form-actions button:first-child:disabled,
+.recommendation-danger-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ── Table section ──────────────────────────────────────────── */
+.recommendation-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.recommendation-danger-btn {
+  border: 1px solid rgba(217, 48, 37, 0.25);
+  background: #fff5f5;
+  color: #d93025;
+}
+
+.recommendation-danger-btn:hover {
+  background: #ffe9e7;
+}
+
+.recommendation-cell-multiline {
+  white-space: normal !important;
+  min-width: 220px;
+  line-height: 1.6;
+}
+
+.reco-row-active {
+  background: var(--accent-bg) !important;
+}
+
+.reco-badge-on,
+.reco-badge-off {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reco-badge-on {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.reco-badge-off {
+  background: var(--color-gray-100);
+  color: var(--text-4);
+}
+
+@media (max-width: 900px) {
+  .reco-header { padding: 0 12px; }
+  .admin-tabs { padding: 12px 12px 0; }
+  .admin-tab { padding: 8px 16px; font-size: 13px; }
+  .reco-body { padding: 12px; }
+  .reco-card { padding: 14px; }
+  .recommendation-page-head { flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .reco-header-title { display: none; }
+}

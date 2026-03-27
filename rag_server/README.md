@@ -17,7 +17,7 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
 ## 架构概览
 
 ```
-用户提问 → ChatKit 协议 → POST /chatkit
+用户提问 → ChatKit 协议 → POST /api/chatkit
                               │
                     ┌─────────▼──────────┐
                     │   Triage Agent      │  非流式，JSON 输出
@@ -157,10 +157,17 @@ uvicorn app.main:app --reload --port 8000
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `/chatkit` | POST | ChatKit 协议端点（线程管理 + 流式对话） |
-| `/search` | GET | 语义搜索（`?q=查询词&limit=10`） |
+| `/api/chatkit` | POST | ChatKit 协议端点（线程管理 + 流式对话） |
+| `/api/search` | GET | 语义搜索（`?q=查询词&limit=10`） |
 | `/api/chat-history` | GET | 获取所有对话线程列表（`?limit=50&order=desc`） |
 | `/api/chat-history/{thread_id}` | GET | 获取指定线程的消息和 Agent 追踪记录 |
+| `/api/post-lead` | POST | 保存一条用户留资数据 |
+| `/api/get-leads` | GET | 获取全部留资数据 |
+| `/api/get-lead-capture-config` | GET | 获取 Triage 留资触发配置（`recommendations.json` 中 `lead_capture` + `purchase_intent_keywords`） |
+| `/api/save-lead-capture-config` | POST | 保存留资 Triage 配置（合并写入 `recommendations.json`，供动态生成 `purchase_intent` 提示词） |
+| `/api/get-recommendations` | GET | 获取全部推荐图鉴条目 |
+| `/api/save-recommendation` | POST | 按 `id` 保存或更新一条推荐图鉴条目 |
+| `/api/delete-recommendation/{recommendation_id}` | DELETE | 删除一条推荐图鉴条目 |
 | `/api/logs` | GET | 列出所有可用日志类型及访问链接 |
 | `/api/logs/all` | GET | 合并所有日志按时间排序输出（`?tail=200`，每个日志取最后 N 行） |
 | `/api/logs/{log_name}` | GET | 获取指定日志的最后 N 行（`?tail=200`，允许：`front.log`、`back.log`、`system.log`） |

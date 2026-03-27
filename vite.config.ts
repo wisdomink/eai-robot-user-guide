@@ -22,9 +22,8 @@ export default defineConfig({
       '/api/search': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/search/, '/search'),
       },
-      '/chatkit': {
+      '/api/chatkit': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
@@ -37,6 +36,34 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/logs': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/post-lead': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/get-leads': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/get-lead-capture-config': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/save-lead-capture-config': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/get-recommendations': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/save-recommendation': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/api/delete-recommendation': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

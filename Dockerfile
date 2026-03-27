@@ -10,7 +10,7 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_CHATKIT_API_URL=/chatkit
+ARG VITE_CHATKIT_API_URL=/api/chatkit
 ARG VITE_CHATKIT_DOMAIN_KEY=local-dev
 ARG VITE_SEARCH_API_URL=/api/search
 

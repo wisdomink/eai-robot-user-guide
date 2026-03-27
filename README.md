@@ -65,7 +65,7 @@ eai-robot-user-guide/
 │
 ├── rag_server/                  # AI 后端（独立 Python 服务）
 │   ├── app/
-│   │   ├── main.py              # 入口：/chatkit、/search、/api/logs
+│   │   ├── main.py              # 入口：/api/chatkit、/api/search、/api/logs
 │   │   ├── core/config.py       # 配置（环境变量 + 路径）
 │   │   └── services/
 │   │       ├── chatkit_handler.py   # 多 Agent 工作流 + ChatKit 桥接
@@ -145,7 +145,7 @@ npm run preview   # 预览构建结果
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `VITE_CHATKIT_API_URL` | `/chatkit` | 后端 ChatKit 端点 |
+| `VITE_CHATKIT_API_URL` | `/api/chatkit` | 后端 ChatKit 端点 |
 | `VITE_CHATKIT_DOMAIN_KEY` | `local-dev` | ChatKit 域名标识 |
 
 ### 后端（RAG Server）

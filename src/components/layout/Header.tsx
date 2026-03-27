@@ -35,8 +35,20 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </button>
       </div>
 
-      {/* Right: Chat + Company Logo */}
+      {/* Right: Admin links + Chat + Company Logo */}
       <div className="flex items-center gap-2">
+        <Link
+          to="/admin"
+          className="chat-btn"
+          title="管理后台"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M13.5 8.5a5.5 5.5 0 01-11 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <path d="M8 1v3M3.5 2.5l1.5 2.5M12.5 2.5l-1.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <circle cx="8" cy="8.5" r="1.2" fill="currentColor"/>
+          </svg>
+          管理后台
+        </Link>
         <button
           className={clsx('chat-btn', isChatOpen && 'active')}
           onClick={toggleChat}

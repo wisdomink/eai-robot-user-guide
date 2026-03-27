@@ -38,7 +38,7 @@ fi
 VS_COUNT=0
 for vs_var in OPENAI_VECTOR_STORE_MASTER_ULTRA_ID OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID \
               OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID OPENAI_VECTOR_STORE_AEGIS_EDU_ID \
-              OPENAI_VECTOR_STORE_ROBOT_ALL_ID; do
+              OPENAI_VECTOR_STORE_FF91_ID OPENAI_VECTOR_STORE_ROBOT_ALL_ID; do
     val="${!vs_var:-}"
     if [ -n "$val" ] && [ "$val" != "vs_xxx" ]; then
         VS_COUNT=$((VS_COUNT + 1))
@@ -74,8 +74,8 @@ fi
 # ── Launch ────────────────────────────────────────────────────────────
 echo ""
 echo "🚀 启动 ChatKit RAG Server (port $PORT)"
-echo "   ChatKit 端点:    http://localhost:$PORT/chatkit"
-echo "   语义搜索端点:    http://localhost:$PORT/search"
+echo "   ChatKit 端点:    http://localhost:$PORT/api/chatkit"
+echo "   语义搜索端点:    http://localhost:$PORT/api/search"
 echo "   健康检查:        http://localhost:$PORT/health"
 echo "   Model:          ${LLM_MODEL:-gpt-5}"
 echo "   Vector Stores:  $VS_COUNT configured"

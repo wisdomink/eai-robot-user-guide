@@ -51,6 +51,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 EVAL_DIR = Path(__file__).resolve().parent
+_RAG_ROOT = EVAL_DIR.parent
+if str(_RAG_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RAG_ROOT))
 
 _env_local = EVAL_DIR / ".env"
 _env_parent = EVAL_DIR.parent / ".env"
@@ -88,6 +91,8 @@ def _load_instructions(name: str) -> str:
     return (_INSTRUCTIONS_DIR / f"{name}.md").read_text(encoding="utf-8")
 
 
+from app.services.recommendation_engine import RecommendationEngine
+
 # ── Triage Agent (mirrors production chatkit_handler.py) ──────────────────
 
 
@@ -99,9 +104,16 @@ class TriageOutput(BaseModel):
 
 _TRIAGE_MODEL_SETTINGS = ModelSettings(store=False)
 
+_reco_engine = RecommendationEngine()
+_TRIAGE_INSTRUCTIONS = (
+    _load_instructions("triage")
+    .replace("{{recommendation_rules}}", _reco_engine.build_triage_rules_prompt())
+    .replace("{{purchase_intent_rules}}", _reco_engine.build_purchase_intent_prompt())
+)
+
 triage_agent = Agent(
     name="FF Robot Triage",
-    instructions=_load_instructions("triage"),
+    instructions=_TRIAGE_INSTRUCTIONS,
     model="gpt-4o",
     output_type=TriageOutput,
     model_settings=_TRIAGE_MODEL_SETTINGS,

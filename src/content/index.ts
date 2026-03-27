@@ -25,7 +25,13 @@ const aegisModules = import.meta.glob('./pages/aegis-ultra/*.md', {
   eager: true,
 }) as Record<string, string>
 
-const mdModules: Record<string, string> = { ...masterModules, ...futuristModules, ...aegiseduModules, ...aegisModules }
+const ff91Modules = import.meta.glob('./pages/ff91/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const mdModules: Record<string, string> = { ...masterModules, ...futuristModules, ...aegiseduModules, ...aegisModules, ...ff91Modules }
 
 /**
  * Get raw markdown content for a page by filename.

@@ -27,7 +27,8 @@ from chatkit.agents import (
     simple_to_agent_input,
     stream_agent_response,
 )
-from chatkit.server import ChatKitServer
+from chatkit.actions import ActionConfig
+from chatkit.server import ChatKitServer, stream_widget
 from chatkit.store import NotFoundError, Store
 from chatkit.types import (
     Annotation,
@@ -39,12 +40,16 @@ from chatkit.types import (
     ThreadMetadata,
     ThreadStreamEvent,
     UserMessageItem,
+    WidgetItem,
 )
+from chatkit.widgets import Card, Caption, Input, Label, Select, Spacer, Text, Title
 
 from app.core.config import (
+    LEADS_DIR,
     LLM_MODEL,
     OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
+    OPENAI_VECTOR_STORE_FF91_ID,
     OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
     OPENAI_VECTOR_STORE_MASTER_ULTRA_ID,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
@@ -52,6 +57,8 @@ from app.core.config import (
     SIDEBAR_PATH,
 )
 from app.core.logging_config import FRONT_LOGGER_NAME
+from app.services.lead_service import LeadStorage
+from app.services.recommendation_engine import RecommendationEngine
 
 logger = logging.getLogger(__name__)
 front_logger = logging.getLogger(FRONT_LOGGER_NAME)
@@ -144,8 +151,12 @@ class _EventStreamRewriter:
 
 class TriageOutput(BaseModel):
     input_lang: str
+    query_scope: str
     query_type: str
     query_text: str
+    purchase_intent: str = "no"
+    recommendation_hit: str = "no"
+    recommendation_rule_id: str = ""
 
 
 # ── Agent definitions ────────────────────────────────────────────────────
@@ -159,13 +170,29 @@ _SUPPORT_MODEL_SETTINGS = ModelSettings(
     tool_choice="required",
 )
 
-triage_agent = Agent(
-    name="FF Robot Triage",
-    instructions=_load_instructions("triage"),
-    model="gpt-5.4-mini",
-    output_type=TriageOutput,
-    model_settings=_TRIAGE_MODEL_SETTINGS,
+_NO_TOOL_MODEL_SETTINGS = ModelSettings(
+    store=True,
 )
+
+_TRIAGE_INSTRUCTIONS_TEMPLATE = _load_instructions("triage")
+
+
+def _build_triage_agent(
+    recommendation_rules_prompt: str,
+    purchase_intent_rules_prompt: str,
+) -> Agent:
+    instructions = _TRIAGE_INSTRUCTIONS_TEMPLATE.replace(
+        "{{recommendation_rules}}", recommendation_rules_prompt
+    ).replace(
+        "{{purchase_intent_rules}}", purchase_intent_rules_prompt
+    )
+    return Agent(
+        name="FF Robot Triage",
+        instructions=instructions,
+        model="gpt-5.4-mini",
+        output_type=TriageOutput,
+        model_settings=_TRIAGE_MODEL_SETTINGS,
+    )
 
 _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
     "master-ultra": {
@@ -188,10 +215,20 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "instructions_file": "aegis-edu",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
     },
+    "ff91": {
+        "name": "FF 91 2.0 Support",
+        "instructions_file": "ff91",
+        "vector_store_id": OPENAI_VECTOR_STORE_FF91_ID,
+    },
     "general": {
         "name": "General Support",
         "instructions_file": "general",
         "vector_store_id": OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
+    },
+    "out-of-scope": {
+        "name": "Official Website Scope Guard",
+        "instructions_file": "out-of-scope",
+        "vector_store_id": "",
     },
 }
 
@@ -213,12 +250,16 @@ def _build_support_agent(
     instructions = template.replace("{{input_lang}}", input_lang)
     instructions = instructions.replace("{{query_text}}", query_text)
 
+    vector_store_id = cfg.get("vector_store_id", "")
+    tools = [FileSearchTool(vector_store_ids=[vector_store_id])] if vector_store_id else []
+    model_settings = _SUPPORT_MODEL_SETTINGS if tools else _NO_TOOL_MODEL_SETTINGS
+
     return Agent(
         name=cfg["name"],
         instructions=instructions,
         model=LLM_MODEL,
-        tools=[FileSearchTool(vector_store_ids=[cfg["vector_store_id"]])],
-        model_settings=_SUPPORT_MODEL_SETTINGS,
+        tools=tools,
+        model_settings=model_settings,
     )
 
 
@@ -301,6 +342,7 @@ class InMemoryStore(Store[dict]):
         self.threads: dict[str, ThreadMetadata] = {}
         self.items: dict[str, list[ThreadItem]] = defaultdict(list)
         self.agent_traces: dict[str, list[dict]] = defaultdict(list)
+        self.thread_langs: dict[str, str] = {}
 
     async def load_thread(self, thread_id: str, context: dict) -> ThreadMetadata:
         if thread_id not in self.threads:
@@ -407,12 +449,124 @@ class InMemoryStore(Store[dict]):
 
 
 class FFRobotChatKitServer(ChatKitServer[dict]):
-    """Two-phase multi-agent workflow:
+    """Two-phase multi-agent workflow with post-answer recommendations.
 
     1. **Triage** (non-streamed): detect language, identify product, expand query.
     2. **Support Agent** (streamed): run the product-specific agent with
        file_search and stream the response back to ChatKit.
+    3. **Recommendation** (post-answer): show a product card or lead-capture
+       form based on rules.
     """
+
+    def __init__(self, store: InMemoryStore) -> None:
+        super().__init__(store=store)
+        self.reco_engine = RecommendationEngine()
+        self._lead_storage = LeadStorage(LEADS_DIR)
+
+    # ── Widget builders ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _build_reco_card(title: str, description: str) -> Card:
+        return Card(children=[
+            Title(value=title),
+            Text(value=description),
+        ])
+
+    def _build_lead_card(self, title: str, description: str, lang: str) -> Card:
+        is_cn = lang == "cn"
+        return Card(
+            asForm=True,
+            children=[
+                Title(value=title),
+                Caption(value=description),
+                Spacer(size="sm"),
+                Label(
+                    value="产品 / Product" if is_cn else "Product",
+                    fieldName="product",
+                ),
+                Select(
+                    name="product",
+                    options=self.reco_engine.product_options,
+                    defaultValue="aegis-ultra",
+                ),
+                Spacer(size="sm"),
+                Label(
+                    value="姓名 / Name" if is_cn else "Name",
+                    fieldName="contact_name",
+                ),
+                Input(
+                    name="contact_name",
+                    placeholder="请输入姓名" if is_cn else "Your name",
+                ),
+                Spacer(size="sm"),
+                Label(
+                    value="邮箱 / Email" if is_cn else "Email",
+                    fieldName="email",
+                ),
+                Input(
+                    name="email",
+                    placeholder="请输入邮箱" if is_cn else "Your email",
+                ),
+                Spacer(size="sm"),
+                Label(
+                    value="电话 / Phone" if is_cn else "Phone",
+                    fieldName="phone",
+                ),
+                Input(
+                    name="phone",
+                    placeholder="请输入电话" if is_cn else "Your phone number",
+                ),
+            ],
+            confirm={
+                "label": "提交" if is_cn else "Submit",
+                "action": ActionConfig(
+                    type="submit_lead",
+                    handler="server",
+                    streaming=True,
+                ),
+            },
+        )
+
+    # ── Lead persistence ──────────────────────────────────────────────────
+
+    def _save_lead(self, thread_id: str, payload: dict) -> None:
+        self._lead_storage.save_lead(thread_id, payload)
+        front_logger.info(
+            "[thread=%s] lead captured: product=%s name=%s email=%s",
+            thread_id,
+            payload.get("product", ""),
+            payload.get("contact_name", ""),
+            payload.get("email", ""),
+        )
+
+    # ── Action handler (form submissions) ─────────────────────────────────
+
+    async def action(
+        self,
+        thread: ThreadMetadata,
+        action_obj: object,
+        sender: WidgetItem | None,
+        context: dict,
+    ) -> AsyncIterator[ThreadStreamEvent]:
+        action_type = getattr(action_obj, "type", "")
+        action_payload = getattr(action_obj, "payload", {}) or {}
+
+        if action_type == "submit_lead":
+            self._save_lead(thread.id, action_payload)
+
+            lang = self.store.thread_langs.get(thread.id, "en")
+            success_title, success_text = self.reco_engine.lead_success_text(lang)
+
+            success_card = Card(children=[
+                Title(value=success_title),
+                Text(value=success_text),
+            ])
+            async for ev in stream_widget(thread, success_card):
+                yield ev
+        else:
+            logger.warning("Unknown action type=%r on thread=%s", action_type, thread.id)
+
+    # ── Main respond flow ─────────────────────────────────────────────────
 
     async def respond(
         self,
@@ -454,6 +608,10 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         # ── Phase 1: Triage (non-streamed, structured JSON output) ───────
         yield ProgressUpdateEvent(icon="sparkle", text="Analyzing your question…")
 
+        triage_agent = _build_triage_agent(
+            self.reco_engine.build_triage_rules_prompt(),
+            self.reco_engine.build_purchase_intent_prompt(),
+        )
         logger.info("Running triage agent …")
         triage_result = await Runner.run(
             triage_agent,
@@ -466,18 +624,29 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         triage_output: TriageOutput = triage_result.final_output
         front_logger.info(
-            "[thread=%s] triage → query_type=%s, input_lang=%s, query_text=%s",
+            "[thread=%s] triage → query_scope=%s, query_type=%s, input_lang=%s, purchase_intent=%s, recommendation_hit=%s, recommendation_rule_id=%s, query_text=%s",
             thread.id,
+            triage_output.query_scope,
             triage_output.query_type,
             triage_output.input_lang,
+            triage_output.purchase_intent,
+            triage_output.recommendation_hit,
+            triage_output.recommendation_rule_id,
             triage_output.query_text[:120] if triage_output.query_text else "",
         )
+
+        self.store.thread_langs[thread.id] = triage_output.input_lang
 
         # ── Phase 2: Route to product-specific agent (streamed) ──────────
         support_cfg_name = _SUPPORT_AGENT_CONFIGS.get(
             triage_output.query_type, _SUPPORT_AGENT_CONFIGS["general"]
         )["name"]
-        yield ProgressUpdateEvent(icon="search", text=f"Searching {support_cfg_name}…")
+        progress_text = (
+            f"Searching {support_cfg_name}…"
+            if triage_output.query_scope != "out-of-scope"
+            else "Preparing a scoped response…"
+        )
+        yield ProgressUpdateEvent(icon="search", text=progress_text)
 
         support_agent = _build_support_agent(
             triage_output.query_type,
@@ -497,8 +666,12 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     "model": LLM_MODEL,
                     "role": "triage",
                     "output": {
+                        "query_scope": triage_output.query_scope,
                         "query_type": triage_output.query_type,
                         "input_lang": triage_output.input_lang,
+                        "purchase_intent": triage_output.purchase_intent,
+                        "recommendation_hit": triage_output.recommendation_hit,
+                        "recommendation_rule_id": triage_output.recommendation_rule_id,
                         "query_text": triage_output.query_text,
                     },
                 },
@@ -506,9 +679,10 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     "agent": support_cfg["name"],
                     "model": LLM_MODEL,
                     "role": "support",
+                    "query_scope": triage_output.query_scope,
                     "routed_by": triage_output.query_type,
                     "vector_store_id": support_cfg["vector_store_id"],
-                    "tools": ["file_search"],
+                    "tools": ["file_search"] if support_cfg["vector_store_id"] else [],
                 },
             ],
         })
@@ -534,6 +708,28 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             agent_context, result, converter=FFRobotConverter()
         ):
             yield rewriter.process(event)
+
+        # ── Phase 3: Post-answer recommendation ──────────────────────────
+        reco = self.reco_engine.evaluate_post_answer(
+            input_lang=triage_output.input_lang,
+            thread_id=thread.id,
+            recommendation_rule_id=triage_output.recommendation_rule_id,
+            purchase_intent=triage_output.purchase_intent,
+        )
+        if reco:
+            front_logger.info(
+                "[thread=%s] recommendation id=%s type=%s",
+                thread.id, reco.id, reco.reco_type,
+            )
+            if reco.reco_type == "lead_capture":
+                card = self._build_lead_card(
+                    reco.title, reco.description, triage_output.input_lang,
+                )
+            else:
+                card = self._build_reco_card(reco.title, reco.description)
+
+            async for ev in stream_widget(thread, card):
+                yield ev
 
 
 def create_chatkit_server() -> FFRobotChatKitServer:

@@ -4,12 +4,22 @@ import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
 import { useChatState } from '@/hooks/useChatState'
 
-const CHATKIT_API_URL = import.meta.env.VITE_CHATKIT_API_URL || '/chatkit'
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
+
+function resolveChatKitApiUrl() {
+  const raw = import.meta.env.VITE_CHATKIT_API_URL
+  if (!raw) return '/api/chatkit'
+  if (/^https?:\/\//.test(raw)) {
+    const parsed = new URL(raw)
+    parsed.pathname = '/api/chatkit'
+    return parsed.toString()
+  }
+  return '/api/chatkit'
+}
 
 function buildApiConfig() {
   return {
-    url: CHATKIT_API_URL,
+    url: resolveChatKitApiUrl(),
     domainKey: CHATKIT_DOMAIN_KEY,
   }
 }
@@ -26,6 +36,7 @@ const PROMPTS = [
   { label: 'FF Futurist Ultra', prompt: 'Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?' },
   { label: 'FF Aegis Ultra', prompt: 'Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?' },
   { label: 'FF Aegis EDU', prompt: 'Tell me about FF Aegis EDU. What are its key features, specs, and how do I get started?' },
+  { label: 'FF 91 2.0', prompt: 'Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?' },
 ]
 
 type OverlayMode = 'buttons' | null

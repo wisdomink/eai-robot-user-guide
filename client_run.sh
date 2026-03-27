@@ -28,12 +28,12 @@ if [ ! -d "node_modules" ] || [ ! -f "$HASH_FILE" ] || [ "$(cat "$HASH_FILE")" !
 fi
 
 # ── Launch ────────────────────────────────────────────────────────────
-export VITE_CHATKIT_API_URL="${VITE_CHATKIT_API_URL:-http://localhost:$RAG_PORT/chatkit}"
+export VITE_CHATKIT_API_URL="${VITE_CHATKIT_API_URL:-/api/chatkit}"
 
 echo ""
 echo "🚀 启动前端开发服务器 (port $PORT)"
 echo "   前端地址:    https://localhost:$PORT"
 echo "   ChatKit API: $VITE_CHATKIT_API_URL"
-echo "   搜索 API:    /api/search → http://localhost:$RAG_PORT/search (Vite proxy)"
+echo "   搜索 API:    /api/search → http://localhost:$RAG_PORT/api/search (Vite proxy)"
 echo ""
 exec npx vite --host --port "$PORT"
