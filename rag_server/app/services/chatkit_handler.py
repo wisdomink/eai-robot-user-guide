@@ -58,6 +58,7 @@ from app.core.config import (
 )
 from app.core.logging_config import FRONT_LOGGER_NAME
 from app.services.lead_service import LeadStorage
+from app.services.recommendation_catalog_service import RecommendationCatalogStorage
 from app.services.recommendation_engine import RecommendationEngine
 
 logger = logging.getLogger(__name__)
@@ -458,10 +459,17 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
        form based on rules.
     """
 
-    def __init__(self, store: InMemoryStore) -> None:
+    def __init__(
+        self,
+        store: InMemoryStore,
+        *,
+        lead_storage: LeadStorage | None = None,
+        recommendation_storage: RecommendationCatalogStorage | None = None,
+    ) -> None:
         super().__init__(store=store)
-        self.reco_engine = RecommendationEngine()
-        self._lead_storage = LeadStorage(LEADS_DIR)
+        self._recommendation_storage = recommendation_storage or RecommendationCatalogStorage.from_config()
+        self.reco_engine = RecommendationEngine(self._recommendation_storage)
+        self._lead_storage = lead_storage or LeadStorage.from_config()
 
     # ── Widget builders ───────────────────────────────────────────────────
 
@@ -732,5 +740,13 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 yield ev
 
 
-def create_chatkit_server() -> FFRobotChatKitServer:
-    return FFRobotChatKitServer(store=InMemoryStore())
+def create_chatkit_server(
+    *,
+    lead_storage: LeadStorage | None = None,
+    recommendation_storage: RecommendationCatalogStorage | None = None,
+) -> FFRobotChatKitServer:
+    return FFRobotChatKitServer(
+        store=InMemoryStore(),
+        lead_storage=lead_storage,
+        recommendation_storage=recommendation_storage,
+    )

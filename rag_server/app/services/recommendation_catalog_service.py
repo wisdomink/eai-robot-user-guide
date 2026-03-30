@@ -4,13 +4,55 @@ import json
 import re
 from pathlib import Path
 
+import boto3
+from boto3.dynamodb.conditions import Key
+
 
 class RecommendationCatalogStorage:
-    """Persist recommendation catalog items in recommendations.json."""
+    """Persist recommendation config in a local JSON file or DynamoDB."""
 
-    def __init__(self, config_path: Path) -> None:
+    _CONFIG_PK = "CONFIG"
+    _CATALOG_PK = "CATALOG_ITEM"
+
+    def __init__(
+        self,
+        config_path: Path | None = None,
+        *,
+        backend: str = "file",
+        dynamodb_table: str = "",
+        aws_region: str = "",
+    ) -> None:
+        self._backend = backend.strip().lower() or "file"
         self._config_path = config_path
-        self._config_path.parent.mkdir(parents=True, exist_ok=True)
+        self._seed_cache: dict | None = None
+        self._dynamodb_table_name = dynamodb_table.strip()
+        self._aws_region = aws_region.strip()
+        self._dynamodb_table = None
+
+        if self._backend == "dynamodb":
+            if not self._dynamodb_table_name:
+                raise ValueError("RECOMMENDATIONS_DDB_TABLE is required when RECOMMENDATIONS_BACKEND=dynamodb")
+            resource_kwargs = {}
+            if self._aws_region:
+                resource_kwargs["region_name"] = self._aws_region
+            dynamodb = boto3.resource("dynamodb", **resource_kwargs)
+            self._dynamodb_table = dynamodb.Table(self._dynamodb_table_name)
+        else:
+            if self._config_path is None:
+                raise ValueError("config_path is required when RECOMMENDATIONS_BACKEND=file")
+            self._config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def from_config(cls) -> RecommendationCatalogStorage:
+        from app.core.config import AWS_REGION_NAME, RECOMMENDATIONS_BACKEND, RECOMMENDATIONS_DDB_TABLE
+        from app.services.recommendation_engine import RECOMMENDATIONS_PATH
+
+        return cls(
+            RECOMMENDATIONS_PATH,
+            backend=RECOMMENDATIONS_BACKEND,
+            dynamodb_table=RECOMMENDATIONS_DDB_TABLE,
+            aws_region=AWS_REGION_NAME,
+        )
 
     @staticmethod
     def _to_slug(name: str) -> str:
@@ -47,9 +89,36 @@ class RecommendationCatalogStorage:
 
         return item
 
+    @staticmethod
+    def _base_config() -> dict:
+        return {
+            "default_product": {},
+            "lead_capture": {},
+            "products": [],
+            "purchase_intent_keywords": {"cn": [], "en": []},
+            "catalog_items": [],
+        }
+
+    def _load_seed_config(self) -> dict:
+        if self._seed_cache is not None:
+            return json.loads(json.dumps(self._seed_cache))
+
+        if self._config_path and self._config_path.exists():
+            with open(self._config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                self._seed_cache = data
+                return json.loads(json.dumps(data))
+
+        self._seed_cache = self._base_config()
+        return json.loads(json.dumps(self._seed_cache))
+
     def _load_config(self) -> dict:
+        if self._backend == "dynamodb":
+            return self._load_config_from_dynamodb()
+
         if not self._config_path.exists():
-            return {"catalog_items": []}
+            return self._base_config()
 
         with open(self._config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -59,9 +128,101 @@ class RecommendationCatalogStorage:
         return data
 
     def _write_config(self, config: dict) -> None:
+        if self._backend == "dynamodb":
+            raise RuntimeError("_write_config is not used for DynamoDB backend")
         with open(self._config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
             f.write("\n")
+
+    def _load_config_from_dynamodb(self) -> dict:
+        self._ensure_dynamodb_seeded()
+        assert self._dynamodb_table is not None
+
+        seed = self._load_seed_config()
+        config = self._base_config()
+        config["default_product"] = dict(seed.get("default_product") or {})
+        config["lead_capture"] = dict(seed.get("lead_capture") or {})
+        config["products"] = list(seed.get("products") or [])
+        config["purchase_intent_keywords"] = dict(seed.get("purchase_intent_keywords") or {"cn": [], "en": []})
+
+        for item in self._query_partition(self._CONFIG_PK):
+            sk = item.get("sk")
+            row = {k: v for k, v in item.items() if k not in {"pk", "sk"}}
+            if sk == "DEFAULT_PRODUCT":
+                config["default_product"] = row
+            elif sk == "LEAD_CAPTURE":
+                config["lead_capture"] = row
+            elif sk == "PRODUCTS":
+                config["products"] = row.get("items", [])
+            elif sk == "PURCHASE_INTENT_KEYWORDS":
+                config["purchase_intent_keywords"] = {
+                    "cn": list(row.get("cn", []) or []),
+                    "en": list(row.get("en", []) or []),
+                }
+
+        catalog_items = [
+            {k: v for k, v in item.items() if k not in {"pk", "sk"}}
+            for item in self._query_partition(self._CATALOG_PK)
+            if isinstance(item, dict)
+        ]
+        config["catalog_items"] = catalog_items if catalog_items else list(seed.get("catalog_items") or [])
+        return config
+
+    def _query_partition(self, partition_key: str) -> list[dict]:
+        assert self._dynamodb_table is not None
+        rows: list[dict] = []
+        query_kwargs = {
+            "KeyConditionExpression": Key("pk").eq(partition_key),
+        }
+        while True:
+            response = self._dynamodb_table.query(**query_kwargs)
+            rows.extend(response.get("Items", []))
+            last_key = response.get("LastEvaluatedKey")
+            if not last_key:
+                return rows
+            query_kwargs["ExclusiveStartKey"] = last_key
+
+    def _ensure_dynamodb_seeded(self) -> None:
+        assert self._dynamodb_table is not None
+        response = self._dynamodb_table.scan(Limit=1, Select="COUNT")
+        if response.get("Count", 0):
+            return
+
+        seed = self._load_seed_config()
+        with self._dynamodb_table.batch_writer() as batch:
+            default_product = seed.get("default_product")
+            if isinstance(default_product, dict) and default_product:
+                batch.put_item(Item={"pk": self._CONFIG_PK, "sk": "DEFAULT_PRODUCT", **default_product})
+
+            lead_capture = seed.get("lead_capture")
+            if isinstance(lead_capture, dict) and lead_capture:
+                batch.put_item(Item={"pk": self._CONFIG_PK, "sk": "LEAD_CAPTURE", **lead_capture})
+
+            products = seed.get("products")
+            if isinstance(products, list) and products:
+                batch.put_item(Item={"pk": self._CONFIG_PK, "sk": "PRODUCTS", "items": products})
+
+            keywords = seed.get("purchase_intent_keywords")
+            if isinstance(keywords, dict):
+                batch.put_item(
+                    Item={
+                        "pk": self._CONFIG_PK,
+                        "sk": "PURCHASE_INTENT_KEYWORDS",
+                        "cn": self._normalize_keyword_list(keywords.get("cn")),
+                        "en": self._normalize_keyword_list(keywords.get("en")),
+                    }
+                )
+
+            catalog_items = seed.get("catalog_items")
+            if isinstance(catalog_items, list):
+                for item in catalog_items:
+                    if not isinstance(item, dict):
+                        continue
+                    normalized = self._normalize_item(item)
+                    batch.put_item(Item={"pk": self._CATALOG_PK, "sk": normalized["id"], **normalized})
+
+    def get_full_config(self) -> dict:
+        return self._load_config()
 
     def list_recommendations(self) -> list[dict]:
         config = self._load_config()
@@ -71,6 +232,23 @@ class RecommendationCatalogStorage:
         return [item for item in items if isinstance(item, dict)]
 
     def save_or_update_recommendation(self, payload: dict) -> tuple[dict, bool]:
+        if self._backend == "dynamodb":
+            self._ensure_dynamodb_seeded()
+            assert self._dynamodb_table is not None
+            existing_ids = {
+                item.get("id")
+                for item in self.list_recommendations()
+                if isinstance(item, dict) and item.get("id")
+            }
+            normalized = self._normalize_item(payload, existing_ids)
+            existing = self._dynamodb_table.get_item(
+                Key={"pk": self._CATALOG_PK, "sk": normalized["id"]}
+            ).get("Item")
+            self._dynamodb_table.put_item(
+                Item={"pk": self._CATALOG_PK, "sk": normalized["id"], **normalized}
+            )
+            return normalized, existing is None
+
         config = self._load_config()
         items = config.get("catalog_items", [])
         if not isinstance(items, list):
@@ -121,6 +299,49 @@ class RecommendationCatalogStorage:
         purchase_intent_keywords: dict | None = None,
     ) -> dict:
         """Merge lead_capture fields and replace purchase_intent_keywords. Preserves other top-level keys."""
+        if self._backend == "dynamodb":
+            self._ensure_dynamodb_seeded()
+            assert self._dynamodb_table is not None
+
+            current = self.get_lead_capture_triage_config()
+            existing = current.get("lead_capture")
+            if not isinstance(existing, dict):
+                existing = {}
+            merged = {**existing}
+            for key, value in (lead_capture_updates or {}).items():
+                if value is None:
+                    continue
+                if key in (
+                    "trigger_conditions_cn",
+                    "trigger_conditions_en",
+                    "title_cn",
+                    "title_en",
+                    "description_cn",
+                    "description_en",
+                    "success_title_cn",
+                    "success_title_en",
+                    "success_text_cn",
+                    "success_text_en",
+                ):
+                    merged[key] = value.strip() if isinstance(value, str) else str(value)
+                else:
+                    merged[key] = value
+
+            self._dynamodb_table.put_item(Item={"pk": self._CONFIG_PK, "sk": "LEAD_CAPTURE", **merged})
+
+            if purchase_intent_keywords is not None:
+                kw = purchase_intent_keywords if isinstance(purchase_intent_keywords, dict) else {}
+                self._dynamodb_table.put_item(
+                    Item={
+                        "pk": self._CONFIG_PK,
+                        "sk": "PURCHASE_INTENT_KEYWORDS",
+                        "cn": self._normalize_keyword_list(kw.get("cn")),
+                        "en": self._normalize_keyword_list(kw.get("en")),
+                    }
+                )
+
+            return self.get_lead_capture_triage_config()
+
         config = self._load_config()
         existing = config.get("lead_capture")
         if not isinstance(existing, dict):
@@ -147,6 +368,20 @@ class RecommendationCatalogStorage:
         return self.get_lead_capture_triage_config()
 
     def delete_recommendation(self, recommendation_id: str) -> dict | None:
+        if self._backend == "dynamodb":
+            self._ensure_dynamodb_seeded()
+            assert self._dynamodb_table is not None
+            target_id = recommendation_id.strip()
+            if not target_id:
+                raise ValueError("Recommendation id is required")
+            existing = self._dynamodb_table.get_item(
+                Key={"pk": self._CATALOG_PK, "sk": target_id}
+            ).get("Item")
+            if not existing:
+                return None
+            self._dynamodb_table.delete_item(Key={"pk": self._CATALOG_PK, "sk": target_id})
+            return {k: v for k, v in existing.items() if k not in {"pk", "sk"}}
+
         config = self._load_config()
         items = config.get("catalog_items", [])
         if not isinstance(items, list):

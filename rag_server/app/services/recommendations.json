@@ -86,6 +86,14 @@
       "recommendation_content_cn": "FF Aegis Ultra 是一款 IP54 防护等级的四足机器人，支持最大 40° 爬坡和 35cm 垂直跳跃，配备 FPV 摄像头和扩展接口，可搭载自定义传感器与负载（最大 5kg），适合户外巡检、安防巡逻等复杂环境作业场景。",
       "recommendation_content_en": "FF Aegis Ultra is an IP54-rated quadruped robot capable of climbing slopes up to 40° and jumping 35 cm vertically. Equipped with an FPV camera and expansion interfaces, it supports custom sensor and payload integration (up to 5 kg) — ideal for outdoor inspection, security patrol, and operations in challenging environments.",
       "id": "aegis_ultra"
+    },
+    {
+      "enabled": false,
+      "product_name": "master-ultra",
+      "trigger_scene": "用户询问家庭机器人的时候",
+      "recommendation_content_cn": "FF Master Ultra 是一款家庭机器人，适合在家庭场景中进行辅助",
+      "recommendation_content_en": "FF Master Ultra is a family robot",
+      "id": "master_ultra"
     }
   ]
 }

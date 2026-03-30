@@ -19,12 +19,15 @@ set -euo pipefail
 # ══════════════════════════════════════════════════════════
 export AWS_ACCESS_KEY_ID="xxx"
 export AWS_SECRET_ACCESS_KEY="xxx"
-export AWS_DEFAULT_REGION="us-east-1"
+export AWS_DEFAULT_REGION="xxx"
 
 APP_NAME="eai-robot"
 IMAGE_NAME="eai-robot-app"
 AWS_REGION="$AWS_DEFAULT_REGION"
 ECR_REPO_NAME="eai-robot-app"
+LEADS_DDB_TABLE="${APP_NAME}-leads"
+RECOMMENDATIONS_DDB_TABLE="${APP_NAME}-recommendations"
+TASK_ROLE_NAME="${APP_NAME}-task-role"
 CONTAINER_PORT=80
 CPU=512        # 0.5 vCPU
 MEMORY=1024    # 1 GB
@@ -99,6 +102,7 @@ save_config() {
 ECS_CLUSTER_NAME="$ECS_CLUSTER_NAME"
 ECS_SERVICE_NAME="$ECS_SERVICE_NAME"
 TASK_FAMILY="$TASK_FAMILY"
+TASK_ROLE_ARN="${TASK_ROLE_ARN:-}"
 ALB_ARN="$ALB_ARN"
 TG_ARN="$TG_ARN"
 SG_ID="$SG_ID"
@@ -124,6 +128,120 @@ parse_env_file() {
     done < "$ENV_FILE"
     env_json+="]"
     echo "$env_json"
+}
+
+build_task_env_json() {
+    local base_json="$1"
+    BASE_JSON="$base_json" \
+    AWS_REGION="$AWS_REGION" \
+    LEADS_DDB_TABLE="$LEADS_DDB_TABLE" \
+    RECOMMENDATIONS_DDB_TABLE="$RECOMMENDATIONS_DDB_TABLE" \
+    python3 - <<'PY'
+import json
+import os
+
+data = json.loads(os.environ["BASE_JSON"])
+extra = {
+    "AWS_DEFAULT_REGION": os.environ["AWS_REGION"],
+    "LEADS_BACKEND": "dynamodb",
+    "LEADS_DDB_TABLE": os.environ["LEADS_DDB_TABLE"],
+    "RECOMMENDATIONS_BACKEND": "dynamodb",
+    "RECOMMENDATIONS_DDB_TABLE": os.environ["RECOMMENDATIONS_DDB_TABLE"],
+}
+
+index_by_name = {
+    item.get("name"): idx
+    for idx, item in enumerate(data)
+    if isinstance(item, dict) and item.get("name")
+}
+
+for key, value in extra.items():
+    item = {"name": key, "value": value}
+    if key in index_by_name:
+        data[index_by_name[key]] = item
+    else:
+        data.append(item)
+
+print(json.dumps(data))
+PY
+}
+
+ensure_dynamodb_tables() {
+    echo ""
+    echo "══ 配置 DynamoDB ══"
+
+    aws dynamodb describe-table \
+        --table-name "$LEADS_DDB_TABLE" \
+        --region "$AWS_REGION" >/dev/null 2>&1 || {
+        echo "  📦 创建表: $LEADS_DDB_TABLE"
+        aws dynamodb create-table \
+            --table-name "$LEADS_DDB_TABLE" \
+            --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S \
+            --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+            --billing-mode PAY_PER_REQUEST \
+            --region "$AWS_REGION" >/dev/null
+        aws dynamodb wait table-exists --table-name "$LEADS_DDB_TABLE" --region "$AWS_REGION"
+    }
+
+    aws dynamodb describe-table \
+        --table-name "$RECOMMENDATIONS_DDB_TABLE" \
+        --region "$AWS_REGION" >/dev/null 2>&1 || {
+        echo "  📦 创建表: $RECOMMENDATIONS_DDB_TABLE"
+        aws dynamodb create-table \
+            --table-name "$RECOMMENDATIONS_DDB_TABLE" \
+            --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S \
+            --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+            --billing-mode PAY_PER_REQUEST \
+            --region "$AWS_REGION" >/dev/null
+        aws dynamodb wait table-exists --table-name "$RECOMMENDATIONS_DDB_TABLE" --region "$AWS_REGION"
+    }
+
+    echo "  ✅ DynamoDB 表已就绪"
+}
+
+ensure_task_role() {
+    local assume_policy dynamodb_policy
+    assume_policy='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
+
+    TASK_ROLE_ARN=$(aws iam get-role --role-name "$TASK_ROLE_NAME" --query "Role.Arn" --output text 2>/dev/null || echo "")
+    if [ -z "$TASK_ROLE_ARN" ] || [ "$TASK_ROLE_ARN" = "None" ]; then
+        echo "  📦 创建 ECS 应用角色..."
+        aws iam create-role \
+            --role-name "$TASK_ROLE_NAME" \
+            --assume-role-policy-document "$assume_policy" >/dev/null
+        TASK_ROLE_ARN=$(aws iam get-role --role-name "$TASK_ROLE_NAME" --query "Role.Arn" --output text)
+    fi
+
+    dynamodb_policy=$(cat <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$LEADS_DDB_TABLE",
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$RECOMMENDATIONS_DDB_TABLE"
+      ]
+    }
+  ]
+}
+EOF
+)
+
+    aws iam put-role-policy \
+        --role-name "$TASK_ROLE_NAME" \
+        --policy-name "${APP_NAME}DynamoDbAccess" \
+        --policy-document "$dynamodb_policy" >/dev/null
 }
 
 get_default_vpc() {
@@ -505,9 +623,11 @@ cmd_deploy() {
     aws iam put-role-policy --role-name ecsTaskExecutionRole \
         --policy-name CloudWatchLogsCreateGroup \
         --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"logs:CreateLogGroup","Resource":"*"}]}' 2>/dev/null || true
+    ensure_task_role
     echo "  ✅ IAM 角色就绪"
 
     aws logs create-log-group --log-group-name "/ecs/$APP_NAME" --region "$AWS_REGION" 2>/dev/null || true
+    ensure_dynamodb_tables
 
     # ── 3. Task Definition ──
     echo ""
@@ -515,6 +635,7 @@ cmd_deploy() {
     TASK_FAMILY="${TASK_FAMILY:-$APP_NAME}"
     local env_json
     env_json=$(parse_env_file)
+    env_json=$(build_task_env_json "$env_json")
 
     cat > /tmp/ecs-task-def.json << TASKDEF
 {
@@ -524,6 +645,7 @@ cmd_deploy() {
     "cpu": "$CPU",
     "memory": "$MEMORY",
     "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+    "taskRoleArn": "$TASK_ROLE_ARN",
     "containerDefinitions": [{
         "name": "$APP_NAME",
         "image": "$ECR_IMAGE",

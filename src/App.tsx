@@ -1,13 +1,9 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { ALL_PRODUCTS } from '@/hooks/useProductContext'
 import MarkdownPage from '@/pages/MarkdownPage'
 import AdminPage from '@/pages/AdminPage'
-import ChatPanel from '@/components/chat/ChatPanel'
-import { ChatContext } from '@/hooks/useChatState'
-
-const isDesktop = () =>
-  typeof window !== 'undefined' && window.innerWidth >= 1024
+import { ChatPanel, type ChatEntityNavigatePayload } from '@/components/chat'
 
 function ManualRoutes() {
   return (
@@ -40,8 +36,19 @@ function ManualRoutes() {
 }
 
 export function AppRoutes() {
-  const [isChatOpen, setIsChatOpen] = useState(isDesktop)
-  const toggleChat = () => setIsChatOpen(prev => !prev)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const handleEntityNavigate = ({ url }: ChatEntityNavigatePayload) => {
+    navigate(`${url.pathname}${url.search}`)
+
+    if (url.hash) {
+      setTimeout(() => {
+        document.getElementById(url.hash.slice(1))
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }
 
   return (
     <Routes>
@@ -52,10 +59,14 @@ export function AppRoutes() {
       <Route
         path="*"
         element={
-          <ChatContext.Provider value={{ isChatOpen, toggleChat }}>
+          <>
             <ManualRoutes />
-            <ChatPanel />
-          </ChatContext.Provider>
+            <ChatPanel
+              open={isChatOpen}
+              onOpenChange={setIsChatOpen}
+              onEntityNavigate={handleEntityNavigate}
+            />
+          </>
         }
       />
     </Routes>

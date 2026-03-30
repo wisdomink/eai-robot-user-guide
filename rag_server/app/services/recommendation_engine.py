@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from app.services.recommendation_catalog_service import RecommendationCatalogStorage
+
 logger = logging.getLogger(__name__)
 
 RECOMMENDATIONS_PATH = Path(__file__).parent / "recommendations.json"
@@ -44,7 +46,8 @@ class RecommendationCatalogItem:
 class RecommendationEngine:
     """Evaluate post-answer product recommendations from catalog rules."""
 
-    def __init__(self) -> None:
+    def __init__(self, storage: RecommendationCatalogStorage | None = None) -> None:
+        self._storage = storage or RecommendationCatalogStorage.from_config()
         self._shown: dict[str, list[str]] = defaultdict(list)
 
     # ── config ────────────────────────────────────────────────────────────
@@ -55,7 +58,7 @@ class RecommendationEngine:
             return json.load(f)
 
     def _get_config(self) -> dict:
-        return self._load_config()
+        return self._storage.get_full_config()
 
     @staticmethod
     def _normalize_catalog_item(item: dict) -> RecommendationCatalogItem | None:

@@ -25,7 +25,6 @@ from pydantic import BaseModel, Field
 from chatkit.server import StreamingResult
 
 from app.core.config import (
-    LEADS_DIR,
     LOG_DIR,
     OPENAI_API_KEY,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
@@ -35,7 +34,6 @@ from app.core.logging_config import setup_logging
 from app.services.chatkit_handler import create_chatkit_server
 from app.services.lead_service import LeadStorage
 from app.services.recommendation_catalog_service import RecommendationCatalogStorage
-from app.services.recommendation_engine import RECOMMENDATIONS_PATH
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -89,9 +87,12 @@ def _summarize_chatkit_body(raw: bytes) -> str:
 
 # ── ChatKit (backend mode) ─────────────────────────────────────────────────
 
-chatkit_server = create_chatkit_server()
-lead_storage = LeadStorage(LEADS_DIR)
-recommendation_storage = RecommendationCatalogStorage(RECOMMENDATIONS_PATH)
+lead_storage = LeadStorage.from_config()
+recommendation_storage = RecommendationCatalogStorage.from_config()
+chatkit_server = create_chatkit_server(
+    lead_storage=lead_storage,
+    recommendation_storage=recommendation_storage,
+)
 
 
 class LeadCreateRequest(BaseModel):

@@ -48,6 +48,16 @@ ALERT_DIGEST_INTERVAL: int = int(os.getenv("ALERT_DIGEST_INTERVAL", "3600"))  # 
 
 # ── Leads (contact form submissions) ─────────────────────────────────────
 LEADS_DIR: Path = Path(os.getenv("LEADS_DIR", str(RAG_SERVER_ROOT / "data")))
+LEADS_BACKEND: str = os.getenv("LEADS_BACKEND", "file").strip().lower()
+LEADS_DDB_TABLE: str = os.getenv("LEADS_DDB_TABLE", "").strip()
+
+# ── Recommendation config persistence ─────────────────────────────────────
+RECOMMENDATIONS_BACKEND: str = os.getenv("RECOMMENDATIONS_BACKEND", "file").strip().lower()
+RECOMMENDATIONS_DDB_TABLE: str = os.getenv("RECOMMENDATIONS_DDB_TABLE", "").strip()
+AWS_REGION_NAME: str = (
+    os.getenv("AWS_DEFAULT_REGION", "").strip()
+    or os.getenv("AWS_REGION", "").strip()
+)
 
 # ── Public URL (for rewriting image paths in ChatKit iframe) ─────────────
 PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")

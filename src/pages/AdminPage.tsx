@@ -54,6 +54,10 @@ function keywordLinesToArray(text: string): string[] {
     .filter(Boolean)
 }
 
+function isBlank(text: string): boolean {
+  return text.trim().length === 0
+}
+
 /* ───── Recommendations Tab ───── */
 
 function RecommendationsTab() {
@@ -102,9 +106,22 @@ function RecommendationsTab() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
     setError(null)
     setSuccess(null)
+    if (isBlank(form.trigger_scene)) {
+      setError('触发场景不能为空。')
+      return
+    }
+    if (isBlank(form.recommendation_content_cn)) {
+      setError('中文推荐文案不能为空。')
+      return
+    }
+    if (isBlank(form.recommendation_content_en)) {
+      setError('英文推荐文案不能为空。')
+      return
+    }
+
+    setSubmitting(true)
     try {
       const payload = editingId ? { ...form, id: editingId } : form
       const { created } = await saveRecommendation(payload)
@@ -191,6 +208,7 @@ function RecommendationsTab() {
               onChange={(e) => updateField('trigger_scene', e.target.value)}
               placeholder="用户咨询工业巡检、安防巡逻、复杂环境作业……"
               rows={3}
+              required
             />
           </label>
 
@@ -201,6 +219,7 @@ function RecommendationsTab() {
               onChange={(e) => updateField('recommendation_content_cn', e.target.value)}
               placeholder="请输入中文推荐文案"
               rows={4}
+              required
             />
           </label>
 
@@ -211,6 +230,7 @@ function RecommendationsTab() {
               onChange={(e) => updateField('recommendation_content_en', e.target.value)}
               placeholder="Please enter recommendation copy in English"
               rows={4}
+              required
             />
           </label>
 
@@ -343,9 +363,29 @@ function LeadsTab() {
 
   const handleSaveTriageConfig = async (e: FormEvent) => {
     e.preventDefault()
-    setTriageSaving(true)
     setTriageError(null)
     setTriageSuccess(null)
+    const trimmedKwCn = keywordLinesToArray(kwCnText)
+    const trimmedKwEn = keywordLinesToArray(kwEnText)
+
+    if (isBlank(triggerCn)) {
+      setTriageError('触发条件说明（中文）不能为空。')
+      return
+    }
+    if (isBlank(triggerEn)) {
+      setTriageError('Trigger notes (English) 不能为空。')
+      return
+    }
+    if (trimmedKwCn.length === 0) {
+      setTriageError('购买意图关键词（中文）至少填写一条。')
+      return
+    }
+    if (trimmedKwEn.length === 0) {
+      setTriageError('Purchase-intent keywords (English) 至少填写一条。')
+      return
+    }
+
+    setTriageSaving(true)
     try {
       await saveLeadCaptureTriageConfig({
         lead_capture: {
@@ -354,8 +394,8 @@ function LeadsTab() {
           trigger_conditions_en: triggerEn,
         },
         purchase_intent_keywords: {
-          cn: keywordLinesToArray(kwCnText),
-          en: keywordLinesToArray(kwEnText),
+          cn: trimmedKwCn,
+          en: trimmedKwEn,
         },
       })
       setTriageSuccess('已保存。下次对话的 Triage 将使用新配置动态生成购买意图判定说明。')
@@ -422,7 +462,8 @@ function LeadsTab() {
               <textarea
                 value={triggerCn}
                 onChange={e => setTriggerCn(e.target.value)}
-                placeholder="补充哪些情况应判为购买/商务意图（可选，支持多行）"
+                placeholder="补充哪些情况应判为购买/商务意图（支持多行）"
+                required
               />
             </label>
             <label className="lead-form-full">
@@ -430,7 +471,8 @@ function LeadsTab() {
               <textarea
                 value={triggerEn}
                 onChange={e => setTriggerEn(e.target.value)}
-                placeholder="Optional English notes for purchase / business intent"
+                placeholder="English notes for purchase / business intent"
+                required
               />
             </label>
             <label className="lead-form-full">
@@ -439,6 +481,7 @@ function LeadsTab() {
                 value={kwCnText}
                 onChange={e => setKwCnText(e.target.value)}
                 placeholder="例如：&#10;询价&#10;多少钱&#10;采购"
+                required
               />
             </label>
             <label className="lead-form-full">
@@ -447,6 +490,7 @@ function LeadsTab() {
                 value={kwEnText}
                 onChange={e => setKwEnText(e.target.value)}
                 placeholder={'e.g.\nprice\nquote\nprocurement'}
+                required
               />
             </label>
             <button type="submit" disabled={triageSaving}>
