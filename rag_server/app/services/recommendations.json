@@ -21,20 +21,24 @@
   },
   "products": [
     {
-      "value": "aegis-ultra",
-      "label": "FF Aegis Ultra"
+      "value": "master",
+      "label": "FF Master"
     },
     {
-      "value": "master-ultra",
-      "label": "FF Master Ultra"
+      "value": "futurist",
+      "label": "FF Futurist"
     },
     {
       "value": "futurist-ultra",
       "label": "FF Futurist Ultra"
     },
     {
-      "value": "aegis-edu",
-      "label": "FF Aegis EDU"
+      "value": "aegis",
+      "label": "FF Aegis"
+    },
+    {
+      "value": "aegis-ultra",
+      "label": "FF Aegis Ultra"
     },
     {
       "value": "ff91",

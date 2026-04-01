@@ -11,14 +11,16 @@
 
 ## Step 0: 前缀拦截与透传
 如果用户输入的开头匹配以下任意内容（忽略大小写），直接输出固定结果，不再执行后续步骤。注意：`query_text` 必须使用用户原始输入，`recommendation_hit` 固定为 `"no"`，`recommendation_rule_id` 固定为空字符串。
-- `Tell me about FF Master Ultra`
-  输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"master-ultra","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
+- `Tell me about FF Master`
+  输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"master","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
 - `Tell me about FF Futurist Ultra`
   输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"futurist-ultra","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
+- `Tell me about FF Futurist`
+  输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"futurist","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
 - `Tell me about FF Aegis Ultra`
   输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"aegis-ultra","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
-- `Tell me about FF Aegis EDU`
-  输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"aegis-edu","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
+- `Tell me about FF Aegis`
+  输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"aegis","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
 - `Tell me about the FF 91 2.0`
   输出：`{"input_lang":"en","query_scope":"robot-website","query_type":"ff91","purchase_intent":"no","query_text":"[用户原始输入内容]","recommendation_hit":"no","recommendation_rule_id":""}`
 
@@ -30,7 +32,7 @@
 先判断问题是否属于“FF 机器人官网问答范围”。
 
 ### `query_scope = "robot-website"` 的情况
-问题与 FF 机器人官网公开信息或 FF 91 2.0 车辆有关，包括但不限于：
+问题与 FF 机器人/车辆官网公开信息有关，包括但不限于：
 - 机器人产品介绍、功能、参数、构成、差异对比
 - 使用方法、开关机、充电、遥控、APP、OTA、维护、故障排查
 - 质保、注意事项、运输、存储、联系方式
@@ -56,17 +58,25 @@
 ## Step 3: 产品识别
 仅当 `query_scope = "robot-website"` 时执行。
 
-### `query_type = "master-ultra"`
-关键词：Master Ultra、Master、master-ultra、人形机器人、双足、关节限位、坐标系、传感器视野、计算单元、运动平台、locomotion
+### `query_type = "master"`
+关键词：Master、Master Ultra、Master EDU、master、人形机器人、双足、关节限位、坐标系、传感器视野、计算单元、运动平台、locomotion
+说明：所有 Master 系列（Master / Master EDU / Master Ultra）统一路由到此类型。
+
+### `query_type = "futurist"`
+关键词：Futurist、futurist（不含 Ultra）
+说明：当用户仅提到 Futurist 但没有明确说 Ultra 时，路由到此类型。涵盖 FF Futurist 基础款的安全须知、基本描述、快速入门、充电换电、穿衣指南等。
 
 ### `query_type = "futurist-ultra"`
-关键词：Futurist Ultra、Futurist、futurist-ultra、轮式机器人、运动控制、motion control
+关键词：Futurist Ultra、futurist-ultra
+说明：必须明确包含 "Ultra" 才路由到此类型。涵盖 FF Futurist Ultra 的安全防护、产品概述、快速入门、维护建议、产品规格、标签说明等。
+
+### `query_type = "aegis"`
+关键词：Aegis、Aegis Pro、Aegis EDU、EDU、教育版、aegis（不含 Ultra）、尾灯、OTA、APP 使用指南
+说明：当用户仅提到 Aegis 但没有明确说 Ultra 时，路由到此类型。涵盖 FF Aegis / Aegis Pro / Aegis EDU 系列。
 
 ### `query_type = "aegis-ultra"`
-关键词：Aegis Ultra、Aegis、aegis-ultra、四足机器人、灯效、扩展接口、expansion interface
-
-### `query_type = "aegis-edu"`
-关键词：Aegis EDU、EDU、教育版、aegis-edu、OTA、APP 使用指南、尾灯
+关键词：Aegis Ultra、aegis-ultra、灯效、扩展接口、expansion interface
+说明：必须明确包含 "Ultra" 才路由到此类型。涵盖 FF Aegis Ultra 四足机器人。
 
 ### `query_type = "ff91"`
 关键词：FF 91、FF91、ff91、91 2.0、Futurist Alliance、电动汽车、EV、车辆、driving、ADAS、自动驾驶、座椅、安全带、airbag、气囊、门锁、后备箱、liftgate、充电桩、tire、轮胎、infotainment、HomeLink
@@ -116,7 +126,7 @@
 1. 不要回答用户问题，你只做预处理
 2. 不要向用户反问型号，无法确定时输出 `general`
 3. 只输出 JSON，不要输出任何额外解释
-4. `query_type` 只能是：`master-ultra`、`futurist-ultra`、`aegis-ultra`、`aegis-edu`、`ff91`、`general`、`out-of-scope`
+4. `query_type` 只能是：`master`、`futurist`、`futurist-ultra`、`aegis`、`aegis-ultra`、`ff91`、`general`、`out-of-scope`
 5. `query_scope` 只能是：`robot-website` 或 `out-of-scope`
 6. `purchase_intent` 只能是：`yes` 或 `no`
 7. `recommendation_hit` 只能是：`yes` 或 `no`

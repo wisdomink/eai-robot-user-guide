@@ -1,9 +1,10 @@
-import { useState, useCallback, type FormEvent } from 'react'
+import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
 import './chat-panel.css'
 
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
+const CHATKIT_THREAD_STORAGE_KEY = 'ffrobot:chatkit:thread-id'
 
 function resolveChatKitApiUrl() {
   const raw = import.meta.env.VITE_CHATKIT_API_URL
@@ -23,18 +24,33 @@ function buildApiConfig() {
   }
 }
 
+function readStoredThreadId() {
+  if (typeof window === 'undefined') return null
+  return window.sessionStorage.getItem(CHATKIT_THREAD_STORAGE_KEY)
+}
+
+function persistThreadId(threadId: string | null) {
+  if (typeof window === 'undefined') return
+  if (threadId) {
+    window.sessionStorage.setItem(CHATKIT_THREAD_STORAGE_KEY, threadId)
+    return
+  }
+  window.sessionStorage.removeItem(CHATKIT_THREAD_STORAGE_KEY)
+}
+
 const BUILD_VERSION = (() => {
   const d = new Date(__BUILD_TIME__)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
 })()
 
-const GREETING = 'Hi! I can help you with any of our robot products. Pick one to get started.'
+const GREETING = 'Hi! I can help you with any of our products. Pick one to get started.'
 const PROMPTS = [
-  { label: 'FF Master Ultra', prompt: 'Tell me about FF Master Ultra. What are its key features, specs, and how do I get started?' },
+  { label: 'FF Master', prompt: 'Tell me about FF Master. What are its key features, specs, and how do I get started?' },
+  { label: 'FF Futurist', prompt: 'Tell me about FF Futurist. What are its key features, specs, and how do I get started?' },
   { label: 'FF Futurist Ultra', prompt: 'Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?' },
+  { label: 'FF Aegis', prompt: 'Tell me about FF Aegis. What are its key features, specs, and how do I get started?' },
   { label: 'FF Aegis Ultra', prompt: 'Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?' },
-  { label: 'FF Aegis EDU', prompt: 'Tell me about FF Aegis EDU. What are its key features, specs, and how do I get started?' },
   { label: 'FF 91 2.0', prompt: 'Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?' },
 ]
 
@@ -116,8 +132,12 @@ export default function ChatPanel({
   showFab = true,
   buildVersion = BUILD_VERSION,
 }: ChatPanelProps) {
+  const resolvedApiConfig = useMemo(() => apiConfig ?? buildApiConfig(), [apiConfig])
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(() => readStoredThreadId())
   const [isChatOpen, setIsChatOpen] = useControllableOpen(open, defaultOpen, onOpenChange)
-  const [overlayMode, setOverlayMode] = useState<OverlayMode>('buttons')
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>(() => (
+    readStoredThreadId() ? null : 'buttons'
+  ))
   const [inputValue, setInputValue] = useState('')
 
   const openChat = useCallback(() => {
@@ -130,7 +150,8 @@ export default function ChatPanel({
 
   const { sendUserMessage, control } = useChatKit({
     locale: 'en',
-    api: apiConfig ?? buildApiConfig(),
+    api: resolvedApiConfig,
+    initialThread: activeThreadId,
     header: {
       title: { text: title },
       rightAction: {
@@ -151,10 +172,14 @@ export default function ChatPanel({
       setOverlayMode(null)
     },
     onThreadChange: ({ threadId }: { threadId: string | null }) => {
+      setActiveThreadId(threadId)
+      persistThreadId(threadId)
       if (threadId === null) {
         setOverlayMode('buttons')
         setInputValue('')
+        return
       }
+      setOverlayMode(null)
     },
     entities: {
       onClick: (entity) => {

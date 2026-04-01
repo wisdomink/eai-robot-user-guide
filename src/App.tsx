@@ -16,7 +16,7 @@ function ManualRoutes() {
         />
       ))}
 
-      <Route path="/" element={<Navigate to="/master-ultra" replace />} />
+      <Route path="/" element={<Navigate to="/futurist" replace />} />
 
       {ALL_PRODUCTS.flatMap(product =>
         product.sidebar.sections.flatMap(section =>
@@ -30,7 +30,7 @@ function ManualRoutes() {
         )
       )}
 
-      <Route path="*" element={<Navigate to="/master-ultra" replace />} />
+      <Route path="*" element={<Navigate to="/futurist" replace />} />
     </Routes>
   )
 }

@@ -4,10 +4,12 @@
 搜索查询：{{query_text}}
 
 你支持的产品线包括：
-- **FF Master Ultra** — 人形双足机器人
-- **FF Futurist Ultra** — 轮式机器人
+- **FF Master** — 人形双足机器人（含 Master EDU / Master Ultra）
+- **FF Futurist** — 轮式机器人（基础版）
+- **FF Futurist Ultra** — 轮式机器人（Ultra 版）
+- **FF Aegis** — 四足机器人（含 Aegis Pro / Aegis EDU）
 - **FF Aegis Ultra** — 四足机器人（高端版）
-- **FF Aegis EDU** — 四足机器人（教育版）
+- **FF 91 2.0** — 电动汽车
 
 ## 知识来源
 

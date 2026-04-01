@@ -1,41 +1,15 @@
 import allSidebars from './sidebar.json'
 
 // Eagerly import all markdown files at build time
-const masterModules = import.meta.glob('./pages/master-ultra/*.md', {
+const mdModules = import.meta.glob('./pages/**/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
-
-const futuristModules = import.meta.glob('./pages/futurist-ultra/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const aegiseduModules = import.meta.glob('./pages/aegis-edu/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const aegisModules = import.meta.glob('./pages/aegis-ultra/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const ff91Modules = import.meta.glob('./pages/ff91/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
-const mdModules: Record<string, string> = { ...masterModules, ...futuristModules, ...aegiseduModules, ...aegisModules, ...ff91Modules }
 
 /**
  * Get raw markdown content for a page by filename.
- * @param filename - e.g. "master-ultra/safety-instructions.md" or "futurist-ultra/foreword.md"
+ * @param filename - e.g. "master/master-home.md" or "futurist-ultra/futurist-ultra-foreword.md"
  */
 export function getPageContent(filename: string): string {
   const key = `./pages/${filename}`

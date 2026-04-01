@@ -26,13 +26,13 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
                     │   查询扩写          │  → query_text
                     └─────────┬──────────┘
                               │ 路由
-            ┌─────────────────┼─────────────────┐
-            ▼                 ▼                  ▼
-    Master Ultra      Futurist Ultra     ... General
-    Support Agent     Support Agent      Support Agent
-    (FileSearch)      (FileSearch)       (FileSearch)
-            │                 │                  │
-            └─────────────────┼──────────────────┘
+            ┌──────────┬──────────┬──────────┬─────────┐
+            ▼          ▼          ▼          ▼         ▼
+        Master    Futurist   Futurist    Aegis     ... General
+        Support   Support    Ultra       Support   Support Agent
+        Agent     Agent      Support     Agent     (FileSearch)
+            │          │          │          │         │
+            └──────────┴──────────┴──────────┴─────────┘
                               ▼
                     FFRobotConverter
                     file_citation → EntitySource(slug)
@@ -56,11 +56,14 @@ rag_server/
 │       ├── chatkit_handler.py       # 多 Agent 工作流 + ChatKit 桥接
 │       └── instructions/            # Agent Prompt 模板
 │           ├── triage.md            # Triage Agent — 路由预处理
-│           ├── master-ultra.md      # Master Ultra 技术支持
+│           ├── master.md            # Master 系列技术支持
+│           ├── futurist.md          # Futurist 技术支持
 │           ├── futurist-ultra.md    # Futurist Ultra 技术支持
+│           ├── aegis.md             # Aegis 系列技术支持
 │           ├── aegis-ultra.md       # Aegis Ultra 技术支持
-│           ├── aegis-edu.md         # Aegis EDU 技术支持
-│           └── general.md           # 通用/跨产品支持
+│           ├── ff91.md              # FF 91 2.0 技术支持
+│           ├── general.md           # 通用/跨产品支持
+│           └── out-of-scope.md      # 超范围拦截
 ├── eval/
 │   ├── run_eval.py                  # RAG 评测脚本
 │   └── test_cases.json              # 测试用例
@@ -135,10 +138,12 @@ uvicorn app.main:app --reload --port 8000
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
-| `OPENAI_VECTOR_STORE_MASTER_ULTRA_ID` | ✅ | Master Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_MASTER_ID` | ✅ | Master 系列产品文档库（含 Master / Master EDU / Master Ultra） |
+| `OPENAI_VECTOR_STORE_FUTURIST_ID` | ✅ | Futurist 产品文档库 |
 | `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | ✅ | Futurist Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_ID` | ✅ | Aegis 系列产品文档库（含 Aegis / Aegis Pro / Aegis EDU） |
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_EDU_ID` | ✅ | Aegis EDU 产品文档库 |
+| `OPENAI_VECTOR_STORE_FF91_ID` | ✅ | FF 91 2.0 产品文档库 |
 | `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索 + General Agent；`create_vector_store.py` 同步目标） |
 
 ### 其他
@@ -182,7 +187,7 @@ uvicorn app.main:app --reload --port 8000
 | 字段 | 说明 |
 |------|------|
 | `input_lang` | 用户语言：`cn`（中文）/ `en`（英文） |
-| `query_type` | 产品路由：`master-ultra` / `futurist-ultra` / `aegis-ultra` / `aegis-edu` / `general` |
+| `query_type` | 产品路由：`master` / `futurist` / `futurist-ultra` / `aegis` / `aegis-ultra` / `ff91` / `general` / `out-of-scope` |
 | `query_text` | 翻译为英文并扩写后的搜索查询，用于优化 RAG 检索 |
 
 ### Support Agent（产品技术支持）
@@ -191,11 +196,14 @@ uvicorn app.main:app --reload --port 8000
 
 | Agent | Vector Store | 文档范围 |
 |-------|-------------|---------|
-| Master Ultra Support | 独立库 | Master Ultra 手册 |
+| Master Support | 独立库 | Master / Master EDU / Master Ultra 手册 |
+| Futurist Support | 独立库 | Futurist 手册 |
 | Futurist Ultra Support | 独立库 | Futurist Ultra 手册 |
+| Aegis Support | 独立库 | Aegis / Aegis Pro / Aegis EDU 手册 |
 | Aegis Ultra Support | 独立库 | Aegis Ultra 手册 |
-| Aegis EDU Support | 独立库 | Aegis EDU 手册 |
+| FF 91 2.0 Support | 独立库 | FF 91 2.0 Owner's Manual |
 | General Support | 全量库 | 全部手册 |
+| Scope Guard | 无 | 超范围拦截，不做检索 |
 
 模板支持 `{{input_lang}}`、`{{query_text}}` 等变量插值。
 

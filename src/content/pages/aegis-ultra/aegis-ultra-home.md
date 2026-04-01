@@ -1,3 +1,6 @@
-# FX Aegis Ultra Instruction Manual V1.0
+# FF Aegis Ultra QUADRUPED ROBOT User Manual
 
-![FX Aegis Ultra](/images/aegis-ultra/home.png)
+![FF Aegis Ultra](/images/aegis-ultra/aegis-ultra-home-1.png)
+
+*Professional, embodied-AI quadruped robot designed for security and companionship*
+

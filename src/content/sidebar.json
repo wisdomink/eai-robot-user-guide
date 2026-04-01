@@ -1,150 +1,81 @@
 {
-  "master-ultra": {
-    "title": "FF Master Ultra",
+  "futurist": {
+    "title": "FF Futurist",
     "sections": [
       {
-        "id": "master-ultra-home",
+        "id": "futurist-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FF Master Ultra",
-            "slug": "/master-ultra",
-            "file": "master-ultra/master-ultra-home.md"
+            "title": "FF Futurist",
+            "slug": "/futurist",
+            "file": "futurist/futurist-home.md"
           }
         ]
       },
       {
-        "id": "preliminary",
-        "title": "Preliminary Notice",
+        "id": "futurist-safety",
+        "title": "Safety",
         "pages": [
           {
-            "title": "Safety Instructions",
-            "slug": "/master-ultra/safety-instructions",
-            "file": "master-ultra/master-ultra-safety-instructions.md"
-          },
-          {
-            "title": "Safety Guidelines",
-            "slug": "/master-ultra/safety-guidelines",
-            "file": "master-ultra/master-ultra-safety-guidelines.md"
-          },
-          {
-            "title": "Maintenance and Management Guidelines",
-            "slug": "/master-ultra/maintenance-guidelines",
-            "file": "master-ultra/master-ultra-maintenance.md"
+            "title": "Safety",
+            "slug": "/futurist/safety",
+            "file": "futurist/futurist-safety.md"
           }
         ]
       },
       {
-        "id": "about",
-        "title": "About FF Master",
+        "id": "futurist-basic-description",
+        "title": "Basic Description",
         "pages": [
           {
-            "title": "Packing List",
-            "slug": "/master-ultra/packing-list",
-            "file": "master-ultra/master-ultra-packing-list.md"
-          },
-          {
-            "title": "Product Overview",
-            "slug": "/master-ultra/product-overview",
-            "file": "master-ultra/master-ultra-product-overview.md"
-          },
-          {
-            "title": "Computational Unit",
-            "slug": "/master-ultra/computational-unit",
-            "file": "master-ultra/master-ultra-computational-unit.md"
-          },
-          {
-            "title": "Battery Indicator Lights",
-            "slug": "/master-ultra/battery-indicator-lights",
-            "file": "master-ultra/master-ultra-battery-indicator.md"
-          },
-          {
-            "title": "Sensor Field of View",
-            "slug": "/master-ultra/sensor-fov",
-            "file": "master-ultra/master-ultra-sensor-fov.md"
-          },
-          {
-            "title": "Joint Name and Joint Limit",
-            "slug": "/master-ultra/joint-limits",
-            "file": "master-ultra/master-ultra-joint-limits.md"
-          },
-          {
-            "title": "Coordinate Systems",
-            "slug": "/master-ultra/coordinate-systems",
-            "file": "master-ultra/master-ultra-coordinate-systems.md"
-          },
-          {
-            "title": "Specifications",
-            "slug": "/master-ultra/specifications",
-            "file": "master-ultra/master-ultra-specifications.md"
+            "title": "Basic Description",
+            "slug": "/futurist/basic-description",
+            "file": "futurist/futurist-basic-description.md"
           }
         ]
       },
       {
-        "id": "operation",
-        "title": "Operation Guide",
+        "id": "futurist-quick-start-guide",
+        "title": "Quick Start Guide",
         "pages": [
           {
-            "title": "Safety Precautions",
-            "slug": "/master-ultra/safety-precautions",
-            "file": "master-ultra/master-ultra-safety-precautions.md"
-          },
-          {
-            "title": "Start-Up Guide",
-            "slug": "/master-ultra/startup-guide",
-            "file": "master-ultra/master-ultra-startup-guide.md"
-          },
-          {
-            "title": "Shutdown Guide",
-            "slug": "/master-ultra/shutdown-guide",
-            "file": "master-ultra/master-ultra-shutdown-guide.md"
-          },
-          {
-            "title": "Charging Procedure",
-            "slug": "/master-ultra/charging-procedure",
-            "file": "master-ultra/master-ultra-charging-procedure.md"
-          },
-          {
-            "title": "Remote Control User Guide",
-            "slug": "/master-ultra/remote-control",
-            "file": "master-ultra/master-ultra-remote-control.md"
-          },
-          {
-            "title": "Robot Interaction Procedure Guide",
-            "slug": "/master-ultra/robot-interaction",
-            "file": "master-ultra/master-ultra-robot-interaction.md"
-          },
-          {
-            "title": "FF Robotic APP Manual",
-            "slug": "/master-ultra/ff-robotic-app",
-            "file": "master-ultra/master-ultra-ff-robotic-app.md"
-          },
-          {
-            "title": "Others",
-            "slug": "/master-ultra/others",
-            "file": "master-ultra/master-ultra-others.md"
+            "title": "Quick Start Guide",
+            "slug": "/futurist/quick-start-guide",
+            "file": "futurist/futurist-quick-start-guide.md"
           }
         ]
       },
       {
-        "id": "locomotion",
-        "title": "Locomotion & Manipulation Platform Manual",
+        "id": "futurist-charging-battery",
+        "title": "Charging and Battery Replacement",
         "pages": [
           {
-            "title": "Locomotion & Manipulation Platform Manual",
-            "slug": "/master-ultra/locomotion-platform",
-            "file": "master-ultra/master-ultra-locomotion-platform.md"
+            "title": "Charging and Battery Replacement",
+            "slug": "/futurist/charging-and-battery-replacement",
+            "file": "futurist/futurist-charging-and-battery-replacement.md"
           }
         ]
       },
       {
-        "id": "contact",
-        "title": "Contact Information",
+        "id": "futurist-dressing-guide",
+        "title": "Dressing Guide",
         "pages": [
           {
-            "title": "Contact Information",
-            "slug": "/master-ultra/contact-information",
-            "file": "master-ultra/master-ultra-contact-information.md"
+            "title": "Dressing Guide",
+            "slug": "/futurist/dressing-guide",
+            "file": "futurist/futurist-dressing-guide.md"
+          }
+        ]
+      },
+      {
+        "id": "futurist-other-notes",
+        "title": "Other Notes",
+        "pages": [
+          {
+            "title": "Other Notes",
+            "slug": "/futurist/other-notes",
+            "file": "futurist/futurist-other-notes.md"
           }
         ]
       }
@@ -158,14 +89,14 @@
         "title": "Home",
         "pages": [
           {
-            "title": "FF Futurist Ultra",
+            "title": "FF Futurist Ultra Edition Instruction Manual V1.0",
             "slug": "/futurist-ultra",
             "file": "futurist-ultra/futurist-ultra-home.md"
           }
         ]
       },
       {
-        "id": "foreword",
+        "id": "futurist-ultra-foreword",
         "title": "Foreword",
         "pages": [
           {
@@ -176,119 +107,350 @@
         ]
       },
       {
-        "id": "safety",
-        "title": "Safety Protection Measures",
+        "id": "futurist-ultra-safety-protection-measures",
+        "title": "1. Safety Protection Measures",
         "pages": [
           {
-            "title": "Safety Guide",
-            "slug": "/futurist-ultra/safety-guide",
-            "file": "futurist-ultra/futurist-ultra-safety-guide.md"
-          },
-          {
-            "title": "Precautions for Use",
-            "slug": "/futurist-ultra/precautions",
-            "file": "futurist-ultra/futurist-ultra-precautions.md"
-          },
-          {
-            "title": "Maintenance and Management Guidelines",
-            "slug": "/futurist-ultra/maintenance-guidelines",
-            "file": "futurist-ultra/futurist-ultra-maintenance-guidelines.md"
+            "title": "1. Safety Protection Measures",
+            "slug": "/futurist-ultra/safety-protection-measures",
+            "file": "futurist-ultra/futurist-ultra-safety-protection-measures.md"
           }
         ]
       },
       {
-        "id": "product-overview",
-        "title": "Product Overview",
+        "id": "futurist-ultra-product-overview",
+        "title": "2. Product Overview",
         "pages": [
           {
-            "title": "Product Introduction",
-            "slug": "/futurist-ultra/product-introduction",
-            "file": "futurist-ultra/futurist-ultra-product-introduction.md"
+            "title": "2. Product Overview",
+            "slug": "/futurist-ultra/product-overview",
+            "file": "futurist-ultra/futurist-ultra-product-overview.md"
           }
         ]
       },
       {
-        "id": "quick-start",
-        "title": "Quick Start Guide",
+        "id": "futurist-ultra-quick-start-guide",
+        "title": "3. Quick Start Guide",
         "pages": [
           {
-            "title": "Startup",
-            "slug": "/futurist-ultra/startup",
-            "file": "futurist-ultra/futurist-ultra-startup.md"
-          },
-          {
-            "title": "Shutdown",
-            "slug": "/futurist-ultra/shutdown",
-            "file": "futurist-ultra/futurist-ultra-shutdown.md"
-          },
-          {
-            "title": "Motion Control",
-            "slug": "/futurist-ultra/motion-control",
-            "file": "futurist-ultra/futurist-ultra-motion-control.md"
-          },
-          {
-            "title": "Charging & Battery Swapping",
-            "slug": "/futurist-ultra/charging",
-            "file": "futurist-ultra/futurist-ultra-charging.md"
+            "title": "3. Quick Start Guide",
+            "slug": "/futurist-ultra/quick-start-guide",
+            "file": "futurist-ultra/futurist-ultra-quick-start-guide.md"
           }
         ]
       },
       {
-        "id": "maintenance",
-        "title": "Maintenance and Suggestion",
+        "id": "futurist-ultra-maintenance-and-suggestion",
+        "title": "4. Maintenance and Suggestion",
         "pages": [
           {
-            "title": "Routine Maintenance",
-            "slug": "/futurist-ultra/routine-maintenance",
-            "file": "futurist-ultra/futurist-ultra-routine-maintenance.md"
-          },
-          {
-            "title": "Battery Maintenance",
-            "slug": "/futurist-ultra/battery-maintenance",
-            "file": "futurist-ultra/futurist-ultra-battery-maintenance.md"
+            "title": "4. Maintenance and Suggestion",
+            "slug": "/futurist-ultra/maintenance-and-suggestion",
+            "file": "futurist-ultra/futurist-ultra-maintenance-and-suggestion.md"
           }
         ]
       },
       {
-        "id": "specifications",
-        "title": "Product Specifications",
+        "id": "futurist-ultra-product-specifications",
+        "title": "5. Product Specifications",
         "pages": [
           {
-            "title": "Product Composition",
-            "slug": "/futurist-ultra/product-composition",
-            "file": "futurist-ultra/futurist-ultra-product-composition.md"
-          },
-          {
-            "title": "Basic Parameters",
-            "slug": "/futurist-ultra/basic-parameters",
-            "file": "futurist-ultra/futurist-ultra-basic-parameters.md"
-          },
-          {
-            "title": "Workspace",
-            "slug": "/futurist-ultra/workspace",
-            "file": "futurist-ultra/futurist-ultra-workspace.md"
+            "title": "5. Product Specifications",
+            "slug": "/futurist-ultra/product-specifications",
+            "file": "futurist-ultra/futurist-ultra-product-specifications.md"
           }
         ]
       },
       {
-        "id": "labels",
-        "title": "Product Label Description",
+        "id": "futurist-ultra-product-label-description",
+        "title": "6. Product label description",
         "pages": [
           {
-            "title": "Product Label Description",
-            "slug": "/futurist-ultra/product-labels",
-            "file": "futurist-ultra/futurist-ultra-product-labels.md"
+            "title": "6. Product label description",
+            "slug": "/futurist-ultra/product-label-description",
+            "file": "futurist-ultra/futurist-ultra-product-label-description.md"
           }
         ]
       },
       {
-        "id": "rf-specifications",
-        "title": "Specifications",
+        "id": "futurist-ultra-specifications",
+        "title": "7. Specifications",
         "pages": [
           {
-            "title": "RF Specifications",
-            "slug": "/futurist-ultra/rf-specifications",
-            "file": "futurist-ultra/futurist-ultra-rf-specifications.md"
+            "title": "7. Specifications",
+            "slug": "/futurist-ultra/specifications",
+            "file": "futurist-ultra/futurist-ultra-specifications.md"
+          }
+        ]
+      }
+    ]
+  },
+  "master": {
+    "title": "FF Master",
+    "sections": [
+      {
+        "id": "master-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FF Master / Master EDU / Master Ultra Edition Instruction Manual V1.0",
+            "slug": "/master",
+            "file": "master/master-home.md"
+          }
+        ]
+      },
+      {
+        "id": "master-preliminary-notice",
+        "title": "1. Preliminary Notice",
+        "pages": [
+          {
+            "title": "1. Preliminary Notice",
+            "slug": "/master/preliminary-notice",
+            "file": "master/master-preliminary-notice.md"
+          }
+        ]
+      },
+      {
+        "id": "master-about",
+        "title": "2. About FF Master",
+        "pages": [
+          {
+            "title": "2.1 Packing List",
+            "slug": "/master/packing-list",
+            "file": "master/master-packing-list.md"
+          },
+          {
+            "title": "2.2 Product Overview",
+            "slug": "/master/product-overview",
+            "file": "master/master-product-overview.md"
+          },
+          {
+            "title": "2.3 Computational Unit",
+            "slug": "/master/computational-unit",
+            "file": "master/master-computational-unit.md"
+          },
+          {
+            "title": "2.4 Battery Indicator Lights",
+            "slug": "/master/battery-indicator-lights",
+            "file": "master/master-battery-indicator-lights.md"
+          },
+          {
+            "title": "2.5 Sensor Field of View",
+            "slug": "/master/sensor-fov",
+            "file": "master/master-sensor-fov.md"
+          },
+          {
+            "title": "2.6 Joint Name and Joint Limit",
+            "slug": "/master/joint-limits",
+            "file": "master/master-joint-limits.md"
+          },
+          {
+            "title": "2.7 Coordinate Systems",
+            "slug": "/master/coordinate-systems",
+            "file": "master/master-coordinate-systems.md"
+          },
+          {
+            "title": "2.8 Specifications",
+            "slug": "/master/specifications",
+            "file": "master/master-specifications.md"
+          }
+        ]
+      },
+      {
+        "id": "master-operation-guide",
+        "title": "3. Operation Guide",
+        "pages": [
+          {
+            "title": "3.1 Safety Precautions",
+            "slug": "/master/safety-precautions",
+            "file": "master/master-safety-precautions.md"
+          },
+          {
+            "title": "3.2 Start-Up Guide",
+            "slug": "/master/startup-guide",
+            "file": "master/master-startup-guide.md"
+          },
+          {
+            "title": "3.3 Shutdown Guide",
+            "slug": "/master/shutdown-guide",
+            "file": "master/master-shutdown-guide.md"
+          },
+          {
+            "title": "3.4 Charging Procedure",
+            "slug": "/master/charging-procedure",
+            "file": "master/master-charging-procedure.md"
+          },
+          {
+            "title": "3.5 Remote Control User Guide",
+            "slug": "/master/remote-control",
+            "file": "master/master-remote-control.md"
+          },
+          {
+            "title": "3.6 Robot Interaction Procedures Guide",
+            "slug": "/master/robot-interaction",
+            "file": "master/master-robot-interaction.md"
+          },
+          {
+            "title": "3.7 FF Robotic APP Manual",
+            "slug": "/master/ff-robotic-app",
+            "file": "master/master-ff-robotic-app.md"
+          },
+          {
+            "title": "3.8 Others",
+            "slug": "/master/others",
+            "file": "master/master-others.md"
+          }
+        ]
+      },
+      {
+        "id": "master-locomotion",
+        "title": "4. Locomotion & Manipulation Platform Manual",
+        "pages": [
+          {
+            "title": "4. Locomotion & Manipulation Platform Manual",
+            "slug": "/master/locomotion-platform",
+            "file": "master/master-locomotion-platform.md"
+          }
+        ]
+      },
+      {
+        "id": "master-contact",
+        "title": "5. Contact Information",
+        "pages": [
+          {
+            "title": "5. Contact Information",
+            "slug": "/master/contact-information",
+            "file": "master/master-contact-information.md"
+          }
+        ]
+      }
+    ]
+  },
+  "aegis": {
+    "title": "FF Aegis",
+    "sections": [
+      {
+        "id": "aegis-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FX Aegis/Aegis Pro / Aegis EDU",
+            "slug": "/aegis",
+            "file": "aegis/aegis-home.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-version-statement",
+        "title": "Version Statement",
+        "pages": [
+          {
+            "title": "Version Statement",
+            "slug": "/aegis/version-statement",
+            "file": "aegis/aegis-version-statement.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-product-description",
+        "title": "Product Description",
+        "pages": [
+          {
+            "title": "Product Overview",
+            "slug": "/aegis/product-overview",
+            "file": "aegis/aegis-product-overview.md"
+          },
+          {
+            "title": "Component Introduction",
+            "slug": "/aegis/component-introduction",
+            "file": "aegis/aegis-component-introduction.md"
+          },
+          {
+            "title": "Taillight Introduction",
+            "slug": "/aegis/tail-lights",
+            "file": "aegis/aegis-tail-lights.md"
+          },
+          {
+            "title": "Power Supply Introduction",
+            "slug": "/aegis/power-supply",
+            "file": "aegis/aegis-power-supply.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-product-usage",
+        "title": "Product Usage",
+        "pages": [
+          {
+            "title": "Product Usage",
+            "slug": "/aegis/product-usage",
+            "file": "aegis/aegis-product-usage.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-product-parameters",
+        "title": "Parameters",
+        "pages": [
+          {
+            "title": "Parameters",
+            "slug": "/aegis/parameters",
+            "file": "aegis/aegis-product-parameters.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-troubleshooting",
+        "title": "Troubleshooting",
+        "pages": [
+          {
+            "title": "Troubleshooting",
+            "slug": "/aegis/troubleshooting",
+            "file": "aegis/aegis-troubleshooting.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-transportation-storage",
+        "title": "Transportation and storage",
+        "pages": [
+          {
+            "title": "Transportation and storage",
+            "slug": "/aegis/transportation-storage",
+            "file": "aegis/aegis-transportation-storage.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-hazardous-substances",
+        "title": "Hazardous Substances Description",
+        "pages": [
+          {
+            "title": "Hazardous Substances Description",
+            "slug": "/aegis/hazardous-substances",
+            "file": "aegis/aegis-hazardous-substances.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-caution",
+        "title": "Caution",
+        "pages": [
+          {
+            "title": "Caution",
+            "slug": "/aegis/caution",
+            "file": "aegis/aegis-caution.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-warranty",
+        "title": "Warranty Instructions",
+        "pages": [
+          {
+            "title": "Warranty Instructions",
+            "slug": "/aegis/warranty-instructions",
+            "file": "aegis/aegis-warranty-instructions.md"
           }
         ]
       }
@@ -302,7 +464,7 @@
         "title": "Home",
         "pages": [
           {
-            "title": "FF Aegis Ultra",
+            "title": "FF Aegis Ultra QUADRUPED ROBOT User Manual",
             "slug": "/aegis-ultra",
             "file": "aegis-ultra/aegis-ultra-home.md"
           }
@@ -428,148 +590,6 @@
       }
     ]
   },
-  "aegis-edu": {
-    "title": "FF Aegis EDU",
-    "sections": [
-      {
-        "id": "aegis-edu-home",
-        "title": "Home",
-        "pages": [
-          {
-            "title": "FF Aegis EDU",
-            "slug": "/aegis-edu",
-            "file": "aegis-edu/aegis-edu-home.md"
-          }
-        ]
-      },
-      {
-        "id": "version-statement",
-        "title": "Version Statement",
-        "pages": [
-          {
-            "title": "Legal Statement",
-            "slug": "/aegis-edu/legal-statement",
-            "file": "aegis-edu/aegis-edu-legal-statement.md"
-          },
-          {
-            "title": "Notes to be Observed",
-            "slug": "/aegis-edu/notes",
-            "file": "aegis-edu/aegis-edu-notes.md"
-          },
-          {
-            "title": "Battery and Charging Precautions",
-            "slug": "/aegis-edu/battery-charging-precautions",
-            "file": "aegis-edu/aegis-edu-battery-charging-precautions.md"
-          }
-        ]
-      },
-      {
-        "id": "product-description",
-        "title": "Product Description",
-        "pages": [
-          {
-            "title": "Product Overview",
-            "slug": "/aegis-edu/product-overview",
-            "file": "aegis-edu/aegis-edu-product-overview.md"
-          },
-          {
-            "title": "Introduction to Tail Lights",
-            "slug": "/aegis-edu/tail-lights",
-            "file": "aegis-edu/aegis-edu-tail-lights.md"
-          },
-          {
-            "title": "Power Supply Introduction",
-            "slug": "/aegis-edu/power-supply",
-            "file": "aegis-edu/aegis-edu-power-supply.md"
-          }
-        ]
-      },
-      {
-        "id": "product-usage",
-        "title": "Product Usage",
-        "pages": [
-          {
-            "title": "Preparation Before First Use",
-            "slug": "/aegis-edu/first-use",
-            "file": "aegis-edu/aegis-edu-first-use.md"
-          },
-          {
-            "title": "Remote Control User Guide",
-            "slug": "/aegis-edu/remote-control",
-            "file": "aegis-edu/aegis-edu-remote-control.md"
-          },
-          {
-            "title": "APP User Guide",
-            "slug": "/aegis-edu/app-guide",
-            "file": "aegis-edu/aegis-edu-app-guide.md"
-          },
-          {
-            "title": "Product OTA Upgrade",
-            "slug": "/aegis-edu/ota-upgrade",
-            "file": "aegis-edu/aegis-edu-ota-upgrade.md"
-          }
-        ]
-      },
-      {
-        "id": "product-parameters",
-        "title": "Product Parameters",
-        "pages": [
-          {
-            "title": "Product Parameters",
-            "slug": "/aegis-edu/product-parameters",
-            "file": "aegis-edu/aegis-edu-product-parameters.md"
-          },
-          {
-            "title": "Troubleshooting",
-            "slug": "/aegis-edu/troubleshooting",
-            "file": "aegis-edu/aegis-edu-troubleshooting.md"
-          },
-          {
-            "title": "Product Transportation",
-            "slug": "/aegis-edu/transportation",
-            "file": "aegis-edu/aegis-edu-transportation.md"
-          },
-          {
-            "title": "Storage Environment",
-            "slug": "/aegis-edu/storage",
-            "file": "aegis-edu/aegis-edu-storage.md"
-          },
-          {
-            "title": "Battery Precautions",
-            "slug": "/aegis-edu/battery-precautions-storage",
-            "file": "aegis-edu/aegis-edu-battery-precautions-storage.md"
-          },
-          {
-            "title": "Handle with Care",
-            "slug": "/aegis-edu/handle-with-care",
-            "file": "aegis-edu/aegis-edu-handle-with-care.md"
-          }
-        ]
-      },
-      {
-        "id": "hazardous-substances",
-        "title": "Hazardous Substances ",
-        "pages": [
-          {
-            "title": "Hazardous Substances",
-            "slug": "/aegis-edu/hazardous-substances",
-            "file": "aegis-edu/aegis-edu-hazardous-substances.md"
-          }
-        ]
-      },
-      {
-        "id": "warranty",
-        "title": "Warranty Information",
-        "pages": [
-          {
-            "title": "Warranty Instructions",
-            "slug": "/aegis-edu/warranty",
-            "file": "aegis-edu/aegis-edu-warranty.md"
-          }
-        ]
-      }
-    ]
-  },
   "ff91": {
     "title": "FF 91 2.0",
     "sections": [
@@ -580,7 +600,7 @@
           {
             "title": "FF 91 2.0",
             "slug": "/ff91",
-            "file": "ff91/ff91-table-of-contents.md"
+            "file": "ff91/ff91-home.md"
           }
         ]
       },

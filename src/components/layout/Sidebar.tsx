@@ -21,7 +21,8 @@ function ProductGroup({
   onNavigate?: () => void
 }) {
   const { pathname } = useLocation()
-  const isActive = pathname.startsWith(`/${productId}`)
+  const productBasePath = `/${productId}`
+  const isActive = pathname === productBasePath || pathname.startsWith(`${productBasePath}/`)
   const [isExpanded, setIsExpanded] = useState(isActive)
 
   useEffect(() => {

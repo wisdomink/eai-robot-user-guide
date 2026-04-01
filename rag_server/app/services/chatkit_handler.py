@@ -47,11 +47,12 @@ from chatkit.widgets import Card, Caption, Input, Label, Select, Spacer, Text, T
 from app.core.config import (
     LEADS_DIR,
     LLM_MODEL,
-    OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
+    OPENAI_VECTOR_STORE_AEGIS_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     OPENAI_VECTOR_STORE_FF91_ID,
+    OPENAI_VECTOR_STORE_FUTURIST_ID,
     OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
-    OPENAI_VECTOR_STORE_MASTER_ULTRA_ID,
+    OPENAI_VECTOR_STORE_MASTER_ID,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     PUBLIC_BASE_URL,
     SIDEBAR_PATH,
@@ -196,25 +197,30 @@ def _build_triage_agent(
     )
 
 _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
-    "master-ultra": {
-        "name": "Master Ultra Support",
-        "instructions_file": "master-ultra",
-        "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ULTRA_ID,
+    "master": {
+        "name": "Master Support",
+        "instructions_file": "master",
+        "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ID,
+    },
+    "futurist": {
+        "name": "Futurist Support",
+        "instructions_file": "futurist",
+        "vector_store_id": OPENAI_VECTOR_STORE_FUTURIST_ID,
     },
     "futurist-ultra": {
         "name": "Futurist Ultra Support",
         "instructions_file": "futurist-ultra",
         "vector_store_id": OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
     },
+    "aegis": {
+        "name": "Aegis Support",
+        "instructions_file": "aegis",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ID,
+    },
     "aegis-ultra": {
         "name": "Aegis Ultra Support",
         "instructions_file": "aegis-ultra",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
-    },
-    "aegis-edu": {
-        "name": "Aegis EDU Support",
-        "instructions_file": "aegis-edu",
-        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_EDU_ID,
     },
     "ff91": {
         "name": "FF 91 2.0 Support",

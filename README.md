@@ -2,7 +2,7 @@
 
 FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态文档站，支持 SSG 预渲染与 AI 智能问答。
 
-覆盖产品：**FF Master Ultra** · **FF Futurist Ultra** · **FF Aegis Ultra** · **FF Aegis EDU**
+覆盖产品：**FF Master** · **FF Futurist** · **FF Futurist Ultra** · **FF Aegis** · **FF Aegis Ultra** · **FF 91 2.0**
 
 ## 功能一览
 
@@ -57,10 +57,9 @@ eai-robot-user-guide/
 ├── docker-build.sh              # Docker 构建脚本
 │
 ├── scripts/
-│   ├── convert.mjs              # 源文档 → Markdown 转换（Master Ultra）
-│   ├── convert-futurist.mjs     # Futurist Ultra 转换
-│   ├── convert-aegis.mjs        # Aegis Ultra 转换
-│   ├── convert-aegisedu.mjs     # Aegis EDU 转换
+│   ├── convert.mjs              # 源文档 → Markdown 转换（Master）
+│   ├── convert-futurist.mjs     # Futurist 转换
+│   ├── convert-aegis.mjs        # Aegis 转换
 │   └── prerender.mjs            # SSG 预渲染脚本
 │
 ├── rag_server/                  # AI 后端（独立 Python 服务）
@@ -88,10 +87,12 @@ eai-robot-user-guide/
     │   ├── index.ts            # 内容注册表
     │   ├── chunks.ts           # 内容分块（按 ## 标题切分）
     │   └── pages/              # Markdown 页面
-    │       ├── master-ultra/
+    │       ├── master/
+    │       ├── futurist/
     │       ├── futurist-ultra/
+    │       ├── aegis/
     │       ├── aegis-ultra/
-    │       └── aegis-edu/
+    │       └── ff91/
     │
     ├── components/
     │   ├── layout/             # Header、Sidebar、ContentLayout、MobileMenuDrawer
@@ -201,15 +202,15 @@ cd rag_server && ./server_run.sh
 
 ### 新增页面
 
-**第 1 步** — 创建 Markdown 文件，如 `src/content/pages/master-ultra/new-topic.md`
+**第 1 步** — 创建 Markdown 文件，如 `src/content/pages/master/new-topic.md`
 
 **第 2 步** — 在 `src/content/sidebar.json` 对应产品的 `sections` 中添加条目：
 
 ```json
 {
   "title": "New Topic",
-  "slug": "/master-ultra/new-topic",
-  "file": "master-ultra/new-topic.md"
+  "slug": "/master/new-topic",
+  "file": "master/new-topic.md"
 }
 ```
 
@@ -218,7 +219,7 @@ cd rag_server && ./server_run.sh
 ### 页面间跳转链接
 
 ```markdown
-See also: [Safety Guidelines](/master-ultra/safety-guidelines)
+See also: [Safety Guidelines](/master/safety-precautions)
 ```
 
 以 `/` 开头的内部链接会通过 React Router 进行 SPA 导航。
@@ -236,10 +237,9 @@ See also: [Safety Guidelines](/master-ultra/safety-guidelines)
 从源文档（PDF / Word）生成 Markdown：
 
 ```bash
-npm run convert              # Master Ultra：完整管道
-npm run convert:futurist     # Futurist Ultra
-npm run convert:aegis        # Aegis Ultra
-npm run convert:aegisedu     # Aegis EDU
+npm run convert              # Master：完整管道
+npm run convert:futurist     # Futurist
+npm run convert:aegis        # Aegis
 ```
 
 各命令支持 `:text`（仅文本）和 `:images`（仅图片）子命令。

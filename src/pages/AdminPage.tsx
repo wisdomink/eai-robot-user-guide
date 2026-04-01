@@ -17,30 +17,33 @@ import { fetchLeads, submitLead, type LeadPayload, type LeadRecord } from '@/api
 type Tab = 'recommendations' | 'leads'
 
 const RECO_PRODUCT_OPTIONS = [
-  { value: 'master-ultra', label: 'FF Master Ultra' },
+  { value: 'futurist', label: 'FF Futurist' },
   { value: 'futurist-ultra', label: 'FF Futurist Ultra' },
+  { value: 'master', label: 'FF Master' },
+  { value: 'aegis', label: 'FF Aegis' },
   { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
-  { value: 'aegis-edu', label: 'FF Aegis EDU' },
+  { value: 'ff91', label: 'FF 91 2.0' },
 ]
 
 const LEAD_PRODUCT_OPTIONS = [
-  { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
-  { value: 'master-ultra', label: 'FF Master Ultra' },
+  { value: 'futurist', label: 'FF Futurist' },
   { value: 'futurist-ultra', label: 'FF Futurist Ultra' },
-  { value: 'aegis-edu', label: 'FF Aegis EDU' },
+  { value: 'master', label: 'FF Master' },
+  { value: 'aegis', label: 'FF Aegis' },
+  { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
   { value: 'ff91', label: 'FF 91 2.0' },
 ]
 
 const EMPTY_RECO_FORM: RecommendationPayload = {
   enabled: true,
-  product_name: 'master-ultra',
+  product_name: 'master',
   trigger_scene: '',
   recommendation_content_cn: '',
   recommendation_content_en: '',
 }
 
 const EMPTY_LEAD_FORM: LeadPayload = {
-  product: 'aegis-ultra',
+  product: 'master',
   contact_name: '',
   email: '',
   phone: '',
