@@ -208,14 +208,14 @@
 
 本次改动主要涉及以下模块：
 
-- `rag_server/app/services/instructions/triage.md`
-- `rag_server/app/services/chatkit_handler.py`
-- `rag_server/app/services/recommendation_engine.py`
-- `rag_server/app/main.py`
-- `rag_server/app/services/recommendation_catalog_service.py`
+- `apps/rag-api/app/services/instructions/triage.md`
+- `apps/rag-api/app/services/chatkit_handler.py`
+- `apps/rag-api/app/services/recommendation_engine.py`
+- `apps/rag-api/app/main.py`
+- `apps/rag-api/app/services/recommendation_catalog_service.py`
 - `src/pages/RecommendationRecordsPage.tsx`
 - `src/api/recommendations.ts`
-- `rag_server/app/services/recommendations.json`
+- `apps/rag-api/app/services/recommendations.json`
 
 ## 11. 预期收益
 

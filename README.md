@@ -40,7 +40,7 @@ FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态�
 | OpenAI ChatKit (Python) | 1.6+ | ChatKit 协议桥接 + 流式转换 |
 | OpenAI Vector Store | — | 托管式文档检索（RAG + 语义搜索） |
 
-后端详细文档见 [`rag_server/README.md`](rag_server/README.md)。
+后端详细文档见 [`apps/rag-api/README.md`](apps/rag-api/README.md)。
 
 ## 项目结构
 
@@ -48,68 +48,43 @@ FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态�
 eai-robot-user-guide/
 ├── README.md
 ├── CLAUDE.md                    # 项目约定 + Figma MCP 集成规则
-├── index.html                   # Vite 入口（含 ChatKit JS CDN）
-├── package.json
-├── vite.config.ts               # Vite 配置 + 后端代理规则
-├── client_run.sh                # 前端一键启动脚本
+├── package.json                 # npm workspaces 根（聚合脚本）
+├── tsconfig.json                # TypeScript 项目引用根配置
+│
 ├── deploy.sh                    # 测试环境一键部署（前端 + 后端）
-├── aws-deploy.sh                # AWS 部署脚本
-├── docker-build.sh              # Docker 构建脚本
+├── docker-compose.yml           # 本地 Docker 测试
+├── aws-deploy.sh                # AWS ECS 部署（ECR 推送 + ECS 滚动更新）
+├── Dockerfile                   # 多阶段构建（Node 构建前端 + Python 运行后端）
+├── supervisord.conf             # 容器内进程管理（nginx + uvicorn）
+├── nginx/default.conf           # 容器内 nginx 反向代理配置
 │
-├── scripts/
-│   ├── convert.mjs              # 源文档 → Markdown 转换（Master）
-│   ├── convert-futurist.mjs     # Futurist 转换
-│   ├── convert-aegis.mjs        # Aegis 转换
-│   └── prerender.mjs            # SSG 预渲染脚本
+├── apps/
+│   ├── web/                     # 手册站点前端（Vite + React）
+│   │   ├── src/                 # main.tsx、content/、components/ …
+│   │   ├── public/images/       # 静态资源
+│   │   ├── scripts/             # prerender.mjs、convert*.mjs
+│   │   └── client_run.sh        # 前端开发服务器启动脚本
+│   └── rag-api/                 # AI 后端（独立 Python 服务）
+│       ├── app/
+│       │   ├── main.py              # 入口：/api/chatkit、/api/search、/api/logs
+│       │   ├── core/config.py       # 配置（环境变量 + 路径）
+│       │   └── services/
+│       │       ├── chatkit_handler.py   # 多 Agent 工作流 + ChatKit 桥接
+│       │       └── instructions/*.md   # 各 Agent 的 Prompt 模板
+│       ├── create_vector_store.py  # Vector Store 同步（上传手册文档）
+│       ├── server_run.sh           # 后端启动脚本
+│       └── README.md
 │
-├── rag_server/                  # AI 后端（独立 Python 服务）
-│   ├── app/
-│   │   ├── main.py              # 入口：/api/chatkit、/api/search、/api/logs
-│   │   ├── core/config.py       # 配置（环境变量 + 路径）
-│   │   └── services/
-│   │       ├── chatkit_handler.py   # 多 Agent 工作流 + ChatKit 桥接
-│   │       └── instructions/*.md   # 各 Agent 的 Prompt 模板
-│   ├── eval/                    # RAG 评测脚本
-│   ├── create_vector_store.py  # Vector Store 同步（上传手册文档）
-│   ├── server_run.sh           # 一键启动脚本
-│   └── README.md
+├── packages/
+│   └── chat-sdk/               # @ffrobot/chat-sdk：ChatPanel + 嵌入 SDK（npm run build:embed）
 │
-├── public/images/               # 静态图片资源
+├── tools/
+│   └── eval/                   # RAG 评测（run_eval.py / test_cases.json）
 │
-└── src/
-    ├── main.tsx                 # 客户端入口
-    ├── entry-server.tsx        # SSG 服务端入口
-    ├── App.tsx                 # 路由配置（从 sidebar.json 自动生成）
-    ├── index.css               # Tailwind + 自定义样式
-    │
-    ├── content/                # 内容管理
-    │   ├── sidebar.json        # 导航树配置（所有产品，按 productId 分组）
-    │   ├── index.ts            # 内容注册表
-    │   ├── chunks.ts           # 内容分块（按 ## 标题切分）
-    │   └── pages/              # Markdown 页面
-    │       ├── master/
-    │       ├── futurist/
-    │       ├── futurist-ultra/
-    │       ├── aegis/
-    │       ├── aegis-ultra/
-    │       └── ff91/
-    │
-    ├── components/
-    │   ├── layout/             # Header、Sidebar、ContentLayout、MobileMenuDrawer
-    │   ├── chat/
-    │   │   └── ChatPanel.tsx   # ChatKit 对话面板
-    │   ├── markdown/
-    │   │   └── MarkdownRenderer.tsx
-    │   └── search/             # SearchBar、SearchDropdown、SearchInfoBar
-    │
-    ├── pages/
-    │   └── MarkdownPage.tsx    # 通用 Markdown 页面
-    │
-    └── hooks/
-        ├── useSearch.ts        # 搜索逻辑（精确 + 语义合并）
-        ├── useSemanticSearch.ts # 语义搜索 Hook
-        ├── useMediaQuery.ts    # 响应式断点
-        └── useSidebarState.ts  # 侧边栏开关状态
+├── examples/
+│   └── chat-sdk-demo.html      # SDK 嵌入示例
+│
+└── docs/                       # 项目文档（需求、设计、评测报告等）
 ```
 
 ## 快速开始
@@ -131,11 +106,11 @@ npm run build     # 完整构建（含 SSG 预渲染）
 npm run preview   # 预览构建结果
 ```
 
-`npm run build` 依次执行：
+`npm run build` 依次执行（在 **`apps/web`** 工作区内）：
 
 1. **TypeScript 类型检查** — `tsc -b`
-2. **客户端构建** — `vite build`（输出到 `dist/client/`）
-3. **服务端构建** — `vite build --ssr`（输出到 `dist/server/`）
+2. **客户端构建** — `vite build`（输出到 `apps/web/dist/`）
+3. **服务端构建** — `vite build --ssr`（输出到 `apps/web/dist/server/`）
 4. **SSG 预渲染** — `node scripts/prerender.mjs`（为每个路由生成静态 HTML）
 
 ## 环境变量
@@ -151,7 +126,7 @@ npm run preview   # 预览构建结果
 
 ### 后端（RAG Server）
 
-详见 [`rag_server/README.md` — 环境变量](rag_server/README.md#环境变量)。
+详见 [`apps/rag-api/README.md` — 环境变量](apps/rag-api/README.md#环境变量)。
 
 ## AI 智能问答
 
@@ -177,10 +152,10 @@ OpenAI API (Vector Store + LLM)
 
 ```bash
 # 终端 1：启动后端
-cd rag_server && ./server_run.sh
+cd apps/rag-api && ./server_run.sh
 
 # 终端 2：启动前端
-./client_run.sh
+cd apps/web && ./client_run.sh
 ```
 
 **方式二：一键部署**
@@ -192,19 +167,19 @@ cd rag_server && ./server_run.sh
 ./deploy.sh restart   # 重启服务
 ```
 
-完整后端配置说明见 **[`rag_server/README.md`](rag_server/README.md)**。
+完整后端配置说明见 **[`apps/rag-api/README.md`](apps/rag-api/README.md)**。
 
 ## 内容管理
 
 ### 修改页面内容
 
-直接编辑 `src/content/pages/` 下对应的 `.md` 文件即可。
+直接编辑 `apps/web/src/content/pages/` 下对应的 `.md` 文件即可。
 
 ### 新增页面
 
-**第 1 步** — 创建 Markdown 文件，如 `src/content/pages/master/new-topic.md`
+**第 1 步** — 创建 Markdown 文件，如 `apps/web/src/content/pages/master/new-topic.md`
 
-**第 2 步** — 在 `src/content/sidebar.json` 对应产品的 `sections` 中添加条目：
+**第 2 步** — 在 `apps/web/src/content/sidebar.json` 对应产品的 `sections` 中添加条目：
 
 ```json
 {
@@ -257,7 +232,7 @@ npm run convert:aegis        # Aegis
 
 通过 SSG（Static Site Generation）实现 SEO 优化：
 
-- `src/entry-server.tsx` — 使用 `renderToString` 在服务端渲染每个路由
+- `apps/web/src/entry-server.tsx` — 使用 `renderToString` 在服务端渲染每个路由
 - `scripts/prerender.mjs` — 构建后遍历 `sidebar.json` 中的所有路由，生成静态 HTML
 - 每个页面通过 `document.title` 动态设置 SEO 友好的标题
 

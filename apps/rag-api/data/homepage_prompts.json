@@ -1,0 +1,47 @@
+{
+  "greeting": "Hi! I can help you with any of our products. Pick one to get started.",
+  "prompts": [
+    {
+      "enabled": true,
+      "label": "FF Master",
+      "prompt": "Tell me about FF Master. What are its key features, specs, and how do I get started?",
+      "sort_order": 0,
+      "id": "ff_master"
+    },
+    {
+      "id": "ff_futurist",
+      "enabled": true,
+      "label": "FF Futurist",
+      "prompt": "Tell me about FF Futurist. What are its key features, specs, and how do I get started?",
+      "sort_order": 1
+    },
+    {
+      "id": "ff_futurist_ultra",
+      "enabled": true,
+      "label": "FF Futurist Ultra",
+      "prompt": "Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?",
+      "sort_order": 2
+    },
+    {
+      "id": "ff_aegis",
+      "enabled": true,
+      "label": "FF Aegis",
+      "prompt": "Tell me about FF Aegis. What are its key features, specs, and how do I get started?",
+      "sort_order": 3
+    },
+    {
+      "id": "ff_aegis_ultra",
+      "enabled": true,
+      "label": "FF Aegis Ultra",
+      "prompt": "Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?",
+      "sort_order": 4
+    },
+    {
+      "id": "ff_91_2_0",
+      "enabled": true,
+      "label": "FF 91 2.0",
+      "prompt": "Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?",
+      "sort_order": 5
+    }
+  ]
+}

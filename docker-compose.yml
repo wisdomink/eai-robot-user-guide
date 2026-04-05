@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: eai-robot-app
     env_file:
-      - rag_server/.env
+      - apps/rag-api/.env
     ports:
       - "${APP_PORT:-80}:80"
     restart: unless-stopped

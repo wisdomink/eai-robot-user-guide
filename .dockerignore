@@ -1,5 +1,4 @@
 node_modules
-dist
 .git
 .gitignore
 .pids
@@ -7,14 +6,36 @@ dist
 .env
 .env.*
 !.env.example
-rag_server/venv
-rag_server/__pycache__
-rag_server/**/__pycache__
-rag_server/.env
+
+# Python
+apps/rag-api/venv
+apps/rag-api/__pycache__
+apps/rag-api/**/__pycache__
+apps/rag-api/.env
+apps/rag-api/logs
+
+# IDE / tools
 .cursor
 .vscode
+.idea
+.claude
+
+# chat-sdk is built separately; exclude its source from Docker build context.
+# package.json is kept (negation rule) so npm ci can resolve the workspace.
+packages/chat-sdk
+!packages/chat-sdk/package.json
+
+# Build artifacts (not needed in Docker build)
+dist
+dist-embed
 *.pyc
-README.md
-CLAUDE.md
-LICENSE.md
-CHANGELOG.md
+*.tsbuildinfo
+
+# Docs / non-runtime
+docs
+tools
+examples
+*.md
+!apps/rag-api/app/services/instructions/*.md
+!apps/rag-api/app/services/instructions.md
+!apps/rag-api/price/*.md

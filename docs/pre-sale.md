@@ -336,7 +336,7 @@ Score = 场景匹配度 × 内容相关度 × 用户兴趣度 × 业务优先级
 -  增加 recommendation slot 管理 
 -  支持 system card / chips / banner 三种展示形式 
 后端
-新增一个推荐域服务，建议放在 rag_server 内，先不拆独立服务：
+新增一个推荐域服务，建议放在 apps/rag-api 内，先不拆独立服务：
 - recommendation_controller
 - recommendation_service
 - recommendation_rule_engine

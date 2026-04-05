@@ -145,13 +145,13 @@ echo "✅ $(python3 --version)"
 
 # ── 3. Check .env file ───────────────────────────────────────────────
 
-RAG_ENV="$SCRIPT_DIR/rag_server/.env"
+RAG_ENV="$SCRIPT_DIR/apps/rag-api/.env"
 
 if [ ! -f "$RAG_ENV" ]; then
-    if [ -f "$SCRIPT_DIR/rag_server/.env.example" ]; then
-        cp "$SCRIPT_DIR/rag_server/.env.example" "$RAG_ENV"
+    if [ -f "$SCRIPT_DIR/apps/rag-api/.env.example" ]; then
+        cp "$SCRIPT_DIR/apps/rag-api/.env.example" "$RAG_ENV"
     fi
-    echo "⚠️  请编辑 rag_server/.env 填入 OPENAI_API_KEY 后重新运行"
+    echo "⚠️  请编辑 apps/rag-api/.env 填入 OPENAI_API_KEY 后重新运行"
     exit 1
 fi
 
@@ -160,7 +160,12 @@ echo "✅ .env 配置就绪 ($RAG_ENV)"
 # ── 4. Install frontend dependencies ─────────────────────────────────
 
 HASH_FILE="$SCRIPT_DIR/node_modules/.pkg_hash"
-CURRENT_HASH=$(md5sum "$SCRIPT_DIR/package.json" 2>/dev/null | awk '{print $1}' || echo "unknown")
+LOCK_FILE="$SCRIPT_DIR/package-lock.json"
+if [ -f "$LOCK_FILE" ]; then
+    CURRENT_HASH=$(md5sum "$LOCK_FILE" 2>/dev/null | awk '{print $1}' || echo "unknown")
+else
+    CURRENT_HASH="unknown"
+fi
 
 if [ ! -d "node_modules" ] || [ ! -f "$HASH_FILE" ] || [ "$(cat "$HASH_FILE")" != "$CURRENT_HASH" ]; then
     echo "📦 安装前端依赖..."
@@ -171,7 +176,7 @@ echo "✅ 前端依赖就绪"
 
 # ── 5. Setup RAG server venv ──────────────────────────────────────────
 
-RAG_VENV="$SCRIPT_DIR/rag_server/venv"
+RAG_VENV="$SCRIPT_DIR/apps/rag-api/venv"
 
 if [ ! -d "$RAG_VENV" ]; then
     echo "📦 创建 Python 虚拟环境 (venv)..."
@@ -179,11 +184,11 @@ if [ ! -d "$RAG_VENV" ]; then
 fi
 
 RAG_HASH_FILE="$RAG_VENV/.deps_hash"
-RAG_HASH=$(md5sum "$SCRIPT_DIR/rag_server/requirements.txt" 2>/dev/null | awk '{print $1}' || echo "unknown")
+RAG_HASH=$(md5sum "$SCRIPT_DIR/apps/rag-api/requirements.txt" 2>/dev/null | awk '{print $1}' || echo "unknown")
 
 if [ ! -f "$RAG_HASH_FILE" ] || [ "$(cat "$RAG_HASH_FILE")" != "$RAG_HASH" ]; then
     echo "📦 安装 RAG Server 依赖..."
-    "$RAG_VENV/bin/pip" install -q -r "$SCRIPT_DIR/rag_server/requirements.txt"
+    "$RAG_VENV/bin/pip" install -q -r "$SCRIPT_DIR/apps/rag-api/requirements.txt"
     echo "$RAG_HASH" > "$RAG_HASH_FILE"
 fi
 echo "✅ RAG Server 依赖就绪"
@@ -199,7 +204,7 @@ kill_port "$CLIENT_PORT" "前端"
 # ── 7. Start RAG server ──────────────────────────────────────────────
 
 echo "🚀 启动 RAG Server (port $RAG_PORT)..."
-cd "$SCRIPT_DIR/rag_server"
+cd "$SCRIPT_DIR/apps/rag-api"
 setsid nohup "$RAG_VENV/bin/uvicorn" app.main:app --host 0.0.0.0 --port "$RAG_PORT" \
     >> "$RAG_LOG" 2>&1 < /dev/null &
 echo $! > "$RAG_PID"
@@ -208,7 +213,7 @@ cd "$SCRIPT_DIR"
 # ── 8. Start Vite dev server ─────────────────────────────────────────
 
 echo "🚀 启动 Vite 前端 (port $CLIENT_PORT)..."
-setsid nohup npx vite --host --port "$CLIENT_PORT" \
+setsid nohup npm run dev -w web -- --host --port "$CLIENT_PORT" \
     >> "$FRONTEND_LOG" 2>&1 < /dev/null &
 echo $! > "$FRONTEND_PID"
 

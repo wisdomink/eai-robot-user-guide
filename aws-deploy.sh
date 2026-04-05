@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 #
-# 将本地 Docker 镜像推送到 AWS ECR 并部署到 ECS
-#
-# 前提：先用 docker-build.sh 构建好镜像，本地测试通过
+# 构建 Docker 镜像并部署到 AWS ECS
 #
 # Usage:
-#   ./aws-deploy.sh                     # 推送本地镜像并部署/更新
 #   ./aws-deploy.sh --build             # 构建镜像 + 推送 + 部署（一步到位）
 #   ./aws-deploy.sh setup-ssl <域名>    # 配置自定义域名 + HTTPS（首次）
 #   ./aws-deploy.sh status              # 查看 ECS 服务状态
@@ -17,9 +14,9 @@ set -euo pipefail
 # ══════════════════════════════════════════════════════════
 #  配置（在此填入你的 AWS 凭证）
 # ══════════════════════════════════════════════════════════
-# export AWS_ACCESS_KEY_ID="xxx"
-# export AWS_SECRET_ACCESS_KEY="xxx"
-# export AWS_DEFAULT_REGION="xxx"
+export AWS_ACCESS_KEY_ID="xxxx"
+export AWS_SECRET_ACCESS_KEY="xxxx"
+export AWS_DEFAULT_REGION="xxxx"
 
 APP_NAME="eai-robot"
 IMAGE_NAME="eai-robot-app"
@@ -32,10 +29,11 @@ CONTAINER_PORT=80
 CPU=512        # 0.5 vCPU
 MEMORY=1024    # 1 GB
 
-BUILD_FIRST=false
+PRODUCTION_CHAT_SERVICE_ORIGIN="https://robotics-instruction-manual.ff.com"
+CHATKIT_DOMAIN_KEY="domain_pk_69d52b6b7cb08193b207b84802aa895d08baab6db3c053fa"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/rag_server/.env"
+ENV_FILE="$SCRIPT_DIR/apps/rag-api/.env"
 DEPLOY_CONFIG="$SCRIPT_DIR/.deploy-config"
 
 # ══════════════════════════════════════════════════════════
@@ -58,29 +56,6 @@ check_prerequisites() {
     if ! command -v docker &>/dev/null || ! docker info &>/dev/null 2>&1; then
         echo "❌ Docker 未运行。请启动 Docker Desktop"
         exit 1
-    fi
-}
-
-check_image_exists() {
-    if ! docker images "$IMAGE_NAME:latest" --format "{{.ID}}" 2>/dev/null | grep -q .; then
-        echo "❌ 本地没有找到镜像 $IMAGE_NAME:latest"
-        echo "   请先运行: ./docker-build.sh  或  ./aws-deploy.sh --build"
-        exit 1
-    fi
-}
-
-check_image_changed() {
-    local current_id
-    current_id=$(docker images "$IMAGE_NAME:latest" --format "{{.ID}}" 2>/dev/null)
-    if [ -n "${LAST_PUSHED_IMAGE_ID:-}" ] && [ "$current_id" = "$LAST_PUSHED_IMAGE_ID" ]; then
-        echo ""
-        echo "⚠️  本地镜像未更新（Image ID: $current_id）"
-        echo "   与上次推送的镜像相同，跳过部署。"
-        echo ""
-        echo "   如需重新构建并部署:  ./aws-deploy.sh --build"
-        echo "   如需强制推送:        ./aws-deploy.sh --force"
-        echo ""
-        exit 0
     fi
 }
 
@@ -569,7 +544,7 @@ cmd_setup_ssl() {
         else
             echo "PUBLIC_BASE_URL=https://$domain" >> "$ENV_FILE"
         fi
-        echo "  ✅ 已更新 rag_server/.env 中的 PUBLIC_BASE_URL=https://$domain"
+        echo "  ✅ 已更新 apps/rag-api/.env 中的 PUBLIC_BASE_URL=https://$domain"
     fi
 
     echo ""
@@ -578,8 +553,7 @@ cmd_setup_ssl() {
     echo ""
     echo "  完成上述 DNS 和 OpenAI 白名单配置后，重新部署生效:"
     echo ""
-    echo "    ./docker-build.sh --no-cache"
-    echo "    ./aws-deploy.sh --force"
+    echo "    ./aws-deploy.sh --build --force"
     echo ""
     echo "  访问地址: https://$domain"
     echo "═══════════════════════════════════════════════════════"
@@ -751,13 +725,27 @@ TASKDEF
 
     aws ecs create-cluster --cluster-name "$ECS_CLUSTER_NAME" --region "$AWS_REGION" >/dev/null 2>&1 || true
 
-    aws ecs create-service \
-        --cluster "$ECS_CLUSTER_NAME" --service-name "$ECS_SERVICE_NAME" \
-        --task-definition "$TASK_FAMILY" --desired-count 1 --launch-type FARGATE \
-        --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SG_ID],assignPublicIp=ENABLED}" \
-        --load-balancers "targetGroupArn=$TG_ARN,containerName=$APP_NAME,containerPort=$CONTAINER_PORT" \
-        --region "$AWS_REGION" >/dev/null
-    echo "  ✅ ECS Service 已创建"
+    local svc_status
+    svc_status=$(aws ecs describe-services \
+        --cluster "$ECS_CLUSTER_NAME" --services "$ECS_SERVICE_NAME" \
+        --query "services[?status!='INACTIVE'].status" --output text --region "$AWS_REGION" 2>/dev/null || true)
+
+    if [ -n "$svc_status" ]; then
+        echo "  ⚠️  Service 已存在 (${svc_status})，执行 update-service..."
+        aws ecs update-service \
+            --cluster "$ECS_CLUSTER_NAME" --service "$ECS_SERVICE_NAME" \
+            --task-definition "$TASK_FAMILY" --desired-count 1 --force-new-deployment \
+            --region "$AWS_REGION" >/dev/null
+        echo "  ✅ ECS Service 已更新"
+    else
+        aws ecs create-service \
+            --cluster "$ECS_CLUSTER_NAME" --service-name "$ECS_SERVICE_NAME" \
+            --task-definition "$TASK_FAMILY" --desired-count 1 --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SG_ID],assignPublicIp=ENABLED}" \
+            --load-balancers "targetGroupArn=$TG_ARN,containerName=$APP_NAME,containerPort=$CONTAINER_PORT" \
+            --region "$AWS_REGION" >/dev/null
+        echo "  ✅ ECS Service 已创建"
+    fi
 
     save_config
     wait_for_service_stable
@@ -769,7 +757,7 @@ TASKDEF
     echo ""
     echo "  🌐 访问地址: http://$dns"
     echo ""
-    echo "  后续更新:     ./docker-build.sh && ./aws-deploy.sh"
+    echo "  后续更新:     ./aws-deploy.sh --build"
     echo "  配置 HTTPS:   ./aws-deploy.sh setup-ssl <你的域名>"
     echo "  查看状态:     ./aws-deploy.sh status"
     echo "  查看日志:     ./aws-deploy.sh logs"
@@ -783,35 +771,50 @@ TASKDEF
 #  入口
 # ══════════════════════════════════════════════════════════
 
-ACTION="${1:-deploy}"
-FORCE_DEPLOY=false
-for arg in "$@"; do
-    case "$arg" in
-        --build) BUILD_FIRST=true ;;
-        --force) FORCE_DEPLOY=true ;;
-    esac
-done
+show_usage() {
+    echo "Usage: $0 <command>"
+    echo ""
+    echo "Commands:"
+    echo "  --build                构建镜像 + 推送 + 部署（一步到位）"
+    echo "  setup-ssl <域名>       配置自定义域名 + HTTPS（首次）"
+    echo "  status                 查看 ECS 服务状态"
+    echo "  logs [时长]            查看容器日志（默认 1h，如 24h）"
+    echo "  destroy                删除所有 AWS 资源"
+}
+
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 1
+fi
+
+ACTION="$1"
 
 case "$ACTION" in
-    deploy|--build|--force)
+    --build)
         check_prerequisites
-        if [ "$BUILD_FIRST" = true ]; then
-            echo ""
-            echo "══ 构建镜像 ══"
-            "$SCRIPT_DIR/docker-build.sh"
-        else
-            check_image_exists
-        fi
-        if [ "$FORCE_DEPLOY" = false ]; then
-            load_config 2>/dev/null || true
-            check_image_changed
-        fi
+
+        echo ""
+        echo "══ 构建 Chat SDK (release) ══"
+        "$SCRIPT_DIR/packages/chat-sdk/build.sh" release
+
+        echo ""
+        echo "══ 构建 Docker 镜像 ══"
+        echo "  🌐 Chat 服务域名: $PRODUCTION_CHAT_SERVICE_ORIGIN"
+        echo ""
+        echo "  🔨 构建中（目标平台: linux/amd64）..."
+        docker buildx build --platform linux/amd64 \
+            --build-arg VITE_CHAT_SERVICE_ORIGIN="$PRODUCTION_CHAT_SERVICE_ORIGIN" \
+            --build-arg VITE_CHATKIT_DOMAIN_KEY="$CHATKIT_DOMAIN_KEY" \
+            -t "$IMAGE_NAME" -f Dockerfile "$SCRIPT_DIR"
+        echo ""
+        echo "  ✅ Docker 镜像构建完成: $IMAGE_NAME"
+
         cmd_deploy
         ;;
     setup-ssl)
         DOMAIN="${2:-}"
         if [ -z "$DOMAIN" ]; then
-            echo "❌ 请指定域名。用法: ./aws-deploy.sh setup-ssl your.domain.com"
+            echo "❌ 请指定域名。用法: $0 setup-ssl your.domain.com"
             exit 1
         fi
         check_prerequisites
@@ -830,7 +833,9 @@ case "$ACTION" in
         cmd_destroy
         ;;
     *)
-        echo "Usage: $0 [deploy|--build|--force|setup-ssl <domain>|status|logs|destroy]"
+        echo "❌ 未知命令: $ACTION"
+        echo ""
+        show_usage
         exit 1
         ;;
 esac

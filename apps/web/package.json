@@ -1,0 +1,45 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "marked": "^17.0.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
+    "@vitejs/plugin-react": "^5.1.4",
+    "mammoth": "^1.11.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && npm run build:client && npm run build:server && npm run prerender",
+    "build:client": "vite build",
+    "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
+    "prerender": "node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "convert": "node scripts/convert.mjs",
+    "convert:text": "node scripts/convert.mjs --text-only",
+    "convert:images": "node scripts/convert.mjs --images-only",
+    "convert:futurist": "node scripts/convert-futurist.mjs",
+    "convert:futurist:text": "node scripts/convert-futurist.mjs --text-only",
+    "convert:futurist:images": "node scripts/convert-futurist.mjs --images-only",
+    "convert:aegisedu": "node scripts/convert-aegisedu.mjs",
+    "convert:aegisedu:text": "node scripts/convert-aegisedu.mjs --text-only",
+    "convert:aegisedu:images": "node scripts/convert-aegisedu.mjs --images-only",
+    "convert:aegis": "node scripts/convert-aegis.mjs",
+    "convert:aegis:text": "node scripts/convert-aegis.mjs --text-only",
+    "convert:aegis:images": "node scripts/convert-aegis.mjs --images-only"
+  }
+}

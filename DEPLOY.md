@@ -52,21 +52,25 @@ brew install awscli
 需要你的 AWS Access Key ID 和 Secret Access Key。
 获取方式：登录 AWS Console → 右上角用户名 → Security credentials → Create access key
 
-打开 `aws-deploy.sh`，在顶部配置区填入凭证：
+通过以下方式之一配置凭证：
 
 ```bash
+# 方式一：环境变量（推荐用于 CI/CD）
 export AWS_ACCESS_KEY_ID="AKIA...(你的 Access Key)"
 export AWS_SECRET_ACCESS_KEY="xxxx...(你的 Secret Key)"
 export AWS_DEFAULT_REGION="us-east-1"
+
+# 方式二：AWS CLI 配置（推荐用于本地开发）
+aws configure
 ```
 
 ### 2.4 配置环境变量
 
-确保 `rag_server/.env` 文件已填入所有必要的值（OPENAI_API_KEY 等）。
+确保 `apps/rag-api/.env` 文件已填入所有必要的值（OPENAI_API_KEY 等）。
 如果是全新项目，先从模板创建：
 
 ```bash
-cp rag_server/.env.example rag_server/.env
+cp apps/rag-api/.env.example apps/rag-api/.env
 # 编辑填入实际值
 ```
 
@@ -105,7 +109,7 @@ docker compose down
 1. **构建 Docker 镜像**（Mac Apple Silicon 自动交叉编译为 amd64）
 2. **推送到 AWS ECR**（自动创建仓库、登录、推送）
 3. **创建 IAM 角色**（ECS 执行角色）
-4. **注册 Task Definition**（从 `rag_server/.env` 读取环境变量）
+4. **注册 Task Definition**（从 `apps/rag-api/.env` 读取环境变量）
 5. **创建网络基础设施**（安全组、ALB、Target Group）
 6. **创建 ECS 集群和服务**（Fargate 启动类型）
 7. **等待服务就绪**并输出公网访问地址
@@ -159,7 +163,7 @@ docker compose down
 3. 等待证书验证通过
 4. 给 ALB 添加 HTTPS 监听器（443 端口）
 5. 配置 HTTP → HTTPS 自动跳转
-6. 更新 `rag_server/.env` 中的 `PUBLIC_BASE_URL`
+6. 更新 `apps/rag-api/.env` 中的 `PUBLIC_BASE_URL`
 
 ### 需要手动完成的部分
 
@@ -184,8 +188,7 @@ docker compose down
 ### 配置完成后重新部署
 
 ```bash
-./docker-build.sh --no-cache
-./aws-deploy.sh --force
+./aws-deploy.sh --build
 ```
 
 访问 `https://docs.yourcompany.com` 验证一切正常。
@@ -218,21 +221,11 @@ docker compose down
 
 ## 8. 脚本命令速查
 
-### docker-build.sh — 镜像构建
-
-| 命令 | 说明 |
-|------|------|
-| `./docker-build.sh` | 构建镜像 |
-| `./docker-build.sh --run` | 构建镜像并本地启动 |
-| `./docker-build.sh --no-cache` | 不使用缓存，全新构建 |
-
 ### aws-deploy.sh — AWS 部署
 
 | 命令 | 说明 |
 |------|------|
-| `./aws-deploy.sh` | 推送本地镜像并部署/更新 |
 | `./aws-deploy.sh --build` | 构建镜像 + 推送 + 部署（一步到位） |
-| `./aws-deploy.sh --force` | 跳过镜像变更检测，强制推送部署 |
 | `./aws-deploy.sh setup-ssl <域名>` | 配置自定义域名 + HTTPS |
 | `./aws-deploy.sh status` | 查看 ECS 服务状态 |
 | `./aws-deploy.sh logs` | 查看容器日志 |
@@ -253,13 +246,7 @@ docker compose down
 
 ### Q: Docker 构建时拉取镜像超时
 
-编辑 `~/.docker/daemon.json` 添加镜像加速器，重启 Docker Desktop：
-
-```json
-{
-  "registry-mirrors": ["https://docker.1ms.run", "https://docker.xuanyuan.me"]
-}
-```
+优先使用官方 Docker Hub。若你之前在 `~/.docker/daemon.json` 里配置过 `registry-mirrors`，请删除该字段后重启 Docker Desktop。
 
 ### Q: `aws configure` 填什么 Region？
 
@@ -268,7 +255,7 @@ docker compose down
 
 ### Q: 部署后环境变量改了怎么办？
 
-修改 `rag_server/.env` 后重新运行 `./aws-deploy.sh`，会自动注册新的 Task Definition 并滚动更新。
+修改 `apps/rag-api/.env` 后重新运行 `./aws-deploy.sh`，会自动注册新的 Task Definition 并滚动更新。
 
 ### Q: 如何查看部署是否成功？
 

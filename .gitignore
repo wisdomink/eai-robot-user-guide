@@ -3,7 +3,9 @@ node_modules/
 
 # Build output
 dist/
+dist-embed/
 *.tsbuildinfo
+apps/web/public/dist-embed/
 
 # Environment variables
 .env
@@ -42,9 +44,14 @@ Desktop.ini
 __pycache__/
 *.pyc
 *.pyo
+venv/
 
 # Deploy
 .deploy-config
+
+# Runtime
+.pids/
+.logs/
 
 # Logs
 *.log
