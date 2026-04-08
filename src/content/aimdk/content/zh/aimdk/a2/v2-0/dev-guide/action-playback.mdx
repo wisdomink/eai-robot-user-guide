@@ -1,0 +1,369 @@
+---
+title: 7.2 动作播放部分
+description: >-
+  A2
+  机器人提供了基本的预设动作播放能力，机器出厂自带部分预设动作（此外还可以通过遥操作设备进行动作录制，满足更多个性化需求，相关内容请查阅遥操作相关文档），自带预设动作列表如下：
+  ```
+  右手比耶/右手比耶.mcap向左欢迎/向左欢迎.mcap播报随机动作_09/播报随机动作_09.mcap数字手势“9”/数字手势“9”.mcap方向_指向左边/方向_指向左边.mcap右手拍照pose2-短/右手拍照pose2-短.mcap播报随机动…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - action-playback
+route: /zh/a2/v2-0/dev-guide/action-playback
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-02-motion_play'
+order: 21
+---
+# 7.2 动作播放部分
+
+### 7.2.1 整体介绍
+
+A2 机器人提供了基本的预设动作播放能力，机器出厂自带部分预设动作（此外还可以通过遥操作设备进行动作录制，满足更多个性化需求，相关内容请查阅遥操作相关文档），自带预设动作列表如下：
+
+```
+右手比耶/右手比耶.mcap向左欢迎/向左欢迎.mcap播报随机动作_09/播报随机动作_09.mcap数字手势“9”/数字手势“9”.mcap方向_指向左边/方向_指向左边.mcap右手拍照pose2-短/右手拍照pose2-短.mcap播报随机动作_11/播报随机动作_11.mcap简述6个要点_12s/简述6个要点_12s.mcap左转头/左转头.mcap右手挥手/右手挥手.mcap右手拍照pose3-短/右手拍照pose3-短.mcap数字手势“8”/数字手势“8”.mcap点点头/点点头.mcap做“自上而下”的示意_10s/做“自上而下”的示意_10s.mcap强调2大要点_12s/强调2大要点_12s.mcap右手握手_长/右手握手_长.mcap快速强调5大要点_8s/快速强调5大要点_8s.mcap左手加油/左手加油.mcap摆拍_右手胸前点赞/摆拍_右手胸前点赞.mcap播报随机动作_06/播报随机动作_06.mcap右手碰拳_长/右手碰拳_长.mcap方向_左手指后方/方向_左手指后方.mcap数字手势“5”/数字手势“5”.mcap个人介绍_7s/个人介绍_7s.mcap双手比耶/双手比耶.mcap播报随机动作_19/播报随机动作_19.mcap方向_左边示意/方向_左边示意.mcap数字手势“1”/数字手势“1”.mcap右手NO/右手NO.mcap对3个要点展开阐述_15s/对3个要点展开阐述_15s.mcap强调3大要点_11s/强调3大要点_11s.mcap右手比心/右手比心.mcap灵动环顾1/灵动环顾1.mcap方向_向右下方指引/方向_向右下方指引.mcap右手握手收回/右手握手收回.mcap方向_向右上方指引/方向_向右上方指引.mcap右手拍照pose4-短/右手拍照pose4-短.mcap结尾致谢_7s/结尾致谢_7s.mcap右手拍照pose1-短/右手拍照pose1-短.mcap方向_右手指后方/方向_右手指后方.mcap方向_右边示意/方向_右边示意.mcap播报随机动作_08/播报随机动作_08.mcap演讲27s/演讲27s.mcap播报随机动作_18/播报随机动作_18.mcap左手比耶/左手比耶.mcap播报随机动作_10/播报随机动作_10.mcap击掌_长/击掌_长.mcap摆拍_右手胸前比耶/摆拍_右手胸前比耶.mcap播报随机动作_01/播报随机动作_01.mcap播报随机动作_16/播报随机动作_16.mcap左手挥手/左手挥手.mcap播报随机动作_17/播报随机动作_17.mcap跳舞/跳舞.mcap左手握手_长/左手握手_长.mcap数字手势“2”/数字手势“2”.mcap双手点赞/双手点赞.mcap演讲10s/演讲10s.mcap播报随机动作_02/播报随机动作_02.mcap双手向下比心/双手向下比心.mcap双手挥手/双手挥手.mcap数字手势“6”/数字手势“6”.mcap灵动环顾2/灵动环顾2.mcap方向_指向当前位置/方向_指向当前位置.mcap摆拍_双手咏春/摆拍_双手咏春.mcap灵动环顾3/灵动环顾3.mcap向右欢迎/向右欢迎.mcap讲解结束总结_9s/讲解结束总结_9s.mcap右手握手/右手握手.mcap用手指强调信息_09s/用手指强调信息_09s.mcap播报随机动作_12/播报随机动作_12.mcap播报随机动作_15/播报随机动作_15.mcap摆拍_抬起右手/摆拍_抬起右手.mcap右手加油/右手加油.mcap右手点赞_长/右手点赞_长.mcap演讲15s/演讲15s.mcap播报随机动作_05/播报随机动作_05.mcap方向_向左下方指引/方向_向左下方指引.mcap右手碰拳/右手碰拳.mcap方向_向左上方指引/方向_向左上方指引.mcap左手点赞/左手点赞.mcap开篇打招呼_12s/开篇打招呼_12s.mcap敬礼/敬礼.mcap播报随机动作_14/播报随机动作_14.mcap摇摇头/摇摇头.mcap双手加油/双手加油.mcap左手碰拳/左手碰拳.mcap数字手势“3”/数字手势“3”.mcap演讲20s/演讲20s.mcap播报随机动作_04/播报随机动作_04.mcap左手点赞_长/左手点赞_长.mcap演讲5s/演讲5s.mcap播报随机动作_13/播报随机动作_13.mcap左手握手/左手握手.mcap播报随机动作_07/播报随机动作_07.mcap强调4大要点_16s/强调4大要点_16s.mcap摆拍_左手胸前比耶/摆拍_左手胸前比耶.mcap对2个要点展开阐述_18s/对2个要点展开阐述_18s.mcap双手擦眼泪/双手擦眼泪.mcap打太极拳/打太极拳.mcap数字手势“4”/数字手势“4”.mcap灵动环顾4/灵动环顾4.mcap右转头/右转头.mcap用握拳强调2组信息_12s/用握拳强调2组信息_12s.mcap数字手势“7”/数字手势“7”.mcap右手强调“核心”_10s/右手强调“核心”_10s.mcap方向_指向右边/方向_指向右边.mcap右手OK/右手OK.mcap方向_左手指前方/方向_左手指前方.mcap左手碰拳_长/左手碰拳_长.mcap对1个要点展开阐述_14s/对1个要点展开阐述_14s.mcap方向_右手指前方/方向_右手指前方.mcap右手点赞/右手点赞.mcap数字手势“10”/数字手势“10”.mcap双手强调“全局”_08s/双手强调“全局”_08s.mcap摆拍_我是大力士/摆拍_我是大力士.mcap播报随机动作_03/播报随机动作_03.mcap右手拍照pose5-短/右手拍照pose5-短.mcap比心/比心.mcap快速端东西/快速端东西.mcap端东西/端东西.mcap端盘子/端盘子.mcap单手发红包/单手发红包.mcap拿话筒演讲/拿话筒演讲.mcap握话筒/握话筒.mcap下蹲感谢示意/下蹲感谢示意.mcap右手拿话筒大幅扭腰/右手拿话筒大幅扭腰.mcap右手拿话筒轻微扭腰/右手拿话筒轻微扭腰.mcap右手拿话筒双侧扭腰/右手拿话筒双侧扭腰.mcap右手拿话筒双侧扭腰2/右手拿话筒双侧扭腰2.mcap右手拿话筒左手讲解1/右手拿话筒左手讲解1.mcap右手拿话筒左手讲解2/右手拿话筒左手讲解2.mcap右手拿话筒左手讲解3/右手拿话筒左手讲解3.mcap
+```
+
+以上动作文件位于 x86 的 /agibot/data/resources/default/motion 目录下，自定义录制的动作应放置于 /agibot/data/resources/custom/motion 目录下，以上列表通过在对应目录下指定如下命令获得
+
+Terminal window
+
+```
+find . -type f -name "*.mcap" -printf "%P\n"
+```
+
+具体动作效果可以使用后续章节提供的运控仿真进行查看，或直接使用真机进行查看。
+
+机上的动作播放由 motion\_player 模块进行，该模块会在 JOINT\_SERVO 模式下对手臂和脖子关节进行控制，基本控制原理为读取并解算指定的动作文件，按照 100 Hz 播放动作文件，发送 /motion/control/arm\_joint\_command 和 /motion/control/neck\_joint\_command 给到运动控制模块，由运控模块进行相应动作。
+
+由于一些历史原因以及架构设计因素，我们提供了两套 RPC 接口用于调用动作播放，分别为 SendMotionCommand 以及 PlayerMotion 接口，其中 SendMotionCommand 是由 motion\_player 模块直接提供的底层接口，功能更为丰富完善，推荐使用；而 PlayerMotion 接口则为 rc 遥控模块封装的上层动作播放模块，仅支持播放，不支持打断、暂停、状态查询等操作，新版本不推荐使用，保留仅为保持兼容性。
+
+### 7.2.2 动作播放 RPC 接口 SendMotionCommand
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/SendMotionCommand` |
+| --- | --- |
+| 功能概述 | 播放指定动作文件 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/SendMotionCommand |
+| 入参 | 
+```json
+{
+  "motion_id": "/agibot/data/resources/default/motion/演讲10s/演讲10s.mcap",
+  "duration_ms": 10000,
+  "cmd_end": true,
+  "cmd_pause": false,
+  "cmd_reset": false
+}
+```
+
+-   motion\_id: 动作文件绝对路径，到最后一级 .mcap 文件，例如
+    
+    -   /agibot/data/resources/default/motion/演讲10s/演讲10s.mcap
+-   duration\_ms: 无效字段，保持不动即可
+    
+-   cmd\_end: 是否在动作执行后自动恢复到初始姿态，`true`表示自动复位，`false`表示不自动复位
+    
+-   cmd\_pause: 动作暂停标志，`true`表示暂停，将暂停向机器人发送控制信号，一般不使用
+    
+-   cmd\_reset: 复位标志，`true`表示复位，`false`表示不复位。复位操作会将当前动作的状态重置至初始状态
+    
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762851946",
+      "nanos": 693223585,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/send\_motion\_id.sh |
+| 备注 | 
+
+-   本接口有调用 Action 限制，仅可在 JOINT\_SERVO 后缀的运控 Action 下调用
+    
+    -   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+-   老版本录制的 .db 动作文件仍可使用，但是传入路径需要带上 .db 后缀，例如
+    
+    -   /path/to/old\_motion\_files/演讲10s/演讲10s.db
+
+ |
+
+### 7.2.3 动作播放状态查询 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/GetMotionStatus` |
+| --- | --- |
+| 功能概述 | 获取动作播放状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/GetMotionStatus |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762852836",
+      "nanos": 502608623,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "time_to_end_ms": "235",
+  "status": "MotionCommandStatus_OPERATING",
+  "is_neck_enable": true,
+  "motion_id": "1见面招手"
+}
+```
+
+-   time\_to\_end\_ms: 动作距离结束时间，单位 ms
+    
+-   status: 动作播放状态
+    
+    -   MotionCommandStatus\_IDLE：无动作，空闲中
+    -   MotionCommandStatus\_START：动作开始播放
+    -   MotionCommandStatus\_OPERATING：动作播放中
+    -   MotionCommandStatus\_PAUSE：调用动作播放接口 cmd\_pause=true 的状态
+    -   MotionCommandStatus\_STOP：调用 DisableMotionPlayer 后的状态
+-   is\_neck\_enable: 脖子是否受 motion\_player 控制
+    
+-   motion\_id: 动作名称
+    
+
+ |
+| 示例脚本 | examples/motion\_player/get\_motion\_status.sh |
+| 备注 |  |
+
+### 7.2.4 禁用、开启动作播放模块 RPC 接口
+
+动作播放模块会在 JOINT\_SREVO 模式下持续给运控发送 /motion/control/arm\_joint\_command 和 /motion/control/neck\_joint\_command 的控制指令，这时二开程序也发送指令会造成冲突问题，可以调用以下接口禁用和开启动作播放模块
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/DisableMotionPlayer` |
+| --- | --- |
+| 功能概述 | 禁用动作播放模块，进程不会退出，不发送指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/disable\_motion\_player.sh |
+| 备注 |  |
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/EnableMotionPlayer` |
+| --- | --- |
+| 功能概述 | 开启动作播放模块，开始持续发送指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/EnableMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/enable\_motion\_player.sh |
+| 备注 |  |
+
+### 7.2.5 禁用、开启动作播放脖子控制 RPC 接口
+
+有些情况下需要单独禁用脖子的动作播放功能，从而将脖子的控制权交给二开程序进行头部跟随等，可以调用如下接口进行禁用和开启动作播放的脖子控制。
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer` |
+| --- | --- |
+| 功能概述 | 禁用动作播放模块控制脖子电机，进程不会退出，不发送脖子指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/disable\_neck\_motion\_player.sh |
+| 备注 |  |
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer` |
+| --- | --- |
+| 功能概述 | 开启动作播放模块控制脖子接口，开始持续发送脖子控制指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/enable\_neck\_motion\_player.sh |
+| 备注 |  |
+
+### 7.2.6 获取动作列表 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/GetMotion` |
+| --- | --- |
+| 功能概述 | 获取动作列表 rpc |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetMotion |
+| 入参 | 
+```bash
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "motions": [
+    {
+      "motion_id": 10001,
+      "motion_name": "亮相A",
+      "motion_path": "/agibot/data/resources/custom/motion/亮相A/亮相A.db",
+      "description": "",
+      "display_name_zh": "",
+      "display_name_en": "",
+      "url": "",
+      "thumbnail_url": "",
+      "is_change": true,
+      "create_time_stamp": "0",
+      "update_time_stamp": "0",
+      "duration": 2,
+      "motion_type": "Untyped"
+    },
+    {
+      "motion_id": 10002,
+      "motion_name": "亮相B",
+      "motion_path": "/agibot/data/resources/custom/motion/亮相B/亮相B.db",
+      "description": "",
+      "display_name_zh": "",
+      "display_name_en": "",
+      "url": "",
+      "thumbnail_url": "",
+      "is_change": true,
+      "create_time_stamp": "0",
+      "update_time_stamp": "0",
+      "duration": 2,
+      "motion_type": "Untyped"
+    },
+    ...
+  ]
+}
+```
+
+-   motion\_id：用于 PlayerMotion 播放动作接口的 id
+
+其余字段可以不用管，路径可在 x86 上找到对应文件 |
+| 示例脚本 | examples/rc/a2\_GetMotionList.sh |
+| 备注 |  |
+
+### 7.2.7 动作播放 RPC 接口 PlayerMotion
+
+| 接口名 | `pb:/aimdk.protocol.RcMotionPlayerService/PlayerMotion` |
+| --- | --- |
+| 功能概述 | 播放指定 id 动作 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:59001/rpc/aimdk.protocol.RcMotionPlayerService/PlayerMotion |
+| 入参 | 
+```bash
+{
+  "motion_id": "1"
+}
+```
+
+-   motion\_id: 动作 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/rc/a2\_PlayerMotion.sh |
+| 备注 | 
+
+-   本接口有调用 Action 限制，仅可在 JOINT\_SERVO 后缀的运控 Action 下调用
+    
+    -   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+

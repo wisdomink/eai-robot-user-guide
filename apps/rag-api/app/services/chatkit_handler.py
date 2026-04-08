@@ -65,6 +65,7 @@ from app.core.config import (
     OPENAI_VECTOR_STORE_NEWS_ID,
     OPENAI_VECTOR_STORE_PRICE_ID,
     PUBLIC_BASE_URL,
+    DEVELOPER_SIDEBAR_PATH,
     SIDEBAR_PATH,
 )
 from app.core.logging_config import FRONT_LOGGER_NAME
@@ -594,21 +595,9 @@ def _build_output_agent(
 # ── File name → slug mapping (for source navigation links) ──────────────
 
 
-def _build_file_slug_map() -> dict[str, dict]:
-    """Build {filename: {slug, title}} from sidebar.json.
-
-    Indexes by both the full relative path (e.g. "master-ultra/foo.md")
-    and the bare filename (e.g. "foo.md") so that OpenAI file_citation
-    lookups succeed regardless of which form the API returns.
-    """
-    try:
-        with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
-            all_sidebars = json.load(f)
-    except FileNotFoundError:
-        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
-        return {}
-
-    result: dict[str, dict] = {}
+def _merge_sidebar_pages_into_map(
+    all_sidebars: dict, result: dict[str, dict]
+) -> None:
     for product_sidebar in all_sidebars.values():
         for section in product_sidebar.get("sections", []):
             for page in section.get("pages", []):
@@ -621,6 +610,29 @@ def _build_file_slug_map() -> dict[str, dict]:
                 basename = rel_path.rsplit("/", 1)[-1]
                 if basename != rel_path:
                     result.setdefault(basename, entry)
+
+
+def _build_file_slug_map() -> dict[str, dict]:
+    """Build {filename: {slug, title}} from sidebar.json and developer-sidebar.json.
+
+    Indexes by both the full relative path (e.g. "master-ultra/foo.md")
+    and the bare filename (e.g. "foo.md") so that OpenAI file_citation
+    lookups succeed regardless of which form the API returns.
+    """
+    result: dict[str, dict] = {}
+
+    try:
+        with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            _merge_sidebar_pages_into_map(json.load(f), result)
+    except FileNotFoundError:
+        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
+
+    try:
+        with open(DEVELOPER_SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            _merge_sidebar_pages_into_map(json.load(f), result)
+    except FileNotFoundError:
+        logger.warning("developer-sidebar.json not found at %s", DEVELOPER_SIDEBAR_PATH)
+
     return result
 
 

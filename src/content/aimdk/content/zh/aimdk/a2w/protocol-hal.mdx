@@ -1,0 +1,680 @@
+---
+title: HAL硬件抽象层模块
+description: >-
+  本页面包含了HAL（Hardware Abstraction Layer）硬件抽象层相关的话题和服务的相关文档协议，以提供系统的硬件控制和传感器数据。
+  本模块位于 orin 开发板上，http 后端监听的端口为 56422。 HAL模块包含以下子系统： - **sensors**:
+  传感器数据采集（相机、IMU、激光雷达等） - **bms**: 电池管理系统 - **fault**: 故障检测与报告 - **hand**: 手部控制
+  …
+product: a2w
+slug:
+  - a2w
+  - protocol-hal
+route: /zh/a2w/protocol-hal
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/hal/readme'
+order: 140
+---
+# HAL硬件抽象层模块
+
+本页面包含了HAL（Hardware Abstraction Layer）硬件抽象层相关的话题和服务的相关文档协议，以提供系统的硬件控制和传感器数据。
+
+本模块位于 orin 开发板上，http 后端监听的端口为 56422。
+
+HAL模块包含以下子系统：
+
+-   **sensors**: 传感器数据采集（相机、IMU、激光雷达等）
+-   **bms**: 电池管理系统
+-   **fault**: 故障检测与报告
+-   **hand**: 手部控制
+-   **jaka**: Jaka机械臂控制
+-   **joint**: 关节控制
+-   **light**: 灯光控制
+-   **neck**: 颈部控制
+-   **pose**: 位姿估计
+-   **power**: 电源管理
+-   **state**: 系统状态
+-   **temp**: 温度监控
+
+各个传感器数据的分辨率和帧率如下：
+
+| 传感器类型 | 位置 | 数据流 | 分辨率 | 帧率 |
+| --- | --- | --- | --- | --- |
+| 鱼眼相机 (Senyun ISX031C-H190XA) | 胸部左 (chest\_left) | 彩色图像 (color) | 640x480 | 30 FPS |
+| 鱼眼相机 (Senyun ISX031C-H190XA) | 胸部右 (chest\_right) | 彩色图像 (color) | 640x480 | 30 FPS |
+| RGB-D 相机 (Realsense D415) | 头部前 (head\_front) | 彩色图像 (color) | 1280x720 | 15 FPS |
+| RGB-D 相机 (Realsense D415) | 头部前 (head\_front) | 深度图像 (depth) | 1280x720 | 15 FPS |
+| RGB-D 相机 (Orbbec) | 腰部前 (waist\_front) | 彩色图像 (color) | 640x480 | 10 FPS |
+| RGB-D 相机 (Orbbec) | 腰部前 (waist\_front) | 深度图像 (depth) | 640x400 | 10 FPS |
+| 激光雷达 (Mid360) | 颈部 (neck) | 点云数据 (pcd\_option) | \- | 10 FPS |
+| IMU (YISENSE YI 320) | 腰部中心 (waist\_center) | IMU 数据 (imu\_option) | \- | 1000FPS |
+
+## Channel 接口
+
+| 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 |
+| :-- | :-: | :-: | --- | --- | --- |
+| `/aima/hal/sensors/camera/chest_left/color` | 胸部左鱼眼相机rgb图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/sensors/camera/chest_right/color` | 胸部右鱼眼相机rgb图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/head_front/color` | 头部相机rgb图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/head_front/depth` | 头部相机depth图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/chassis_front/color` | 腰部相机rgb图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/chassis_front/depth` | 腰部相机depth图像 | 发布 | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/lidar/top/pointcloud` | 脖颈部雷达点云 | 发布 | [sensor\_msgs::msg::PointCloud2](https://docs.ros.org/en/ros2_packages/humble/api/JointCommandsensor_msgs/msg/PointCloud2.html) |  | ros2 |
+| `/body_drive/imu/data` | imu | 发布 | [sensor\_msgs::msg::Imu](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Imu.html) |  | ros2 |
+| `/body_drive/arm_joint_state` | 关节状态信息 | 发布 | [joint\_msg\_interface::msg::JointState](#jointmsginterface-msg-jointstate) |  | iceoryx |
+| `/body_drive/arm_joint_command` | 关节控制命令 | 订阅 | [joint\_msg\_interface::msg::JointCommand](#jointmsginterface-msg-jointcommand) |  | iceoryx |
+| `/body_drive/arm_pose_state` | 机器人位姿信息 | 发布 | [joint\_msg\_interface::msg::PoseStates](#jointmsginterface-msg-posestates) |  | ros2 |
+| `/body_drive/neck_joint_state` | 颈部状态信息 | 发布 | [joint\_msg\_interface::msg::JointState](#jointmsginterface-msg-jointstate) |  | iceoryx |
+| `/body_drive/neck_joint_command` | 颈部控制命令 | 订阅 | [joint\_msg\_interface::msg::JointCommand](#jointmsginterface-msg-jointcommand) |  | iceoryx |
+| `/body_drive/waist_joint_state` | 俯仰电机状态发布 | 发布 | [joint\_msg\_interface::msg::JointState](#jointmsginterface-msg-jointstate) |  | iceoryx |
+| `/body_drive/waist_joint_command` | 俯仰电机控制指令 | 订阅 | [joint\_msg\_interface::msg::JointCommand](#jointmsginterface-msg-jointcommand) |  | iceoryx |
+| `/body_drive/lift_joint_state` | 升降电机状态发布 | 发布 | [joint\_msg\_interface::msg::JointState](#jointmsginterface-msg-jointstate) |  | iceoryx |
+| `/body_drive/lift_joint_command` | 升降电机控制指令 | 订阅 | [joint\_msg\_interface::msg::JointCommand](#jointmsginterface-msg-jointcommand) |  | iceoryx |
+| `/body_drive/wheel_joint_state` | 轮毂和转向电机状态发布 | 发布 | [joint\_msg\_interface::msg::JointState](#jointmsginterface-msg-jointstate) |  | ros2 |
+| `/body_drive/wheel_joint_command` | 轮毂和转向电机控制指令 | 订阅 | [joint\_msg\_interface::msg::JointCommand](#jointmsginterface-msg-jointcommand) |  | ros2 |
+| `/body_drive/claw_joint_state` | 夹爪状态发布 | 发布 | [aimdk::protocol::HandStateChannel](#aimdk-protocol-handstatechannel) |  | iceoryx |
+| `/body_drive/claw_joint_command` | 夹爪控制指令 | 订阅 | [aimdk::protocol::HandCommandChannel](#aimdk-protocol-handcommandchannel) |  | iceoryx |
+| `/hal_state/emergency` | 急停信号发布 | 发布 | [aimdk::protocol::EmergencyStateChannel](#aimdk-protocol-emergencystatechannel) |  | sm,mqtt |
+| `/rc/data` | 遥控状态发布 | 发布 | [aimdk::protocol::RemoteControlChannel](#aimdk-protocol-remotecontrolchannel) |  | sm,ros2 |
+| `aima/rgb_light` | rgb灯状态发布 | 发布 | [aimdk::protocol::RgbLightStateChannel](#aimdk-protocol-rgblightstatechannel) |  | mqtt |
+| `/aima/fill_light` | 补光灯状态发布 | 发布 | [aimdk::protocol::FillLightStateChannel](#aimdk-protocol-filllightstatechanne) |  | mqtt |
+| `/aima/light_strip` | 灯带状态发布 | 发布 | [aimdk::protocol::LightStripStateChannel](#aimdk-protocol-lightstripstatechannel) |  | mqtt |
+| `/aima/bms/data` | BMS数据发布 | 发布 | [aimdk::protocol::BmsStateChannel](#aimdk-protocol-bmsstatechannel) |  | mqtt |
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.CamerasIntrinsicService/GetCamerasIntrinsic` | 获取相机的内参 | [aimdk::protocol::GetCamerasIntrinsicRequest](#aimdk-protocol-getcamerasintrinsicrequest) | [aimdk::protocol::GetCamerasIntrinsicResponse](#aimdk-protocol-getcamerasintrinsicresponse) | 请注意，获取相机内参时，在 P1 机型上 **鱼眼相机** 和 **交互相机** 由 camera 模块单独管理，http 端口号需要改为 59324；  
+机型可通过 `cat /etc/bsp_version` 文件来判断，该文件存在则为 P1 机型，否则为 T3 机型。 | http |
+| `pb:/aimdk.protocol.HalRgbLightService/GetRgbLightState` | 获取RGB灯状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::RgbLightStateRsp](#aimdk-protocol-rgblightstatersp) |  | http |
+| `pb:/aimdk.protocol.HalRgbLightService/SetRgbLightCommand` | 控制RGB灯 | [aimdk::protocol::RgbLightCommandReq](#aimdk-protocol-rgblightcommandreq) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| `pb:/aimdk.protocol.HalLightStripService/GetLightStripState` | 获取灯带状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::LightStripStateRsp](https://code.agibot.com/agibot_aima/aima_protocol/-/blob/a2w/dev/v0.9/aimdk/protocol/hal/light/light.proto?ref_type=heads) |  | http |
+| `pb:/aimdk.protocol.HalRgbLightService/SetLightStripCommand` | 控制灯带 | [aimdk::protocol::LightStripCommandReq](#aimdk-protocol-lightstripcommandreq) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| `pb:/aimdk.protocol.HalFillLightService/GetFillLightState` | 获取补光灯状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::FillLightStateRsp](#aimdk-protocol-filllightstatersp) |  | http |
+| `pb:/aimdk.protocol.HalRgbLightService/SetFillLightCommand` | 控制补光灯 | [aimdk::protocol::FillLightCommandReq](#aimdk-protocol-filllightcommandreq) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| `pb:/aimdk.protocol.HalBmsService/GetBmsState` | 获取BMS数据 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::BmsStateRsp](#aimdk-protocol-bmsstatersp) |  | http |
+| `pb:/aimdk.protocol.HalBmsService/SetBmsMosfeCommand` | 电池包MOSFE控制 | [aimdk::protocol::BmsMosfeCommandReq](#aimdk-protocol-bmsmosfecommandreq) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| `pb:/aimdk.protocol.HalBmsService/GetPowerState` | 获取当前Power状态信息 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::PowerStateRsp](#aimdk-protocol-powerstatersp) |  | http |
+| `pb:/aimdk.protocol.HalHandService/GetHandState` | 获取夹爪状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::HandStateResponse](#aimdk-protocol-handstateresponse) |  | http |
+| `pb:/aimdk.protocol.HalHandService/SetHandCommand` | 夹爪控制 | [aimdk::protocol::HandCommandRequest](#aimdk-protocol-handcommandrequest) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| `pb:/aimdk.protocol.HalPowerService/ResetPower` | 重置电源 | [aimdk::protocol::PowerResetReq](https://code.agibot.com/agibot_aima/aima_protocol/-/blob/a2w/dev/v0.9/aimdk/protocol/hal/power/hal_power_service.proto?ref_type=heads) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::DistortionType`
+
+畸变类型枚举。
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| DistortionType\_UNDEFINED | 0 | 未定义 |
+| DistortionType\_MODIFIED\_BROWN\_CONRADY | 1 | 修改的布朗-康拉迪 |
+| DistortionType\_INVERSE\_BROWN\_CONRADY | 2 | 逆布朗-康拉迪 |
+| DistortionType\_FTHETA | 3 | F-θ |
+| DistortionType\_BROWN\_CONRADY | 4 | 布朗-康拉迪 |
+| DistortionType\_KANNALA\_BRANDT4 | 5 | 卡纳拉-布兰特4 |
+| DistortionType\_COUNT | 6 | 计数 |
+
+### `aimdk::protocol::StreamType`
+
+流类型枚举。
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| StreamType\_UNDEFINED | 0 | 未定义 |
+| StreamType\_DEPTH | 1 | 深度 |
+| StreamType\_COLOR | 2 | 彩色 |
+| StreamType\_IR | 3 | 红外 |
+
+### `aimdk::protocol::CameraIntrinsicInfo`
+
+相机内参信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| id | string | 相机ID |
+| name | string | 相机名称 |
+| stream\_type | [aimdk::protocol::StreamType](#aimdk-protocol-streamtype) | 流类型 |
+| width | int32 | 图像宽度，单位：像素 |
+| height | int32 | 图像高度，单位：像素 |
+| ppx | float | 主点X坐标，单位：像素 |
+| ppy | float | 主点Y坐标，单位：像素 |
+| fx | float | 焦距X，单位：像素 |
+| fy | float | 焦距Y，单位：像素 |
+| model | [aimdk::protocol::DistortionType](#aimdk-protocol-distortiontype) | 畸变模型 |
+| coeffs | float\[\] | 畸变系数，无单位 |
+
+### `aimdk::protocol::GetCamerasIntrinsicRequest`
+
+获取相机内参请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+
+### `aimdk::protocol::GetCamerasIntrinsicResponse`
+
+获取相机内参的响应结果。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| info | [aimdk::protocol::CameraIntrinsicInfo\[\]](#aimdk-protocol-cameraintrinsicinfo) | 相机内参信息列表 |
+
+## HAL子系统Protobuf消息类型
+
+### BMS电池管理系统
+
+#### `aimdk::protocol::hal::BatteryStatus`
+
+电池状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| voltage | double | 电池电压，单位：V |
+| current | double | 电流，单位：A |
+| capacity | double | 电池容量，单位：Ah |
+| charge | double | 电量百分比，单位：% |
+| design\_capacity | double | 设计容量，单位：Ah |
+| temperature | double | 电池温度，单位：°C |
+| cycle\_count | uint32 | 充电循环次数 |
+| present | bool | 电池是否存在 |
+| power\_supply\_status | uint32 | 电源状态 |
+| power\_supply\_health | uint32 | 电源健康状态 |
+| power\_supply\_technology | uint32 | 电源技术类型 |
+| cell\_voltage | double\[\] | 单体电池电压列表，单位：V |
+| cell\_temperature | double\[\] | 单体电池温度列表，单位：°C |
+| location | string | 电池位置 |
+| serial\_number | string | 序列号 |
+
+#### `aimdk::protocol::hal::ChargeStatus`
+
+充电状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| is\_charging | bool | 是否正在充电 |
+| is\_plugged | bool | 是否插入充电器 |
+| charge\_power | double | 充电功率，单位：W |
+| time\_to\_full | uint32 | 充满电时间，单位：秒 |
+
+#### `aimdk::protocol::BmsStateRsp`
+
+BMS状态响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::BatteryStatus | 电池状态数据 |
+
+#### `aimdk::protocol::BmsMosfeCommandReq`
+
+电池包MOSFE控制请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| command | int32 | MOSFE控制命令 |
+
+#### `aimdk::protocol::PowerStateRsp`
+
+电源状态响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::PowerStatus | 电源状态数据 |
+
+### 关节控制系统
+
+#### `aimdk::protocol::hal::JointState`
+
+关节状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| joint\_names | string\[\] | 关节名称列表 |
+| positions | float\[\] | 关节位置，单位：rad |
+| velocities | float\[\] | 关节速度，单位：rad/s |
+| efforts | float\[\] | 关节力矩，单位：Nm |
+
+#### `aimdk::protocol::hal::JointCommand`
+
+关节控制命令。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| joint\_names | string\[\] | 关节名称列表 |
+| target\_positions | float\[\] | 目标位置，单位：rad |
+| target\_velocities | float\[\] | 目标速度，单位：rad/s |
+| target\_efforts | float\[\] | 目标力矩，单位：Nm |
+| control\_mode | int32 | 控制模式 |
+
+### 位姿估计系统
+
+#### `aimdk::protocol::hal::RobotPose`
+
+机器人位姿信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| position | [aimdk::protocol::Vec3](../common/README.md#aimdk-protocol-vec3) | 位置信息，单位：m |
+| orientation | [aimdk::protocol::Quaternion](../common/README.md#aimdk-protocol-quaternion) | 方向信息（四元数） |
+| frame\_id | string | 坐标系ID |
+
+### 系统状态
+
+#### `aimdk::protocol::hal::SystemState`
+
+系统状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| cpu\_usage | float | CPU使用率，单位：% |
+| memory\_usage | float | 内存使用率，单位：% |
+| disk\_usage | float | 磁盘使用率，单位：% |
+| uptime | int64 | 系统运行时间，单位：s |
+| system\_mode | int32 | 系统模式 |
+| error\_count | int32 | 错误计数 |
+
+### 温度监控系统
+
+#### `aimdk::protocol::hal::TemperatureData`
+
+温度监控数据。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| sensor\_names | string\[\] | 温度传感器名称列表 |
+| temperatures | float\[\] | 温度值，单位：°C |
+| max\_temperature | float | 最高温度，单位：°C |
+| min\_temperature | float | 最低温度，单位：°C |
+| warning\_flags | bool\[\] | 温度警告标志 |
+
+### 电源管理系统
+
+#### `aimdk::protocol::hal::PowerStatus`
+
+电源状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| input\_voltage | float | 输入电压，单位：V |
+| output\_voltage | float | 输出电压，单位：V |
+| power\_consumption | float | 功耗，单位：W |
+| efficiency | float | 电源效率，单位：% |
+| is\_power\_good | bool | 电源状态是否正常 |
+| fault\_code | int32 | 故障代码 |
+
+### 灯光控制系统
+
+#### `aimdk::protocol::hal::LightControl`
+
+灯光控制命令。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| light\_ids | string\[\] | 灯光ID列表 |
+| brightness | float\[\] | 亮度值，范围：0-1 |
+| colors | int32\[\] | 颜色值（RGB） |
+| modes | int32\[\] | 灯光模式 |
+| enabled | bool\[\] | 是否启用 |
+
+#### `aimdk::protocol::RgbLightStateReq`
+
+RGB灯光状态请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| state | aimdk::protocol::hal::LightControl | RGB灯光状态 |
+
+#### `aimdk::protocol::FillLightStateReq`
+
+补光灯状态请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| state | aimdk::protocol::hal::LightControl | 补光灯状态 |
+
+#### `aimdk::protocol::LightStripStateReq`
+
+灯带状态请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| state | aimdk::protocol::hal::LightControl | 灯带状态 |
+
+### 手部控制系统
+
+#### `aimdk::protocol::hal::HandState`
+
+手部状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| left | float | 左手状态 |
+| right | float | 右手状态 |
+
+#### `aimdk::protocol::hal::HandCommand`
+
+手部控制命令。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| left | float | 左手控制命令 |
+| right | float | 右手控制命令 |
+
+#### `aimdk::protocol::HandStateRsp`
+
+手部状态响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::HandState | 手部状态数据 |
+
+#### `aimdk::protocol::HandCommandReq`
+
+手部控制命令请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| command | aimdk::protocol::hal::HandCommand | 手部控制命令 |
+
+### 颈部控制系统
+
+#### `aimdk::protocol::hal::NeckState`
+
+颈部状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| joint\_names | string\[\] | 颈部关节名称列表 |
+| positions | float\[\] | 关节位置，单位：rad |
+| velocities | float\[\] | 关节速度，单位：rad/s |
+| neck\_mode | int32 | 颈部模式 |
+
+#### `aimdk::protocol::hal::NeckCommand`
+
+颈部控制命令。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| joint\_names | string\[\] | 颈部关节名称列表 |
+| target\_positions | float\[\] | 目标位置，单位：rad |
+| target\_velocities | float\[\] | 目标速度，单位：rad/s |
+| neck\_mode | int32 | 颈部模式 |
+
+#### `aimdk::protocol::NeckStateRsp`
+
+颈部状态响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::NeckState | 颈部状态数据 |
+
+#### `aimdk::protocol::NeckCommandReq`
+
+颈部控制命令请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| command | aimdk::protocol::hal::NeckCommand | 颈部控制命令 |
+
+### 故障检测系统
+
+#### `aimdk::protocol::hal::FaultInfo`
+
+故障信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| fault\_code | uint32 | 故障代码 |
+| fault\_level | uint32 | 故障级别 |
+| fault\_msg | string | 故障消息 |
+| fault\_source | string | 故障来源 |
+| timestamp | aimdk::protocol::Timestamp | 时间戳 |
+
+#### `aimdk::protocol::hal::FaultStatus`
+
+故障状态信息。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| faults | [aimdk::protocol::hal::FaultInfo\[\]](#aimdk-protocol-hal-faultinfo) | 故障信息列表 |
+
+### CameraSnapshotsService相关消息类型
+
+#### `aimdk::protocol::SnapshotRequest`
+
+拍摄快照请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| camera\_id | string | 相机ID |
+
+#### `aimdk::protocol::SnapshotResponse`
+
+拍摄快照响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| image\_data | bytes | 图像数据 |
+
+### HalPowerService相关消息类型
+
+#### `aimdk::protocol::PowerInfoRsp`
+
+电源信息响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::PowerStatus | 电源信息数据 |
+
+### HalEmergencyService相关消息类型
+
+#### `aimdk::protocol::EmergencyStopReq`
+
+紧急停止请求。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| stop | bool | 是否紧急停止 |
+
+#### `aimdk::protocol::EmergencyStateRsp`
+
+紧急状态响应。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| is\_emergency\_stopped | bool | 是否处于紧急停止状态 |
+
+#### `joint_msg_interface::msg::JointState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | std\_msgs | 响应头 |
+| joints | State\[\] | 关节状态信息 |
+
+#### `joint_msg_interface::msg::State`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 响应头 |
+| sequence | uint32 | 关节状态信息 |
+| position | float64 | 关节位置，单位：rad |
+| velocity | float64 | 关节速度，单位：rad/s |
+| effort | float64 | 关节力矩，单位：Nm |
+
+#### `joint_msg_interface::msg::JointCommand`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | std\_msgs | 响应头 |
+| joints | Command\[\] | 关节状态信息 |
+
+#### `joint_msg_interface::msg::Command`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 响应头 |
+| sequence | uint32 | 关节状态信息 |
+| position | float64 | 关节位置，单位：rad |
+| velocity | float64 | 关节速度，单位：rad/s |
+| effort | float64 | 关节力矩，单位：Nm |
+| stiffness | float64 |  |
+| damping | float64 |  |
+
+#### `joint_msg_interface::msg::PoseStates`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| names | string\[\] | 响应头 |
+| poses | PoseState\[\] | 姿势 |
+| torqs | TorqSensorState\[\] |  |
+
+#### `joint_msg_interface::msg::PoseState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | float64 |  |
+| y | float64 |  |
+| z | float64 |  |
+| rx | float64 |  |
+| ry | float64 |  |
+| rz | float64 |  |
+
+#### `joint_msg_interface::msg::TorqSensorState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| act\_torque | float64 |  |
+| torque | float64 |  |
+| real\_torque | float64 |  |
+
+#### `aimdk::protocol::HandStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::HandState | 手部状态 |
+
+#### `aimdk::protocol::HandCommandChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::EmergencyState | 手部指令 |
+
+#### `aimdk::protocol::EmergencyStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::EmergencyState |  |
+
+#### `aimdk::protocol::RemoteControlChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::McRemoteControlInfo | 数据 |
+
+#### `aimdk::protocol::RgbLightStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::RgbLightState | RGB灯光状态数据 |
+
+#### `aimdk::protocol::FillLightStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::FillLightState | 补光灯灯光状态数据 |
+
+#### `aimdk::protocol::LightStripStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::LightStripState | 灯带灯光状态数据 |
+
+#### `aimdk::protocol::BmsStateChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::BmsState | BMS状态数据 |
+
+#### `aimdk::protocol::RgbLightStateRsp`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| data | aimdk::protocol::hal::RgbLightState | RGB灯光状态数据 |
+
+#### `aimdk::protocol::RgbLightCommandReq`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 消息头 |
+| cmd | aimdk::protocol::hal::RgbLightCommand | RGB灯光控制指令 |
+
+#### `aimdk::protocol::LightStripCommandReq`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| cmd | aimdk::protocol::hal::LightStripCommand | 灯带控制指令 |
+
+#### `aimdk::protocol::FillLightStateRsp`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| cmd | aimdk::protocol::hal::FillLightState | 灯光状态数据 |
+
+#### `aimdk::protocol::FillLightCommandReq`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| cmd | aimdk::protocol::hal::FillLightCommand | 灯光控制指令 |
+
+#### `aimdk::protocol::HandStateResponse`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::ResponseHeader | 响应头 |
+| data | aimdk::protocol::hal::HandState | 手部状态 |
+
+#### `aimdk::protocol::HandCommandRequest`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::RequestHeader | 请求头 |
+| data | aimdk::protocol::hal::HandCommand | 手部控制 |
+

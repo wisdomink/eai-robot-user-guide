@@ -1,0 +1,174 @@
+---
+title: 8. 运控仿真使用指南
+description: >-
+  我们为 A2 机器人提供了基于 mujoco 的仿真系统，旨在提供一个可以对 A2
+  机器人的运控和动作播放接口进行基本调用的试验场，用作实机运行前的一个基本验证，减低损坏机器人本体风险同时方便调试二次开发程序逻辑等。
+  ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBSYNkpzf.png&w=1280&h=747&f=webp)
+  该系统运行了 mujoco…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - simulation
+route: /zh/a2-lite/v2-0/simulation
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/08-motion_control_simulation'
+order: 130
+---
+# 8. 运控仿真使用指南
+
+## 8.1 仿真说明
+
+我们为 A2 机器人提供了基于 mujoco 的仿真系统，旨在提供一个可以对 A2 机器人的运控和动作播放接口进行基本调用的试验场，用作实机运行前的一个基本验证，减低损坏机器人本体风险同时方便调试二次开发程序逻辑等。
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBSYNkpzf.png&w=1280&h=747&f=webp)
+
+该系统运行了 mujoco\_sim，motion\_control 和 motion\_player 组件，其中 mujoco\_sim 作为底层仿真引擎模拟了机器人物理本体 + hal\_ethercat，motion\_control 则与 mujoco\_sim 进行控制命令和状态的交互对仿真机器人进行控制，motion\_player 则调用 motion\_control 提供的上层接口进行动作播放，其中 motion\_control 和 motion\_player 组件与真机完全一致，该系统可以正常调用所有运动控制和动作播放模块的接口。
+
+## 8.2 前置条件
+
+该仿真系统以容器镜像的方式提供，内含各个组件的可执行文件和动作资源文件以及调用脚本，使用该仿真系统需要满足以下条件
+
+1.  装有 docker 的 x86\_64 架构 Linux 系统
+    
+2.  使用 X11 桌面系统
+    
+    -   可以通过 echo $XDG\_SESSION\_TYPE 来检测，输出 x11 为期望现象
+
+## 8.3 使用教程
+
+### 8.3.1 拉取镜像
+
+1.  登录镜像仓库只读账号
+
+Terminal window
+
+```
+docker login tongyong-public-cn-shanghai.cr.volces.com -u crrobot@aima-public-reader -p Aima123456
+```
+
+2.  拉取对应镜像
+
+Terminal window
+
+```
+docker pull tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-lite-simulator:v2.0
+```
+
+### 8.3.2 启动镜像
+
+1.  允许 docker 访问显示器，用于配置 X Window System 的访问控制列表。执行 xhost + 会允许所有的主机连接到当前用户的 X 服务器，这样做会取消 X 服务器的访问控制，从而允许任何用户访问和操作 X 服务器。
+    
+    Terminal window
+    
+    ```
+    xhost +
+    ```
+    
+2.  启动 docker 容器
+    
+    Terminal window
+    
+    ```
+    docker run -it \--name=a2-lite-sim \--privileged \--net=host \--ipc=host \--pid=host \-e DISPLAY=$DISPLAY \-v /tmp/.X11-unix:/tmp/.X11-unix \-v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \-d tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-lite-simulator:v2.0
+    ```
+    
+    如果发现使用 NVIDIA 显卡的机器使用上述命令开启容器后仿真界面运行卡顿，可以尝试使用以下命令开启容器：
+    
+    Terminal window
+    
+    ```
+    docker run -it \        --name=a2-lite-sim \        --gpus all \        --privileged \        --net=host \        --ipc=host \        --pid=host \        -e DISPLAY=$DISPLAY \        -e NVIDIA_VISIBLE_DEVICES=all \        -e NVIDIA_DRIVER_CAPABILITIES=all \        -v /tmp/.X11-unix:/tmp/.X11-unix \        -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \        -d tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-lite-simulator:v2.0
+    ```
+    
+
+3.  进入容器
+    
+    Terminal window
+    
+    ```
+    docker start a2-lite-sim && docker exec -it a2-lite-sim /bin/bash
+    ```
+    
+
+### 8.3.3 启动仿真、运控、动作播放模块
+
+1.  进入镜像后运行下面的指令，启动仿真
+    
+    Terminal window
+    
+    ```
+    docker start a2-lite-sim && docker exec -it a2-lite-sim /bin/bash
+    cd /home/agi/a2_simulation/mujoco_sim/bin./start_a2_lite.sh
+    ```
+    
+2.  在一个新窗口中连接到容器，启动运动控制程序
+    
+    Terminal window
+    
+    ```
+    docker start a2-lite-sim && docker exec -it a2-lite-sim /bin/bash
+    cd /home/agi/a2_simulation/motion_control_lite_2.0.10/scripts/motion_control./start_motion_control.sh
+    ```
+    
+3.  在又一个新窗口中连接到容器，启动动作播放程序
+    
+    Terminal window
+    
+    ```
+    docker start a2-lite-sim && docker exec -it a2-lite-sim /bin/bash
+    cd /home/agi/a2_simulation/motion_player_lite_2.0.10/scripts/motion_player./start_motion_player.sh
+    ```
+    
+
+### 8.3.4 控制机器人行走
+
+这里以机器人行走为例，讲解一个最基本的运控接口调用逻辑，其余接口可参考运动控制部分的接口文档配合示例脚本进行调用。
+
+1.  开启一个新窗口，进入容器内切换运控 Action 至位控站立模式（RL\_JOINT\_DEFAULT）
+    
+    Terminal window
+    
+    ```
+    cd /home/agi/a2_simulation/tools-lite/motion_control./SetAction.py # 选 RL_JOINT_DEFAULT 对应的数字
+    ```
+    
+2.  点击 mujoco\_sim 界面 Load-Key 按钮让机器人站稳
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDvPeY_ig.png&w=1280&h=766&f=webp)
+    
+3.  继续切换运控 Action 到强化行走模式（RL\_LOCOMOTION\_DEFAULT）
+    
+    Terminal window
+    
+    ```
+    cd /home/agi/a2_simulation/tools-lite/motion_control./SetAction.py # 选 RL_LOCOMOTION_DEFAULT 对应的数字
+    ```
+    
+4.  调用行走示例脚本
+    
+    Terminal window
+    
+    ```
+    source /home/agi/a2_simulation/a2_simulation/prebuilt/ros2_plugin_proto_x86_64/share/ros2_plugin_proto/local_setup.bash./walk.py
+    ```
+    
+
+### 8.3.5 控制机器人进行动作播放
+
+1.  切换运控状态到强化行走上肢伺服模式（RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO）
+    
+    Terminal window
+    
+    ```
+    cd /home/agi/a2_simulation/tools-lite/motion_control./SetAction.py # 选 RL_LOCOMOTION_ARM_EXT_JOINT_SERVO 对应的数字
+    ```
+    
+2.  调用 SendMotionCommand 接口进行动作调用
+    
+    Terminal window
+    
+    ```
+    cd /home/agi/a2_simulation/tools-lite/motion_player./send_motion_id.sh /agibot/data/resources/default/motion/motion_player/default/双手挥手/双手挥手
+    ```
+

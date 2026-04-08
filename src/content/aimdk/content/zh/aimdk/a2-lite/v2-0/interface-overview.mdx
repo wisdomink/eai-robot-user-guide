@@ -1,0 +1,115 @@
+---
+title: 4. 二次开发接口概述
+description: >-
+  上述软件系统中模块大多数均使用 AimRT 作为底层框架，AimRT 是一款对标 ROS2 的机器人运行时底层框架，由智元机器人公司在 2024/09
+  开源，AimRT 中提供了两种基本的底层通信方式，分别为 Channel 和 RPC（更多内容可以参考 [AimRT
+  官方文档](https://docs.aimrt.org/v0.10.0/tutorials/concepts/concepts.html#aimrt-channel)）…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - interface-overview
+route: /zh/a2-lite/v2-0/interface-overview
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/04-second_develop_interface'
+order: 50
+---
+# 4. 二次开发接口概述
+
+上述软件系统中模块大多数均使用 AimRT 作为底层框架，AimRT 是一款对标 ROS2 的机器人运行时底层框架，由智元机器人公司在 2024/09 开源，AimRT 中提供了两种基本的底层通信方式，分别为 Channel 和 RPC（更多内容可以参考 [AimRT 官方文档](https://docs.aimrt.org/v0.10.0/tutorials/concepts/concepts.html#aimrt-channel)），其中两种通信方式又可以对应多个不同通信后端。
+
+为降低二次开发心智负担，我们为二次开发提供了两种形式使用较为简单和通用的接口，分别为 HTTP JSON RPC 和 ROS2 Topic，其中 HTTP JSON RPC 适用于低频接口多对一调用，ROS2 Topic 适用于高频接口多对多调用。以下为二者图示
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDI0OK-Tk.png&w=1394&h=1686&f=webp)
+
+> 针对开发语言，二次开发程序并不限制任何开发语言，只要能收发 HTTP 消息即可调用所有 HTTP JSON RPC 接口，只要支持 ROS2 Humble 版本能收发 ROS2 话题消息即可调用所有本体 ROS2 Topic 接口。
+
+这里给出两个具体的接口调用示例，建立更加清晰的接口认知：
+
+## 4.1 HTTP JSON RPC
+
+以下为获取电池电量的命令行 RPC 请求示例
+
+Terminal window
+
+```
+curl -i     -H 'content-type:application/json' \            -H 'timeout: 1000'   -X POST 'http://127.0.0.1:56421/rpc/aimdk.protocol.HalBmsService/GetBmsState' \            -d '{}'
+```
+
+其中
+
+-   `127.0.0.1` 为机器人 X86 开发板的 IP 地址，这里填写的为 localhost 地址，只能在 X86 本地进行调用，如需远程调用，可将该 IP 改为机器人 X86 开发板 WiFi 网卡对应的 IP（可通过 AimMaster 软件查看或在 X86 上执行 ip a 进行查询）。
+    
+-   `56421` 相应服务的 HTTP 端口号，这个一般会在详细接口示例中给出。
+    
+-   `content-type:application/json` 为请求头，表示请求体为 json 格式，**必须要加上这个请求头**。
+    
+-   `timeout: 1000` 为请求头，表示请求超时时间，单位为毫秒，这里设置为 1000 毫秒，即 1 秒，该字段可以不设置。
+    
+-   `aimdk.protocol.HalBmsService/GetBmsState` 为获取电池状态的 RPC 接口名称，各个接口的具体名称在对应接口的文档和示例中可以找到。
+    
+-   `'&#123;&#125;'` 为请求体，这里为空代表其中的字段都为默认值，如果需要传入特定字段，可以传入 json 字符串，例如 `'&#123;"bms_state": 1&#125;'` 表示传入 bms\_state 字段，值为 1（仅为举例，具体字段名称和值需要参考对应接口的文档和示例）。
+    
+
+## 4.2 ROS2 Topic
+
+### 4.2.1 环境变量设置
+
+话题接口采用 ROS2 原生话题，机上默认使用 **ROS2 Humble with Fastdds**，在调用任意 ROS2 Topic 接口之前**必须设置一些环境变量**，如下：
+
+Terminal window
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml
+```
+
+> 如果您的程序需要以 root 权限启动则将上述 dds 配置文件改为使用以下配置文件：
+> 
+> Terminal window
+> 
+> ```
+> export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/privileged_ros_dds_configuration.xml
+> ```
+> 
+> 在 `ros_dds_configuration.xml` 中同时启用了共享内存通信和 udp 通信，而在 `privileged_ros_dds_configuration.xml` 中则仅启用了 udp 通信，用以规避共享内存的权限问题。
+
+### 4.2.2 QoS 设置
+
+另外还需注意机上话题默认 QoS 为
+
+```
+  history: keep_last  depth: 10  reliability: best_effort
+```
+
+使用时需保持 QoS 一致以保证通信顺畅。
+
+### 4.2.3 调用示例
+
+以下为订阅关节状态的 ROS2 Topic 示例脚本。
+
+```
+#!/usr/bin/env python3import rclpyfrom rclpy.node import Nodefrom rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicyfrom sensor_msgs.msg import JointState
+class JointStateSubscriber(Node):    def __init__(self, topic_name: str):        super().__init__("joint_state_subscriber")
+        self.topic_name = topic_name
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST, depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT        )
+        self.subscription = self.create_subscription(JointState, topic_name, self.listener_callback, qos_profile)
+    def listener_callback(self, msg: JointState):        self.get_logger().info(f"=== Received {self.topic_name} ===")        self.get_logger().info(f"  header: {msg.header}")        self.get_logger().info(f"  name: {msg.name}")        self.get_logger().info(f"  position: {msg.position}")        self.get_logger().info(f"  velocity: {msg.velocity}")        self.get_logger().info(f"  effort: {msg.effort}")
+def main(args=None):    rclpy.init(args=args)    # 手臂关节状态: /motion/control/arm_joint_state    # 脖子关节状态: /motion/control/neck_joint_state    joint_state_node = JointStateSubscriber("/motion/control/arm_joint_state")    try:        rclpy.spin(joint_state_node)    except KeyboardInterrupt:        pass    finally:        joint_state_node.destroy_node()        rclpy.shutdown()
+if __name__ == "__main__":    main()
+```
+
+### 4.2.4 ROS2 话题外部 PC 通信
+
+为保证机上 ROS2 通信稳定性，我们修改了机上 DDS 通信的配置文件，对于非 root 进程默认启用了共享内存通信和 UDP 通信，如下所示（位于 X86 开发板上 `/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml`）：
+
+```
+<?xml version="1.0" encoding="UTF-8"?><dds>  <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">    <transport_descriptors>      <transport_descriptor>        <transport_id>UDPv4_transport</transport_id>        <type>UDPv4</type>        <interfaceWhiteList>          <address>127.0.0.1</address>          <address>10.42.0.100</address>        </interfaceWhiteList>      </transport_descriptor>      <transport_descriptor>        <transport_id>SHM_transport</transport_id>        <type>SHM</type>        <segment_size>8388608</segment_size>        <port_queue_capacity>1024</port_queue_capacity>      </transport_descriptor>    </transport_descriptors>
+    <participant profile_name="participant_profile" is_default_profile="true">      <rtps>        <useBuiltinTransports>false</useBuiltinTransports>        <userTransports>          <transport_id>SHM_transport</transport_id>          <transport_id>UDPv4_transport</transport_id>        </userTransports>      </rtps>    </participant>  </profiles></dds>
+```
+
+其中网卡白名单配置了 127.0.0.1 和 10.42.0.100 两个 IP，分别为本地回环 IP 和遥操所需网卡 IP，如需在三方 PC 或加装的工控机上接受和发送对应的 ROS2 Topic，需要在白名单（**privileged 和非 privileged 都需要加**）中添加一项本机网卡 ip（一般可选 **192.168.2.50** 即为机器人背后调试网口固定 ip，另可选预留加装算力板网口固定 ip **192.168.100.100**），添加完成后重启机器人通过有线连接至对应网口即可进行相应通信。
+
+> 两个进程使用非对称 dds 白名单在 ROS2 Humble 版本有时会导致不可预测的通信问题，请务必确保 dds 白名单配置保持一致。
+> 
+> 参考：[https://github.com/eProsima/Fast-DDS/pull/3733](https://github.com/eProsima/Fast-DDS/pull/3733)
+

@@ -1,0 +1,62 @@
+---
+title: 遥控模块
+description: >-
+  本文档介绍了遥控模块（Remote Control, RC）对外开发接口，目前只开放了 A2W 上肢控制相关接口 本模块 http 后端监听的端口为
+  59001。 | 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 | | :-- | :-: | --- | --- |
+  --- | --- | | `pb:/aimdk.protocol.RemoteControlService/SendMotionAd…
+product: a2w
+slug:
+  - a2w
+  - protocol-remote-control
+route: /zh/a2w/protocol-remote-control
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/rc/readme'
+order: 150
+---
+# 遥控模块
+
+本文档介绍了遥控模块（Remote Control, RC）对外开发接口，目前只开放了 A2W 上肢控制相关接口
+
+本模块 http 后端监听的端口为 59001。
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.RemoteControlService/SendMotionAdjustCommand` | 发送上肢调整命令 | [aimdk::protocol::AdjustCommandRequest](#aimdk-protocol-adjustcommandrequest) | [aimdk::protocol::RcCommonResponse](#aimdk-protocol-rccommonresponse) |  | http |
+| `pb:/aimdk.protocol.RemoteControlService/JointControlSwitchCommand` | 切换控制状态，使能/不使能 | [aimdk::protocol::RcJointControlSwitchRequest](#aimdk-protocol-rcjointcontrolswitchrequest) | [aimdk::protocol::RcCommonResponse](#aimdk-protocol-rccommonresponse) |  | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::RcCommonResponse`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| state | [aimdk::protocol::CommonState](../common/README.md#aimdk-protocol-commonstate)\[\] | 动作列表 |
+| request\_send\_mts | uint64 | 客户端请求发送时间 |
+| request\_recv\_mts | uint64 | 服务端请求接收时间 |
+
+### `aimdk::protocol::AdjustCommandRequest`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::AdjustCommand](#aimdk-protocol-adjustcommand) | 上肢调整命令 |
+
+### `aimdk::protocol::AdjustCommand`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节或末端名称 |
+| name | uint32 | 1 左臂，2 右臂，3 双臂 |
+| mode | uint32 | 按压模式 |
+| step | double | 步长 |
+| velocity | double | 速度 |
+
+### `aimdk::protocol::RcJointControlSwitchRequest`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| enable | bool | false: 禁用, true: 使能 |
+

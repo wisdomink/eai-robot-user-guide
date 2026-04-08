@@ -1,0 +1,395 @@
+---
+title: 7.8 规控导航部分
+description: >-
+  A2
+  旗舰款机器人出厂预置基本的建图定位导航能力，用户可以通过二次开发接口进行导航点导航、目标点导航、指定线路导航等各种任务，同时自带动态障碍物识别避障等功能。
+  导航任务下发接口按照导航逻辑不同有多种接口，不一一列出每个接口单独的说明文档，而是统一说明下发接口区别的出入参。 导航任务下发接口统一说明： 1.
+  执行任务前，需要机器人重定位成功，且下发任务的地图id需要与重定位的地图一致 2. 执行任务前，需要将MC状态切换到 RL\_LO…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - navigation
+route: /zh/a2/v2-0/dev-guide/navigation
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-08-navigation'
+order: 27
+---
+# 7.8 规控导航部分
+
+### 7.8.1 整体介绍
+
+A2 旗舰款机器人出厂预置基本的建图定位导航能力，用户可以通过二次开发接口进行导航点导航、目标点导航、指定线路导航等各种任务，同时自带动态障碍物识别避障等功能。
+
+导航任务下发接口按照导航逻辑不同有多种接口，不一一列出每个接口单独的说明文档，而是统一说明下发接口区别的出入参。
+
+导航任务下发接口统一说明：
+
+1.  执行任务前，需要机器人重定位成功，且下发任务的地图id需要与重定位的地图一致
+2.  执行任务前，需要将MC状态切换到 RL\_LOCOMOTION\_DEFAULT（强化直腿）模式，否则机器人可能无法正常响应PNC的速度指令
+3.  下发任务时，需要设置task\_id，若不设置（默认为0），PNC会自动生成一个task\_id，并在response中返回，客户端需要保存该task\_id以便后续下发控制指令或查询任务状态
+
+代码示例都在 examples/pnc/ 目录下，每个接口都有对应调用脚本，从文件名即可看出，有一个完整的全流程从获取地图 id，选择点位 id 到下发导航任务到监控任务状态的示例 example/pnc/pnc\_demo.py 可供参考。
+
+字段统一说明
+
+-   task\_id：任务 id，若不设置（默认为0），PNC会自动生成一个task\_id，并在response中返回，客户端需要保存该task\_id以便后续下发控制指令或查询任务状态
+-   map\_id：地图 id，需要填写当前地图 id
+-   target\_id：导航点 id
+-   pose：2D 世界坐标位姿
+-   pose\_offset：目标点相对偏移
+-   state：未做特殊说明的情况都代表请求是否成功送达和接收，返回 CommonState\_SUCCESS 即为成功，其他情况为失败
+-   ackerman\_mode：保留字段未使用，按照示例填写即可
+-   guide\_line\_id：保留字段未使用，按照示例填写即可
+
+### 7.8.2 到点导航 RPC 接口
+
+| **接口名** | **接口描述** | **URL** | **入参** | **出参** | **备注** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToGoal` | 下发给定目标点ID的规划导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToGoal | 
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0,
+  "guide_line_id": 0,
+  "ackerman_mode": false
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 到点精度范围最大约0.4米 |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToPose2D` | 下发给定目标点位姿的规划导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToPose2D | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 10,
+      "y": 5
+    },
+    "angle": 3.14159
+  },
+  "ackerman_mode": false
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 到点精度范围最大约0.4米 |
+| `pb:/aimdk.protocol.PncService/LinearNaviToRelative` | 下发给定相对目标点位姿的直线导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToRelative | 
+
+```json
+{
+  "task_id": 1,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 1.57
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 先执行原地旋转，再执行直线移动 |
+| `pb:/aimdk.protocol.PncService/LinearNaviToGoal` | 下发给定目标点ID的直线导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 先执行原地旋转，再执行直线移动 |
+| `pb:/aimdk.protocol.PncService/LinearNaviToPose2D` | 下发给定目标点位姿的直线导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToPose2D | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 1.57
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 先执行原地旋转，再执行直线移动 |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelativeGoal` | 下发给定目标点ID的直接移动任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelativeGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 一边平移一边旋转，仅适用于目标点与机器人朝向偏差较小的任务，否则可能导致到点偏差较大 |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelative` | 下发给定相对目标点位姿的直接移动任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelative | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 0
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/PreciseNaviToGoal` | 下发给定目标点ID的高精度导航任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PreciseNaviToGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0,
+  "pose_offset": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 0
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 仅适用于特殊场景下的高精到点任务，机器人会先以普通规划导航模式走到目标点后方约0.5米的位置，再直接移动到目标点，直接移动过程中不避障，并可能多次调整。到点精度约0.1米左右。需要保证目标点后方有足够空间。非特殊需求不建议使用此模式 |
+
+### 7.8.3 简单移动 RPC 接口
+
+| **接口名** | **接口描述** | **URL** | **入参** | **出参** | **备注** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/SpinTurnAndMoveForward` | 下发给原地旋转+直线前进任务，会先执行原地旋转，再执行直线前进 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurnAndMoveForward | 
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 3.14159,
+  "distance": 1
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/SpinTurn` | 下发原地旋转任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurn | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 3.14159
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/MoveForward` | 下发直线平移任务 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/MoveForward | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 0,
+  "distance": 1
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 任务执行后机器朝向不会发生变化 |
+
+### 7.8.4 任务查询、控制 RPC 接口
+
+| **接口名** | **接口描述** | **URL** | **入参** | **出参** | **备注** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/ActionCancel` | 下发取消任务指令 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionCancel | 
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE |
+| `pb:/aimdk.protocol.PncService/ActionPause` | 下发暂停任务指令 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionPause | 
+
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE |
+| `pb:/aimdk.protocol.PncService/ActionResume` | 下发恢复暂停中的任务指令 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionResume | 
+
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE |
+| `pb:/aimdk.protocol.PncService/ActionGetState` | 获取导航任务状态 | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionGetState | 
+
+```json
+{
+  "task_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "PncServiceState_RUNNING"
+}
+```
+
+-   state：任务状态
+    
+    -   PncServiceState\_UNDEFINED 未知状态
+    -   PncServiceState\_IDLE 任务空闲中
+    -   PncServiceState\_RUNNING 任务运行中
+    -   PncServiceState\_PAUSED 任务暂停中
+    -   PncServiceState\_SUCCESS 任务完成
+    -   PncServiceState\_FAILED 任务失败
+
+ | 若请求的 task\_id 为 0 则返回最近一次任务的 task\_id 及对应的状态，其它 task\_id 不匹配的请求则返回 PncServiceState\_FAILED |
+

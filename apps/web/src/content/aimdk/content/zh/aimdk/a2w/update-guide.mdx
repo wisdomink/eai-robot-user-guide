@@ -1,0 +1,86 @@
+---
+title: 开发环境更新指南
+description: >-
+  编辑 .devcontainer/devcontainer.json 文件,将 image 字段更新为新的镜像版本号:
+  `tongyong-public-cn-shanghai.cr.volces.com/a2w_sdk/sdk-image-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344:latest`。
+  ![更新版本号](https://open.agibot.com/docs/_image?href=…
+product: a2w
+slug:
+  - a2w
+  - update-guide
+route: /zh/a2w/update-guide
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/update'
+order: 90
+---
+# 开发环境更新指南
+
+## 完整镜像更新
+
+### 1\. 更新镜像版本配置
+
+编辑 .devcontainer/devcontainer.json 文件,将 image 字段更新为新的镜像版本号: `tongyong-public-cn-shanghai.cr.volces.com/a2w_sdk/sdk-image-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344:latest`。
+
+![更新版本号](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBDmSBIbQ.png&w=1280&h=563&f=webp)
+
+### 2\. 重建容器
+
+在 VS Code 中执行命令:
+
+-   按 F1 或 Ctrl+Shift+P 打开命令面板
+-   输入并选择: Dev Containers: Rebuild and Reopen in Container
+
+![重建容器](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FWX2RgmLx.png&w=1183&h=152&f=webp)
+
+## DevKit 包更新
+
+### 复制 DevKit 包到挂载目录
+
+将 DevKit 包复制到主机的挂载目录 ~/sdk/aimde/,该目录会自动映射到容器内的 /workspaces/aimde/ 路径。
+
+Terminal window
+
+```
+# 在主机上执行cp sdk-package-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344-devkit.tar.gz ~/sdk/aimde/
+```
+
+### 在容器内替换 DevKit 包
+
+进入 DevContainer 终端,执行以下命令:
+
+Terminal window
+
+```
+# 清理旧版本sudo rm -rf /sdk/*
+# 解压新版本到 /sdk/ 目录sudo tar -xvf /workspaces/aimde/sdk-package-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344-devkit.tar.gz -C /sdk/
+# 清理压缩包(可选)rm -rf /workspaces/aimde/sdk-package-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344-devkit.tar.gz
+```
+
+## 工作区项目更新
+
+**最佳实践:**
+
+1.  拷贝/sdk/aima\_task\_sdk\_example到/workspaces/aimde/
+
+Terminal window
+
+```
+sudo cp -r /sdk/aima_task_sdk_example /workspaces/aimde/sudo chown -R vscode:vscode /workspaces/aimde/aima_task_sdk_example
+```
+
+2.  查看aima\_task\_sdk\_example的变更
+
+Terminal window
+
+```
+cd /workspaces/aimde/aima_task_sdk_examplegit diff
+```
+
+3.  根据上面的diff结果按需更新自己工作区/workspaces/aimde/demo\_project
+
+## 注意事项
+
+-   更新前建议备份重要数据和配置文件
+-   确保 Docker 服务正常运行
+-   完整镜像更新会重建容器,容器内未持久化的数据将丢失
+-   DevKit 更新仅替换 SDK 工具包,不影响容器配置
+

@@ -1,0 +1,57 @@
+---
+title: 编译拆垛场景可执行程序
+description: >-
+  ``` cd aima_task_sdk_examplebash ./tools/build_module.sh -t scenerio -a
+  orin_aarch64 -c ``` - 等待编译完成 ``` cd bazel-binscp scenario_tar.tar
+  agi@192.168.35.143:/agibot/data/home/agi/workspace ``` ``` ssh
+  agi@192.168.35.143c…
+product: a2w
+slug:
+  - a2w
+  - palletizing-build
+route: /zh/a2w/palletizing-build
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/development/run'
+order: 40
+---
+# 编译拆垛场景可执行程序
+
+```
+cd aima_task_sdk_examplebash ./tools/build_module.sh -t scenerio -a orin_aarch64 -c
+```
+
+-   等待编译完成
+
+```
+cd bazel-binscp scenario_tar.tar agi@192.168.35.143:/agibot/data/home/agi/workspace
+```
+
+```
+ssh agi@192.168.35.143cd /agibot/data/home/agi/workspacetar -vxf scenario_tar.tar
+```
+
+```
+.├── aima_task_sdk                 #配合aima master使用│   └── worker_apps│       └── fl_scenario├── bin├── log                            #运行日志└── scripts    └── scenario                   #启动脚本
+```
+
+-   由于需要使用aima master界面配置，将aima\_task\_sdk复制到相关目录下
+
+```
+rm -rf /agibot/software/v0/aima_task_sdk && cp -r aima_task_sdk /agibot/software/v0/aima_task_sdk
+```
+
+-   需要手动创建任务模板，否则创建任务时无法选择任务模板
+
+```
+cd /agibot/software/v0/aima_task_sdk/worker_apps/fl_scenariosudo bash ./run_task.sh worker_app --dump /agibot/data/var/TaskMasterData/fsmsaima em stop-app task_engineaima em start-app task_engine
+```
+
+-   配置参数文件，参数文件的路径和设置与主线一致，都在/agibot/data/param/task\_engine/manipunate.yaml里配置
+
+```
+aima em load-envbash ./scripts/scenario/start_fl_scenario.sh
+```
+
+-   在master上新建任务并做相关配置后，点击界面上运行，即可运行拆垛任务，注意此种启动方式界面上无法暂停和停止程序，需要手动停止脚本才能停止程序
+
+-   在master上新建任务并做相关配置后，点击界面上运行，即可运行拆垛任务，此种方式界面上的启动和停止可以正常生效
+

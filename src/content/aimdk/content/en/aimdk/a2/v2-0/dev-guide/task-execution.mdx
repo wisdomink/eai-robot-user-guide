@@ -1,0 +1,256 @@
+---
+title: 7.9 Task Execution Section
+description: >-
+  AimMaster provides a guided task feature, allowing users to create guided
+  tasks on AimMaster and use programmatic interfaces for invocation and other
+  operations. Note that task creation, editing, deletion, and other oper…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - task-execution
+route: /en/a2/v2-0/dev-guide/task-execution
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-09-task'
+order: 28
+---
+# 7.9 Task Execution Section
+
+### 7.9.1 Overview
+
+AimMaster provides a guided task feature, allowing users to create guided tasks on AimMaster and use programmatic interfaces for invocation and other operations.
+
+Note that task creation, editing, deletion, and other operations still need to be performed through the AimMaster software. The programmatic interface only provides basic functions such as starting, pausing, and canceling tasks.
+
+### 7.9.2 Single Task Information RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.TaskEngineService/GetTask` |
+| --- | --- |
+| Function Summary | Retrieve execution information for a single task |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetTask |
+| Input Parameters | 
+```json
+{
+  "task_id": "1"
+}
+```
+
+-   task\_id: Task ID
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": [
+    {
+      "task_id": "1",
+      "name": "task1",
+      "is_valid": true,
+      "state": "StateType_IDLE",
+      "duration": "0",
+      "setting": "task_type: interaction_1 xxx YAML content"
+    }
+  ]
+}
+```
+
+-   task\_id: Task ID
+    
+-   name: Task name
+    
+-   is\_valid: Task validity
+    
+-   state: Task state
+    
+    -   StateType\_UNDEFINED
+    -   StateType\_IDLE
+    -   StateType\_RUNNING
+    -   StateType\_PAUSED
+    -   StateType\_STOPPED
+    -   StateType\_PAUSING
+    -   StateType\_STOPPING
+    -   StateType\_RESUMING
+    -   StateType\_FAILPAUSE
+    -   StateType\_FAILSTOP
+    -   StateType\_FAILRESUME
+    -   StateType\_EXCEPTION
+    -   StateType\_LAZY\_PAUSING
+-   duration: Reserved field
+    
+-   setting: Reserved field
+    
+
+ |
+| Example Script | examples/task\_engine/get\_task.sh |
+| Notes |  |
+
+### 7.9.3 All Tasks Information RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.TaskEngineService/GetAllTasks` |
+| --- | --- |
+| Function Summary | Retrieve execution information for all tasks |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetAllTasks |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": [
+    {
+      "task_id": "1",
+      "name": "task1",
+      "is_valid": true,
+      "state": "StateType_IDLE",
+      "duration": "0",
+      "setting": "task_type: interaction_1 xxx YAML content"
+    }
+  ]
+}
+```
+
+The fields are the same as the single task information interface, but it includes information and execution status for all tasks. |
+| Example Script | examples/task\_engine/get\_all\_tasks.sh |
+| Notes |  |
+
+### 7.9.4 Task Execution RPC Interface
+
+The task execution interface requires the use of two interfaces: first, call `SetCurrentTask` to set the current task, then call `LaunchTask` to start the task.
+
+Before calling `LaunchTask` to start a task, you must switch the SM (System State Management) module to the Auto functional group. This is achieved by executing the following synchronous interface:
+
+Terminal window
+
+```
+curl -i -H 'content-type:application/json' -X POST 'http://192.168.100.110:51056/rpc/aimdk.protocol.SystemService/MigrateSystemStateSync' -d '{"state": "Auto"}'
+```
+
+If this step is not performed, the call may return the result `res: ReturnType_FAIL_UNKNOWN`.
+
+| Interface Name | `pb:/aimdk.protocol.TaskEngineService/SetCurrentTask` |
+| --- | --- |
+| Function Summary | Set the current task |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/SetCurrentTask |
+| Input Parameters | 
+```json
+{
+  "task_id": "15"
+}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "task_id": "15",
+  "is_success": true
+}
+```
+
+-   task\_id: Task ID
+-   is\_success: Whether the setting was successful
+
+ |
+| Example Script | examples/task\_engine/set\_current\_task.sh |
+| Notes | Cannot be called when a task is currently executing |
+
+| Interface Name | `pb:/aimdk.protocol.TaskEngineService/LaunchTask` |
+| --- | --- |
+| Function Summary | Start task execution |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/LaunchTask |
+| Input Parameters | 
+```json
+{
+  "task_id": "15"
+}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "task_id": "15",
+  "res": "ReturnType_SUCCEED"
+}
+```
+
+-   task\_id: Task ID
+    
+-   res: Start result
+    
+    -   ReturnType\_UNDEFINED
+    -   ReturnType\_SUCCEED
+    -   ReturnType\_FAIL\_TASK\_CONFLICT
+    -   ReturnType\_FAIL\_TASK\_VALIDATE
+    -   ReturnType\_FAIL\_UNKNOWN
+
+ |
+| Example Script | examples/task\_engine/launch\_task.sh |
+| Notes | 
+
+-   Before starting task execution, you need to call the `SetCurrentTask` interface to set the current task
+-   You must pass the same task\_id; passing a different task\_id is undefined behavior
+
+ |
+
+### 7.9.5 Task Control RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.TaskEngineService/CtrlTaskState` |
+| --- | --- |
+| Function Summary | Control task pause, resume, stop, etc. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/CtrlTaskState |
+| Input Parameters | 
+```json
+{
+  "task_id": "15",
+  "type": "Type_PAUSE"
+}
+```
+
+-   task\_id: Task ID
+    
+-   type: Control type
+    
+    -   Type\_UNDEFINED
+    -   Type\_PAUSE
+    -   Type\_RESUME
+    -   Type\_STOP
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "task_id": "15",
+  "res": "ReturnType_SUCCEED"
+}
+```
+
+-   task\_id: Task ID
+    
+-   res: Control result
+    
+    -   ReturnType\_UNDEFINED
+    -   ReturnType\_SUCCEED
+    -   ReturnType\_FAIL\_TASK\_CONFLICT
+    -   ReturnType\_FAIL\_TASK\_VALIDATE
+    -   ReturnType\_FAIL\_UNKNOWN
+
+ |
+| Example Script | examples/task\_engine/ctrl\_task\_state.sh |
+| Notes |  |
+

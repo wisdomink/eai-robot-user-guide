@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ALL_PRODUCTS } from '@/hooks/useProductContext'
 import MarkdownPage from '@/pages/MarkdownPage'
 import AdminPage from '@/pages/AdminPage'
+import DeveloperDocPage from '@/pages/DeveloperDocPage'
 import ChatPanelSdkBridge from '@/components/chat/ChatPanelSdkBridge'
 
 function ManualRoutes() {
@@ -42,7 +43,11 @@ export function AppRoutes() {
         {/* Standalone admin page — no sidebar, no ChatPanel */}
         <Route path="/admin" element={<AdminPage />} />
 
-        {/* All other pages — with sidebar; ChatPanel now mounts through the SDK bridge */}
+        {/* Developer platform docs — separate sidebar tree; must be before manual catch-all */}
+        <Route path="/developer" element={<Navigate to="/developer/en" replace />} />
+        <Route path="/developer/*" element={<DeveloperDocPage />} />
+
+        {/* Product manuals — with sidebar; ChatPanel now mounts through the SDK bridge */}
         <Route path="*" element={<ManualRoutes />} />
       </Routes>
     </>

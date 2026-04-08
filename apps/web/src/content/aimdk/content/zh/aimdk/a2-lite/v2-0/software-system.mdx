@@ -1,0 +1,72 @@
+---
+title: 3. 软件系统概述
+description: >-
+  机器人搭载一台 x86\_64 架构工控机，安装有 Ubuntu 22.04 系统，使用 systemd 作为系统服务管理器，配置
+  agibot\_em.service 作为智元软件系统入口点，该服务开机自启，会拉起 EM（进程启动管理）、SM（进程状态管理）模块，再由 EM 和 SM
+  配合拉起其余各个模块进程，SM 会对不同系统模式下的进程列表进行开启和关闭的状态管理。 EM 和 SM 的配置文件路径分别为 `/agibot/soft…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - software-system
+route: /zh/a2-lite/v2-0/software-system
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/03-software_system_overview'
+order: 40
+---
+# 3. 软件系统概述
+
+机器人搭载一台 x86\_64 架构工控机，安装有 Ubuntu 22.04 系统，使用 systemd 作为系统服务管理器，配置 agibot\_em.service 作为智元软件系统入口点，该服务开机自启，会拉起 EM（进程启动管理）、SM（进程状态管理）模块，再由 EM 和 SM 配合拉起其余各个模块进程，SM 会对不同系统模式下的进程列表进行开启和关闭的状态管理。 EM 和 SM 的配置文件路径分别为 `/agibot/software/v0/entry/bin/cfg/run_agibot.yaml` 和 `/agibot/software/v0/entry/bin/cfg/sm.yaml`，前者列有默认启动的进程列表，后者列有各个系统模式分别启用哪些功能组的进程。
+
+下图中列出了机上主要进程的逻辑布局，仅展示主要交互关系，且并非所有进程都在同一时刻启动。
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCiJu9E0h.png&w=2702&h=2490&f=webp)
+
+下表为图中名词解释：
+
+|  | 名称 | 说明/作用 |
+| --- | --- | --- |
+| AimMaster | 客户端软件 | 用于操作机器人基本功能 |
+| OMP | 智元云端平台 | 负责接收端侧埋点信息上报 |
+| Speaker | 扬声器 | 用于播放声音 |
+| VR | 虚拟现实设备 | 用于机器人遥操作 |
+| MCU | 微控制器 | 对下控制机器人电机、接收电机和IMU 等信息，对上与 HAL Ethercat 通信接收控制指令，上传电机和IMU 等信息 |
+| MQTT Broker | MQTT 网关 | 网关节点，对接 AimMaster 和机上软件接口 |
+| em | 进程管理模块 | 负责拉起进程，查询进程状态等 |
+| sm | 系统状态管理模块 | 负责切换系统状态，管控进程列表 |
+| iox\_roudi | iceoryx 共享内存中心节点 | 负责 iceoryx 通信的中心调度等 |
+| ota\_mastersota\_slave0ota\_gateway | OTA 相关功能模块 | 负责下载 OTA 包以及执行 OTA 流程 |
+| recordbag0 | 数据录制模块 | 负责录制诊断数据包 |
+| setting | 系统设置模块 | 负责 WIFI、音量等设备设置等 |
+| osmonitor | 系统监控模块 | 监控系统资源占用、基本运行情况等 |
+| resource\_manager | 资源管理模块 | 同一管理机上动作 |
+| skillpilot | 技能调度模块 | 对机器人基本技能进行统一管理仲裁调度 |
+| data\_exporter | 数据导出模块 | 负责压缩、导出诊断数据包 |
+| reboot0 | 重启脚本 | 由 sm 调用时对系统进行重启 |
+| hds | 健康诊断模块 | 接收各个模块上报的故障信息 |
+| Interaction | 语音交互模块 | 仅用于播放音乐、提示语等，不执行大模型等交互功能 |
+| rc | 遥控模块 | 为 AimMaster 提供接口调用机器人基本功能，例如表情、动作、行走等 |
+| motion\_player | 动作播放模块 | 负责播放指定的动作文件 |
+| motion\_streamer | 动作流模块 | 专用与遥操作，接受 VR、动捕服数据映射为机器人上肢关节动作 |
+| gateway | 网关模块 | 将外部请求转发到内部各个模块上，主要来自 AimMaster |
+| mc | 运动控制模块 | 负责整个机器人的运动控制 |
+| hal\_ethercat | 硬件抽象层模块 | 负责与 MCU 进行 ethercat 通信，传递硬件状态和指令 |
+| elink\_log\_dump | ethercat 通信日志模块 | 负责落盘 hal\_ethercat 与 MCU 的通信日志 |
+
+在不同的系统模式下会启用不同的功能组软件，具体情况如下（摘录自 /agibot/software/v0/entry/bin/cfg/sm.yaml）：
+
+```
+ system_modes:    "Startup": # 状态名      next_mode_list: [ "Ready", "OTA", "Poweroff" ]  # 可流转状态列表      active_FG_list: [ "System", "EStop", "RC", "MoCap", "Gateway" ]  # 需要维持的功能组列表      action_list:        - [ DIFF ]
+    "Poweroff":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Poweroff ]
+    "Reboot":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Reboot ]
+    "Ready":      next_mode_list: [ "Manual", "EStop", "Poweroff" ]      active_FG_list: [ "System", "EStop", "RC", "MoCap", "Gateway" ]      action_list:        - [ DIFF ]
+    "OTA":      next_mode_list: [ "Reboot", "Ready", "Poweroff" ]      active_FG_list: [ "System", "OTA", "Gateway" ]      action_list:        - [ DIFF ]
+    "Manual":      next_mode_list: [ "OTA", "Auto", "Reset", "EStop", "Poweroff", "Safe", "MotionStream" ]      active_FG_list: [ "System", "EStop", "RC", "MoCap", "Gateway", "Motion" ]      action_list:        - [ DIFF ]        - [ activate rc ]      post_process:        - level: 47          action_list: [ [ fallback mc ] ]
+    "Reset":      next_mode_list: [ "Reboot", "Poweroff" ]      active_FG_list: [ "System", "OTA", "Gateway" ]      action_list:        - [ DIFF ]
+    "EStop":      next_mode_list: [ "Ready", "OTA", "Poweroff" ]      active_FG_list: [ "System", "EStop", "RC", "MoCap", "Gateway" ]      action_list:        - [ DIFF ]
+    "Safe":      next_mode_list: [ "Manual", "EStop", "Poweroff" ]      active_FG_list: [ "System", "EStop", "Gateway", "Motion", "RC", "MoCap"]      action_list:        - [ DIFF ]        - [ deactivate mc, deactivate rc  ]
+    # 实时遥操作状态，用于实时遥操作    "MotionStream":      next_mode_list: [ "Manual", "EStop", "Poweroff" ]      active_FG_list: [ "System", "EStop", "RC", "Gateway", "Motion", "MoStream" ]      action_list:        - [ DIFF ]        - [ activate rc ]
+```
+
+开机时会完成从 Startup 到 Ready 再到 Manual 的流转，流转到 Manual 时可认为机器人机上软件初始化完成。
+

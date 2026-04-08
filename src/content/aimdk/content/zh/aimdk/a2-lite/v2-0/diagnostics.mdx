@@ -1,0 +1,179 @@
+---
+title: 7.4 故障诊断部分
+description: >-
+  机器人本身提供了基础的故障诊断和健康监测的能力，能够对一些基本的异常和故障进行监控，例如关节过温、传感器失效、系统占用持续过高、电池电量过低等。
+  针对故障诊断有两个基本概念，分别为 Alert 告警和 Exception 故障，Alert 是 Exception 的聚类，Alert
+  指代一大类故障，Exception 则是某个具体的故障，例如重定位失败就是一个 Alert，对应很多种不同失败原因，每个都是一个具体的
+  Exception。…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - diagnostics
+route: /zh/a2-lite/v2-0/diagnostics
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/07-04-troubleshooting'
+order: 110
+---
+# 7.4 故障诊断部分
+
+### 7.4.1 整体介绍
+
+机器人本身提供了基础的故障诊断和健康监测的能力，能够对一些基本的异常和故障进行监控，例如关节过温、传感器失效、系统占用持续过高、电池电量过低等。
+
+针对故障诊断有两个基本概念，分别为 Alert 告警和 Exception 故障，Alert 是 Exception 的聚类，Alert 指代一大类故障，Exception 则是某个具体的故障，例如重定位失败就是一个 Alert，对应很多种不同失败原因，每个都是一个具体的 Exception。AimMaster 上显示的一般也是 Alert，Exception 会比较多，看起来也不太直观。 如果需要持续监控机器人的异常状态，建议每隔一段时间查询一次当前的告警列表（频率不要太高，推荐 0.2 Hz 及以下的频率）。
+
+全量告警可在 x86 机上 /agibot/software/v0/config/hds\_master/database/alert\_info.yaml 文件中找到。
+
+### 7.4.2 获取当前告警列表 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HDSService/GetAlertList` |
+| --- | --- |
+| 功能概述 | 获取当前告警列表 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:50587/rpc/aimdk.protocol.HDSService/GetAlertList |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "alerts": [
+      {
+        "id": "c39f6ccc-85d9-4976-a2e9-08f2906cc237",
+        "appeared_timestamp": "1762933137153",
+        "disappeared_timestamp": "0",
+        "alert_code": "A2000003",
+        "state": "AlertState_ACTIVE",
+        "exception_list": [
+          {
+            "type": "ExceptionType_Normal",
+            "module_id": 81,
+            "code": 100,
+            "info": "急停拍下",
+            "module_name": "健康管理HDS"
+          }
+        ],
+        "description": "急停拍下",
+        "level": "AlertLevel_HIDDEN_DANGERS",
+        "manual_clear": true,
+        "show_type": "AlertShowType_Normal",
+        "solution_list": [
+          {
+            "type": "txt",
+            "content": "请逆时针旋转急停按钮解除急停状态。"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+-   id: 本条告警 id
+    
+-   appeared\_timestamp: 告警出现的时间戳
+    
+-   disappeared\_timestamp: 告警消失的时间戳
+    
+-   alert\_code: 告警码
+    
+-   state: 告警状态
+    
+    -   AlertState\_UNDEFINED: 未知
+    -   AlertState\_ACTIVE: 告警中
+    -   AlertState\_CLEARED: 已清除
+    -   AlertState\_ExceptionChanged: 告警中异常变更
+    -   AlertState\_Recovering: 恢复中
+-   exception\_list: 异常列表
+    
+-   exception\_list\[i\].type: 异常类型
+    
+    -   ExceptionType\_Normal: 正常类型 该类型异常需要周期性上报、
+    -   ExceptionType\_Trigger\_Appear: 触发式异常(异常产生时上报一次) 设置该异常为产生状态
+    -   ExceptionType\_Trigger\_Disappear: 触发式异常(异常消失时上报一次) 设置该异常为消失状态
+-   exception\_list\[i\].module\_id: 异常模块 ID
+    
+-   exception\_list\[i\].code: 模块异常码
+    
+-   exception\_list\[i\].info: 异常信息
+    
+-   exception\_list\[i\].module\_name: 模块名称
+    
+-   description: 告警描述
+    
+-   level: 告警等级
+    
+    -   AlertLevel\_UNDEFINED: 无告警
+    -   AlertLevel\_FATAL: 致命告警
+    -   AlertLevel\_SERIOUS: 严重告警
+    -   AlertLevel\_WARNING: 警告告警
+    -   AlertLevel\_HIDDEN\_DANGERS: 当前系统存在隐患
+    -   AlertLevel\_STATUS: 当前系统存在状态类告警
+-   manual\_clear: 是否支持手动清除
+    
+-   show\_type: 告警展示类型
+    
+    -   AlertShowType\_Normal
+    -   AlertShowType\_Toast
+-   solution\_list: 解决方案
+    
+-   solution\_list\[i\].type: 解决方案类型
+    
+-   solution\_list\[i\].content: 解决方案内容
+    
+
+ |
+| 示例脚本 | examples/hds/get\_alert\_list.sh |
+| 备注 |  |
+
+### 7.4.3 尝试清除告警 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HDSService/ClearAlert` |
+| --- | --- |
+| 功能概述 | 尝试清除告警，需传入告警 id |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:50587/rpc/aimdk.protocol.HDSService/ClearAlert |
+| 入参 | 
+```json
+{
+  "id": "c92f2fdd-cea5-4209-b02f-d0eb62ae18ce"
+}
+```
+
+-   id: 需要填入具体的 alert 的 id，可通过 GetAlertList 接口获取
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "1",
+    "msg": "clear alert failed!",
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "data": "c92f2fdd-cea5-4209-b02f-d0eb62ae18ce"
+  }
+}
+```
+
+-   data: 传入的告警 id
+-   header 中返回本次清除是否成功的信息，code 为 0 代表成功
+
+ |
+| 示例脚本 | examples/hds/clear\_alert.sh |
+| 备注 | 
+
+-   急停告警虽然 manual\_clear 为 true，但是仍会清除失败，需手动解除急停后才能清除
+-   一般情况下请不要调用本接口进行清除操作，请完全理解告警含义后再考虑使用本接口进行清除
+
+ |
+

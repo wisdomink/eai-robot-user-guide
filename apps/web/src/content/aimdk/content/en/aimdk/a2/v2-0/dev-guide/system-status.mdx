@@ -1,0 +1,332 @@
+---
+title: 7.11 System Status Section
+description: >-
+  System status refers to the state of the software system, as described in the
+  _Software System Overview_ section. | Interface Name |
+  `pb:/aimdk.protocol.SystemService/GetSystemState` | | --- | --- | | Function
+  Summary | …
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - system-status
+route: /en/a2/v2-0/dev-guide/system-status
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-11-system_status'
+order: 30
+---
+# 7.11 System Status Section
+
+### 7.11.1 Overview
+
+System status refers to the state of the software system, as described in the _Software System Overview_ section.
+
+### 7.11.2 System Status Retrieval RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.SystemService/GetSystemState` |
+| --- | --- |
+| Function Summary | Retrieve system status |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:51011/rpc/aimdk.protocol.SystemService/GetSystemState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "trace_id": "",
+    "domin": ""
+  },
+  "cur_state": "EStop",
+  "cur_status": "SystemStatus_IN_READY"
+}
+```
+
+-   cur\_state: Current system state
+    
+    -   Startup: Starting up
+    -   Ready: Startup complete
+    -   Manual: Manual operation
+    -   MotionStream: Remote operation
+    -   OTA: Over-the-air update
+    -   Estop: Emergency stop
+    -   Poweroff: Power off
+    -   Reboot: Rebooting
+    -   Reset: Resetting
+    -   Safe: Safe state
+-   cur\_status: Current system condition
+    
+    -   SystemStatus\_IN\_INITIAL: Initializing
+    -   SystemStatus\_IN\_READY: Transition complete
+    -   SystemStatus\_IN\_MOVE: Transitioning
+    -   SystemStatus\_IN\_ROLLBACK: Rolling back
+    -   SystemStatus\_IN\_RECOVERY: Recovering
+
+ |
+| Example Script | examples/other/get\_system\_state.sh |
+| Notes |  |
+
+## 7.11.3 BMS State Retrieval RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.HalBmsService/GetBmsState` |
+| --- | --- |
+| Function Overview | Retrieve system status |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56421/rpc/aimdk.protocol.HalBmsService/GetBmsState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "ver": {
+      "hardware_major": 49,
+      "hardware_minor": 48,
+      "hardware_revision": 49,
+      "software_major": 55,
+      "software_minor": 48,
+      "software_revision": 49
+    },
+    "voltage": 45460,
+    "current": -1156,
+    "power": 52551,
+    "temperature": 289,
+    "capacity": 4220,
+    "charge": 29,
+    "power_supply_health": "PowerSupplyHealth_GOOD",
+    "power_supply_status": "PowerSupplyStatus_IDEL",
+    "cycles_num": 1,
+    "cycles_capacity": 21,
+    "abnormal_state": "PowerAbnormalStatus_NORMAL",
+    "charger_state": "ChargerNotPulgin",
+    "bms_state": "BatteryStatus_Connected",
+    "max_current": 0,
+    "battery_firmware_type": "BatteryFirmwareType_OLD",
+    "battery_key_state": "BatteryKeyStatus_SHORT_CURCUIT",
+    "battery_pack_state": "BatteryPackStatus_NORMAL",
+    "battery_comm_state": "BatteryCommunication_NORMAL"
+  }
+}
+```
+
+-   ver: Version information
+    
+-   voltage: Current voltage, unit mV
+    
+-   current: Current, unit mA
+    
+-   power: Current power, unit mW
+    
+-   temperature: Current temperature, unit 0.1 degrees Celsius
+    
+-   capacity: Current capacity, unit: mAh
+    
+-   charge: Current charge percentage
+    
+-   power\_supply\_health: Not available
+    
+-   power\_supply\_status: Charging status
+    
+    -   PowerSupplyStatus\_IDEL
+    -   PowerSupplyStatus\_CHARGING
+    -   PowerSupplyStatus\_FULL
+-   cycles\_num: Number of cycles
+    
+-   cycles\_capacity: Cycle capacity (total charge and discharge capacity of the current battery pack), unit: Ah
+    
+-   abnormal\_state: Abnormal status
+    
+    -   PowerAbnormalStatus\_NORMAL
+    -   PowerAbnormalStatus\_SHORT\_CIRCUIT
+    -   PowerAbnormalStatus\_DISCHARGE\_OVERCURRENT
+    -   PowerAbnormalStatus\_CHARGING\_OVERCURRENT
+    -   PowerAbnormalStatus\_UNDERVOLTAGE
+    -   PowerAbnormalStatus\_OVERVOLTAGE
+    -   PowerAbnormalStatus\_EXCEED\_DISCHARGE\_TEMP\_LIMIT
+    -   PowerAbnormalStatus\_EXCEED\_CHARGING\_TEMP\_LIMIT
+-   charger\_state: Whether the charger is plugged in
+    
+    -   ChargerNotPulgin
+    -   ChargerConnected
+-   bms\_state: Whether the battery is connected
+    
+    -   BatteryStatus\_NotPulgin
+    -   BatteryStatus\_Connected
+-   max\_current: Maximum current
+    
+-   battery\_firmware\_type: Battery pack firmware version
+    
+    -   BatteryFirmwareType\_OLD
+    -   BatteryFirmwareType\_NEW
+-   battery\_key\_state: Battery pack key status
+    
+    -   BatteryKeyStatus\_SHORT\_CURCUIT
+    -   BatteryKeyStatus\_CONNECTED
+-   battery\_pack\_state: Battery pack abnormal status
+    
+    -   BatteryPackStatus\_NORMAL
+    -   BatteryPackStatus\_ABNORMAL
+-   battery\_comm\_state: Battery pack communication status
+    
+    -   BatteryCommunication\_NORMAL
+    -   BatteryCommunication\_ABNORMAL
+
+ |
+| Example Script | examples/other/get\_bms\_state.sh |
+| Notes |  |
+
+### 7.11.4 Emergency Stop State Retrieval RPC Interface
+
+When an emergency stop is triggered, an alert will also be issued, and the emergency stop state can be obtained through `GetAlertList`. This section provides a separate interface to query the emergency stop state.
+
+| Interface Name | `pb:/aimdk.protocol.HalEmergencyService/GetEmergencyState` |
+| --- | --- |
+| Function Overview | Retrieve the emergency stop state |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56421/rpc/aimdk.protocol.HalEmergencyService/GetEmergencyState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "active": true,
+    "reason": "Reason_WIRELESS_ESTOP",
+    "left_front_sensor_alarm": false,
+    "right_front_sensor_alarm": false,
+    "left_sensor_alarm": false,
+    "right_sensor_alarm": false,
+    "left_back_sensor_alarm": false,
+    "right_back_sensor_alarm": false,
+    "lift_upper_limit_alarm": false,
+    "lift_lower_limit_alarm": false,
+    "tray_limit_alarm": false,
+    "front_left_tof_alarm": false,
+    "front_right_tof_alarm": false,
+    "right_front_tof_alarm": false,
+    "right_back_tof_alarm": false,
+    "back_tof_alarm": false,
+    "left_back_tof_alarm": false,
+    "left_front_tof_alarm": false,
+    "wired_emergency_stop": false,
+    "wireless_emergency_stop": true,
+    "software_emergency_stop": false
+  }
+}
+```
+
+-   active: Whether the emergency stop is triggered
+-   reason: The reason for the emergency stop
+-   wireless\_emergency\_stop: Whether the wireless emergency stop is triggered
+-   software\_emergency\_stop: Whether the software emergency stop is triggered
+
+The rest of the fields do not need to be concerned with. |
+| Example Script | examples/other/get\_emergency\_state.sh |
+| Notes | 
+
+-   The software emergency stop interface is not yet open for secondary development, and cannot be triggered through the interface.
+-   If an empty JSON body is returned, it means all parameters are default values, i.e., the emergency stop is not triggered.
+
+ |
+
+### 7.11.5 Software Version Retrieval RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.OTAService/GetRobotOtaInfo` |
+| --- | --- |
+| Function Overview | Retrieve software version information |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:57900/rpc/aimdk.protocol.OTAService/GetRobotOtaInfo |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "robot_info": {
+    "model": "A2_T3D1_FLAGSHIP"
+  },
+  "current_apk_info": {
+    "apk_version": "A2_ULTRA-v1.3.23-0-gcee4e21f1-2511292056",
+    "pub_time": "",
+    "soc_info": [],
+    "mcu_info": [],
+    "contents": "",
+    "fota_version": ""
+  },
+  "support_rollback_apk_infos": []
+}
+```
+
+-   apk\_version: Software version information
+
+The rest of the fields do not need to be concerned with. |
+| Example Script | examples/other/get\_robot\_ota\_info.sh |
+| Notes |  |
+
+### 7.11.6 Retrieve OTA Progress Information RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.OTAService/GetCurrentOtaProgress` |
+| --- | --- |
+| Function Overview | Retrieve OTA progress information |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:57900/rpc/aimdk.protocol.OTAService/GetCurrentOtaProgress |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Not in an abnormal state",
+    "timestamp": {
+      "seconds": "1764918512",
+      "nanos": 387993669,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "progress": {
+    "current_states": "OTAStates_OTA_IDLE",
+    "percentage": 0,
+    "error_count": 0,
+    "current_stage_error_count": 0,
+    "current_apk_version": ""
+  }
+}
+```
+
+-   apk\_version: Software version information
+
+The rest of the fields do not need to be concerned with. |
+| Example Script | examples/other/get\_ota\_progress.sh |
+| Notes | The software emergency stop interface is not yet open for secondary development, and cannot be triggered through the interface. |
+

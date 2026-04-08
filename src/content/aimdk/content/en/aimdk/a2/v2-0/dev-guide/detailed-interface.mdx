@@ -1,0 +1,32 @@
+---
+title: 7. Detailed Interface Documentation
+description: >-
+  To reduce redundancy and increase information density, the following
+  conventions are used in the interface documentation below: 1. The header
+  fields in the request and response messages of HTTP JSON RPC are not
+  explained…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - detailed-interface
+route: /en/a2/v2-0/dev-guide/detailed-interface
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-00-detailed_interface
+order: 16
+---
+# 7. Detailed Interface Documentation
+
+To reduce redundancy and increase information density, the following conventions are used in the interface documentation below:
+
+1.  The header fields in the request and response messages of HTTP JSON RPC are not explained in detail. Some headers are omitted in the example messages, and they can also be left blank in actual requests. Please refer to the actual runnable example scripts for details.
+2.  In HTTP JSON RPC, the IP addresses in the URLs are filled as 192.168.100.110 or 192.168.100.100, corresponding to the ORIN industrial PC IP and X86 industrial PC IP, respectively. You can change them to other accessible IPs as needed.
+3.  All request methods in HTTP JSON RPC are POST, and they are not listed separately in the following interface documentation.
+4.  In ROS2 Topics, if the message type is an input parameter, the secondary development program will publish this topic, and the onboard program will receive it. If it is an output parameter, the opposite is true.
+5.  The message type for ROS2 Topic interfaces is `ros2_plugin_proto/msg/RosMsgWrapper`. You need to source `prebuilt/ros2_plugin_proto_aarch64/share/ros2_plugin_proto/local_setup.bash` before using it. If you are running on an x86 architecture machine, replace `ros2_plugin_proto_aarch64` with `ros2_plugin_proto_x86_64`. This is not further elaborated in the interface notes.
+6.  Unexplained parameters are generally invalid. Fill in the default values as shown in the examples without modification.
+7.  For unspecified units, angles are in radians (rad) by default, and lengths are in meters (m) by default.
+

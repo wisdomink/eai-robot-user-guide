@@ -1,0 +1,676 @@
+---
+title: 7.7 地图管理部分
+description: >-
+  ORIN 的地图管理模块（Map
+  Management，MM）主要负责机器人地图的统一管理与调度。为方便用户进行二次开发与功能扩展，系统开放了完整的地图操作接口，涵盖地图获取、存储、更新及切换等核心能力。通过这些标准化接口，开发者可高效集成并灵活控制地图相关功能，从而提升系统的可扩展性与开发效率。
+  | 接口名 | `pb:/aimdk.protocol.MappingService/Get2DWholeMap` | | --- | --…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - map-management
+route: /zh/a2/v2-0/dev-guide/map-management
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-07-map'
+order: 26
+---
+# 7.7 地图管理部分
+
+### 7.7.1 整体介绍
+
+ORIN 的地图管理模块（Map Management，MM）主要负责机器人地图的统一管理与调度。为方便用户进行二次开发与功能扩展，系统开放了完整的地图操作接口，涵盖地图获取、存储、更新及切换等核心能力。通过这些标准化接口，开发者可高效集成并灵活控制地图相关功能，从而提升系统的可扩展性与开发效率。
+
+### 7.7.2 获取 2D 地图数据 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/Get2DWholeMap` |
+| --- | --- |
+| 功能概述 | 获取 2D 地图数据 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/Get2DWholeMap |
+| 入参 | 
+```json
+{
+  "command": "MappingCommand_GET_2D_WHOLE_MAP",
+  "map_id": "1764059676131"
+}
+```
+
+-   command：保持不变即可
+-   map\_id：填写需要获取信息的地图 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "map_id": "1764059676131",
+    "map_name": "园区",
+    "width": 2898,
+    "height": 2603,
+    "resolution": 20,
+    "origin_x": 1274,
+    "origin_y": 1371,
+    "map_data": "...",
+    "rotate_angle": -5.512457272434708,
+    "map_url": ""
+  }
+}
+```
+
+-   map\_id：地图 id
+-   map\_name：地图名
+-   width：地图宽度
+-   height：地图高度
+-   resolution：分辨率
+-   origin\_x, origin\_y：建图时的坐标原点，可认为地图原点
+-   map\_data：地图数据，png 格式
+-   rotate\_angle：旋转角度，指示客户端展示方式，可忽略
+-   map\_url：无效字段
+
+ |
+| 示例脚本 | examples/mm/get\_2d\_whole\_map.sh |
+| 备注 | 
+
+-   可以通过以下公式计算机器人在像素地图中的位置
+    
+    ```bash
+    pixel_x = origin_x + x * resolution
+    pixel_y = origin_y - y * resolution
+    ```
+    
+    其中 x, y 为 map 坐标系到机器人本体 base\_link 坐标系的变换坐标，可通过 /tf 话题获取
+    
+
+ |
+
+### 7.7.3 获取地图列表 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/GetStoredMapNames` |
+| --- | --- |
+| 功能概述 | 获取地图列表 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/GetStoredMapNames |
+| 入参 | 
+```json
+{
+  "command": "MappingCommand_GET_STORED_MAP_NAME"
+}
+```
+
+-   保持固定填写即可
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "map_lists": [
+      {
+        "map_id": "1764137567113",
+        "map_name": "园区河边",
+        "map_index": 5
+      },
+      {
+        "map_id": "1764059676131",
+        "map_name": "园区",
+        "map_index": 3
+      },
+      {
+        "map_id": "1762584133656",
+        "map_name": "e2-8",
+        "map_index": 2
+      }
+    ]
+  }
+}
+```
+
+-   map\_id：地图 id
+-   map\_name：地图名称
+-   map\_index：地图索引
+
+ |
+| 示例脚本 | examples/mm/get\_stored\_map\_names.sh |
+| 备注 |  |
+
+### 7.7.4 获取当前工作地图 id RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/GetCurrentWorkingMap` |
+| --- | --- |
+| 功能概述 | 获取当前工作地图 id |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/GetCurrentWorkingMap |
+| 入参 | 
+```json
+{
+  "command": "MappingCommand_GET_CURRENT_WORKING_MAP"
+}
+```
+
+固定填写即可 |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "map_id": "1764059676131"
+  }
+}
+```
+
+map\_id：当前正在使用的地图 id |
+| 示例脚本 | examples/mm/get\_current\_working\_map.sh |
+| 备注 |  |
+
+### 7.7.5 获取地图拓扑数据 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.LocalizationService/GetTopoMsgs` |
+| --- | --- |
+| 功能概述 | 获取地图拓扑数据 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.LocalizationService/GetTopoMsgs |
+| 入参 | 
+```json
+{
+  "command": "TopoCommand_GET_TOPO_MSG",
+  "map_id": 1764059676131
+}
+```
+
+-   command 字段固定填写 TopoCommand\_GET\_TOPO\_MSG
+-   map\_id：地图 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "points": [
+      {
+        "point_id": 1,
+        "name": "导航点1",
+        "point_type": "NaviPointType_NAVI_POINT",
+        "pixel_pose": {
+          "position": {
+            "u": 1506,
+            "v": 1420
+          },
+          "angle": 0
+        },
+        "pose": {
+          "position": {
+            "x": 11.6,
+            "y": -2.45,
+            "z": 0
+          }
+        }
+      }
+    ],
+    "paths": [],
+    "regions": []
+  }
+}
+```
+
+-   points，paths，regions 分别代表点位、路线、区域，其中点位可用于动线讲解，导航等，后二者一般不使用，无需关注
+-   point\_id：点位 id
+-   name：点位名称
+-   point\_type：点位类型
+-   pixel\_pose：像素坐标
+-   pose：世界坐标
+
+ |
+| 示例脚本 | examples/mm/get\_topo\_msgs.sh |
+| 备注 |  |
+
+## 7.7.6 创建地图 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/StartMapping` |
+| --- | --- |
+| 功能概述 | 创建地图 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/StartMapping |
+| 入参 | 
+```json
+{
+    "header": {},
+    "command": "MappingCommand_START_MAPPING",
+    "no_realtime_data": true
+}
+```
+
+-   command：建图时需设置为MappingCommand\_START\_MAPPING
+-   no\_realtime\_data：需设置为true否则无法观察到建图数据
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1771990841418"
+    },
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   仅需关注msg即可，msg为空时为正常现象，msg=mapping is already running, it can not be started again时，证明已经在建图状态了，无需再次调用RPC。
+
+ |
+| 示例脚本 | examples/mm/start\_mapping.sh |
+| 备注 |  |
+
+## 7.7.7 停止建图 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/StopMapping` |
+| --- | --- |
+| 功能概述 | 停止建图 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/StopMapping |
+| 入参 | 
+```json
+{
+    "header": {
+      "timestamp": {
+        "seconds": "0",
+        "nanos": 0,
+        "ms_since_epoch": "1744598548952"
+      }
+    },
+    "command": "MappingCommand_SAVING_MAP",
+    "map_name": "测试地图"
+ }
+```
+
+-   command：停止并保存地图时设置为MappingCommand\_START\_MAPPING，此时map\_name必须有值，停止且不保存地图时设置为MappingCommand\_STOP\_MAPPING，map\_name可无值。
+-   map\_name：用于保存时的地图名
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1771999740870"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "map_id": "1771999738335"
+  }
+}
+```
+
+-   map\_id：地图保存后的标识
+
+ |
+| 示例脚本 | examples/mm/stop\_mapping.sh |
+| 备注 |  |
+
+## 7.7.8 修改地图 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/SyncRegion` |
+| --- | --- |
+| 功能概述 | 修改地图 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/SyncRegion |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1744598548952"
+    }
+  },
+  "command": "MappingCommand_SYNC_REGION",
+  "map_id": "1772000978418",
+  "regions": [
+    {
+      "vertices": [
+        {
+          "position": {
+            "u": 39,
+            "v": 89
+          },
+          "angle": -0.47089385898070374
+        },
+        {
+          "position": {
+            "u": 52,
+            "v": 83
+          },
+          "angle": -1.8811837339272481
+        },
+        {
+          "position": {
+            "u": 48,
+            "v": 71
+          },
+          "angle": 2.0094491421767824
+        }
+      ],
+      "color": "FFFFFFFF",
+      "type": "VerteciesType_CLOSURE"
+    }
+  ]
+}
+```
+
+-   command：修改底图时需设置为MappingCommand\_SYNC\_REGION
+    
+-   map\_id：需要修改的地图对象
+    
+-   regions：修改的区域，入参为顶点，u为x轴像素，v为y轴像素，angle为弧度，地图左上为原点，y向下为正,x向右为正,angle为x轴为0到点上的弧度值。
+    
+-   color：color值对应三种地图信息：
+    
+    未知区域：0xFFFFFFFF
+    
+    已知区域：0xFFe0e5f1
+    
+    特征边界：0xff9da6bd
+    
+-   type：绘画类型，VerteciesType\_CLOSURE为多边形（此时输入的regions点数必须不小于3，构成一个面），VerteciesType\_LINES为折线，折线仅在输入特征边界时有效。
+    
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772002285632"
+    },
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   仅需关注msg即可，msg为空时为正常现象
+
+ |
+| 示例脚本 | 参考7.7.13ui示例对地图修改的使用 |
+| 备注 |  |
+
+## 7.7.9 重命名地图 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/RenameMap` |
+| --- | --- |
+| 功能概述 | 重命名地图 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/RenameMap |
+| 入参 | 
+```json
+{
+    "header": {},
+    "command": "MappingCommand_RENAME_MAP",
+    "map_id": map_id, 
+    "old_name": old_name,
+    "new_name": new_name,
+}
+```
+
+-   command：重命名地图时设置为MappingCommand\_RENAME\_MAP
+-   map\_id：可由获取地图列表RPC获取
+-   old\_name: 旧名字
+-   new\_name:新名字
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772002285632"
+    },
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   msg：msg为空时为正常现象
+
+ |
+| 示例脚本 | examples/mm/rename\_map.sh |
+| 备注 |  |
+
+## 7.7.10 获取建图数据 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/GetRealtimeMapData` |
+| --- | --- |
+| 功能概述 | 获取建图数据 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/GetRealtimeMapData |
+| 入参 | 
+```json
+{
+   "header": {
+      "timestamp": {
+        "seconds": "0",
+        "nanos": 0,
+        "ms_since_epoch": "1744598548952"
+      }
+    },
+    "command": "MappingCommand_GET_REALTIME_MAP",
+}
+```
+
+-   command：获取建图数据时设置为MappingCommand\_GET\_REALTIME\_MAP
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772009151445"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "cur_pos": {
+      "position": {
+        "u": 279,
+        "v": 384
+      },
+      "angle": -0.00010155542310597177
+    },
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772009150955"
+    },
+    "map_info": {
+      "resolution": 20,
+      "width": 600,
+      "height": 888,
+      "origin": {
+        "position": {
+          "u": 279,
+          "v": 384
+        },
+        "angle": 0
+      }
+    },
+    "lidar_points": [
+      { "u": 348, "v": 386 },
+      { "u": 352, "v": 389 },
+      { "u": 310, "v": 387 },
+      { "u": 308, "v": 389 },
+      { "u": 307, "v": 389 },
+      { "u": 305, "v": 390 },
+      { "u": 303, "v": 390 },
+      ......
+    ],
+    "trajectory": [
+      { "u": 279, "v": 384 }
+    ],
+     "map_data":"iVBORw0KGgoAAAANSUhEUgAAAlg......."
+```
+
+-   cur\_pos：当前位置，单位像素，u为x轴,v为y轴，原点在左上，y向下为正
+-   resolution：分辨率，单位厘米/像素
+-   width：宽
+-   height：高
+-   origin：地图原点
+-   lidar\_points：雷达点
+-   trajectory：行动轨迹
+-   map\_data： Base64 编码的png地图
+
+ |
+| 示例脚本 | examples/mm/get\_realtime\_map.sh |
+| 备注 |  |
+
+## 7.7.11 重定位 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.RelocalizationService/StartGlobalRelocalization` |
+| --- | --- |
+| 功能概述 | 机器人重定位 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/`aimdk.protocol.RelocalizationService/StartGlobalRelocalization` |
+| 入参 | 
+```json
+{
+   "header": {
+      "timestamp": {
+        "seconds": "0",
+        "nanos": 0,
+        "ms_since_epoch": "1744598548952"
+      }
+    },
+    "command":"RelocalizationCommand_GLOBAL_START",
+    "map_id": 123456,
+}
+```
+
+-   command：重定位时设置为RelocalizationCommand\_GLOBAL\_START
+-   map\_id：需使用当前正在使用的地图
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772002285632"
+    },
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   msg为空时为正常现象
+
+ |
+| 示例脚本 | examples/mm/relocalization.sh |
+| 备注 |  |
+
+## 7.7.12 设置当前工作地图 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MappingService/SetCurrentWorkingMap` |
+| --- | --- |
+| 功能概述 | 设置当前工作地图 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/SetCurrentWorkingMap |
+| 入参 | 
+```json
+{
+   "header": {
+      "timestamp": {
+        "seconds": "0",
+        "nanos": 0,
+        "ms_since_epoch": "1744598548952"
+      }
+    },
+    "command":"MappingCommand_SET_CURRENT_WORKING_MAP",
+    "map_id": 123456,
+}
+```
+
+-   command：切换地图时设置为MappingCommand\_SET\_CURRENT\_WORKING\_MAP
+-   map\_id：需要切换的地图id
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "0",
+      "nanos": 0,
+      "ms_since_epoch": "1772002285632"
+    },
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   msg为空时为正常现象
+
+ |
+| 示例脚本 | examples/mm/set\_current\_working\_map.sh |
+| 备注 |  |
+
+## 7.7.13 地图管理部分 ui 示例
+
+为方便用户快速上手并高效使用上述接口，系统提供了基于 PySide6 编写的 UI 示例程序。该示例覆盖了地图管理相关的常用功能演示，包括地图获取、存储、更新与切换等典型使用场景。适合开发者学习和参考，根据自身业务需求灵活扩展并构建定制化应用程序。
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F75BwPlr_.png&w=1004&h=729&f=webp)
+
+示例程序在 examples/mm/ui 具体使用说明请参考 examples/mm/ui/readme.md
+

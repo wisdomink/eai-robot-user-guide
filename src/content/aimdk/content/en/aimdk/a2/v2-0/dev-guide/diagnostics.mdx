@@ -1,0 +1,120 @@
+---
+title: Untitled
+description: >-
+  The robot provides basic fault diagnosis and health monitoring capabilities,
+  and can monitor common anomalies and faults such as joint overheating, sensor
+  failure, sustained high system load, and low battery level. There…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - diagnostics
+route: /en/a2/v2-0/dev-guide/diagnostics
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-10-troubleshooting'
+order: 29
+---
+### 7.10.1 Overview
+
+The robot provides basic fault diagnosis and health monitoring capabilities, and can monitor common anomalies and faults such as joint overheating, sensor failure, sustained high system load, and low battery level.
+
+There are two core concepts in fault diagnosis: `Exception` and `Alert`. `Exception` refers to a specific fault, while `Alert` is the user-friendly message shown in the AimMaster client for that exception. For example, the exception “severe IMU message delay” may correspond to the alert “system abnormality”. In most cases, `Exception` and `Alert` are one-to-one, meaning one exception corresponds to one alert code. Different alert codes may still share the same alert text.
+
+If you need continuous monitoring of abnormal robot status, query the current alert list periodically (recommended frequency: 0.2 Hz or lower).
+
+The full list of exceptions and alerts can be found in `/agibot/software/v0/config/hds/database/exception_info.yaml` on ORIN.
+
+### 7.10.2 Get Current Alert List RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.HDSService/GetAlertList` |
+| --- | --- |
+| Function Summary | Get the current alert list |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:50587/rpc/aimdk.protocol.HDSService/GetAlertList |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters  
+ | 
+
+```json
+{
+  "data": {
+    "alerts": [
+      {
+        "id": "c39f6ccc-85d9-4976-a2e9-08f2906cc237",
+        "appeared_timestamp": "1762933137153",
+        "disappeared_timestamp": "0",
+        "alert_code": "A2000003",
+        "state": "AlertState_ACTIVE",
+        "description": "急停拍下",
+        "level": "AlertLevel_H5_STATUS",
+        "alert_text": {
+          "zh_CN": "急停拍下",
+          "en_US": "Emergency Stop Triggered"
+        },
+        "alert_module": {
+          "zh_CN": "monitor",
+          "en_US": "Health Management HDS"
+        }
+      }
+    ]
+  }
+}
+```
+
+-   id: Alert ID.
+    
+-   appeared\_timestamp: Timestamp when the alert appeared.
+    
+-   disappeared\_timestamp: Timestamp when the alert disappeared.
+    
+-   alert\_code: Alert code.
+    
+-   state: Alert state.
+    
+    -   AlertState\_UNDEFINED: Unknown
+    -   AlertState\_ACTIVE: Active
+    -   AlertState\_CLEARED: Cleared
+-   description: Alert description.
+    
+-   level: Alert level.
+    
+    -   AlertLevel\_UNDEFINED: No alert
+    -   AlertLevel\_H1\_FATAL: Irreversible fault, robot cannot continue working
+    -   AlertLevel\_H2\_CRITICAL: Fault with fall risk
+    -   AlertLevel\_H2\_PERMANENT: Irreversible fault, some functions are disabled
+    -   AlertLevel\_H3\_ERROR: Fault with fall risk
+    -   AlertLevel\_H3\_PERMANENT: Irreversible fault affecting part of the user experience
+    -   AlertLevel\_H4\_WARNING: Fault affecting part of the user experience
+    -   AlertLevel\_H4\_EVENT: Suboptimal robot state with fall risk
+    -   AlertLevel\_H5\_EVENT: Suboptimal robot state affecting part of the user experience
+    -   AlertLevel\_H5\_TRIVIAL: Fault that may affect part of the user experience
+    -   AlertLevel\_H5\_STATUS: No prompt
+    -   AlertLevel\_H6\_RESERVE: Gray release
+    -   AlertLevel\_H7\_EVENT: Normal function
+    -   AlertLevel\_H7\_DELETE: Non-fault event
+-   alert\_text: Client-facing alert text, multilingual.
+    
+-   alert\_module: Fault reporting module, multilingual.
+    
+
+ |
+| Example Script | examples/hds/get\_alert\_list.sh |
+| Notes |  |
+
+### 7.10.3 Other Health Diagnosis Interfaces
+
+In addition to `GetAlertList`, the following interfaces are also available:
+
+1.  `GetTotalAlertList`: Get all alerts in the system, including historical records.
+2.  `GetAlertCount`: Get the number of currently active alerts.
+3.  `GetExceptionEvent`: Get exception events in the system.
+
+These interfaces are relatively verbose or inconvenient for routine usage. For basic alert retrieval, `GetAlertList` is recommended. Example scripts for all open interfaces are under `examples/hds`, and detailed input/output fields are omitted here.
+

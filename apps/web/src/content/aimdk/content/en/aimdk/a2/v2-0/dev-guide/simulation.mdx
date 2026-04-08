@@ -1,0 +1,177 @@
+---
+title: 8. Guide to Motion Control Simulation
+description: >-
+  We provide a mujoco-based simulation system for the A2 robot, designed to
+  serve as a testing ground for basic calls to the A2 robot’s motion control and
+  action playback interfaces. This serves as a basic validation befor…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - simulation
+route: /en/a2/v2-0/dev-guide/simulation
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/08-motion_control_simulation
+order: 40
+---
+# 8. Guide to Motion Control Simulation
+
+## 8.1 Simulation Description
+
+We provide a mujoco-based simulation system for the A2 robot, designed to serve as a testing ground for basic calls to the A2 robot’s motion control and action playback interfaces. This serves as a basic validation before actual operation, reducing the risk of damaging the robot while facilitating the debugging of secondary development program logic.
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBSYNkpzf.png&w=1280&h=747&f=webp)
+
+The system runs the mujoco\_sim, motion\_control, and motion\_player components. mujoco\_sim acts as the underlying simulation engine, simulating the robot’s physical body and hal\_ethercat. motion\_control interacts with mujoco\_sim to exchange control commands and states, controlling the simulated robot. motion\_player then calls the high-level interfaces provided by motion\_control to play actions. The motion\_control and motion\_player components are identical to those on the real machine, allowing the system to call all interfaces of the motion control and action playback modules.
+
+## 8.2 Prerequisites
+
+This simulation system is provided as a container image, containing executable files for each component, action resource files, and calling scripts. To use this simulation system, the following conditions must be met:
+
+1.  An x86\_64 architecture Linux system with Docker installed.
+    
+2.  Use of an X11 desktop system.
+    
+    -   You can check this by running `echo $XDG_SESSION_TYPE`; the expected output is `x11`.
+
+## 8.3 Usage Tutorial
+
+### 8.3.1 Pulling the Image
+
+1.  Log in to the image repository with a read-only account.
+
+Terminal window
+
+```
+docker login tongyong-public-cn-shanghai.cr.volces.com -u crrobot@aima-public-reader -p Aima123456
+```
+
+2.  Pull the corresponding image.
+
+Terminal window
+
+```
+docker pull tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-simulator:v1.3
+```
+
+### 8.3.2 Starting the Image
+
+1.  Allow Docker to access the display, which is used to configure the access control list for the X Window System. Running `xhost +` will allow all hosts to connect to the current user’s X server, effectively disabling access control for the X server and allowing any user to access and operate it.
+    
+    Terminal window
+    
+    ```
+    xhost +
+    ```
+    
+2.  Start the Docker container.
+    
+    Terminal window
+    
+    ```
+    docker run -it \        --name=a2-ultra-sim \        --privileged \        --net=host \        --ipc=host \        --pid=host \        -e DISPLAY=$DISPLAY \        -v /tmp/.X11-unix:/tmp/.X11-unix \        -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \        -d tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-simulator:v1.3
+    ```
+    
+    If you find that the simulation interface is lagging when using an NVIDIA graphics card, try starting the container with the following command:
+    
+    Terminal window
+    
+    ```
+    docker run -it \        --name=a2-ultra-sim \        --gpus all \        --privileged \        --net=host \        --ipc=host \        --pid=host \        -e DISPLAY=$DISPLAY \        -e NVIDIA_VISIBLE_DEVICES=all \        -e NVIDIA_DRIVER_CAPABILITIES=all \        -v /tmp/.X11-unix:/tmp/.X11-unix \        -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \        -d tongyong-public-cn-shanghai.cr.volces.com/aima-public/a2-simulator:v1.3
+    ```
+    
+
+3.  Enter the container.
+    
+    Terminal window
+    
+    ```
+    docker start a2-ultra-sim && docker exec -it a2-ultra-sim /bin/bash
+    ```
+    
+
+### 8.3.3 Starting the Simulation, Motion Control, and Action Playback Modules
+
+1.  Enter the image and run the following command to start the simulation.
+    
+    Terminal window
+    
+    ```
+    docker start a2-ultra-sim && docker exec -it a2-ultra-sim /bin/bash
+    cd /home/agi/a2_simulation/mujoco_sim_ultra_1.3/bin./start_a2_t2d0_ultra.sh
+    ```
+    
+2.  In a new window, connect to the container and start the motion control program.
+    
+    Terminal window
+    
+    ```
+    docker start a2-ultra-sim && docker exec -it a2-ultra-sim /bin/bash
+    cd /home/agi/a2_simulation/motion_control_ultra_1.3.26/scripts/motion_control./start_motion_control.sh
+    ```
+    
+3.  In another new window, connect to the container and start the action playback program.
+    
+    Terminal window
+    
+    ```
+    docker start a2-ultra-sim && docker exec -it a2-ultra-sim /bin/bash
+    cd /home/agi/a2_simulation/motion_player_ultra_1.3.26/scripts/motion_player./start_motion_player.sh
+    ```
+    
+
+### 8.3.4 Controlling Robot Walking
+
+Here, we will use robot walking as an example to explain the basic logic of calling a motion control interface. For other interfaces, refer to the motion control interface documentation and example scripts.
+
+1.  Open a new window, enter the container, and switch the motion control Action to joint standing mode (RL\_JOINT\_DEFAULT).
+    
+    Terminal window
+    
+    ```
+    docker start a2-ultra-sim && docker exec -it a2-ultra-sim /bin/bash
+    cd /home/agi/a2_simulation/tools-ultra/mc./SetAction.py # Select the number corresponding to RL_JOINT_DEFAULT.
+    ```
+    
+2.  Click the Load-Key button in the mujoco\_sim interface to stabilize the robot.
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDvPeY_ig.png&w=1280&h=766&f=webp)
+    
+3.  Continue to switch the motion control Action to enhanced walking mode (RL\_LOCOMOTION\_DEFAULT).
+    
+    Terminal window
+    
+    ```
+    ./SetAction.py # Select the number corresponding to RL_LOCOMOTION_DEFAULT.
+    ```
+    
+4.  Call the walking example script.
+    
+    Terminal window
+    
+    ```
+    source /home/agi/a2_simulation/ros2_plugin_proto_x86_64/share/ros2_plugin_proto/local_setup.bash./walk.py
+    ```
+    
+
+### 8.3.5 Controlling Robot for Action Playback
+
+1.  Switch the motion control state to enhanced walking upper limb servo mode (RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO).
+    
+    Terminal window
+    
+    ```
+    cd /home/agi/a2_simulation/tools-ultra/mc./SetAction.py # Select the number corresponding to RL_LOCOMOTION_ARM_EXT_JOINT_SERVO.
+    ```
+    
+2.  Call the SendMotionCommand interface to perform the action.
+    
+    Terminal window
+    
+    ```
+    cd ../motion_player./send_motion_id.sh /agibot/data/resources/default/motion/演讲10s/演讲10s.mcap
+    ```
+

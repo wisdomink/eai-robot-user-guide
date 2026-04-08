@@ -1,0 +1,52 @@
+---
+title: 开发环境介绍
+description: >-
+  包含SDK的开发工具链、构建规则和多架构库文件，用于支持项目的编译和开发。 ``` /sdk/dev_tools├── orin_aarch64 #
+  aarch64架构SDK库├── rule_ros2 # ROS2 Bazel构建规则├── sdk-buildchain # 集成编译仓├──
+  third_party_libs # 三方依赖库└── x86_64 # x86架构SDK库 ``` 提供NVIDIA Orin平台的交叉编译工…
+product: a2w
+slug:
+  - a2w
+  - environment-setup
+route: /zh/a2w/environment-setup
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/introduce'
+order: 50
+---
+# 开发环境介绍
+
+## 目录结构
+
+### /sdk/dev\_tools
+
+包含SDK的开发工具链、构建规则和多架构库文件，用于支持项目的编译和开发。
+
+```
+/sdk/dev_tools├── orin_aarch64      # aarch64架构SDK库├── rule_ros2         # ROS2 Bazel构建规则├── sdk-buildchain    # 集成编译仓├── third_party_libs  # 三方依赖库└── x86_64            # x86架构SDK库
+```
+
+### /opt/nvidia
+
+提供NVIDIA Orin平台的交叉编译工具链和部分三方依赖库。
+
+```
+/opt/nvidia├── l4t-toolchain  # 交叉编译工具链└── orin_sysroot   # ARM架构的三方库（cuda/cudnn/tensorrt等）
+```
+
+### /workspaces/aimde
+
+开发工作区，包含task sdk和aimdk的示例代码及开发环境配置。
+
+```
+/workspaces/aimde├── aima_task_sdk_example # task sdk示例代码├── aimdk_examples # aimdk模块示例代码└── .devcontainer # 开发容器配置
+```
+
+## 核心特性
+
+### 数据持久化
+
+在 Devcontainer 中，/workspaces 目录下的 aimde（代码）、.data（配置）和 data（业务数据）三个目录均已持久化，执行 rebuild container 操作后数据不会丢失。
+
+```
+/workspaces├── aimde # 代码相关├── .data # 用户配置信息│   ├── autojump│   ├── .cache│   ├── credential│   ├── .jfrog│   ├── .ssh│   └── .zsh_history└── data # 用户业务数据
+```
+

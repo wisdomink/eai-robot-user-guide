@@ -1,0 +1,194 @@
+---
+title: 感知模块
+description: >-
+  感知模块（Perception）负责机器人的环境感知功能，包括目标检测、6D位姿估计、多尺度对象处理和环境对象信息管理等功能。 本模块位于 orin
+  开发板上，http 后端监听的端口为 58001。 | 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 | | :-- |
+  :-: | :-: | --- | --- | --- | | `/point_cloud_percep/tracked_obsta…
+product: a2w
+slug:
+  - a2w
+  - protocol-perception
+route: /zh/a2w/protocol-perception
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/perception/readme'
+order: 190
+---
+# 感知模块
+
+感知模块（Perception）负责机器人的环境感知功能，包括目标检测、6D位姿估计、多尺度对象处理和环境对象信息管理等功能。
+
+本模块位于 orin 开发板上，http 后端监听的端口为 58001。
+
+## Channel 接口
+
+| 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 |
+| :-- | :-: | :-: | --- | --- | --- |
+| `/point_cloud_percep/tracked_obstacles` | 跟踪障碍物 | 发布 | [perception\_msg\_interface::msg::TrackedObstacles](#perceptionmsginterface-msg-trackedobstacles) |  | ros2 |
+| `/point_cloud_percep/tracked_pedestrian` | 行人检测-规划 | 发布 | [perception\_msg\_interface::msg::TrackedObstacles](#perceptionmsginterface-msg-trackedobstacles) |  | ros2 |
+| `/nv_cam_lidar_percep/occupancy_3d` | 3D占用栅格地图 | 发布 | [aimdk::protocol::PerceptionOcc3D](../common/README.md#aimdk-protocol-perceptionocc3d) |  | ros2 |
+| `/aima/hal/lidar/top/pointcloud` | 激光雷达 | 订阅 | [sensor\_msgs::PointCloud2](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/PointCloud2.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/head_front/color` | 头部RGB相机 | 订阅 | [sensor\_msgs::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/head_front/depth` | 头部深度相机 | 订阅 | [sensor\_msgs::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/chassis_front/color` | 底盘RGB相机 | 订阅 | [sensor\_msgs::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/aima/hal/rgbd_camera/chassis_front/depth` | 底盘深度相机 | 订阅 | [sensor\_msgs::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) |  | ros2 |
+| `/tf` | TF变换数据 | 订阅 | [tf2\_msgs::TFMessage](https://docs.ros.org/en/ros2_packages/humble/api/tf2_msgs/msg/TFMessage.html) |  | ros2 |
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.GraspObjService/UpdateGraspObjects` | 更新抓取作业中的对象信息 | [aimdk::protocol::UpdateGraspObjectsRequest](#aimdk-protocol-updategraspobjectsrequest) | [aimdk::protocol::UpdateGraspObjectsResponse](#aimdk-protocol-updategraspobjectsresponse) | 为机器人动态添加附加对象 | http |
+| `pb:/aimdk.protocol.Object2dDetectionService/Get2dDection` | 2D目标检测 | [aimdk::protocol::ObjectDetectionRequest](#aimdk-protocol-objectdetectionrequest) | [aimdk::protocol::ObjectDetectionResponse](#aimdk-protocol-objectdetectionresponse) | 进行2D目标检测，返回二维边界框 | http |
+| `pb:/aimdk.protocol.Object6dPoseEstimationService/Get6dPose` | 6D位姿估计 | [aimdk::protocol::ObjectPoseEstimationRequest](#aimdk-protocol-objectposeestimationrequest) | [aimdk::protocol::ObjectPoseEstimationResponse](#aimdk-protocol-objectposeestimationresponse) | 进行6D位姿估计，返回二维和三维边界框 | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::TargetType`
+
+目标类型枚举
+
+| Name | Number | Description |
+| --- | --- | --- |
+| TargetType\_UNKNOWN | 0 | 未知类型 |
+| TargetType\_PLASTIC\_BOX | 1 | 塑料箱 |
+| TargetType\_METAL\_SHELF | 2 | 金属货架 |
+
+### `aimdk::protocol::ObjectDetectionRequest`
+
+目标检测请求
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| target\_type | [aimdk::protocol::TargetType](#aimdk-protocol-targettype) | 目标类型枚举 |
+
+### `aimdk::protocol::ObjectDetectionResponse`
+
+目标检测响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| box2d | [aimdk::protocol::Box](../common/README.md#aimdk-protocol-box)\[\] | 二维边界框列表 |
+
+### `aimdk::protocol::ObjectPoseEstimationRequest`
+
+目标位姿估计请求
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| target\_type | [aimdk::protocol::TargetType](#aimdk-protocol-targettype) | 目标类型枚举 |
+
+### `aimdk::protocol::ObjectPoseEstimationResponse`
+
+目标位姿估计响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| box2d | [aimdk::protocol::Box](../common/README.md#aimdk-protocol-box)\[\] | 二维边界框列表 |
+| bbox6d | [aimdk::protocol::Bbox6d](#aimdk-protocol-bbox6d)\[\] | 三维边界框列表 |
+
+### `aimdk::protocol::UpdateGraspObjectsRequest`
+
+更新抓取对象信息请求
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| grasp\_objs | [aimdk::protocol::GraspObject](#aimdk-protocol-graspobject)\[\] | 抓取对象列表 |
+
+### `aimdk::protocol::UpdateGraspObjectsResponse`
+
+更新抓取对象信息响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | bool | 更新结果返回值 |
+
+### `aimdk::protocol::GraspObject`
+
+抓取对象
+
+| Field | Type | Description |
+| --- | --- | --- |
+| object\_id | string | 物体唯一标识，例如 “box\_1” |
+| dims | [aimdk::protocol::Vec3](../common/README.md#aimdk-protocol-vec3) | 物体长宽高 |
+| pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) | 物体pose |
+| frame\_id | string | 所属坐标系，例如 “left\_arm\_link07” |
+
+### `aimdk::protocol::CommonResponse`
+
+通用响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+
+### `aimdk::protocol::Bbox6d`
+
+三维边界框
+
+| Field | Type | Description |
+| --- | --- | --- |
+| center | [aimdk::protocol::Point3D](../common/README.md#aimdk-protocol-point3d) | 中心点坐标 |
+| size | [aimdk::protocol::Point3D](../common/README.md#aimdk-protocol-point3d) | 尺寸大小 |
+| rotation | [aimdk::protocol::Quaternion](../common/README.md#aimdk-protocol-quaternion) | 旋转四元数 |
+
+#### `perception_msg_interface::msg::TrackedObstacles`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| Infotracked\_obstacle | aimdk::protocol::perception::TrackedObstacleInfo |  |
+| uint32 | track\_id | 1 |
+| uint32 | type\_id | 2 |
+| is\_moving | bool | 3 |
+| is\_movable | bool | 4 |
+| is\_in\_blind | bool | 5 |
+| num\_observation | uint32 | 6 |
+| is\_no\_static\_occluded | bool | 7 |
+| center | Point | 8 |
+| center\_in\_map | Point | 9 |
+| velocity\_in\_map | Vector3 | 10 |
+| smoothed\_center\_in\_map | Point | 11 |
+| center\_in\_odom | Point | 12 |
+| velocity\_in\_odom | Vector3 | 13 |
+| smoothed\_center\_in\_odom | Point | 14 |
+| polygon\_in\_map | Polygon | 15 |
+| polygon\_in\_odom | Polygon | 16 |
+| PointStamped prediction\_center\_in\_odom | repeated | 17 |
+| center\_in\_wcs | Point | 18 |
+| velocity\_in\_wcs | Vector3 | 19 |
+| smoothed\_center\_in\_wcs | Point | 20 |
+| polygon | Polygon | 21 |
+| polygon\_in\_wcs | Polygon | 22 |
+| PointStamped prediction\_center\_in\_wcs | repeated | 23 |
+
+## 使用示例
+
+提供 Http Curl 示例，需要将 127.0.0.1 替换为机器人 orin 开发板的 IP 地址：
+
+### 2D目标检测
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:58001/rpc/aimdk.protocol.Object2dDetectionService/Get2dDection' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"target_type":"TargetType_PLASTIC_BOX"}'
+```
+
+### 6D位姿估计
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:58001/rpc/aimdk.protocol.Object6dPoseEstimationService/Get6dPose' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"target_type":"TargetType_METAL_SHELF"}'
+```
+
+### 更新操作的抓取对象
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:58001/rpc/aimdk.protocol.GraspObjService/UpdateGraspObjectsRequest' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"objects":[{"id":"obj_001","dims":{"x":1.2, "y":0.8, "z":0.6},"pose":{"position": {"x":1.2, "y":0.8, "z":0.6}, "orientation":{"x":0.15, "y":0.86, "z":0.652, "w":1.234}},"frame_id":"right_arm_01"}]}'
+```
+

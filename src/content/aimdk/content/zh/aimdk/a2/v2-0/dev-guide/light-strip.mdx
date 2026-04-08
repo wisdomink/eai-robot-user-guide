@@ -1,0 +1,113 @@
+---
+title: 7.12 灯带控制部分
+description: >-
+  灯带控制接口用于控制机器人灯带的颜色和亮度。 灯光控制逻辑如下： 1.
+  所有灯带灯珠统一控制，可以设置常亮、流水灯、呼吸灯等几个预置灯效，无法单独控制某个灯带或灯珠。 2.
+  机器人默认灯光为蓝色呼吸灯，可被用户自定义控制指令覆盖。 3. 低电量、关节过温等红色闪烁告警灯光优先级高于所有用户自定义控制指令，无法被覆盖。 | 接口名
+  | `pb:/aimdk.protocol.HalRgbLightService/SetRgbLightCo…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - light-strip
+route: /zh/a2/v2-0/dev-guide/light-strip
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-12-light_strip_control'
+order: 31
+---
+# 7.12 灯带控制部分
+
+### 7.12.1 整体介绍
+
+灯带控制接口用于控制机器人灯带的颜色和亮度。
+
+灯光控制逻辑如下：
+
+1.  所有灯带灯珠统一控制，可以设置常亮、流水灯、呼吸灯等几个预置灯效，无法单独控制某个灯带或灯珠。
+2.  机器人默认灯光为蓝色呼吸灯，可被用户自定义控制指令覆盖。
+3.  低电量、关节过温等红色闪烁告警灯光优先级高于所有用户自定义控制指令，无法被覆盖。
+
+### 7.12.2 设置灯光模式 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HalRgbLightService/SetRgbLightCommand` |
+| --- | --- |
+| 功能概述 | 设置灯光模式 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:52893/rpc/aimdk.protocol.HalRgbLightService/SetRgbLightCommand |
+| 入参 | 
+```json
+{
+  "cmd": {
+    "red": 255,
+    "green": 0,
+    "blue": 0,
+    "effect": 2,
+    "control": 1
+  }
+}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "cmd": {
+    "red": 255,
+    "green": 0,
+    "blue": 0,
+    "effect": 2,
+    "control": 1
+  }
+}
+```
+
+-   red：红色亮度，范围：0~255
+-   green：绿色亮度，范围：0~255
+-   blue：蓝色亮度，范围：0~255
+-   effect：灯光模式，范围：0~4, 0代表熄灭，1代表单色光，2代表呼吸灯，3代表闪烁灯，4代表流水灯
+-   control：灯光控制权，0代表嵌入式接管，1代表端侧接管
+
+ |
+| 示例脚本 | examples/light/SetRgbLightCommand.sh |
+| 备注 |  |
+
+### 7.12.3 获取灯光状态 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HalRgbLightService/GetRgbLightState` |
+| --- | --- |
+| 功能概述 | 获取灯光状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:52893/rpc/aimdk.protocol.HalRgbLightService/GetRgbLightState |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "red": 255,
+    "green": 0,
+    "blue": 0,
+    "effect": 2,
+    "control": 1
+  }
+}
+```
+
+-   red：红色亮度，范围：0~255
+-   green：绿色亮度，范围：0~255
+-   blue：蓝色亮度，范围：0~255
+-   effect：灯光模式，范围：0~4, 0代表熄灭，1代表单色光，2代表呼吸灯，3代表闪烁灯，4代表流水灯
+-   control：灯光控制权，0代表嵌入式接管，1代表端侧接管
+
+其余字段无需关注 |
+| 示例脚本 | examples/light/GetRgbLightState.sh |
+| 备注 |  |
+

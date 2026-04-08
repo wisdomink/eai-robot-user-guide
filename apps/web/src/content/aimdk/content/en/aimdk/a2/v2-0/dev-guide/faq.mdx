@@ -1,0 +1,45 @@
+---
+title: 11. Frequently Asked Questions
+description: >-
+  The A2 robot comes with a series of onboard software, which will be upgraded
+  along with the OTA (Over-The-Air) updates. Generally, when you ssh into the
+  robot, the software version (current application version) will be p…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - faq
+route: /en/a2/v2-0/dev-guide/faq
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/11-frequently_asked_questions
+order: 43
+---
+# 11. Frequently Asked Questions
+
+## 11.1 What is the onboard software version?
+
+The A2 robot comes with a series of onboard software, which will be upgraded along with the OTA (Over-The-Air) updates.
+
+Generally, when you ssh into the robot, the software version (current application version) will be printed out. You can also check it through the AimMaster software. The version number is usually in the format of 1.2.x.
+
+## 11.2 What are P1 and T3?
+
+P1 and T3 are the hardware models of the A2 robot. The main difference between these hardware models lies in the configuration of the industrial PC, such as network card configuration and hardware connections. However, the upper-level interfaces are generally unified.
+
+After logging into the x86 industrial PC via ssh, you can check the /etc/bsp\_version to confirm the model. If this file exists, it is P1; if it does not exist, it is T3.
+
+## 11.3 How to handle the over-speed anomaly reported by the arm joint motor?
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FAsQTtyVv.png&w=2112&h=256&f=webp)
+
+Reason: When calling the arm interface, there is a step change between the input position and the current position, causing the motor to exceed the speed limit and trigger current limiting. At this point, the embedded system will disable the joint for protection and report an alarm.
+
+Solution: In most cases, restarting the robot will resolve the issue. To avoid this problem, when calling the arm ROS2 Topic interface, filter and smooth the joint positions before inputting them to ensure that the input values do not have a significant step change from the current state.
+
+## 11.4 Is it possible to develop your own motion control program?
+
+By default, the low-level control interfaces for the lower limb joint motors are not open. Control can only be achieved through high-level speed commands. If you need to develop your own motion control algorithms to replace the Agibot factory-installed algorithms,please refer to the “A2 Ultra Low-Level Motion Control Development Guide” in the documentation. Please read the risk warnings and safety precautions for motion control development carefully before proceeding.
+

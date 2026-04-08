@@ -254,6 +254,47 @@ body {
   min-height: 50vh;
 }
 
+/* Developer MDX (AimdkMdxBody): black / navy prose — no purple from .md-body a on heading anchors */
+.aimdk-mdx.md-body a {
+  color: var(--color-navy);
+  border-bottom-color: transparent;
+}
+
+.aimdk-mdx.md-body a:hover {
+  color: var(--color-navy);
+  border-bottom-color: var(--color-gray-400);
+}
+
+.aimdk-mdx.md-body h1 a,
+.aimdk-mdx.md-body h2 a,
+.aimdk-mdx.md-body h3 a,
+.aimdk-mdx.md-body h4 a,
+.aimdk-mdx.md-body h5 a,
+.aimdk-mdx.md-body h6 a {
+  color: var(--color-navy);
+  border-bottom: none;
+}
+
+.aimdk-mdx.md-body h1 a:hover,
+.aimdk-mdx.md-body h2 a:hover,
+.aimdk-mdx.md-body h3 a:hover,
+.aimdk-mdx.md-body h4 a:hover,
+.aimdk-mdx.md-body h5 a:hover,
+.aimdk-mdx.md-body h6 a:hover {
+  color: var(--color-navy);
+  border-bottom: none;
+  opacity: 0.85;
+}
+
+.aimdk-mdx.md-body blockquote {
+  border-left-color: var(--color-gray-300);
+  background: var(--color-gray-50);
+}
+
+.aimdk-mdx.md-body blockquote strong {
+  color: var(--color-navy);
+}
+
 /* ══════════════════════════════════════════════════════════════
    SEARCH HIGHLIGHTS
 ══════════════════════════════════════════════════════════════ */

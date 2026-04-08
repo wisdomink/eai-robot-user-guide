@@ -1,0 +1,368 @@
+---
+title: 7.2 Action Playback Section
+description: >-
+  The A2 robot provides basic preset action playback capabilities, with some
+  preset actions included out of the box (additional actions can be recorded
+  using remote control devices to meet more personalized needs; for more…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - action-playback
+route: /en/a2/v2-0/dev-guide/action-playback
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-02-motion_play'
+order: 21
+---
+# 7.2 Action Playback Section
+
+### 7.2.1 Overview
+
+The A2 robot provides basic preset action playback capabilities, with some preset actions included out of the box (additional actions can be recorded using remote control devices to meet more personalized needs; for more information, please refer to the relevant documentation on remote control). The list of built-in preset actions is as follows:
+
+```
+右手比耶/右手比耶.mcap向左欢迎/向左欢迎.mcap播报随机动作_09/播报随机动作_09.mcap数字手势“9”/数字手势“9”.mcap方向_指向左边/方向_指向左边.mcap右手拍照pose2-短/右手拍照pose2-短.mcap播报随机动作_11/播报随机动作_11.mcap简述6个要点_12s/简述6个要点_12s.mcap左转头/左转头.mcap右手挥手/右手挥手.mcap右手拍照pose3-短/右手拍照pose3-短.mcap数字手势“8”/数字手势“8”.mcap点点头/点点头.mcap做“自上而下”的示意_10s/做“自上而下”的示意_10s.mcap强调2大要点_12s/强调2大要点_12s.mcap右手握手_长/右手握手_长.mcap快速强调5大要点_8s/快速强调5大要点_8s.mcap左手加油/左手加油.mcap摆拍_右手胸前点赞/摆拍_右手胸前点赞.mcap播报随机动作_06/播报随机动作_06.mcap右手碰拳_长/右手碰拳_长.mcap方向_左手指后方/方向_左手指后方.mcap数字手势“5”/数字手势“5”.mcap个人介绍_7s/个人介绍_7s.mcap双手比耶/双手比耶.mcap播报随机动作_19/播报随机动作_19.mcap方向_左边示意/方向_左边示意.mcap数字手势“1”/数字手势“1”.mcap右手NO/右手NO.mcap对3个要点展开阐述_15s/对3个要点展开阐述_15s.mcap强调3大要点_11s/强调3大要点_11s.mcap右手比心/右手比心.mcap灵动环顾1/灵动环顾1.mcap方向_向右下方指引/方向_向右下方指引.mcap右手握手收回/右手握手收回.mcap方向_向右上方指引/方向_向右上方指引.mcap右手拍照pose4-短/右手拍照pose4-短.mcap结尾致谢_7s/结尾致谢_7s.mcap右手拍照pose1-短/右手拍照pose1-短.mcap方向_右手指后方/方向_右手指后方.mcap方向_右边示意/方向_右边示意.mcap播报随机动作_08/播报随机动作_08.mcap演讲27s/演讲27s.mcap播报随机动作_18/播报随机动作_18.mcap左手比耶/左手比耶.mcap播报随机动作_10/播报随机动作_10.mcap击掌_长/击掌_长.mcap摆拍_右手胸前比耶/摆拍_右手胸前比耶.mcap播报随机动作_01/播报随机动作_01.mcap播报随机动作_16/播报随机动作_16.mcap左手挥手/左手挥手.mcap播报随机动作_17/播报随机动作_17.mcap跳舞/跳舞.mcap左手握手_长/左手握手_长.mcap数字手势“2”/数字手势“2”.mcap双手点赞/双手点赞.mcap演讲10s/演讲10s.mcap播报随机动作_02/播报随机动作_02.mcap双手向下比心/双手向下比心.mcap双手挥手/双手挥手.mcap数字手势“6”/数字手势“6”.mcap灵动环顾2/灵动环顾2.mcap方向_指向当前位置/方向_指向当前位置.mcap摆拍_双手咏春/摆拍_双手咏春.mcap灵动环顾3/灵动环顾3.mcap向右欢迎/向右欢迎.mcap讲解结束总结_9s/讲解结束总结_9s.mcap右手握手/右手握手.mcap用手指强调信息_09s/用手指强调信息_09s.mcap播报随机动作_12/播报随机动作_12.mcap播报随机动作_15/播报随机动作_15.mcap摆拍_抬起右手/摆拍_抬起右手.mcap右手加油/右手加油.mcap右手点赞_长/右手点赞_长.mcap演讲15s/演讲15s.mcap播报随机动作_05/播报随机动作_05.mcap方向_向左下方指引/方向_向左下方指引.mcap右手碰拳/右手碰拳.mcap方向_向左上方指引/方向_向左上方指引.mcap左手点赞/左手点赞.mcap开篇打招呼_12s/开篇打招呼_12s.mcap敬礼/敬礼.mcap播报随机动作_14/播报随机动作_14.mcap摇摇头/摇摇头.mcap双手加油/双手加油.mcap左手碰拳/左手碰拳.mcap数字手势“3”/数字手势“3”.mcap演讲20s/演讲20s.mcap播报随机动作_04/播报随机动作_04.mcap左手点赞_长/左手点赞_长.mcap演讲5s/演讲5s.mcap播报随机动作_13/播报随机动作_13.mcap左手握手/左手握手.mcap播报随机动作_07/播报随机动作_07.mcap强调4大要点_16s/强调4大要点_16s.mcap摆拍_左手胸前比耶/摆拍_左手胸前比耶.mcap对2个要点展开阐述_18s/对2个要点展开阐述_18s.mcap双手擦眼泪/双手擦眼泪.mcap打太极拳/打太极拳.mcap数字手势“4”/数字手势“4”.mcap灵动环顾4/灵动环顾4.mcap右转头/右转头.mcap用握拳强调2组信息_12s/用握拳强调2组信息_12s.mcap数字手势“7”/数字手势“7”.mcap右手强调“核心”_10s/右手强调“核心”_10s.mcap方向_指向右边/方向_指向右边.mcap右手OK/右手OK.mcap方向_左手指前方/方向_左手指前方.mcap左手碰拳_长/左手碰拳_长.mcap对1个要点展开阐述_14s/对1个要点展开阐述_14s.mcap方向_右手指前方/方向_右手指前方.mcap右手点赞/右手点赞.mcap数字手势“10”/数字手势“10”.mcap双手强调“全局”_08s/双手强调“全局”_08s.mcap摆拍_我是大力士/摆拍_我是大力士.mcap播报随机动作_03/播报随机动作_03.mcap右手拍照pose5-短/右手拍照pose5-短.mcap比心/比心.mcap快速端东西/快速端东西.mcap端东西/端东西.mcap端盘子/端盘子.mcap单手发红包/单手发红包.mcap拿话筒演讲/拿话筒演讲.mcap握话筒/握话筒.mcap下蹲感谢示意/下蹲感谢示意.mcap右手拿话筒大幅扭腰/右手拿话筒大幅扭腰.mcap右手拿话筒轻微扭腰/右手拿话筒轻微扭腰.mcap右手拿话筒双侧扭腰/右手拿话筒双侧扭腰.mcap右手拿话筒双侧扭腰2/右手拿话筒双侧扭腰2.mcap右手拿话筒左手讲解1/右手拿话筒左手讲解1.mcap右手拿话筒左手讲解2/右手拿话筒左手讲解2.mcap右手拿话筒左手讲解3/右手拿话筒左手讲解3.mcap
+```
+
+These action files are located in the x86 directory at /agibot/data/resources/default/motion. Custom recorded actions should be placed in the /agibot/data/resources/custom/motion directory. The above list can be obtained by running the following command in the corresponding directory:
+
+Terminal window
+
+```
+find . -type f -name "*.mcap" -printf "%P\n"
+```
+
+You can view the specific action effects using the motion control simulation provided in subsequent chapters, or directly on the real robot.
+
+Action playback on the robot is handled by the `motion_player` module, which controls the arm and neck joints in JOINT\_SERVO mode. The basic control principle involves reading and parsing the specified action file, playing it at 100 Hz, and sending `/motion/control/arm_joint_command` and `/motion/control/neck_joint_command` to the motion control module, which then performs the corresponding actions.
+
+Due to historical reasons and architectural design factors, we provide two sets of RPC interfaces for calling action playback: `SendMotionCommand` and `PlayerMotion`. `SendMotionCommand` is a lower-level interface provided directly by the `motion_player` module, offering more comprehensive and robust functionality, and is recommended for use. The `PlayerMotion` interface, on the other hand, is an upper-level action playback module encapsulated by the rc remote control module, supporting only playback and not features like interruption, pausing, or status queries. It is not recommended for use in new versions and is retained only for compatibility.
+
+### 7.2.2 Action Playback RPC Interface SendMotionCommand
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/SendMotionCommand` |
+| --- | --- |
+| Function Overview | Play the specified action file |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/SendMotionCommand |
+| Input Parameters | 
+```json
+{
+  "motion_id": "/agibot/data/resources/default/motion/演讲10s/演讲10s.mcap",
+  "duration_ms": 10000,
+  "cmd_end": true,
+  "cmd_pause": false,
+  "cmd_reset": false
+}
+```
+
+-   motion\_id: Absolute path of the action file, including the .mcap file, for example
+    
+    -   /agibot/data/resources/default/motion/演讲10s/演讲10s.mcap
+-   duration\_ms: An invalid field, leave it as is
+    
+-   cmd\_end: Whether to automatically return to the initial posture after the action is executed, `true` indicates automatic reset, `false` indicates no automatic reset
+    
+-   cmd\_pause: Action pause flag, `true` indicates pause, which will stop sending control signals to the robot, generally not used
+    
+-   cmd\_reset: Reset flag, `true` indicates reset, `false` indicates no reset. The reset operation will reset the current action state to the initial state
+    
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762851946",
+      "nanos": 693223585,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/motion\_player/send\_motion\_id.sh |
+| Notes | 
+
+-   This interface has Action call restrictions and can only be called under Motion Control Actions with the JOINT\_SERVO suffix
+    
+    -   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+-   .db action files recorded in older versions can still be used, but the path must include the .db suffix, for example
+    
+    -   /path/to/old\_motion\_files/演讲10s/演讲10s.db
+
+ |
+
+### 7.2.3 Action Playback Status Query RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/GetMotionStatus` |
+| --- | --- |
+| Function Overview | Get the action playback status |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/GetMotionStatus |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762852836",
+      "nanos": 502608623,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "time_to_end_ms": "235",
+  "status": "MotionCommandStatus_OPERATING",
+  "is_neck_enable": true,
+  "motion_id": "1见面招手"
+}
+```
+
+-   time\_to\_end\_ms: Time remaining until the action ends, in milliseconds (ms)
+    
+-   status: Action playback status
+    
+    -   MotionCommandStatus\_IDLE: No action, idle
+    -   MotionCommandStatus\_START: Action started playing
+    -   MotionCommandStatus\_OPERATING: Action is playing
+    -   MotionCommandStatus\_PAUSE: State when calling the action playback interface with cmd\_pause=true
+    -   MotionCommandStatus\_STOP: State after calling DisableMotionPlayer
+-   is\_neck\_enable: Whether the neck is controlled by motion\_player
+    
+-   motion\_id: Action name
+    
+
+ |
+| Example Script | examples/motion\_player/get\_motion\_status.sh |
+| Notes |  |
+
+### 7.2.4 Disable and Enable Motion Playback Module RPC Interface
+
+The motion playback module continuously sends control commands to the motion control module for /motion/control/arm\_joint\_command and /motion/control/neck\_joint\_command in JOINT\_SREVO mode. If a secondary program also sends commands, it can cause conflicts. You can use the following interfaces to disable and enable the motion playback module.
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/DisableMotionPlayer` |
+| --- | --- |
+| Function Overview | Disables the motion playback module. The process does not exit and does not send commands to the motion control module. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableMotionPlayer |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/motion\_player/disable\_motion\_player.sh |
+| Notes |  |
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/EnableMotionPlayer` |
+| --- | --- |
+| Function Overview | Enables the motion playback module and starts sending continuous commands to the motion control module. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/EnableMotionPlayer |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/motion\_player/enable\_motion\_player.sh |
+| Notes |  |
+
+### 7.2.5 Disable and Enable Neck Motion Playback RPC Interface
+
+In some cases, it is necessary to disable the neck’s motion playback function separately, thus transferring control of the neck to a secondary program for head tracking, etc. You can use the following interfaces to disable and enable the neck’s motion playback control.
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer` |
+| --- | --- |
+| Function Overview | Disables the motion playback module from controlling the neck motor. The process does not exit and does not send neck commands to the motion control module. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/motion\_player/disable\_neck\_motion\_player.sh |
+| Notes |  |
+
+| Interface Name | `pb:/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer` |
+| --- | --- |
+| Function Overview | Enables the motion playback module to control the neck interface and starts sending continuous neck control commands to the motion control module. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/motion\_player/enable\_neck\_motion\_player.sh |
+| Notes |  |
+
+### 7.2.6 Get Motion List RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/GetMotion` |
+| --- | --- |
+| Function Overview | Get motion list rpc |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetMotion |
+| Input Parameters | 
+```bash
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "motions": [
+    {
+      "motion_id": 10001,
+      "motion_name": "亮相A",
+      "motion_path": "/agibot/data/resources/custom/motion/亮相A/亮相A.db",
+      "description": "",
+      "display_name_zh": "",
+      "display_name_en": "",
+      "url": "",
+      "thumbnail_url": "",
+      "is_change": true,
+      "create_time_stamp": "0",
+      "update_time_stamp": "0",
+      "duration": 2,
+      "motion_type": "Untyped"
+    },
+    {
+      "motion_id": 10002,
+      "motion_name": "亮相B",
+      "motion_path": "/agibot/data/resources/custom/motion/亮相B/亮相B.db",
+      "description": "",
+      "display_name_zh": "",
+      "display_name_en": "",
+      "url": "",
+      "thumbnail_url": "",
+      "is_change": true,
+      "create_time_stamp": "0",
+      "update_time_stamp": "0",
+      "duration": 2,
+      "motion_type": "Untyped"
+    },
+    ...
+  ]
+}
+```
+
+-   motion\_id: ID used for the PlayerMotion play action interface
+
+The rest of the fields can be ignored, and the paths can be found on x86 for the corresponding files. |
+| Example Script | examples/rc/a2\_GetMotionList.sh |
+| Notes |  |
+
+### 7.2.7 Play Motion RPC Interface PlayerMotion
+
+| Interface Name | `pb:/aimdk.protocol.RcMotionPlayerService/PlayerMotion` |
+| --- | --- |
+| Function Overview | Play the specified id motion |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:59001/rpc/aimdk.protocol.RcMotionPlayerService/PlayerMotion |
+| Input Parameters | 
+```bash
+{
+  "motion_id": "1"
+}
+```
+
+-   motion\_id: Motion ID
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/rc/a2\_PlayerMotion.sh |
+| Notes | 
+
+-   This interface has Action call restrictions and can only be called under JOINT\_SERVO suffix control Actions:
+    
+    -   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+

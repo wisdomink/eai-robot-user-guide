@@ -1,0 +1,105 @@
+---
+title: 7.12 Light Strip Control Section
+description: >-
+  The light strip control interface is used to control the color and brightness
+  of the robot’s light strip. The lighting control logic is as follows: 1. All
+  light strip LEDs are controlled uniformly, and several preset lig…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - light-strip
+route: /en/a2/v2-0/dev-guide/light-strip
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-12-light_strip_control
+order: 31
+---
+# 7.12 Light Strip Control Section
+
+### 7.12.1 Overview
+
+The light strip control interface is used to control the color and brightness of the robot’s light strip.
+
+The lighting control logic is as follows:
+
+1.  All light strip LEDs are controlled uniformly, and several preset lighting effects such as solid color, flowing lights, and breathing lights can be set. It is not possible to control a specific light strip or LED individually.
+2.  The default lighting for the robot is a blue breathing light, which can be overridden by user-defined control commands.
+3.  Red flashing warning lights for low battery, joint overheating, etc., have a higher priority than all user-defined control commands and cannot be overridden.
+
+### 7.12.2 Set Light Mode RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.HalRgbLightService/SetRgbLightCommand` |
+| --- | --- |
+| Function Summary | Set light mode |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:52893/rpc/aimdk.protocol.HalRgbLightService/SetRgbLightCommand |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "cmd": {
+    "red": 255,
+    "green": 0,
+    "blue": 0,
+    "effect": 2,
+    "control": 1
+  }
+}
+```
+
+-   red: Red brightness, range: 0~255
+-   green: Green brightness, range: 0~255
+-   blue: Blue brightness, range: 0~255
+-   effect: Lighting mode, range: 0~4, 0 represents off, 1 represents solid color, 2 represents breathing light, 3 represents flashing light, 4 represents flowing light
+-   control: Lighting control, 0 represents embedded takeover, 1 represents end-side takeover
+
+ |
+| Example Script | examples/light/SetRgbLightCommand.sh |
+| Notes |  |
+
+### 7.12.3 Get Light State RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.HalRgbLightService/GetRgbLightState` |
+| --- | --- |
+| Function Summary | Get light state |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:52893/rpc/aimdk.protocol.HalRgbLightService/GetRgbLightState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "red": 255,
+    "green": 0,
+    "blue": 0,
+    "effect": 2,
+    "control": 1
+  }
+}
+```
+
+-   red: Red brightness, range: 0~255
+-   green: Green brightness, range: 0~255
+-   blue: Blue brightness, range: 0~255
+-   effect: Lighting mode, range: 0~4, 0 represents off, 1 represents solid color, 2 represents breathing light, 3 represents flashing light, 4 represents flowing light
+-   control: Lighting control, 0 represents embedded takeover, 1 represents end-side takeover
+
+The other fields do not need to be concerned with. |
+| Example Script | examples/light/GetRgbLightState.sh |
+| Notes |  |
+

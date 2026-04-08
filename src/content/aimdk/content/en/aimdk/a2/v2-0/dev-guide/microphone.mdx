@@ -1,0 +1,485 @@
+---
+title: 7.6 Microphone Management Section
+description: >-
+  The robot can use two different microphones as interaction input sources by
+  default: external microphones (depusheng handheld microphone and flasher lapel
+  microphone) and internal microphones (built-in microphones of the…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - microphone
+route: /en/a2/v2-0/dev-guide/microphone
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-06-microphone'
+order: 25
+---
+# 7.6 Microphone Management Section
+
+### 7.6.1 Overview
+
+The robot can use two different microphones as interaction input sources by default: external microphones (depusheng handheld microphone and flasher lapel microphone) and internal microphones (built-in microphones of the robot). Additionally, a silent mode can be set to disable interaction. The microphone switching and silent mode settings can be done through the AimMaster software. We also provide RPC interfaces for switching the microphone source and setting the silent mode.
+
+Furthermore, we provide raw audio output from the microphone (with noise reduction, echo cancellation, and VAD), which can be used to obtain the robot’s microphone audio and integrate it into other interaction systems after disabling Agibot’s own interaction chain.
+
+Internal microphone interaction logic (sound, face, lip shape, distance):
+
+1.  The internal fan noise of the robot is relatively loud, so it is recommended that the customer’s wake-up and conversation sounds be as loud as possible.
+2.  The main focus is on the three largest faces in the center camera. The face will only switch when there is a significant change in face size.
+3.  During conversations, lip movement is used to determine if the conversation is ongoing, which helps in anti-interference and separating different speakers.
+4.  The recommended distance is 0.5m to 2m in front of the robot. Users who are very tall (over 180 cm) and standing too close may have their faces out of the camera range. The most important thing is to keep the face within the camera range.
+
+External microphones are directional and can be used by speaking directly into the microphone. There is no face recognition logic involved.
+
+Additionally, the interaction supports secondary development. The agent can be set to different modes, allowing users to exit Agibot’s cloud audio chain and output only the raw audio and face data for custom interaction agent development.
+
+Silent mode is a state under the normal mode and can be flexibly switched without restarting the agent.
+
+### 7.6.2 RPC Interface for Switching Internal and External Microphones
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/SetMicSourceRequest` |
+| --- | --- |
+| Function Summary | Switch between internal and external microphone sources |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetMicSourceRequest |
+| Input Parameters | 
+```json
+{
+  "mic_source": 1
+}
+```
+
+-   mic\_source: 0 represents the internal microphone, 1 represents the external microphone, other values are invalid
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: No need to pay attention to this
+
+ |
+| Example Script | examples/agent/SetMicSource.sh |
+| Notes |  |
+
+### 7.6.3 RPC Interface for Getting the Current Microphone Source
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/GetMicSourceRequest` |
+| --- | --- |
+| Function Summary | Get the current microphone source |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetMicSourceRequest |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Get mic source successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "mic_source": 0
+}
+```
+
+-   mic\_source: 0 represents the internal microphone, 1 represents the external microphone, other values are invalid
+
+ |
+| Example Script | examples/agent/GetMicSource.sh |
+| Notes |  |
+
+### 7.6.4 RPC Interface for Setting Silent Mode
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/SetVoiceEnable` |
+| --- | --- |
+| Function Summary | Set silent mode |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetVoiceEnable |
+| Input Parameters | 
+```json
+{
+  "enable_voice": false
+}
+```
+
+-   enable\_voice: Set to false to enable silent mode, set to true for normal mode
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: No need to pay attention to this
+
+ |
+| Example Script | examples/agent/SetVoiceEnable.sh |
+| Notes |  |
+
+### 7.6.5 Query Silent Mode RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/GetVoiceEnable` |
+| --- | --- |
+| Function Overview | Query the silent mode status |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetVoiceEnable |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "GetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "enable_voice": true
+}
+```
+
+-   enable\_voice: Set to false to enable silent mode, set to true for normal mode
+
+ |
+| Example Script | examples/agent/GetVoiceEnable.sh |
+| Notes |  |
+
+### 7.6.6 Set Interaction Mode RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/SetAgentPropertiesRequest` |
+| --- | --- |
+| Function Overview | Set interaction mode |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetAgentPropertiesRequest |
+| Input Parameters | 
+```json
+{
+  "contents": {
+    "properties": {
+      "2": "only_voice"
+    }
+  }
+}
+```
+
+Modes:
+
+-   only\_voice: Output only noise-reduced microphone audio /agent/process\_audio\_output, all subsequent links are disconnected
+-   voice\_face: Output noise-reduced microphone audio /agent/process\_audio\_output and face recognition results /agent/vision/face\_id, all subsequent links are disconnected
+-   normal: Normal operation mode, interaction runs normally
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+ |
+| Example Script | examples/agent/SetAgentPropertiesRequest.sh |
+| Notes | 
+
+-   The agent or robot needs to be restarted after calling this interface to take effect
+-   It is normal for the return value to be CommonState\_UNKNOWN; you can call the GetAgentPropertiesRequest interface to check if the interaction mode has been successfully switched
+
+ |
+
+### 7.6.7 Get Interaction Mode RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/GetAgentPropertiesRequest` |
+| --- | --- |
+| Function Overview | Query the interaction mode |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetAgentPropertiesRequest |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "contents": {
+    "properties": {
+      "2": "only_voice"
+    }
+  }
+}
+```
+
+Modes:
+
+-   only\_voice: Output only noise-reduced microphone audio /agent/process\_audio\_output, all subsequent links are disconnected
+-   voice\_face: Output noise-reduced microphone audio /agent/process\_audio\_output and face recognition results /agent/vision/face\_id, all subsequent links are disconnected
+-   normal: Normal operation mode, interaction runs normally
+
+ |
+| Example Script | examples/agent/GetAgentPropertiesRequest.sh |
+| Notes |  |
+
+### 7.6.8 Noise-Reduced Microphone Audio Topic Interface
+
+| Interface Name | `/agent/process_audio_output` |
+| --- | --- |
+| Function Overview | Noise-reduced microphone audio interface |
+| Interface Type | ROS2 Topic |
+| Output Parameters | 
+```bash
+{
+  "stream_id": 2,
+  "vad_state": "AUDIO_VAD_STATE_PROCESSING",
+  "audio_data": "..."
+}
+```
+
+-   stream\_id: Microphone identifier, 1 for built-in mic, 2 for external mic
+    
+-   vad\_state: Voice activity detection state
+    
+    -   AUDIO\_VAD\_STATE\_NONE = 0
+    -   AUDIO\_VAD\_STATE\_BEGIN = 1
+    -   AUDIO\_VAD\_STATE\_PROCESSING = 2
+    -   AUDIO\_VAD\_STATE\_END = 3
+-   audio\_data: Audio byte stream data
+    
+
+ |
+| Example Script | examples/agent/get\_voice.py |
+| Notes | 
+
+-   The ROS2 message type is ros2\_plugin\_proto/msg/RosMsgWrapper, which requires sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash before use.
+-   Note: To obtain the following audio, the robot must be connected to the internet for at least 2 minutes after startup to complete the audio-related authentication process. Otherwise, there will be no raw audio output. If offline use is required, ensure that the interface has audio output before disconnecting from the network.
+-   Note: In the current version, the \`vad\_state\` output from the external microphone interface is incorrect. For a single voice input, the expected state sequence is \`122222222223\`, but the actual output is \`0111111111112\`. This issue occurs only with external microphones (internal microphones work correctly) and is scheduled to be fixed in a future release. As a workaround in the current version, it is recommended to manually apply a +1 offset compensation to the state values.
+
+ |
+
+### 7.6.9 Local Face Registration Interface
+
+This interface is not a conventional HTTP JSON RPC or ROS2 Topic, but rather provides a separate script `examples/agent/run_face_id_register.sh` for calling. The content of the script is as follows:
+
+```
+#!/bin/bash
+# 1. The 'images' directory to register (at the same level as the shell script)RUN_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"IMAGES_DIR="${RUN_SCRIPT_DIR}/images"
+# 2. Faceid base directoryFACEID_SCRIPT_DIR="/agibot/software/v0/scripts/agent/face_id/"FACEID_LIB_DIR="/agibot/software/v0/bin"FACEID_OFFLINE_FEAT="/agibot/data/param/interaction/face_id/offline_face_features"
+# 3. Relative paths to the executable and configuration filesEXEC="${FACEID_SCRIPT_DIR}/face_id_register"CONF="${FACEID_SCRIPT_DIR}/face_id_config.json"
+chmod +x "$EXEC"export LD_LIBRARY_PATH="${FACEID_LIB_DIR}":$LD_LIBRARY_PATH
+# 4. Invocationrm -rf "$FACEID_OFFLINE_FEAT"/*"$EXEC" "$CONF" "$IMAGES_DIR"
+```
+
+Place the face data to be registered in the `images` directory in the same directory as the script. Execute the script on ORIN to complete the registration. After registration, the ID and image correspondence, as well as the registration result, are stored in the `Result.txt` file in the same directory. An example is shown below (where blurry and small faces are also successfully registered, but it is still recommended to use clear frontal face images as shown in `satisfy.png` to avoid adverse effects on recognition rates):
+
+Terminal window
+
+```
+GID17648293009168001    满足.png          OK    注册成功GID17648293018063607    侧脸.png          FAIL  人脸质量不满足要求GID17648293020281011    过暗.png          FAIL  人脸质量不满足要求GID17648293021878934    模糊.png          OK    注册成功GID17648293024764703    过曝.png          FAIL  人脸质量不满足要求GID17648293026684491    无人脸.png       FAIL  未检测到人脸GID17648293028768487    非人脸.png       FAIL  未检测到人脸GID17648293030305970    人脸过小.png    OK    注册成功
+```
+
+Explanation of the face registration and recognition logic rules:
+
+1.  Place JPG, PNG, and JPEG type face images in the `images` directory, with each image containing only one clear frontal face. Running the script will register the faces. After registration, you need to restart the agent. On ORIN, run `aima em stop-app agent && aima em start-app agent`, or you can directly restart the robot.
+2.  The locally registered face features will be stored in the `/agibot/data/param/interaction/face_id/offline_face_features` directory on ORIN.
+3.  The construction rule for the registered user ID is: “GID” + timestamp + random 4-digit number. At the time of release, the current machine’s SN (`/agibot/data/info/sn`) will replace “GID” as the new UID.
+4.  The Lingxin platform can also upload faces, which we call the cloud-based face database. The cloud-based face database can be configured with greeting information, etc. After the relevant content is distributed, it will be stored in the `/agibot/data/param/interaction/face_id/user_info.json` file.
+5.  Each time the script registers, it will clear the existing local database. Please always re-register all face data completely, i.e., maintain an `images` folder containing all the faces that need to be recognized. Any additions, deletions, or modifications require re-running the registration script.
+6.  The matching rule always prioritizes the cloud database before the local database. Once the first successful match is found, no further matching will be performed.
+
+### 7.6.10 Face Recognition Result Topic Interface
+
+| Interface Name | /agent/vision/face\_id |
+| --- | --- |
+| Function Overview | Face recognition results |
+| Interface Type | ROS2 Topic |
+| Output Parameters | 
+```yaml
+{
+  "faces": [
+    {
+      "timestamp": "1764829536028",
+      "face_id": "A210041B50001917648293023663264",
+      "confidence": 0.9811308,
+      "face_rect": {
+        "x": 326.0,
+        "y": 961.0,
+        "width": 105.0,
+        "height": 119.0
+      },
+      "captured_feature_base64": "...",
+      "reference_feature_base64": "..."
+    }
+  ]
+}
+```
+
+-   timestamp: Timestamp, using the interactive camera frame timestamp. You can subscribe to the /aima/hal/camera/interactive/color topic to find the corresponding image based on this timestamp.
+-   face\_id: A210041B50001917648293023663264, where the first 14 digits are the SN number, followed by the database face ID part.
+-   confidence: Face match confidence, a value between 0 and 1.
+-   face\_rect: Face rectangle, which can be used to draw the face position in the camera image.
+-   captured\_feature\_base64: Captured face feature base64 encoded, generally not needed.
+-   reference\_feature\_base64: Reference face feature base64 encoded, generally not needed.
+
+ |
+| Example Script | examples/agent/get\_face\_id.py |
+| Notes | 
+
+-   The ROS2 message type for this interface is \`ros2\_plugin\_proto/msg/RosMsgWrapper\`. You need to source \`prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash\` to use it.
+-   This interface will only publish if the interaction mode is set to \`normal\` or \`voice\_face\`. No messages will be published in \`only\_voice\` mode.
+
+ |
+
+## 7.6.11 Wake-Up Result Reporting
+
+| Interface Name | /agent/wakeup/pb\_3Aaimdk\_2Eprotocol\_2EWakeUpResult |
+| --- | --- |
+| Function Summary | Wake-up result reporting |
+| Interface Type | ROS2 Topic |
+| Output Parameters  
+ | 
+```json
+{
+    "language":"zh",
+    "keyword":"远征远征",
+    "timestamp":"1768812507657",
+    "confidence":1.0,
+    "wakeup_id":"event_wMXK9pT05JMXeRAOSc706",
+    "is_success":true,
+    "wakeup_type":"WAKEUP_NORMAL"
+}
+```
+
+-   confidence: Voice match confidence, a value between 0 and 1.
+    
+-   keyword: Wake-up word.
+    
+-   language: Currently only Chinese is supported.
+    
+-   wakeup\_type:
+    
+    -   `WAKEUP_UNKNOWN`: Wake-up with unknown source or state (placeholder/exception case).
+    -   `WAKEUP_NORMAL`: Normal voice wake-up, for example when a user says the default wake-up word.
+    -   `WAKEUP_FACE_TRIGGERED`: Wake-up triggered by face recognition.
+    -   `WAKEUP_CUSTOM_TRIGGERED`: Wake-up triggered by custom methods, such as custom wake words or external events.
+
+ |
+| Example Script | examples/agent/get\_wakeup\_result.py |
+| Notes | 
+
+-   The ROS2 message type is `ros2_plugin_proto/msg/RosMsgWrapper`. Run `source prebuilt/ros2_plugin_proto_aarch64/share/ros2_plugin_proto/local_setup.bash` before use.
+
+ |
+
+## 7.6.12 Built-In Microphone Wake Word Configuration
+
+| Interface Name | `pb:/aimdk.protocol.AgentControlService/SetCustomWakeUpWord` |
+| --- | --- |
+| Function Summary | Set wake-up word for the built-in microphone. |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetCustomWakeUpWord |
+| Input Parameters | 
+```json
+{
+  "keywords":["你好你好"]
+}
+```
+
+-   keywords: Wake-up word.
+
+ |
+| Output Parameters  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",  
+    "msg": "SetCustomWakeUpWord successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   `state=CommonState_UNKNOWN` is normal behavior.
+-   `code=0` means success, `code=1` means failure.
+
+ |
+| Example Script | examples/agent/SetCustomWakeUpWord.sh |
+| Notes | 
+
+-   Avoid binding an intelligent agent; otherwise the setting may not take effect after restarting `agent`.
+-   Only one wake-up word is supported.
+
+ |
+
+## 7.6.13 External Microphone Wake Word Configuration
+
+For the external microphone, modify `/agibot/data/var/agent/omnis_sdk/sherpa-onnx-kws/keywords.txt` on ORIN. Add or remove phonetic entries as needed.
+
+Wake-word format:
+
+```
+声母1(空格)韵母1(带声调)(空格)声母2(空格)韵母2(带声调) ......
+```
+
+1.  Wake words containing non-Chinese characters are not supported. English wake words must be converted into Chinese transliterations. Examples:
+
+```
+* 中文唤醒词1：x iǎo zh ì x iǎo zh ì @小智小智_zh_1
+* 中文唤醒词2(带ü)：x iǎo l ǚ x iǎo l ǚ @小吕小吕_zh_1
+* 中文唤醒词3(多音字)：x iǎo x ī x iǎo x ī @小茜小茜_zh_1
+* 英文唤醒词：h ā l óu t āng mǔ @哈喽汤姆_en_1
+```
+
+2.  Wake-word recommendations and constraints:  
+     **Length:** 3-6 Chinese characters are recommended.  
+     **Repetition pattern:** ABAB-style repetition is recommended to improve wake-up success rate.  
+     **Pronunciation:** Prefer open vowels such as a, o, and e.  
+     **Avoid common words:** Avoid common words or command words (for example, “goodbye”, “good morning”, “watch TV”) to reduce false wake-ups.  
+     **Avoid repeated/similar sounds:** Avoid duplicated characters and consecutive similar pronunciations, such as “珍珍” or “花华”.  
+     **Avoid modal particles:** Avoid light-tone particles such as ‘吧’, ‘呢’, ‘啊’, ‘的’, ‘了’, ‘吗’.  
+     **Avoid zero-initial syllables:** Avoid characters such as ‘昂’, ‘恩’, ‘安’.  
+     **Tone diversity:** Avoid using the same tone for all characters, such as ‘喀咪喀咪’.  
+     **Limit closed vowels:** Reduce use of i, u, and ü.  
+    
+3.  Valid syllable list (using invalid syllables may crash the process):
+    
+
+<table><tbody><tr><td>a</td><td>án</td><td>áo</td><td>é</td><td>en</td><td>er</td><td>ì</td><td>iàn</td><td>iǎo</td></tr><tr><td>á</td><td>àn</td><td>ào</td><td>è</td><td>én</td><td>ér</td><td>ǐ</td><td>iǎn</td><td>iāo</td></tr><tr><td>à</td><td>ǎn</td><td>ǎo</td><td>ě</td><td>èn</td><td>èr</td><td>ī</td><td>iān</td><td>ié</td></tr><tr><td>ǎ</td><td>ān</td><td>āo</td><td>ē</td><td>ěn</td><td>ěr</td><td>ia</td><td>iáng</td><td>iè</td></tr><tr><td>ā</td><td>ang</td><td>b</td><td>ei</td><td>ēn</td><td>f</td><td>iá</td><td>iàng</td><td>iě</td></tr><tr><td>ái</td><td>áng</td><td>c</td><td>éi</td><td>éng</td><td>g</td><td>ià</td><td>iǎng</td><td>iē</td></tr><tr><td>ài</td><td>àng</td><td>ch</td><td>èi</td><td>èng</td><td>h</td><td>iǎ</td><td>iāng</td><td>ín</td></tr><tr><td>ǎi</td><td>ǎng</td><td>d</td><td>ěi</td><td>ěng</td><td>i</td><td>iā</td><td>iáo</td><td>ìn</td></tr><tr><td>āi</td><td>āng</td><td>e</td><td>ēi</td><td>ēng</td><td>í</td><td>ián</td><td>iào</td><td>ǐn</td></tr><tr><td>īn</td><td>iù</td><td>o</td><td>ou</td><td>sh</td><td>ū</td><td>uán</td><td>uè</td><td>ún</td></tr><tr><td>íng</td><td>iǔ</td><td>ó</td><td>óu</td><td>t</td><td>uá</td><td>uàn</td><td>uě</td><td>ùn</td></tr><tr><td>ìng</td><td>iū</td><td>ò</td><td>òu</td><td>u</td><td>uà</td><td>uǎn</td><td>uē</td><td>ǔn</td></tr><tr><td>ǐng</td><td>j</td><td>ǒ</td><td>ǒu</td><td>ú</td><td>uǎ</td><td>uān</td><td>üè</td><td>ūn</td></tr><tr><td>īng</td><td>k</td><td>ō</td><td>ōu</td><td>ù</td><td>uā</td><td>uáng</td><td>üě</td><td>uo</td></tr><tr><td>ióng</td><td>l</td><td>óng</td><td>p</td><td>ǔ</td><td>uái</td><td>uàng</td><td>uí</td><td>uó</td></tr><tr><td>iǒng</td><td>m</td><td>òng</td><td>q</td><td>ǘ</td><td>uài</td><td>uǎng</td><td>uì</td><td>uò</td></tr><tr><td>iōng</td><td>n</td><td>ǒng</td><td>r</td><td>ǜ</td><td>uǎi</td><td>uāng</td><td>uǐ</td><td>uǒ</td></tr><tr><td>iú</td><td>ń</td><td>ōng</td><td>s</td><td>ǚ</td><td>uāi</td><td>ué</td><td>uī</td><td>uō</td></tr><tr><td>w</td><td>x</td><td>y</td><td>z</td><td>zh</td><td></td><td></td><td></td><td></td></tr></tbody></table>
+

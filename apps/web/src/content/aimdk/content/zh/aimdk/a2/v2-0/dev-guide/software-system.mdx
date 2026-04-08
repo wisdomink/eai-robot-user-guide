@@ -1,0 +1,136 @@
+---
+title: 2. 软件系统概述
+description: >-
+  机器人搭载一台 x86\_64 架构工控机和 arm64 架构 AGX Jetson Orin工控机，简称为 x86 和 orin，均安装 Ubuntu
+  22.04 系统，均使用 systemd 作为系统服务管理器，都配置有 agibot\_em.service 作为智元软件系统入口点，该服务开机自启，会拉起
+  EM（进程启动管理）、SM（进程状态管理）模块，再由 EM 和 SM 配合拉起其余各个模块进程，SM 会对不同系统模式下的进程列…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - software-system
+route: /zh/a2/v2-0/dev-guide/software-system
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/02-software_overview'
+order: 11
+---
+# 2. 软件系统概述
+
+## 2.1 基本启动模式
+
+机器人搭载一台 x86\_64 架构工控机和 arm64 架构 AGX Jetson Orin工控机，简称为 x86 和 orin，均安装 Ubuntu 22.04 系统，均使用 systemd 作为系统服务管理器，都配置有 agibot\_em.service 作为智元软件系统入口点，该服务开机自启，会拉起 EM（进程启动管理）、SM（进程状态管理）模块，再由 EM 和 SM 配合拉起其余各个模块进程，SM 会对不同系统模式下的进程列表进行开启和关闭的状态管理（为规避进程启停造成的共享内存资源异常占用问题，自 1.3 版本起系统模式切换不再开关进程，而是调用进程的 activate 和 deactivate 接口，进程仍然保留）。 EM 和 SM 的配置文件路径分别为 `/agibot/software/v0/entry/bin/cfg/run_agibot.yaml`（x86 & orin） 和 `/agibot/software/v0/entry/bin/cfg/sm.yaml`（x86），前者列有默认启动的进程列表，后者列有各个系统模式分别启用哪些功能组的进程 。
+
+## 2.2 模块功能简介
+
+部分模块 orin 和 X86 上均存在，后缀为 1 为 orin，后缀为 0 为 X86
+
+| 模块性质 | 所属工控机 |  | 名称 | 说明/作用 |
+| --- | --- | --- | --- | --- |
+| SoC 外设备 |  | AimMaster | 客户端软件 | 用于操作控制机器人的基本功能 |
+|  |  | OMP | 智元云端平台 | 负责收端侧埋点信息上报 |
+|  |  | VR | 虚拟现实设备 | 用于机器人的遥操作 |
+|  |  | MCU | 微控制器 | 对下控制机器人电机、接收电机和IMU 等信息，对上与 HAL Ethercat 通信接收控制指令，上传电机和IMU 等信息 |
+| 公共服务 基础服务 | ORIN | MQTT broker（mosquitto） | MQTT网关 | MQTT 网关节点，对接AimMaster和机上软件接口 |
+|  |  | data\_exporter | 日志导出功能 | 提供日志批量、分时段导出等功能 |
+|  | ORIN & X86 | iox\_roudi | iceoryx共享内存中心节点 | 负责 iceoryx 通信的中心调度,提供数据的储存位置 |
+|  |  | setting | 设置模块 | 提供基本机器人工控机设置，如 wifi、蓝牙等 |
+|  |  | recordbag | 录包 | 用来持续记录bag包 |
+|  |  | reboot | 重启指令 | 由 sm 调用时对系统进行重启 |
+|  |  | poweroff | 关机指令 | 由 sm 调用时执行关机操作 |
+| 管理模块 | X86 | SM | 系统状态管理模块 | 负责切换系统状态，管控进程列表 |
+|  | ORIN & X86 | EM | 进程管理模块 | 负责拉起进程，查询进程状态 |
+| 功能模块 | X86 | sota\_ota ota\_gateway ota\_master | OTA相关功能模块 | 负责下载OTA包以及执行OTA流程 |
+|  |  | hal\_ethercat | 硬件抽象层模块 | 负责与MCU进行ethercat通信，传递硬件的状态信息和控制指令 |
+|  |  | mc | 运动控制模块 | 负责整个机器人的运动控制，下发运控动作指令 |
+|  |  | motion\_streamer | 动作流模块 | 专门用于遥操作，接受VR 动捕服数据映射为机器人的动作 |
+|  |  | rc | 遥控模块 | 向AimMaster提供接口调用机器人的基本功能和状态并记录相关信息保存到日志 |
+|  |  | motion\_player | 动作播放模块 | 负责解算、映射、播放指定动作文件 |
+|  |  | tf | 坐标变换模块 | 提供坐标变换服务 |
+|  |  | fota\_slave | 固件升级模块 | 负责 FOTA 升级的模块 |
+|  |  | health\_monitor | 健康监控模块 | 负责看护所有业务模块和底层硬件的健康 |
+|  |  | legged\_odometry | 感知定位模块 | 负责读取每条腿的关节角度和IMU数据得到机器人坐标系的位姿，发送到导航或控制模块 |
+|  |  | open\_long\_server | 长连接进程模块 | 负责保持一条24小时不断线的通道，让外部设备随时可以遥控机器人，实时下发动作或拉取日志 |
+|  |  | hds | 健康诊断模块 | 接收各个模块上报的故障信息 |
+|  | ORIN | hal\_audio | 音频播放模块 | 提供原子性的音频播放能力，供 agent 调用 |
+|  |  | agent | 语音智能体模块 | 执行语音大模型，云端交互逻辑等，下发语言、动作、表情等指令 |
+|  |  | task\_engine | 任务管理模块 | 负责对 AimMaster 创建的任务进行执行等 |
+|  |  | pnc | 导航规划模块 | 负责导航的路径规划 |
+|  |  | slam agivslam | 建图定位模块 | 负责建图、定位等功能 |
+|  |  | mm | 地图管理模块 | 负责地图数据加载与解析，将构建好的地图融合以及地图更新 |
+|  |  | perception perception\_object perception\_qr | 感知模块 | 将导航相关的传感器信息收集处理提供给 pnc 和操作等模块 |
+|  |  | hal\_dcw2 hal\_d415 hal\_lidar hal\_xinying(T3) tz\_camera(P1) | 传感器驱动模块 | 负责加载各个摄像头驱动，将图像原始帧用 ros2 话题发布出来 |
+|  |  | gateway | 域外网关通信 | 将外部的请求转发到内部各个模块 |
+|  |  | data\_proxy | 数据搬运模块 | 负责把机器人里的日志、状态、视频流、文件等统一打包，按需转发到云端、上位机或调试工具；同时把外部传来的升级包、动作文件、配置指令再分发到对应模块。 |
+|  |  | colistener coencoder cobridge | 数据闭环相关 | 负责机器人数据与云端等闭环 |
+|  |  | embodied\_agent | 具身操作调度模块 | 是机器人真正的智能主控，负责让机器人听得懂、想得通、动得对，完成上层给它的具体任务。 |
+|  |  | manipulator | 具身操作执行模块 | 提供底层抓取、派发等原子能力 |
+|  |  | skill | 技能调度模块 | 对机器人的基本技能进行统一的管理仲裁调度 |
+|  |  | resource\_manager | 资源管理模块 | 统一管理机上动作、表情、播报等资源文件 |
+
+### 2.2.1 系统模式
+
+各个系统模式下激活和启动的模块有所不同，如下（摘录自 sm.yaml）
+
+```
+  # 系统状态  system_modes:    "Startup":      next_mode_list: [ "Ready", "OTA", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "RC", "MoCap", "Gateway", "Perception", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]
+    "Poweroff":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Poweroff ]
+    "Reboot":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Reboot ]
+    # 系统的就绪状态，会启动业务管理模块以及HAL    "Ready":      next_mode_list: [ "Manual", "EStop", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]      # post_process:      #   - level: 34      #     action_list: [ [ forbid Manual ] ]
+    # OTA状态，会启动OTA功能组，完成OTA相关功能    "OTA":      next_mode_list: [ "Reboot", "Ready", "Poweroff" ]      active_FG_list: [ "System", "HAL", "Manager", "SLAM", "RC", "MoCap", "Gateway","Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ deactivate agent ]        - [ deactivate pnc ]        - [ deactivate mc ]        - [ deactivate slam ]        - [ deactivate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ deactivate motion_player ]
+    # 手动状态，会启动遥控以及MC功能组    "Manual":      next_mode_list: [ "OTA", "Auto", "Reset", "EStop", "Calibration", "Poweroff", "MotionStream", "DataCollection", "FreeExploration", "Mapping", "Manipulator" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"  # 通过tools下使能脚本调用进入的状态          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate rc ]            - [ close Motion ]            - [ close EStop ]      post_process:        - level: 47          action_list: [ [ fallback mc ] ]
+    # 建图状态    "Mapping":      next_mode_list: [ "Manual" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ deactivate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]
+    # 自动状态，会启动任务引擎以及所有业务功能组    "Auto":      next_mode_list: [ "Manual", "EStop", "Poweroff", "FreeExploration" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ activate task_engine ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate task_engine ]            - [ close Motion ]            - [ close EStop ]      # post_process:      #   # - level: 47      #   #   action_list: [ [ MAID ] ]      #   # - level: 43      #   #   action_list: [ [ fallback motion_player ], [ fallback task_engine XXModule B ], [ Move Manual ] ]      #   # - level: 40      #   #   action_list: [ [ MAID ] ]      #   - level: 37      #     action_list: [ [ fallback task_engine ], [ move Manual ] ]      #   - level: 34      #     action_list: [ [ fallback task_engine, fallback mc ] ]      #   # - level: 31      #   #   action_list: [ [ MAID ] ]
+    # 具身操作模式    "Manipulator":      next_mode_list: [ "OTA", "Reset", "EStop", "Poweroff", "FreeExploration", "Manual" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ deactivate motion_player ]
+    # 自由探索模式    "FreeExploration":      next_mode_list: [ "Manual", "EStop", "Poweroff", "Auto" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ activate task_engine ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate task_engine ]            - [ close Motion ]            - [ close EStop ]
+    # 重置状态，用于恢复出厂设置    "Reset":      next_mode_list: [ "Reboot", "Poweroff" ]      active_FG_list: [ "System", "OTA", "Gateway" ]      action_list:        - [ DIFF ]
+    # 紧急停止状态，用于紧急停止    "EStop":      next_mode_list: [ "Ready", "OTA", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]
+    # 安全状态，用于安全状态    # "Safe":    #   next_mode_list: [ "Manual", "EStop", "Poweroff" ]    #   active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion" ]    #   action_list:    #     - [ DIFF ]    #     - [ deactivate mc, deactivate rc ]
+    # 实时遥操作状态，用于实时遥操作    "MotionStream":      next_mode_list: [ "Manual", "EStop", "Poweroff", "RemoteMotionStream", "DataCollection" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+    "RemoteMotionStream":      next_mode_list: [ "Manual", "EStop", "Poweroff", "MotionStream" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA", "RTC" ]      action_list:        - [ deactivate tz_camera ]        - [ deactivate hal_d415 ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ DIFF ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+    # 标定状态， 用于标定，客户端请求标定进入    "Calibration":      next_mode_list: [ "Ready" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "Gateway", "Motion", "Perception", "OTA", "Calibration" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 d415 Calibration ]        - [ deactivate agent ]        - [ deactivate pnc ]        - [ deactivate mc ]        - [ deactivate slam ]        - [ deactivate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]      # post_process:      # #   - level: 43      # #     action_list: [ [ fallback calibration ] ]      # #   - level: 37      # #     action_list: [ [ fallback calibration ] ]      #   - level: 34      #     action_list: [ [ fallback task_engine, fallback mc ] ]
+    "DataCollection":      next_mode_list: [ "Manual", "EStop", "Poweroff", "MotionStream" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA", "Data_Collector" ]      action_list:        - [ DIFF ]        - [ deactivate recordbag0 ]        - [ deactivate recordbag1 ]        - [ activate tz_camera tzcamera DataCollection ]        - [ activate hal_d415 d415 DataCollection ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ deactivate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+```
+
+### 2.2.2 模块禁用方式（谨慎）
+
+由于现在功能众多，ORIN 上负载较高，如需二开替换某些功能模块，需要在系统中配置该模块不启动。
+
+模块依照受 run\_agibot.yaml （x86 & orin）和 sm.yaml (orin) 管理分为两种，前者管理的模块会在启动时默认启动，后续也不受 sm 管理，保持常驻；后者管理的模块会在各个系统模式间切换。
+
+1.  如果需要禁用 run\_agibot.yaml 中管理的模块（即其中 default\_apps 中的部分），只需要从 default\_apps 中移除即可。
+    
+2.  如果需要禁用 sm 管理的模块，则需在相应的系统模式中加入一行 deactivate，指定去使能对应模块。
+    
+
+以禁用 motion\_play 模块为例，可按照如下步骤进行操作。首先在 run\_agibot.yaml（x86） 将 default\_apps 列表里 motion\_play 模块移除：
+
+```
+@@ -20,7 +20,6 @@ process_manager:     "iox_roudi",     "hal_ethercat",     "recordbag0",-    "motion_player",     "ota_gateway",     "ota_master",     "fota_slave",
+```
+
+然后在 sm.yaml (x86) 中 移除 SystemManagerModule 中 group 里的 motion\_player， 将 MoCap 配置修改为空，并移除各状态下对 motion\_player 的 activate / deactivate 操作：
+
+```
+@@ -14,7 +14,7 @@ SystemManagerModule:-      group: [ota_master, motion_player, motion_streamer, sota_slave0, mc, tf, dr, rc, hal_ethercat, poweroff0, reboot0, setting0, recordbag0, data_collector, health_monitor0]+      group: [ota_master, motion_streamer, sota_slave0, mc, tf, dr, rc, hal_ethercat, poweroff0, reboot0, setting0, recordbag0, data_collector, health_monitor0]       url: "http://${AGIBOT_NEIGHBOR_HOST_IP}:50081"
+```
+
+```
+@@ -40,7 +40,7 @@ SystemManagerModule:     "RC":       [ "rc" ]     "MoCap":-      [ "motion_player" ]+      []     "MoStream":       [ "motion_streamer" ]
+```
+
+```
+    "Ready":@@ -100,7 +100,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]    "OTA":@@ -122,7 +121,6 @@ SystemManagerModule:         - [ deactivate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ deactivate motion_player]    "Manual":@@ -140,7 +138,6 @@ SystemManagerModule:         - [ activate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]    "Mapping":@@ -169,7 +166,6 @@ SystemManagerModule:         - [ deactivate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]     "Auto":@@ -188,7 +184,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ activate task_engine ]-        - [ activate motion_player ]    "Manipulator":@@ -227,7 +222,6 @@ SystemManagerModule:         - [ activate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ deactivate motion_player ]    "FreeExploration":@@ -246,7 +240,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ activate task_engine ]-        - [ activate motion_player ]    "EStop":@@ -279,7 +272,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]
+```
+
+## 2.3 机上磁盘目录
+
+**orin**
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBbjIg9x7.png&w=2390&h=5638&f=webp)
+
+**X86**
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FevQ4FJaQ.png&w=2824&h=4726&f=webp)
+

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import type { SectionConfig } from '@/content'
+import { normalizePathname } from '@/utils/normalizePathname'
 
 interface SidebarNavItemProps {
   section: SectionConfig
@@ -12,7 +13,10 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isChildActive = section.pages.some(page => page.slug === location.pathname)
+  const pathNorm = normalizePathname(location.pathname)
+  const isChildActive = section.pages.some(
+    page => normalizePathname(page.slug) === pathNorm
+  )
   const [isExpanded, setIsExpanded] = useState(isChildActive)
 
   useEffect(() => {
@@ -68,23 +72,25 @@ export default function SidebarNavItem({ section, onNavigate }: SidebarNavItemPr
       {/* Don't show sub-pages for single-page sections — title IS the link */}
       {isExpanded && hasPages && !isSinglePage && (
         <div className="mt-0.5">
-          {section.pages.map(page => (
-            <NavLink
-              key={page.slug}
-              to={page.slug}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                clsx(
+          {section.pages.map(page => {
+            const pageActive = normalizePathname(page.slug) === pathNorm
+            return (
+              <Link
+                key={page.slug}
+                to={page.slug}
+                onClick={onNavigate}
+                aria-current={pageActive ? 'page' : undefined}
+                className={clsx(
                   'block py-2 px-3 pl-10 text-[var(--fs-sidebar)] transition-colors',
-                  isActive
+                  pageActive
                     ? 'bg-purple/10 text-purple font-medium'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-navy'
-                )
-              }
-            >
-              {page.title}
-            </NavLink>
-          ))}
+                )}
+              >
+                {page.title}
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

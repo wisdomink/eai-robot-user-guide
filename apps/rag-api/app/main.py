@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from chatkit.server import StreamingResult
 
 from app.core.config import (
+    DEVELOPER_SIDEBAR_PATH,
     LOG_DIR,
     OPENAI_API_KEY,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
@@ -186,16 +187,7 @@ def _to_anchor(heading: str) -> str:
     return result
 
 
-def _build_file_info_map() -> dict[str, dict]:
-    """Build {filename: {slug, title, sectionId}} from sidebar.json."""
-    try:
-        with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
-            all_sidebars = json.load(f)
-    except FileNotFoundError:
-        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
-        return {}
-
-    result: dict[str, dict] = {}
+def _merge_sidebar_file_info(all_sidebars: dict, result: dict[str, dict]) -> None:
     for product_sidebar in all_sidebars.values():
         for section in product_sidebar.get("sections", []):
             for page in section.get("pages", []):
@@ -207,6 +199,24 @@ def _build_file_info_map() -> dict[str, dict]:
                 result[page["file"]] = info
                 basename = page["file"].rsplit("/", 1)[-1]
                 result[basename] = info
+
+
+def _build_file_info_map() -> dict[str, dict]:
+    """Build {filename: {slug, title, sectionId}} from sidebar.json and developer-sidebar.json."""
+    result: dict[str, dict] = {}
+
+    try:
+        with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            _merge_sidebar_file_info(json.load(f), result)
+    except FileNotFoundError:
+        logger.warning("sidebar.json not found at %s", SIDEBAR_PATH)
+
+    try:
+        with open(DEVELOPER_SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            _merge_sidebar_file_info(json.load(f), result)
+    except FileNotFoundError:
+        logger.warning("developer-sidebar.json not found at %s", DEVELOPER_SIDEBAR_PATH)
+
     return result
 
 

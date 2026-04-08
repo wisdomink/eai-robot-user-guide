@@ -1,0 +1,755 @@
+---
+title: 7.1 运动控制部分
+description: >-
+  A2
+  青春款机器人出厂预搭载了运动控制程序，用户只需发送高层线速度和角速度指令即可直接控制机器人行走，无需开发行走等功能的底层控制模型，同时上肢、脖子等关节接口开放了直通
+  HAL 层的硬件接口。 >
+  默认情况下不开放下肢关节电机的底层控制接口，仅能通过高层速度指令进行整体控制，如需自行开发运动控制算法替换智元出厂自带算法，请联系商务或客户项目经理获取运控开发部署指南。
+  智元运控程序内部设计了状态机，在不同状态下会切换不同的模型，同时开放…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - motion-control
+route: /zh/a2-lite/v2-0/motion-control
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/07-01-motion_control'
+order: 80
+---
+# 7.1 运动控制部分
+
+### 7.1.1 整体介绍
+
+A2 青春款机器人出厂预搭载了运动控制程序，用户只需发送高层线速度和角速度指令即可直接控制机器人行走，无需开发行走等功能的底层控制模型，同时上肢、脖子等关节接口开放了直通 HAL 层的硬件接口。
+
+> 默认情况下不开放下肢关节电机的底层控制接口，仅能通过高层速度指令进行整体控制，如需自行开发运动控制算法替换智元出厂自带算法，请联系商务或客户项目经理获取运控开发部署指南。
+
+智元运控程序内部设计了状态机，在不同状态下会切换不同的模型，同时开放不同的上肢控制接口等。状态机如下图所示：
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FqpGOa-k4.png&w=2602&h=1790&f=webp)
+
+对于各个状态说明如下：
+
+| **Action 类型** | **Action 代码** | **中文名称** | **详细说明** | **可调用接口** |
+| --- | --- | --- | --- | --- |
+| 安全 Action | DEFAULT | 默认模式 | 运控启动之后的默认 action |  |
+| 位控 Action | RL\_JOINT\_DEFAULT | 强化位控站立模式 | 上机器人强化位控站立，直腿站立 |  |
+| 位控 Action | PASSIVE\_UPPER\_BODY\_JOINT\_SERVO | 下肢被动上肢伺服模式 | 下肢不使能，手臂可以接收外部关节伺服指令 | T2 |
+| 位控 Action | SIT\_DOWN | 位控坐下模式 | 下肢动作，上肢保持不动，配合椅子实现坐下 |  |
+| 位控 Action | STAND\_UP | 位控站起模式 | 下肢动作，上肢保持不动，配合椅子实现站起 |  |
+| 力控 Action | RL\_LOCOMOTION\_DEFAULT | 强化行走模式 | 强化学习训练的拟人行走模式，走路时手臂会摆动 | T1 |
+| 力控 Action | RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO | 强化行走上肢伺服模式 | 下肢拟人行走或站立，上肢接受外部关节伺服指令，行走或站立时做动作（使用全身控制的强化模型，更具有稳定性） | T1、T2 |
+| 力控 Action | RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO | 全身动作上肢伺服模式 | 与 RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO 类似，额外可控制腰部动作，A2 机器人腰部无实际自由度，腰部动作是通过腿部电机配合实现 | T1、T2、T3 |
+| 力控 Action | RL\_WHOLE\_BODY\_DANCE | 全身舞蹈模式 | 可运行指定的全身舞蹈动作 | S1 |
+
+> 一般情况下不推荐使用程序进行力控之外的切换，仅推荐程序在各个力控状态下切换，其余切换因涉及机器人吊起放下等操作仅可手动操作。
+
+### 7.1.2 状态机切换、查询 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McActionService/SetAction` |
+| --- | --- |
+| 功能概述 | 切换运动控制状态机 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McActionService/SetAction |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1762800293,
+      "nanos": 849579000,
+      "ms_since_epoch": 1762800293849
+    },
+    "control_source": "ControlSource_SAFE"
+  },
+  "command": {
+    "action": "McAction_USE_EXT_CMD",
+    "ext_action": "RL_JOINT_DEFAULT"
+  }
+}
+```
+
+-   action: 固定填写为 McAction\_USE\_EXT\_CMD
+-   ext\_action: 实际需要切换的运控 Action
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762829093",
+      "nanos": 853246996,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_control/SetAction.py |
+| 备注 | 
+
+-   异步接口，调用完成不代表切换即完成，需配合 GetAction 接口查询切换是否完成
+-   本接口无 Action 限制
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.McActionService/GetAction` |
+| --- | --- |
+| 功能概述 | 查询运动控制状态机 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McActionService/GetAction |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762828518",
+      "nanos": 763620392,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "info": {
+    "current_action": "McAction_DEFAULT",
+    "ext_action": "",
+    "status": "McActionStatus_RUNNING"
+  }
+}
+```
+
+-   current\_action: 当前运行的 Action
+-   ext\_action: 扩展 Action，一般不使用
+-   status：Action 状态，一般不使用
+
+ |
+| 示例脚本 | example/mc/actions.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+
+ |
+
+一般上述两个接口会配合使用，如下代码示例
+
+```
+def ensure_action(action_name: str, retries=3, retry_interval=1.0, mc_ip: str = "127.0.0.1"):    try:        for i in range(retries):            if get_action(mc_ip) == action_name:                return True            set_action(action_name, mc_ip)            time.sleep(0.1 if i == 0 else retry_interval)    except Exception as e:        print(f"Failed to set action: {e}")        return False    return False
+```
+
+### 7.1.3 行走控制指令 Topic 接口
+
+| 接口名 | `/motion/control/locomotion_velocity` |
+| --- | --- |
+| 功能概述 | 行走控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "data": {
+    "mode": 0,
+    "forward_velocity": 0.1,
+    "lateral_velocity": 0.0,
+    "angular_velocity": 0.0
+  }
+}
+```
+
+-   mode: 速度控制模式
+    
+    -   0 用于遥控场景
+    -   1 用于导航模式，速度响应更快，0.05m/s激活踏步,踏步后500ms内无速度指令会停止踏步
+-   forward\_velocity: 前进速度，范围 -0.3-0.8 m/s
+    
+-   lateral\_velocity: 水平速度，范围 -0.25-0.25 m/s
+    
+-   angular\_velocity: 旋转速度，范围 -0.5-0.5 rad/s
+    
+
+ |
+| 示例脚本 | examples/motion\_control/walk.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_x86\_64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+-   本接口调用码为 **T1**，在RL\_LOCOMOTION\_DEFAULT 下指令遵循效果较好
+
+ |
+
+### 7.1.4 腰部控制指令 Topic 接口
+
+| 接口名 | `/motion/control/move_waist` |
+| --- | --- |
+| 功能概述 | 腰部控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "data": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.1,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": 0.0
+  }
+}
+```
+
+-   x: 无效字段
+    
+-   y: 无效字段
+    
+-   z: 下蹲，范围 -0.25 到 0.00 m
+    
+-   roll: 无效字段
+    
+-   pitch: 俯身，范围 0 到 0.5236 rad，注意与 z 下蹲有耦合关系
+    
+    -   随着 z 的增大，可俯身程度（pitch 最大值）从 0 先线性变大 到 0.5236，然后维持到最大值 0.5236 不变，最后线性减小到 0.436
+    -   对应三段 z 的范围为 \[0, -0.08\]，\[-0.08, -0.17\]，\[-0.17, -0.25\]
+    -   pitch 最小值为 0，只能前倾无法后仰
+-   yaw: 转身，范围 -0.5236 到 0.5236 rad
+    
+
+ |
+| 示例脚本 | examples/motion\_control/move\_waist.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_x86\_64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+-   本接口调用码为 **T3**，仅可在 RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO 模式下调用
+-   A2 机器人物理设计上不存在独立的腰部自由度，该腰部自由度为虚拟自由度，通过腿部关节电机由强化学习算法模拟得到
+
+ |
+
+### 7.1.5 脖子控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/neck_joint_command` |
+| --- | --- |
+| 功能概述 | 脖子控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name：关节名称，固定填写为 \["idx27\_head\_joint1", "idx28\_head\_joint2"\]，第二个无效，但是需要填写
+-   position：关节角度，第一个值代表摇头自由度，范围 -0.785 到 0.785 rad，第二个值无效，但是需要填写
+-   velocity: 无效字段，不填
+-   effort: 无效字段，不填
+
+ |
+| 示例脚本 | examples/motion\_control/neck.py |
+| 备注 | 
+
+-   本接口调用码为 **T2**，仅可在后缀包含 JOINT\_SERVO 的模式下调用
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player 禁用后再发送指令
+
+ |
+
+| 接口名 | `/motion/control/neck_joint_state` |
+| --- | --- |
+| 功能概述 | 脖子状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   position：关节角度，第一个值代表摇头，其余值无意义
+
+ |
+| 示例脚本 | examples/motion\_control/joint\_state.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+
+ |
+
+### 7.1.6 脖子控制指令、状态 RPC 接口
+
+上述脖子控制话题接口适用于需要持续精确控制脖子角度，例如遥操作等场景，且仅可在 JOINT\_SERVO 模式下调用，某些场景下仅需简单控制到特定角度，可以使用如下 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/SetNeckCommand` |
+| --- | --- |
+| 功能概述 | 设置脖子命令 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McMotionService/SetNeckCommand |
+| 入参 | 
+```json
+{
+  "data": {
+    "shake": {
+      "name": "idx27_head_joint1",
+      "position": 0.5,
+      "velocity": 0.0,
+      "effort": 0.0
+    },
+    "nod": {
+      "name": "idx28_head_joint2",
+      "position": 0.0,
+      "velocity": 0.0,
+      "effort": 0.0
+    }
+  }
+}
+```
+
+-   其中仅 shake 字段中的 position 有意义，其余字段保持不变即可，范围 -0.785 到 0.785 rad
+-   nod 相关内容无意义，保持原样填写即可
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762845079",
+      "nanos": 921954699,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_control/SetNeckCommand.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player 禁用后再发送指令
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/GetNeckState` |
+| --- | --- |
+| 功能概述 | 获取脖子状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McMotionService/GetNeckState |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762846182",
+      "nanos": 679221245,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "shake": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    },
+    "nod": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    }
+  }
+}
+```
+
+-   state: 调用请求状态
+-   仅 shake 的 position 字段有含义，范围 -0.785 到 0.785 rad，其余字段忽略即可
+
+ |
+| 示例脚本 | examples/motion\_control/GetNeckState.py |
+| 备注 | 本接口无 Action 限制 |
+
+### 7.1.7 手臂控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/arm_joint_command` |
+| --- | --- |
+| 功能概述 | 手臂关节控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name：关节名称，固定填写为\["idx13\_left\_arm\_joint1", "idx14\_left\_arm\_joint2", "idx15\_left\_arm\_joint3", "idx16\_left\_arm\_joint4", "idx17\_left\_arm\_joint5", "idx18\_left\_arm\_joint6", "idx19\_left\_arm\_joint7", "idx20\_right\_arm\_joint1", "idx21\_right\_arm\_joint2", "idx22\_right\_arm\_joint3", "idx23\_right\_arm\_joint4", "idx24\_right\_arm\_joint5", "idx25\_right\_arm\_joint6", "idx26\_right\_arm\_joint7"\]，双臂 6 7 关节无效，但是需要填写作为占位
+-   position：关节角度，必须填写 14 个关节的角度值，其中双臂的 6 7 关节无效，需要填写作为占位
+-   velocity: 无效字段，置为 0.0 即可
+-   effort: 无效字段，置为 0.0 即可
+
+ |
+| 示例脚本 | examples/motion\_control/arm.py |
+| 备注 | 
+
+-   本接口调用码为 **T2**，仅可在后缀包含 JOINT\_SERVO 的模式下调用
+    
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player 禁用后再发送指令
+    
+    -   本接口推荐以 100 Hz 的频率进行调用，调用时需要注意相邻指令间隔不要超过 0.03，确保**速度不超过 3 rad/s，最大加速度不超过 6.28** **rad/s^2**，并且指令尽量顺滑，否则可能会有抖动，推荐起码使用基本的低通滤波方法：y(k) = (1 - a) \* y(k - 1) + a \* x(k)。
+-   角度限位如下（单位 rad）
+    
+    -   idx13\_left\_arm\_joint1: -2.91 ~ 2.91
+    -   idx14\_left\_arm\_joint2: -0.46 ~ 1.60
+    -   idx15\_left\_arm\_joint3: -2.91 ~ 2.91
+    -   idx16\_left\_arm\_joint4: -2.00 ~ -0.03
+    -   idx17\_left\_arm\_joint5: -2.94 ~ 2.94
+    -   idx20\_right\_arm\_joint1: -2.91 ~ 2.91
+    -   idx21\_right\_arm\_joint2: -1.60 ~ 0.46
+    -   idx22\_right\_arm\_joint3: -2.91 ~ 2.94
+    -   idx23\_right\_arm\_joint4: 0.03 ~ 2.00
+    -   idx24\_right\_arm\_joint5: -2.94 ~ 2.94
+
+ |
+
+| 接口名 | `/motion/control/arm_joint_state` |
+| --- | --- |
+| 功能概述 | 手臂关节状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: 14 个关节名称，其中双臂 6 7 关节无效
+-   position: 14 个关节角度，其中双臂 6 7 关节无效
+-   velocity: 14 个关节速度，其中双臂 6 7 关节无效
+-   effort: 14 个关节力矩，其中双臂 6 7 关节无效
+
+ |
+| 示例脚本 | examples/motion\_control/joint\_state.py |
+| 备注 | 本接口无 Action 限制 |
+
+### 7.1.8 上下肢关节状态 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McDataService/GetJointState` |
+| --- | --- |
+| 功能概述 | 获取上下肢关节状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McMotionService/GetJointState |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "states": [
+    {
+      "name": "idx01_left_hip_roll",
+      "sequence": 0,
+      "position": 0.006256103515625,
+      "velocity": 0.0048847198486328125,
+      "effort": -13.367523193359375
+    },
+    {
+      "name": "idx02_left_hip_yaw",
+      "sequence": 0,
+      "position": 0.013275146484375,
+      "velocity": 0.024419784545898438,
+      "effort": -11.658126831054688
+    },
+    {
+      "name": "idx03_left_hip_pitch",
+      "sequence": 0,
+      "position": -0.11947822570800781,
+      "velocity": -0.0048847198486328125,
+      "effort": 1.015869140625
+    },
+    {
+      "name": "idx04_left_tarsus",
+      "sequence": 0,
+      "position": 0.28732776641845703,
+      "velocity": -0.0048847198486328125,
+      "effort": -10.862030029296875
+    },
+    {
+      "name": "idx05_left_toe_pitch",
+      "sequence": 0,
+      "position": -0.17624187469482422,
+      "velocity": 0,
+      "effort": 3.44881189007971
+    },
+    {
+      "name": "idx06_left_toe_roll",
+      "sequence": 0,
+      "position": -0.012819436684095006,
+      "velocity": 0.009888242426560891,
+      "effort": 2.4995190811765715
+    },
+    {
+      "name": "idx07_right_hip_roll",
+      "sequence": 0,
+      "position": -0.009918212890625,
+      "velocity": -0.014652252197265625,
+      "effort": 14.119659423828125
+    },
+    {
+      "name": "idx08_right_hip_yaw",
+      "sequence": 0,
+      "position": -0.011749267578125,
+      "velocity": 0.024419784545898438,
+      "effort": 14.25640869140625
+    },
+    {
+      "name": "idx09_right_hip_pitch",
+      "sequence": 0,
+      "position": -0.12344551086425781,
+      "velocity": -0.0048847198486328125,
+      "effort": -7.423675537109375
+    },
+    {
+      "name": "idx10_right_tarsus",
+      "sequence": 0,
+      "position": 0.30014514923095703,
+      "velocity": -0.014652252197265625,
+      "effort": -18.676422119140625
+    },
+    {
+      "name": "idx11_right_toe_pitch",
+      "sequence": 0,
+      "position": -0.18814373016357422,
+      "velocity": -0.004883766174316406,
+      "effort": 4.751964842417327
+    },
+    {
+      "name": "idx12_right_toe_roll",
+      "sequence": 0,
+      "position": 0.012819560417340213,
+      "velocity": 0.01981031932552883,
+      "effort": -0.06747343675733508
+    },
+    {
+      "name": "idx13_left_arm_joint1",
+      "sequence": 0,
+      "position": -0.053559280931949615,
+      "velocity": -5.885322389076464e-05,
+      "effort": -1.253999948501587
+    },
+    {
+      "name": "idx14_left_arm_joint2",
+      "sequence": 0,
+      "position": 1.3100006580352783,
+      "velocity": -6.644718814641237e-05,
+      "effort": -2.2799999713897705
+    },
+    {
+      "name": "idx15_left_arm_joint3",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 2.2660000324249268
+    },
+    {
+      "name": "idx16_left_arm_joint4",
+      "sequence": 0,
+      "position": -0.03490660712122917,
+      "velocity": -4.366529537946917e-05,
+      "effort": 1.715999960899353
+    },
+    {
+      "name": "idx17_left_arm_joint5",
+      "sequence": 0,
+      "position": 1.5707954168319702,
+      "velocity": 0,
+      "effort": 0.06880000233650208
+    },
+    {
+      "name": "idx18_left_arm_joint6",
+      "sequence": 0,
+      "position": 0.75,
+      "velocity": 0,
+      "effort": 0
+    },
+    {
+      "name": "idx19_left_arm_joint7",
+      "sequence": 0,
+      "position": 2.995796503389102e-08,
+      "velocity": 0,
+      "effort": 0
+    },
+    {
+      "name": "idx20_right_arm_joint1",
+      "sequence": 0,
+      "position": 0.03456582874059677,
+      "velocity": 6.644718723691767e-06,
+      "effort": 0.722000002861023
+    },
+    {
+      "name": "idx21_right_arm_joint2",
+      "sequence": 0,
+      "position": -1.3099987506866455,
+      "velocity": 0,
+      "effort": 1.7100000381469727
+    },
+    {
+      "name": "idx22_right_arm_joint3",
+      "sequence": 0,
+      "position": -9.492455319559667e-07,
+      "velocity": 7.40411487640813e-05,
+      "effort": 1.5839999914169312
+    },
+    {
+      "name": "idx23_right_arm_joint4",
+      "sequence": 0,
+      "position": 0.08476477861404419,
+      "velocity": -5.1259259635116905e-05,
+      "effort": 0.7919999957084656
+    },
+    {
+      "name": "idx24_right_arm_joint5",
+      "sequence": 0,
+      "position": 1.5707954168319702,
+      "velocity": 0,
+      "effort": -0.5504000186920166
+    },
+    {
+      "name": "idx25_right_arm_joint6",
+      "sequence": 0,
+      "position": -0.75,
+      "velocity": 0,
+      "effort": 0
+    },
+    {
+      "name": "idx26_right_arm_joint7",
+      "sequence": 0,
+      "position": 3.001038685424783e-08,
+      "velocity": 0,
+      "effort": 0
+    }
+  ]
+}
+```
+
+-   其中双臂的 6 7 关节为无效值
+
+ |
+| 示例脚本 | examples/motion\_control/GetJointState.py |
+| 备注 | 本接口无 Action 限制 |
+
+### 7.1.9 全身舞蹈列表获取 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/GetDanceTypeList` |
+| --- | --- |
+| 功能概述 | 获取支持的全身舞蹈列表 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McMotionService/GetDanceTypeList |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "dance_name": [
+    "摇摆舞",
+    "胜利之舞"
+  ],
+  "dance_model_path": [
+    "/home/agi/a2_simulation/motion_control_lite_1.2.22/bin/../config/motion_control/configuration/robot/raise_a2_lite/learning_controller_dance/models/policy_ybw_1127.onnx",
+    "/home/agi/a2_simulation/motion_control_lite_1.2.22/bin/../config/motion_control/configuration/robot/raise_a2_lite/learning_controller_dance/models/policy_vict_1203.onnx"
+  ],
+  "dance_data_path": [
+    "/home/agi/a2_simulation/motion_control_lite_1.2.22/bin/../config/motion_control/configuration/robot/raise_a2_lite/learning_controller_dance/models/export_data_ybw.npy",
+    "/home/agi/a2_simulation/motion_control_lite_1.2.22/bin/../config/motion_control/configuration/robot/raise_a2_lite/learning_controller_dance/models/export_data_vict_v6.npy"
+  ],
+  "dance_time": [
+    93.64,
+    75.56
+  ]
+}
+```
+
+-   dance\_name: 舞蹈名，用于传入播放接口
+-   dance\_model\_path: 舞蹈模型文件位置，无需关注
+-   dance\_data\_path: 舞蹈数据文件位置，无需关注
+-   dance\_time: 舞蹈时长，单位秒
+
+ |
+| 示例脚本 | examples/motion\_control/GetDanceTypeList.py |
+| 备注 | 
+
+-   本接口无调用限制
+
+ |
+
+### 7.1.10 全身舞蹈播放 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/SelectDanceType` |
+| --- | --- |
+| 功能概述 | 全身舞蹈播放 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56322/rpc/aimdk.protocol.McMotionService/SelectDanceType |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1762818960,
+      "nanos": 172949000,
+      "ms_since_epoch": 1762818960172
+    },
+    "control_source": "ControlSource_SAFE"
+  },
+  "dance_name": "jiangnan"
+}
+```
+
+-   dance\_name：舞蹈名称，需要从上述获取舞蹈列表的接口中获取
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762847760",
+      "nanos": 178468357,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_control/SelectDanceType.py |
+| 备注 | 
+
+-   本接口调用码为 **S1**，仅可在 RL\_WHOLE\_BODY\_DANCE 模式下调用
+
+ |
+

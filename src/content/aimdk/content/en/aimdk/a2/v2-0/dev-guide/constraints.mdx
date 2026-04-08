@@ -1,0 +1,29 @@
+---
+title: 4. Basic Constraints for Secondary Development
+description: >-
+  There are some basic constraints that need to be followed when performing
+  secondary development based on the A2 Ultra model. Violating these constraints
+  may cause damage to the robot’s hardware, software, and system. Dam…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - constraints
+route: /en/a2/v2-0/dev-guide/constraints
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/04-second_develop_constraints_overview
+order: 13
+---
+# 4. Basic Constraints for Secondary Development
+
+There are some basic constraints that need to be followed when performing secondary development based on the A2 Ultra model. Violating these constraints may cause damage to the robot’s hardware, software, and system. Damage caused by violating the following agreements is not covered under the warranty:
+
+1.  Do not deploy secondary development programs on the x86 industrial PC. The motion control program runs on the x86 system, and deploying programs on the x86 industrial PC may lead to CPU and memory resource competition, which can even cause the robot to crash in severe cases.
+2.  Do not modify the system configurations of the x86 and orin industrial PCs at will, such as file system mounting, system scheduling policies, default UDP/TCP buffer sizes, and other kernel-related configurations.
+3.  Do not modify the configuration of the onboard software modules arbitrarily, such as various configurations of the motion control and other modules.
+4.  Do not modify the system software dependencies arbitrarily, and strictly prohibit using apt for installing and uninstalling software.
+5.  Do not frequently call RPC interfaces, as this can cause excessive load on the system, potentially leading to a crash. It is recommended to set the polling frequency for continuous state-based RPC interfaces to 0.2 Hz or below, and for short-term polling interfaces like status queries to 1 Hz or below.
+

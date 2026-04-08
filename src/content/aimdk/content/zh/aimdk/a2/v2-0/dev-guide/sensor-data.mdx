@@ -1,0 +1,226 @@
+---
+title: 7.4 传感器数据部分
+description: >-
+  A2 旗舰款配有丰富的相机、雷达、IMU 等传感器，传感器具体位置可以参考本文档概述中的部件说明。 我们为各个传感器均提供了原始帧数据的 ROS2
+  话题接口，均使用 ROS2 标准消息，此处不一一列出各个接口的单个接口，而是给出统一话题说明表格以及内外参文件和使用说明。
+  有部分相机在不同机型上型号规格不一样，差异点在表格中都有按机型列出。 相机话题订阅示例可以参考 examples/sensors/camera.py
+  雷达话题订阅示例可…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - sensor-data
+route: /zh/a2/v2-0/dev-guide/sensor-data
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-04-sensor_data'
+order: 23
+---
+# 7.4 传感器数据部分
+
+### 7.4.1 整体介绍
+
+A2 旗舰款配有丰富的相机、雷达、IMU 等传感器，传感器具体位置可以参考本文档概述中的部件说明。
+
+我们为各个传感器均提供了原始帧数据的 ROS2 话题接口，均使用 ROS2 标准消息，此处不一一列出各个接口的单个接口，而是给出统一话题说明表格以及内外参文件和使用说明。
+
+### 7.4.2 传感器 Topic 接口
+
+有部分相机在不同机型上型号规格不一样，差异点在表格中都有按机型列出。
+
+相机话题订阅示例可以参考 examples/sensors/camera.py
+
+雷达话题订阅示例可以参考 examples/sensors/lidar.py
+
+imu 话题订阅示例可以参考 examples/sensors/imu.py
+
+原始裸帧接口：
+
+| 话题名 | 消息类型 | **传感器型号** | **数据流** | **分辨率** | **帧率** |
+| --- | --- | --- | --- | --- | --- |
+| /aima/hal/fish\_eye\_camera/chest\_left/color | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 胸部左鱼眼相机 Senyun ISX031C-H190XA（P1） Xinying OG02B10（T3） | 彩色图像 (color) | 640x480 | 30 Hz |
+| /aima/hal/fish\_eye\_camera/chest\_right/color | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 胸部右鱼眼相机 Senyun ISX031C-H190XA（P1） Xinying OG02B10（T3） | 彩色图像 (color) | 640x480 | 30 Hz |
+| /aima/hal/rgbd\_camera/head\_front/color | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 头部 RGB-D 相机 Realsense D415 | 彩色图像 (color) | 1280x720 | 15 Hz |
+| /aima/hal/rgbd\_camera/head\_front/depth | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 头部 RGB-D 相机 Realsense D415 | 深度图像 (depth) | 1280x720 | 15 Hz |
+| /aima/hal/rgbd\_camera/waist\_front/color | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 腰部 RGB-D 相机 Orbbec DCW2 | 彩色图像 (color) | 640x480 | 10 Hz |
+| /aima/hal/rgbd\_camera/waist\_front/depth | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 腰部 RGB-D 相机 Orbbec DCW2 | 深度图像 (depth) | 640x480 | 10 Hz |
+| /aima/hal/lidar/neck/pointcloud | [sensor\_msgs::msg::PointCloud2](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/PointCloud2.html) | 颈部激光雷达 Mid360 | 点云数据 (pcd\_option) | \- | 10 Hz |
+| /aima/hal/lidar/neck/imu | [sensor\_msgs::msg::Imu](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Imu.html) | 颈部激光雷达 Mid360 | IMU 数据 (imu\_option) | \- | 200 Hz |
+| /body\_drive/imu/data | [sensor\_msgs::msg::Imu](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Imu.html) | 腰部IMU YISENSE YI 320 | IMU 数据 (imu\_option) | \- | 1000Hz |
+| /aima/hal/camera/interactive/color | [sensor\_msgs::msg::Image](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Image.html) | 胸部中间交互相机 Senyun ISX031C-H100F1A（P1） 讯飞多模态交互摄像头（T3） | 彩色图像 (color) | 1920x1536（P1）1536x2048（T3） | 30 Hz（P1）12 Hz（T3） |
+
+> 在 **P1 机型**上 /aima/hal/camera/interactive/color 默认以 iceoryx 后端进行发布，调用较为麻烦，现提供修改其发布后端增加 ros2 后端的方法（1.2/1.0 版本通过 iceoryx 的方式调用仍保留兼容，新版本推荐修改后通过标准 ROS2 接口进行订阅），注意新增 ros2 后端后 tz\_camera 模块会有 14% 的 CPU 占用率上升。
+> 
+> P1 机型新增 ROS2 后端方法：
+> 
+> 1.  在 ORIN 上首先备份对应配置文件 cp /agibot/software/v0/config/tzcamera/tzcamera\_config.yaml /agibot/software/v0/config/tzcamera.tzcamera\_config.yaml.original
+> 2.  然后修改该文件，将其 aimrt.channel.pub\_topic\_options 中的 /aima/hal/camera/interactive/color 的 enable\_backends 中添加一项 ros2，从 \[iceoryx\] 变为 \[iceoryx, ros2\]
+> 3.  重启机器人
+
+> 在机器人功能运行正常的情况下，机器人初始化完成后，各个传感器话题应持续有发布，唯一例外如下：
+> 
+> 1.  T3 机器上 /aima/hal/camera/interactive/color 在交互静默模式下无数据。
+
+针对彩色图像，提供 h264 编码接口（实验性接口，暂未提供示例调用脚本，使用该接口需要对 h264 等图像编码知识较为熟悉）：
+
+| 话题名 | 消息类型 | **传感器型号** | **数据流** | **分辨率** | **帧率** |
+| --- | --- | --- | --- | --- | --- |
+| /aima/hal/fish\_eye\_camera/chest\_left/color/h264 | [foxglove\_msgs::msg::CompressedVideo](https://docs.ros.org/en/noetic/api/foxglove_msgs/html/msg/CompressedVideo.html) | 胸部左鱼眼相机 Senyun ISX031C-H190XA（P1） Xinying OG02B10（T3） | 彩色图像 (color) h264 encoded | 640x480 | 5 Hz，I帧间隔 5，每秒一个关键帧 |
+| /aima/hal/fish\_eye\_camera/chest\_right/color/h264 | [foxglove\_msgs::msg::CompressedVideo](https://docs.ros.org/en/noetic/api/foxglove_msgs/html/msg/CompressedVideo.html) | 胸部右鱼眼相机 Senyun ISX031C-H190XA（P1） Xinying OG02B10（T3） | 彩色图像 (color)h264 encoded | 640x480 | 5 Hz，I帧间隔 5，每秒一个关键帧 |
+| /aima/hal/rgbd\_camera/head\_front/color/h264 | [foxglove\_msgs::msg::CompressedVideo](https://docs.ros.org/en/noetic/api/foxglove_msgs/html/msg/CompressedVideo.html) | 头部 RGB-D 相机 Realsense D415 | 彩色图像 (color)h264 encoded | 1280x720 | 5 Hz，I帧间隔 5，每秒一个关键帧 |
+| /aima/hal/rgbd\_camera/waist\_front/color/h264 | [foxglove\_msgs::msg::CompressedVideo](https://docs.ros.org/en/noetic/api/foxglove_msgs/html/msg/CompressedVideo.html) | 腰部 RGB-D 相机 Orbbec DCW2 | 彩色图像 (color)h264 encoded | 640x480 | 5 Hz，I帧间隔 5，每秒一个关键帧 |
+| /aima/hal/camera/interactive/color/h264 | [foxglove\_msgs::msg::CompressedVideo](https://docs.ros.org/en/noetic/api/foxglove_msgs/html/msg/CompressedVideo.html) | 胸部中间交互相机 Senyun ISX031C-H100F1A（P1） 讯飞多模态交互摄像头（T3） | 彩色图像 (color)h264 encoded | 1920x1536（P1） T3 无此话题 | 5 Hz，I帧间隔 5，每秒一个关键帧 |
+
+### 7.4.3 标定参数说明
+
+A2 旗舰款配有丰富的相机、雷达、IMU 等传感器，传感器具体位置可以参考本文档概述中的部件说明。
+
+我们为各个传感器均提供了原始帧数据的 ROS2 话题接口，均使用 ROS2 标准消息，此处不一一列出各个接口的单个接口，而是给出统一话题说明表格以及内外参文件和使用说明。
+
+针孔相机深度图和彩色图对齐示例可以参考 examples/sensors/rgbd\_align.py
+
+鱼眼相机去畸变示例可以参考 examples/sensors/fisheye\_undistorted.py
+
+相机内外参标定结果的保存目录（位于 ORIN ）：
+
+Terminal window
+
+```
+/agibot/data/param/calibration/
+```
+
+文件夹中包含以下文件：
+
+-   外参：
+    
+    -   extrinsic\_baselink\_T\_chest\_left.txt：表示base\_link到左目鱼眼的外参（x, y, z, qw, qx, qy ,qz）
+    -   extrinsic\_chest\_right\_T\_chest\_left.txt：表示左目相机到右目相机的外参（x, y, z, qw, qx, qy ,qz）
+    -   extrinsic\_baselink\_T\_head\_front.txt：表示base\_link到头部相机的外参（x, y, z, qw, qx, qy ,qz）
+    -   estrinsic\_waist\_front\_T\_baselink.txt：表示base\_link到胯部相机的外参（x, y, z, qw, qx, qy ,qz）
+    -   estrinsic\_baselink\_T\_lidar.txt：表示雷达到base\_link的外参（x, y, z, qw, qx, qy ,qz）
+    -   gravity\_T\_imu.txt：表示imu到base\_link的旋转（qw, qx, qy ,qz）
+-   内参：
+    
+    -   intrinsic\_chest\_left.yaml：左目鱼眼相机内参
+    -   intrinsic\_chest\_right.yaml：右目鱼眼相机内参
+    -   intrinsic\_head\_front.yaml：头部相机内参
+    -   intrinsic\_wasit\_front.yaml：胯部相机内参
+
+注：
+
+1.  x, y, z 表示平移；qw, qx, qy, qz 为四元数（Hamilton表达），表示旋转。
+2.  外参文件中的数据表示坐标系变换，例如 extrinsic\_baselink\_T\_head\_front.txt 的外参代表 base\_link 坐标系在头部相机坐标系中的位置和旋转。
+
+#### 7.4.3.1 针孔相机内参读取
+
+针孔相机内参（intrinsic\_head\_front.yaml）示例：
+
+```
+%YAML:1.0---model_type: PINHOLEcamera_name: ""image_width: 1280image_height: 720distortion_parameters:  k1: 8.4721332081814996e-02  k2: -2.2328724059363472e-01  p1: 1.4980714426687237e-02  p2: 5.8573350999184884e-03projection_parameters:  fx: 9.4067882179688206e+02  fy: 9.3408163057525098e+02  cx: 6.3075913699847933e+02  cy: 3.7669033617329160e+02
+```
+
+`fx`, `fy`, `cx`, `cy` 对应相机内参矩阵 (correspond to the camera intrinsic matrix), `k1`, `k2`, `p1`, `p2` 对应畸变系数 (correspond to distortion coefficients)
+
+相应读取函数示例如下：
+
+```
+// 针孔相机内参读取函数 (Pinhole camera intrinsic reading function)bool ReadFromYamlFile(const std::string& filename){    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    if (!fs.isOpened())    {        return false;    }
+    if (!fs["model_type"].isNone())    {        std::string sModelType;        fs["model_type"] >> sModelType;
+        if (sModelType.compare("PINHOLE") != 0)        {            return false;        }    }
+    std::string model_type_ = "PINHOLE";    std::string camera_name_;    fs["camera_name"] >> camera_name_;    int image_width_  = static_cast<int>(fs["image_width"]);    int image_height_ = static_cast<int>(fs["image_height"]);
+    cv::FileNode n = fs["distortion_parameters"];    double k1_            = static_cast<double>(n["k1"]);    double k2_            = static_cast<double>(n["k2"]);    double p1_            = static_cast<double>(n["p1"]);    double p2_            = static_cast<double>(n["p2"]);
+    n   = fs["projection_parameters"];    double fx_ = static_cast<double>(n["fx"]);    double fy_ = static_cast<double>(n["fy"]);    double cx_ = static_cast<double>(n["cx"]);    double cy_ = static_cast<double>(n["cy"]);
+    return true;}
+```
+
+#### 7.4.3.2 鱼眼相机内参读取
+
+鱼眼相机内参（intrinsic\_chest\_left.yaml）示例：
+
+```
+%YAML:1.0---model_type: KANNALA_BRANDTcamera_name: ""image_width: 640image_height: 480projection_parameters:  k2: 4.0154631284881101e-02  k3: -1.9502762632935614e-02  k4: 8.9682432239682577e-04  k5: -5.0758203706675745e-04  mu: 1.9728857021424918e+02  mv: 1.9697037865238804e+02  u0: 3.1897257040247649e+02  v0: 2.4312745081143589e+02
+```
+
+`u0`, `v0`, `mu`, `mv` 对应相机的内参矩阵 (correspond to the camera intrinsic matrix), `k2`, `k3`, `k4`, `k5` 对应畸变系数 (correspond to distortion coefficients).
+
+相应读取函数示例如下：
+
+```
+// 鱼眼相机内参读取函数 (Fisheye camera intrinsic reading function)bool ReadFromYamlFile(const std::string& filename){    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    if (!fs.isOpened())    {        return false;    }
+    if (!fs["model_type"].isNone())    {        std::string sModelType;        fs["model_type"] >> sModelType;
+        if (sModelType.compare("KANNALA_BRANDT") != 0)        {            return false;        }    }
+    std::string model_type_ = "KANNALA_BRANDT";    std::string camera_name_;    fs["camera_name"] >> camera_name_;    int image_width_  = static_cast<int>(fs["image_width"]);    int image_height_ = static_cast<int>(fs["image_height"]);
+    cv::FileNode n = fs["projection_parameters"];    double k2_            = static_cast<double>(n["k2"]);    double k3_            = static_cast<double>(n["k3"]);    double k4_            = static_cast<double>(n["k4"]);    double k5_            = static_cast<double>(n["k5"]);    double mu_            = static_cast<double>(n["mu"]);    double mv_            = static_cast<double>(n["mv"]);    double u0_            = static_cast<double>(n["u0"]);    double v0_            = static_cast<double>(n["v0"]);
+    return true;}
+```
+
+#### 7.4.3.3 相机外参读取
+
+相机外参对应的数据格式：
+
+`x, y, z, qw, qx, qy, qz`
+
+读取函数如下：
+
+```
+// 外参读取函数 (Extrinsic parameter reading function)bool ReadPoseFromFile(const std::string& file_name, SE3d& pose){    if (!std::filesystem::exists(file_name))    {        LOG(WARNING) << "pose file don't exists!" << file_name;        return false;    }
+    std::ifstream     pose_ifs(file_name);    Eigen::Quaternion rot   = pose.unit_quaternion();    Vec3d             trans = pose.translation();    pose_ifs >> trans.x() >> trans.y() >> trans.z() >> rot.w() >> rot.x() >> rot.y() >> rot.z();    pose = SE3d(rot, trans);    pose_ifs.close();    return true;}
+```
+
+## 7.4.4 P1机型摄像头设备释放
+
+> 注意：释放摄像头设备为高风险操作，一般不建议进行修改，释放相机以后，无论是否退出智元交互链路，**智元交互都将受到影响**，无摄像头数据。仅当系统提供的 ros2 接口无法满足开发需求且用户对相机开发有底层需求和开发能力时才可进行该操作。
+
+A2旗舰款P1机型胸前配备了三个摄像头（左右鱼眼相机和中间交互摄像头）默认被系统进程占用，用户可通过以下操作来释放并接管摄像头控制权（T3机型暂无释放摄像头功能）。以下以释放中间交互相机为例，说明具体流程。
+
+1.  修改orin目录下的/agibot/software/v0/config/tzcamera/tzcamera\_config.yaml，删除需要单独访问的相机对应的配置条目（此处为中间交互摄像头）。
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCNRKiaBO.jpg&w=694&h=660&f=webp)
+
+2.  使改动生效：
+
+选择以下任一方法生效配置修改：
+
+-   方法一：重启tz\_camera模块
+    
+    Terminal window
+    
+    ```
+    aima em stop-app tz_camera //停止tz_camera模块aima em start-app tz_camera //重新启动tz_camera模块
+    ```
+    
+-   方法二：重启机器人
+    
+
+3.  验证摄像头是否释放：
+
+在 ORIN 终端执行以下命令，测试中间交互摄像头（`/dev/gmslcam6`）是否可被独立访问：
+
+Terminal window
+
+```
+v4l2-ctl --set-fmt-video=width=1920,height=1536 --stream-mmap --stream-count=300 -d /dev/gmslcam6
+```
+
+若命令正常运行，则表明摄像头已成功释放。
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBt9C6LqQ.jpg&w=1765&h=256&f=webp)
+
+4.  设备名称：
+
+各摄像头对应的设备节点如下：
+
+-   左侧鱼眼相机：`/dev/gmslcam4`
+    
+-   右侧鱼眼相机：`/dev/gmslcam5`
+    
+-   中间交互摄像头：`/dev/gmslcam6`
+    
+
+5.  参考资料
+
+P1机型胸部中间相机使用G3-ISX031C-GMSL2F-H100F1相机，左右鱼眼使用森云SG3-ISX031C-GMSL2F-H190X相机，可在森云官网`https://www.sensing-world.com/h-pd-307.html`获取有关开发资料
+

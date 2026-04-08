@@ -1,0 +1,68 @@
+---
+title: 第三方库依赖
+description: >-
+  所有三方库已预先集成在本地开发环境(aimde)中,通过 Bazel rule
+  统一管理。用户无需自行下载和安装三方库,只需在业务代码中按照规范引入即可,使用简单便捷。 大部分三方库通过此文件引入,库文件统一存放在
+  /sdk/dev\_tools/third\_party\_libs 目录下。
+  projects/external/sdk\_third\_party\_deps.bzl ``` def third_party_deps()…
+product: a2w
+slug:
+  - a2w
+  - third-party-dependencies
+route: /zh/a2w/third-party-dependencies
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/thirdparty'
+order: 80
+---
+# 第三方库依赖
+
+所有三方库已预先集成在本地开发环境(aimde)中,通过 Bazel rule 统一管理。用户无需自行下载和安装三方库,只需在业务代码中按照规范引入即可,使用简单便捷。
+
+## 集成仓三方库定义
+
+### 通过 sdk\_third\_party\_deps.bzl 引入
+
+大部分三方库通过此文件引入,库文件统一存放在 /sdk/dev\_tools/third\_party\_libs 目录下。 projects/external/sdk\_third\_party\_deps.bzl
+
+```
+def third_party_deps():    ...    native.local_repository(        name = "jsoncpp",        path = "/sdk/dev_tools/third_party_libs/external/jsoncpp"    )    native.local_repository(        name = "CURL_orin_aarch64",        path = "/sdk/dev_tools/third_party_libs/external/CURL_orin_aarch64"    )    native.local_repository(        name = "CURL_x86_64",        path = "/sdk/dev_tools/third_party_libs/external/CURL_x86_64"    )    ...
+```
+
+### 通过 sdk\_all\_deps.bzl 引入
+
+少部分三方库(如 cuda/cudnn/tensorrt)通过此文件引入,库文件分别安装在:
+
+-   x86架构: /usr/local 目录
+-   ARM架构: /opt/nvidia/orin\_sysroot 目录 projects/external/sdk\_all\_deps.bzl
+
+```
+def local_deps():    native.new_local_repository(        name = "cuda_x86_64",        build_file = "@integration//projects/third_party:cuda.BUILD",        path = "/usr/local/cuda",    )
+    native.new_local_repository(        name = "cuda_orin_aarch64",        build_file = "@integration//projects/third_party:cuda.BUILD",        path = "/opt/nvidia/orin_sysroot/usr/local/cuda-12.2",    )    ...
+```
+
+### BUILD 文件中的架构适配
+
+通过 alias 和 select 实现不同架构的自动选择:
+
+```
+alias(    name = "cuda",    actual = select({        "@integration//toolchains/platforms:is_orin_aarch64": "@cuda_orin_aarch64//:cuda",        "//conditions:default": "@cuda_x86_64//:cuda",    }),)
+alias(    name = "CURL",    actual = select({        "@integration//toolchains/platforms:is_orin_aarch64": "@CURL_orin_aarch64//:CURL",        "//conditions:default": "@CURL_x86_64//:CURL",    }),)...
+```
+
+### 业务仓三方库引入
+
+#### 方式1: 需要区分架构的三方库
+
+使用集成仓 BUILD 中定义的 alias,引入格式: @integration//:库名 适用场景: 需要根据编译参数区分不同架构的预编译库(如 CURL)
+
+```
+cc_binary(    name = "example",    srcs = glob(["*.cpp"]),    deps = [        "@integration//:CURL",  # 自动选择对应架构的库        ...    ],)
+```
+
+#### 方式2: 无需区分架构的三方库
+
+直接引用三方库名称,引入格式: @库名 适用场景: 不需要区分架构的三方库(如 jsoncpp)
+
+```
+cc_library(    name = "ros2_util",    hdrs = glob(["*.h"]),    deps = [        "@jsoncpp",  # 直接引用        ...    ],)
+```
+

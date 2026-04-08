@@ -6,12 +6,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 const dist = path.resolve(root, 'dist')
 
-// Read merged sidebar config to get all routes
 const allSidebars = JSON.parse(
   fs.readFileSync(path.resolve(root, 'src/content/sidebar.json'), 'utf-8')
 )
 
-// Collect all routes: home + all section pages from every product
+const developerSidebars = JSON.parse(
+  fs.readFileSync(path.resolve(root, 'src/content/developer-sidebar.json'), 'utf-8')
+)
+
+const devRoutes = Object.values(developerSidebars).flatMap(sidebar =>
+  sidebar.sections.flatMap(section =>
+    section.pages.map(page => ({ slug: page.slug, title: page.title }))
+  )
+)
+
+// Collect all routes: home + manuals + developer docs
 const routes = [
   { slug: '/', title: 'EAI Robot - User Manual' },
   ...Object.values(allSidebars).flatMap(sidebar =>
@@ -19,6 +28,7 @@ const routes = [
       section.pages.map(page => ({ slug: page.slug, title: page.title }))
     )
   ),
+  ...devRoutes,
 ]
 
 // Load the SSR module

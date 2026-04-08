@@ -1,0 +1,101 @@
+---
+title: Untitled
+description: >-
+  * * * > This document applies only to A2 Flagship software version 2.0.x. |
+  Date | Update Content | Latest AimDK Package Name | | --- | --- | --- | |
+  2026-02-12 | Release of the A2 Flagship Developer Guide (v2.0) | AimDK…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - doc-updates
+route: /en/a2/v2-0/dev-guide/doc-updates
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide'
+order: 5
+---
+# Untitled
+
+* * *
+
+## title: V2.0 Documentation and Interface Change Notes hideH1: false
+
+> This document applies only to A2 Flagship software version 2.0.x.
+
+## V2.0 Documentation Update Notes
+
+| Date | Update Content | Latest AimDK Package Name |
+| --- | --- | --- |
+| 2026-02-12 | Release of the A2 Flagship Developer Guide (v2.0) | 
+AimDK-A2-Ultra-V2.0-0212
+
+ |
+| 2026-03-10 | The IP address for obtaining the RPC interface for system status in the SM module has been corrected from 192.100.110 to 192.100.100.  
+Corrected the description of the sm.yaml location in the custom operation and control deployment, changing it from orin to x86.  
+Corrected the microphone audio sampling frequency from 24kHz to 16kHz. | 
+
+AimDK-A2-Ultra-V2.0-0304
+
+ |
+| 2026-03-13 | Update finger control command description  
+7.4 Add camera device release method to sensor data section | 
+
+AimDK-A2-Ultra-V2.0-0304
+
+ |
+
+## V2.0 Interface Change Notes
+
+Compared with version V1.3, this changelog lists interface changes and other modifications with significant impact on secondary development. Incompatible changes are highlighted in bold.
+
+1.  Software System Overview
+    
+    -   **The SM (Process State Management) module has been moved from Orin to x86**, resulting in changes to the following module-related content.： System Status Section: **The IP address for the system status retrieval RPC interface** has been changed to 192.168.100.100.
+        
+        Custom Operations and Control Deployment Guide: **The location of sm.yaml has been changed from orin to x86.**
+        
+    -   **HDS (health diagnosis module) has been moved from ORIN to x86.**
+        
+2.  Fault Diagnosis Section
+    
+    -   The fault code and alert system were redesigned and optimized. Key interface changes are:
+    -   **Removed the `ClearAlert` interface.**
+    -   **Removed the `SetShieldAlertLevel` interface.**
+    -   **Refactored the `GetAlertList` interface** with unchanged invocation method but updated output structure:
+        -   Deprecated alert state **`AlertState_Recovering`** in output field `state` because `ClearAlert` was removed.
+        -   Deprecated alert state **`AlertState_ExceptionChanged`** in output field `state` because exceptions and alerts are now one-to-one and no longer have an exception-updated state.
+        -   Deprecated output field `manual_clear` because manual alert clearing is no longer supported.
+        -   Deprecated `show_type` because alert display type is now determined by client side based on alert level.
+        -   Deprecated `solution_list` because alert solution lists are no longer provided.
+        -   Deprecated exception list field `exception_list` because alerts and exceptions are now one-to-one.
+        -   Adjusted alert level field `level` with more granular and explicit definitions.
+        -   Added new output fields: client-facing alert text `alert_text` and fault module `alert_module`.
+3.  Resource Management Section
+    
+    -   Added the resource management section. Users can create, delete, query, import, and export resources through this module to support robot capability configuration and content customization. See section 7.13 for details.
+4.  Microphone Management Section
+    
+    -   Added wake-up result reporting interface `/agent/wakeup`. Users can configure wake-up mode and modify wake words via this module.
+5.  Motion Control Section
+    
+    -   Updated the flagship workflow switch diagram by adding a new flow from enhanced deep sitting to enhanced deep-sit standing.
+    -   There are currently two types of handheld devices: AgiHand and O10Hand. The handheld control commands have been modified as follows:  
+        -   The frame\_id field for finger control instructions is now used to identify the hand model; if not entered, it defaults to AgiHand.  
+            
+        -   No name field is required now; leaving the name field empty will maintain the default order.
+6.  Motion Playback Section
+    
+    -   Added 15 preset motions.
+7.  Map Management Section
+    
+    -   Add map creation interface
+    -   Add stop mapping interface
+    -   Add map modification interface
+    -   Add map renaming interface
+    -   Add interface to retrieve mapping data
+    -   Add relocalization interface
+    -   Add interface to set the current working map
+    -   Add map management UI examples
+

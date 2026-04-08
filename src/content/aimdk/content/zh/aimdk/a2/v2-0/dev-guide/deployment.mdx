@@ -1,0 +1,145 @@
+---
+title: 5. 二次开发程序部署
+description: >-
+  二次开发程序一般推荐两种部署方式，分别为本体 ORIN 部署和三方工控机部署，本体 ORIN
+  部署硬件上较为简洁，适用于二开程序资源占用不大的情况，如需占用较多资源则需将 ORIN 上原有的部分程序关闭释放 CPU/GPU
+  等资源；三方工控机部署则需额外连线，一般需外挂连线配置，好处是原有机上软件程序功能都可以保留，同时又有相对充足的算力资源。 推荐的程序部署目录为
+  /agibot/data/home/agi/Desktop，机上磁盘清…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - deployment
+route: /zh/a2/v2-0/dev-guide/deployment
+sourceUrl: >-
+  https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/05-second_develop_program_deployment
+order: 14
+---
+# 5. 二次开发程序部署
+
+二次开发程序一般推荐两种部署方式，分别为本体 ORIN 部署和三方工控机部署，本体 ORIN 部署硬件上较为简洁，适用于二开程序资源占用不大的情况，如需占用较多资源则需将 ORIN 上原有的部分程序关闭释放 CPU/GPU 等资源；三方工控机部署则需额外连线，一般需外挂连线配置，好处是原有机上软件程序功能都可以保留，同时又有相对充足的算力资源。
+
+## 5.1 本体 ORIN 部署
+
+推荐的程序部署目录为 /agibot/data/home/agi/Desktop，机上磁盘清理模块会定时清理空间，该文件夹为白名单文件夹不会被清理。
+
+Terminal window
+
+```
+mkdir -p /agibot/data/home/agi/Desktop
+```
+
+如遇权限问题，可考虑使用如下命令进行文件夹创建
+
+Terminal window
+
+```
+sudo mkdir -p /agibot/data/home/agi/Desktopsudo chown -R agi:agi /agibot/data/home/agi
+```
+
+### 5.1.1 Python 虚拟环境
+
+使用 Python 语言进行二次开发只需创建虚拟环境即可，可使用 conda/venv 等工具创建虚拟环境，其中 venv 为系统自带工具，conda 安装可以参考 [miniconda 安装官方文档](https://www.anaconda.com/docs/getting-started/miniconda/install#aws-graviton2%2Farm64)。
+
+### 5.1.2 Docker 部署
+
+使用 C++ 或其他编译型语言，或者需要安装或修改某些系统依赖，可以考虑使用 docker 进行部署。
+
+docker 安装方式参考 [https://docs.docker.com/engine/install/ubuntu/#install-from-a-package](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package)，请勿使用 apt 进行程序安装。
+
+#### 5.1.2.1 修改 docker 默认数据路径
+
+docker 数据的默认路径 /var/lib/docker 的分区容量较小，需要将其默认数据存储路径修改为白名单路径。
+
+1.  移动默认存储路径
+    
+    Terminal window
+    
+    ```
+    # 停止 Docker 服务sudo systemctl stop docker
+    # 移动默认存储路径（请先创建目标路径 /agibot/data/home/agi/Desktop）sudo mv /var/lib/docker /agibot/data/home/agi/Desktop
+    ```
+    
+2.  修改配置文件
+    
+    Terminal window
+    
+    ```
+    # 修改 Docker 配置sudo vim /etc/docker/daemon.json
+    ```
+    
+    在配置文件中添加：
+    
+    ```
+    {  "data-root": "/agibot/data/home/agi/Desktop/docker"}
+    ```
+    
+3.  重启docker：
+    
+    Terminal window
+    
+    ```
+    sudo systemctl start docker
+    ```
+    
+    docker配置完毕。
+    
+
+#### 5.1.2.2 容器内外 ROS2 通信设置
+
+默认配置下，容器内无法正常与机上系统间进行 ROS2 通信，需要进行一定配置。
+
+1.  创建容器时将 ipc 通信和 net 通信与主机共享，添加如下选项
+    
+    Terminal window
+    
+    ```
+    --ipc=host --net=host
+    ```
+    
+2.  在容器内使用与 ORIN 上相同的 agi 用户，uid 和 gid 均为 1001
+    
+    Terminal window
+    
+    ```
+    groupadd -g 1001 agi && useradd -u 1001 -g 1001 -m -s /bin/bash agi
+    ```
+    
+3.  在容器内外使用相同的 dds 配置文件，将 ORIN 上的 /agibot/software/v0/entry/bin/cfg/ros\_dds\_configuration.xml 拷贝到容器中，在容器内执行 ROS2 程序或使用 ros2 命令前执行如下命令（其中 /path/to 需要替换为真实路径）
+    
+    Terminal window
+    
+    ```
+    source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/path/to/ros_dds_configuration.xml
+    ```
+    
+4.  此时在容器内应该可以收到 ORIN 上发布的 ROS2 话题
+    
+    Terminal window
+    
+    ```
+    ros2 topic list
+    ```
+    
+
+## 5.2 三方工控机部署
+
+推荐网络拓扑配置为：
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDN9B9Fn1.png&w=1656&h=1224&f=webp)
+
+1.  修改 X86 调试网口为固定 IP 192.168.2.150，在 `/etc/netplan/01-netcfg.yaml` 文件中修改 eth\_debug 或 enp2s0f1 的为固定 IP 192.168.2.150。
+    
+2.  修改 orin 和 x86 的 dds 配置文件 `/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml` 和 `/agibot/software/v0/entry/bin/cfg/privileged_ros_dds_configuration.xml`，在 ORIN 的配置文件加上 `<address>192.168.2.50</address>`，在 X86 的配置文件加上 `<address>192.168.2.150</address>`，然后重启机器人。
+    
+3.  将 PC 的有线网口设为固定 IP 192.168.2.100，在其上安装 ROS2 Humble with Fastdds，按照上图中连线，即可正确与机器人工控机进行 ROS2 通讯，注意运行 ROS2 程序前需要设置如下环境变量
+    
+    Terminal window
+    
+    ```
+    source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0
+    ```
+

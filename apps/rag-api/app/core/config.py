@@ -12,6 +12,7 @@ PROJECT_ROOT = RAG_SERVER_ROOT.parent.parent
 _default_content_dir = PROJECT_ROOT / "apps" / "web" / "src" / "content"
 CONTENT_DIR = Path(os.getenv("CONTENT_DIR", str(_default_content_dir)))
 SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
+DEVELOPER_SIDEBAR_PATH = CONTENT_DIR / "developer-sidebar.json"
 
 # ── OpenAI ───────────────────────────────────────────────────────────────
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

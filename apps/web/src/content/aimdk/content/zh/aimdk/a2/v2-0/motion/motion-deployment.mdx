@@ -1,0 +1,350 @@
+---
+title: Untitled
+description: >-
+  [https://github.com/Link-U-OS/rl\_training](https://github.com/Link-U-OS/rl_training)
+  注意，该训练代码仅进行了基本适配，奖励参数以及训练算法不保证可训练得到鲁棒、稳定的行走模型，仍需自行调整训练方法和奖励参数等。
+  后续版本会不断更新训练方法和参数等，力争提供一个可用的 baseline 行走算法。 [https://github.com/Link-U-…
+product: a2
+version: v2-0
+section: motion
+slug:
+  - a2
+  - v2-0
+  - motion
+  - motion-deployment
+route: /zh/a2/v2-0/motion/motion-deployment
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/deploy_motion_control'
+order: 51
+---
+## 1\. 基于开发机做自定义运控模型训练
+
+[https://github.com/Link-U-OS/rl\_training](https://github.com/Link-U-OS/rl_training)
+
+注意，该训练代码仅进行了基本适配，奖励参数以及训练算法不保证可训练得到鲁棒、稳定的行走模型，仍需自行调整训练方法和奖励参数等。
+
+后续版本会不断更新训练方法和参数等，力争提供一个可用的 baseline 行走算法。
+
+## 2\. 基于开发机做自定义运控仿真调试
+
+[https://github.com/Link-U-OS/rl\_deploy](https://github.com/Link-U-OS/rl_deploy)
+
+可基于此部署框架在开发机进行 mujoco sim2sim 仿真调试，该部署框架可以直接部署到真机。
+
+## 3\. 基于A2本体与商业版软件做自定义运控模块部署
+
+> 本教程仅针对远征 A2 机器人 V1.3/V2.0 版本系统，请通过 AimMaster 或 ssh 命令行连接确认机器人软件版本后再操作。
+> 
+> 实机部署需要使用 xbox 系列手柄硬件，如罗技F710、北通、XBOX、飞智等。
+
+### 3.1 机器人配置修改
+
+远征 A2 机器人机上软件系统已有自带运动控制模块，在部署新的运控系统之前需要将原本的运控模块关闭并修改 Hal 通信后端为 ROS2 以便新的运控系统与其通信。
+
+> 请确保机器人开机且被吊起，处于安全状态再进行后续操作。
+
+#### 3.1.1 关闭自带运动控制模块
+
+修改 X86 上 /agibot/software/v0/entry/bin/cfg/sm.yaml，移除下图中 “mc”,
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCb0vIOwh.png&w=872&h=832&f=webp)
+
+修改后重启机器人，等待机器人初始化完成后在 x86 上使用如下命令确认 mc 进程未启动
+
+Terminal window
+
+```
+aima em doctor
+```
+
+预期输出类似以下状态（无 MC）：
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCZDt4q6r.png&w=1102&h=482&f=webp)
+
+#### 3.1.2 修改 Hal Ethercat 通信后端【可选】
+
+> 该步骤为可选步骤，如使用 Iceoryx 通信后端则无需进行该步骤，自 2026/01/23 日起，部署 SDK 和框架中默认通信修改均已修改为 Iceoryx 通信后端，无需进行此步骤。
+
+修改 x86 上 /agibot/software/v0/config/hal\_ethercat/hal\_ethercat\_t3d1\_flagship\_cfg.yaml
+
+将其中箭头所指部分 iceoryx 修改为 ros2，共 4 处
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FrQf8-3do.png&w=772&h=1070&f=webp)
+
+修改后可以在 x86 上使用以下命令重启 hal\_ethercat 生效。
+
+Terminal window
+
+```
+aima em stop-app hal_ethercataima em start-app hal_ethercat
+```
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBjYfGfBT.png&w=1394&h=250&f=webp)
+
+> hal\_ethercat 关闭后机器人可能会误播报电池电量低并伴随有红色警报灯闪烁，无需惊慌，重启成功后告警会自动消失。
+
+可以使用如下命令在 x86 上检查是否有对应 ros2 话题发布
+
+```
+ssh agi@192.168.100.110 # login to orin
+aima topic hz /body_drive/leg_joint_state
+```
+
+> 自 2026/01/23 日起，rl\_deploy 仓库中提供了 python 版本 aimrl\_sdk 用于 python 部署推理运控模型，请参考 [aimrl\_sdk 使用说明](https://github.com/Link-U-OS/rl_deploy/blob/main/aimrl_sdk/README.zh_CN.md)。以下教程将区分 python 版本和 C++ 版本两种部署方式。
+
+### 3.2 docker 安装与镜像推送（仅 C++ 版本需要）
+
+机器人 x86 和 ORIN 工控机环境均不允许修改，而 **C++ 版本**运控部署程序需要一些额外依赖，需要使用 docker 方式进行部署。
+
+> Python 版本部署不需要容器，可跳过本节，直接参考 3.3.2 与 3.5.2。
+
+#### 3.2.1 docker 安装
+
+只允许使用下载 deb 包的方式安装，参考教程：[https://docs.docker.com/engine/install/ubuntu/#install-from-a-package。](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package%E3%80%82)
+
+1.  在 x86 上创建 /agibot/data/home/agi/Desktop 目录，机上磁盘清理模块会定时清理空间，该文件夹为白名单文件夹不会被清理。
+    
+    Terminal window
+    
+    ```
+    mkdir -p /agibot/data/home/agi/Desktop
+    ```
+    
+2.  docker 安装
+    
+    在[官方仓库](https://download.docker.com/linux/ubuntu/dists/jammy/pool/stable/amd64/)中，下载deb文件（Docker Engine、CLI、containerd 和 Docker Compose 软件包的以下文件）：
+    
+    containerd.io\_1.7.20-1\_amd64.deb
+    
+    docker-ce\_28.0.0-1~ubuntu.22.04~jammy\_amd64.deb
+    
+    docker-ce-cli\_28.0.0-1~ubuntu.22.04~jammy\_amd64.deb
+    
+    docker-buildx-plugin\_0.21.0-1~ubuntu.22.04~jammy\_amd64.deb
+    
+    docker-compose-plugin\_2.35.1-1~ubuntu.22.04~jammy\_amd64.deb
+    
+    将以上文件传输到 x86 上 /agibot/data/home/agi/Desktop 目录下 在该路径下执行：
+    
+    Terminal window
+    
+    ```
+    sudo dpkg -i ./containerd.io_1.7.20-1_amd64.deb \  ./docker-ce_28.0.0-1~ubuntu.22.04~jammy_amd64.deb \  ./docker-ce-cli_28.0.0-1~ubuntu.22.04~jammy_amd64.deb \  ./docker-buildx-plugin_0.21.0-1~ubuntu.22.04~jammy_amd64.deb \  ./docker-compose-plugin_2.35.1-1~ubuntu.22.04~jammy_amd64.deb
+    ```
+    
+3.  将[当前用户 agi 添加到 docker 组](https://docs.docker.com/engine/install/linux-postinstall/)，并刷新用户组使变更立即生效
+    
+    Terminal window
+    
+    ```
+    sudo groupadd dockersudo usermod -aG docker $USERnewgrp docker
+    ```
+    
+4.  修改 docker 默认存储路径 docker 默认存储路径为 /var/lib/docker，而 x86 根目录下磁盘分区空间较小，需修改默认存储路径
+    
+    Terminal window
+    
+    ```
+    # 停止 Docker 服务sudo systemctl stop docker
+    # 移动默认存储路径sudo mv /var/lib/docker /agibot/data/home/agi/Desktop
+    # 修改 Docker 配置sudo vim /etc/docker/daemon.json
+    ```
+    
+    在配置文件中添加：
+    
+    ```
+    {  "data-root": "/agibot/data/home/agi/Desktop/docker"}
+    ```
+    
+    重启docker：
+    
+    Terminal window
+    
+    ```
+    sudo systemctl start docker
+    ```
+    
+    docker配置完毕。
+    
+
+#### 3.2.2 镜像推送
+
+首先在本地 PC 将镜像保存为一个压缩包（假定已完成前述仿真流程中的镜像构建步骤）
+
+Terminal window
+
+```
+docker save -o a2-deploy-image.tar a2-deploy-image
+```
+
+保存完成后使用如下命令推送到 x86 工控机上（IP 地址请改为真实的机器人 x86 工控机地址）
+
+Terminal window
+
+```
+scp a2-deploy-image.tar agi@192.168.xxx.xxx:/agibot/data/home/agi/Desktop
+```
+
+远程连接到机器人 x86 工控机上加载该镜像
+
+Terminal window
+
+```
+docker load -i /agibot/data/home/agi/Desktop/a2-deploy-image.tar
+```
+
+加载完成后运行 docker images 命令可以查看当前已加载到镜像列表。
+
+### 3.3 程序上传并启动（C++ 容器 / Python 本机）
+
+> 本节将分别给出 **C++ 版本部署（Docker）** 与 **Python 版本部署（免容器）** 的上传与启动方式。
+
+#### 3.3.1 C++ 版本：上传 deploy 并启动容器
+
+在本机 PC 进入部署仓库目录，执行以下命令上传程序到机器人 x86 工控机（IP 需替换）
+
+Terminal window
+
+```
+rsync -avz --progress deploy  agi@192.168.xxx.xxx:/agibot/data/home/agi/Desktop/
+```
+
+ssh 连接机器人 x86 工控机，使用如下命令启动镜像
+
+Terminal window
+
+```
+docker run -it \--name=a2_deploy \--privileged \--net=host \--ipc=host \--pid=host \-v /tmp:/tmp \-v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \-v /agibot/data/home/agi/Desktop/deploy:/home/agi/deploy \-v /dev/input:/dev/input \-d a2-deploy-image
+```
+
+检查底层状态数据是否发布（按通信后端选择一种方式）
+
+-   默认 **Iceoryx 后端（推荐/默认）**：无需 ROS2/DDS 环境变量。可在 ORIN 上通过 `aima topic` 检查 `/body_drive/leg_joint_state` 是否有数据发布：
+
+```
+ssh agi@192.168.100.110 # login to orin
+aima topic hz /body_drive/leg_joint_state
+```
+
+-   若你在 3.1.2 **手动将后端改为 ROS2**：可在容器内通过 `ros2 topic` 检查（此时才需要配置 DDS 相关环境变量）：
+
+Terminal window
+
+```
+# 进入容器docker start a2_deploy && docker exec -it a2_deploy /bin/bash
+# 加载 ROS2 环境source /opt/ros/humble/setup.bashsource /home/agi/deploy/install/setup.bash
+# 仅 ROS2 后端需要（可按实际情况调整/省略）export ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/home/agi/deploy/ros_dds_configuration.xml
+ros2 topic list | grep body_driveros2 topic echo /body_drive/leg_joint_state
+```
+
+#### 3.3.2 Python 版本：上传 aimrl\_sdk 并在 x86 上直接运行（免容器）
+
+在本机 PC 进入部署仓库目录，执行以下命令上传 `aimrl_sdk` 到机器人 x86 工控机（IP 需替换）
+
+Terminal window
+
+```
+rsync -avz --progress aimrl_sdk  agi@192.168.xxx.xxx:/agibot/data/home/agi/Desktop/
+```
+
+ssh 连接机器人 x86 工控机后，使用如下命令直接运行 `aimrl_sdk` 示例程序（无需 docker）
+
+Terminal window
+
+```
+# 进入白名单目录（避免被磁盘清理）cd /agibot/data/home/agi/Desktop/aimrl_sdk
+# 创建虚拟环境并安装 SDK (直接使用 whl 包安装)python3 -m venv .venvsource .venv/bin/activatepip install https://github.com/Link-U-OS/rl_deploy/releases/download/aimrl_sdk_v0.1.0/aimrl_sdk-0.1.0-cp310-cp310-linux_x86_64.whl
+# 运行示例（可按需替换 --cfg 里的模型路径与参数）python examples/rl_deploy_basic.py --cfg examples/configs/agibot_a2_dof12.yaml --joystick /dev/input/js0
+```
+
+### 3.4 连接实体手柄控制器
+
+实机启动后，需要使用手柄进行控制。只支持XBOX类型游戏手柄，如罗技F710、北通、XBOX、飞智等，接收器需插在机器人维护仓右侧 USB 调试口（连接到 x86 工控机）上。
+
+接收器插入后，ssh 连接到 x86 工控机上查找 /dev/input/js0 文件，可以 `cat /dev/input/js0` 并按动手柄按键观察是否能接收到手柄输入。
+
+另外还需要给运行程序的环境（容器内）对 /dev/input 下的设备设置一些权限，否则相关手柄读取程序可能无法访问设备信息。
+
+Terminal window
+
+```
+sudo chmod 666 /dev/input/*
+```
+
+### 3.5 启动部署框架
+
+> 启动部署框架并进行调试前请务必保证**机器人急停装置电量充足且随时可触发，机器人必须处于带保护状态。**
+
+#### 3.5.1 C++ 版本：启动 ROS2 部署框架
+
+Terminal window
+
+```
+# 进入容器docker start a2_deploy && docker exec -it a2_deploy /bin/bash
+# 启动部署框架cd /home/agi/deploy/install/deploy_assets/scripts./start_rl_control_real.sh
+```
+
+#### 3.5.2 Python 版本：启动 aimrl\_sdk 示例程序（免容器）
+
+> Python 版本部署推荐直接使用 `aimrl_sdk/examples/rl_deploy_basic.py` 作为基线示例，并按需替换其中的 ONNX 模型与配置文件。更多参数说明请参考 [aimrl\_sdk 使用说明](https://github.com/Link-U-OS/rl_deploy/blob/main/aimrl_sdk/README.zh_CN.md)。
+
+Terminal window
+
+```
+# 在 x86 上运行，无需进入容器cd /agibot/data/home/agi/Desktop/aimrl_sdk
+# 首次运行：创建虚拟环境并安装 SDK (直接使用 whl 包安装)python3 -m venv .venvsource .venv/bin/activatepip install https://github.com/Link-U-OS/rl_deploy/releases/download/aimrl_sdk_v0.1.0/aimrl_sdk-0.1.0-cp310-cp310-linux_x86_64.whl
+# 运行示例（可按需替换 --cfg 里的模型路径与参数）python examples/rl_deploy_basic.py --cfg examples/configs/agibot_a2_dof12.yaml --joystick /dev/input/js0
+```
+
+### 3.6 手柄操作逻辑
+
+请详细阅读以下内容，确保理解手柄操作逻辑后再上实机运行。
+
+#### 3.6.1 手柄操作流程
+
+操作前，请确保机器人急停手柄电量充足且可以随时被按下
+
+1.  按下手柄“start”键机器人进入启动模式
+    -   机上的运行终端（容器内或 x86 本机），应显示“start control”字样
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FJi2Qf68K.jpg&w=659&h=500&f=webp)
+
+2.  同时按下手柄“LB”和“A”键机器人进入位控模式
+    -   机上的运行终端（容器内或 x86 本机），应显示“lie2stand”字样
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDgc1Hh75.jpg&w=660&h=500&f=webp)
+
+此时放下机器人，确保机器人双脚落地，搀扶机器人使其保持平衡，确保吊绳松弛
+
+3.  按下手柄“X”键机器人进入运控模式
+    -   机上的运行终端（容器内或 x86 本机），应显示“stand2walk”字样
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FC-QU-CcF.jpg&w=659&h=500&f=webp)
+
+此时确保机器人急停手柄电量充足且可以随时被按下，并确认机器人周边环境安全
+
+4.  按下手柄“LB”键使能控制摇杆，两个摇杆可发出控制指令
+    -   红色箭头对应摇杆方向控制前进后退
+    -   绿色箭头对应摇杆方向控制左右横移
+    -   蓝色箭头对应摇杆方向控制左右转向
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCxrsNosb.jpg&w=659&h=500&f=webp)
+
+5.  按下手柄“Y”键(绿色圈出)，吊起机器人后按下手柄“start”键(蓝色圈出)，结束机器人控制
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDmVBscJs.jpg&w=659&h=500&f=webp)
+
+#### 3.6.2 手柄按键逻辑
+
+1.  “start”键：切换机器人进入或退出启动模式
+    -   启动模式：各关节位控，此时Kp很小，机器人应显性的表现为腿部臂部关节受很小的力，可以被扳动但会感受到阻力；机上的运行终端（容器内或 x86 本机），应显示“start control”字样
+    -   退出启动模式：此时机器人腿部臂部关节不受力，终端显示“stop control”字样
+2.  “LB”和“A”键：切换机器人进入或退出位控模式
+    -   进入运控模式：机器人应显性的表现为腿部臂部关节受力，可以被小幅度扳动但会感受到阻力；机上的运行终端（容器内或 x86 本机），应显示“lie2stand”字样
+    -   退出运控模式：机器人回到启动模式，终端显示“stand2lie”字样
+3.  “X”键：切换机器人进入运控模式
+    -   机器人可以自主站立；机上的运行终端（容器内或 x86 本机），应显示“stand2walk”字样
+4.  “Y”键：切换机器人退出运控模式
+    -   机器人回到位控模式，终端显示“walk2stand”字样
+5.  “LB”键：使能控制摇杆
+    -   该按键被按下时，手柄的两个摇杆才可以发出控制指令
+

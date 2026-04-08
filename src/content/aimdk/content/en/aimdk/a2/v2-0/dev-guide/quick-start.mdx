@@ -1,0 +1,209 @@
+---
+title: 6. Quick Start for Secondary Development
+description: >-
+  This chapter will demonstrate how to quickly get your first secondary
+  development program up and running through a few simple example programs,
+  providing a basic understanding. The quick start tutorial assumes that the s…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - quick-start
+route: /en/a2/v2-0/dev-guide/quick-start
+sourceUrl: >-
+  https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/06-second_develop_quick_start
+order: 15
+---
+# 6. Quick Start for Secondary Development
+
+This chapter will demonstrate how to quickly get your first secondary development program up and running through a few simple example programs, providing a basic understanding.
+
+The quick start tutorial assumes that the secondary development program is deployed on ORIN and uses a Python venv virtual environment.
+
+## 6.1 Prerequisites
+
+### 6.1.1 Connecting to ORIN
+
+There are multiple ways to connect to ORIN; choose any one of the following methods.
+
+1.  Wired Connection
+    
+    **Set the IP address of the PC’s wired network port to a static IP of 192.168.2.100**, then connect one end of the Ethernet cable to the PC’s wired network port and the other end to the robot’s right debugging network port at the back.
+    
+    ```
+    ping 192.168.2.50 # Check whether it is connectedssh agi@192.168.2.50
+    ```
+    
+2.  Wireless AP Hotspot Connection
+    
+    Connect the development machine to the ORIN AP hotspot, which usually starts with Robot-. The default password can be found in the `password.md` file in the AimDK package. Then, log in to the robot via SSH using the AP hotspot IP.
+    
+    Terminal window
+    
+    ```
+    ssh agi@192.168.88.88
+    ```
+    
+3.  Via X86 WiFi Jump
+    
+    Both the development machine and the robot need to be connected to the same wireless network. Obtain the robot’s IP from the AimMaster settings - Wireless LAN interface, which is actually the X86 WiFi IP. After connecting via SSH, jump to ORIN using 192.168.100.110.
+    
+    Terminal window
+    
+    ```
+    ssh agi@192.168.xxx.xxx # x86 ipssh agi@192.168.100.110
+    ```
+    
+    ORIN and X86 are directly connected via an Ethernet cable in the 192.168.100.0/24 subnet, and you can jump between them using the IPs 192.168.100.100 and 192.168.100.110.
+    
+    You can also use the ssh proxyjump function to make a one-time jump (you still need to enter the password twice).
+    
+    Terminal window
+    
+    ```
+    ssh -J agi@192.168.xxx.xxx agi@192.168.100.110
+    ```
+    
+    The proxyjump function can also be used with rsync to quickly sync local folders to ORIN without transferring through the X86 (the X86 WiFi IP and folder need to be modified):
+    
+    Terminal window
+    
+    ```
+    rsync -avzP --exclude ".git/" \        -e "ssh -J agi@192.168.xxx.xxx" \        /path/to/local/dir agi@192.168.100.110:/agibot/data/home/agi/Desktop/working_dir
+    ```
+    
+
+### 6.1.2 Creating a Deployment Folder
+
+The recommended directory for deploying programs is `/agibot/data/home/agi/Desktop`. The disk cleanup module on the machine will periodically clean up space, and this folder is on the whitelist and will not be cleaned.
+
+> **Placing programs and data in other paths may result in partition full, files being mistakenly deleted, etc. Please strictly follow the convention of using the `/agibot/data/home/agi/Desktop` directory.**
+
+Terminal window
+
+```
+mkdir -p /agibot/data/home/agi/Desktop
+```
+
+If you encounter permission issues, consider using the following command to create the folder:
+
+Terminal window
+
+```
+sudo mkdir -p /agibot/data/home/agi/Desktopsudo chown -R agi:agi /agibot/data/home/agi
+```
+
+### 6.1.3 Creating a Python Virtual Environment
+
+Terminal window
+
+```
+cd /agibot/data/home/agi/Desktoppython -m venv mydevsource mydev/bin/activate
+```
+
+Subsequent examples assume that the virtual environment has been created and activated, and this step will not be repeated.
+
+## 6.2 Example of Running a Battery Power Retrieval Program
+
+This example uses an HTTP request to obtain the BMS status of the robot.
+
+Run the following script directly in the ORIN command line:
+
+```
+curl -i     -H 'content-type:application/json' \            -H 'timeout: 1000'   -X POST 'http://192.168.100.100:56421/rpc/aimdk.protocol.HalBmsService/GetBmsState' \            -d '{}'
+```
+
+The returned result should look like the following (the specific field meanings are explained in detail in the subsequent API chapters):
+
+```
+HTTP/1.1 200 OKAccess-Control-Allow-Origin: *Content-Type: application/jsonContent-Length: 705
+{"data":{"ver":{"hardware_major":48,"hardware_minor":48,"hardware_revision":49,"software_major":51,"software_minor":48,"software_revision":49},"voltage":54410,"current":-304,"power":0,"temperature":308,"capacity":13971,"charge":99,"power_supply_health":"PowerSupplyHealth_GOOD","power_supply_status":"PowerSupplyStatus_IDEL","cycles_num":129,"cycles_capacity":12,"abnormal_state":"PowerAbnormalStatus_NORMAL","charger_state":"ChargerConnected","bms_state":"BatteryStatus_Connected","max_current":25490,"battery_firmware_type":"BatteryFirmwareType_OLD","battery_key_state":"BatteryKeyStatus_SHORT_CURCUIT","battery_pack_state":"BatteryPackStatus_NORMAL","battery_comm_state":"BatteryCommunication_NORMAL"}}
+```
+
+## 6.3 Example of Getting the Upper Limb Joint State
+
+Save the following code on ORIN as /agibot/data/home/agi/Desktop/joint\_state.py.
+
+```
+#!/usr/bin/env python3import rclpyfrom rclpy.node import Nodefrom rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicyfrom sensor_msgs.msg import JointState
+class JointStateSubscriber(Node):    def __init__(self, topic_name: str):        super().__init__("joint_state_subscriber")
+        self.topic_name = topic_name
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST, depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT        )
+        self.subscription = self.create_subscription(JointState, topic_name, self.listener_callback, qos_profile)
+    def listener_callback(self, msg: JointState):        self.get_logger().info(f"=== Received {self.topic_name} ===")        self.get_logger().info(f"  header: {msg.header}")        self.get_logger().info(f"  name: {msg.name}")        self.get_logger().info(f"  position: {msg.position}")        self.get_logger().info(f"  velocity: {msg.velocity}")        self.get_logger().info(f"  effort: {msg.effort}")
+def main(args=None):    rclpy.init(args=args)    # Arm joint status: /motion/control/arm_joint_state    # Neck joint status: /motion/control/neck_joint_state    joint_state_node = JointStateSubscriber("/motion/control/arm_joint_state")    try:        rclpy.spin(joint_state_node)    except KeyboardInterrupt:        pass    finally:        joint_state_node.destroy_node()        rclpy.shutdown()
+if __name__ == "__main__":    main()
+```
+
+Then execute the following command:
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xmlpython3 /agibot/data/home/agi/Desktop/joint_state.py
+```
+
+## 6.4 Example of Controlling the Head Shaking Interface
+
+We provide both HTTP and ROS2 interfaces for the head.
+
+### 6.4.1 Head Shaking HTTP Example
+
+Using the HTTP interface is simpler. Save and run the following script:
+
+```
+#!/usr/bin/env python3
+## Function: Set head joint values
+import requestsfrom datetime import datetime
+# Generate request headerdef create_header():    now = datetime.utcnow()    header = {        "timestamp": {            "seconds": int(now.timestamp()),            "nanos": now.microsecond * 1000,            "ms_since_epoch": int(now.timestamp() * 1000),        },        "control_source": "ControlSource_SAFE",    }    return header
+def create_neck_data():    neck_data = {        "shake": {            "name": "idx27_head_joint1",            "position": 0.5,            "velocity": 0.0,            "effort": 0.0,        },        "nod": {            "name": "idx28_head_joint2",            "position": 0.5,            "velocity": 0.0,            "effort": 0.0,        },    }
+    return neck_data
+def service_call():    # Send service request
+    url = (        "http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/SetNeckCommand"    )    headers = {"Content-Type": "application/json", "timeout": "60000"}
+    payload = {"header": create_header(), "data": create_neck_data()}
+    response = requests.Session().post(url, headers=headers, json=payload)
+    return response
+# Main program entry pointdef main():    response = service_call()    print(response.text)    requests.Session().close()
+if __name__ == "__main__":    main()
+```
+
+In this, `velocity` and `effort` are ineffective; only `position` is a valid value.
+
+### 6.4.2 Head Shaking ROS2 Example
+
+Using the ROS2 interface to call the head shaking program requires some prerequisites:
+
+1.  You need to switch the state machine of the motion control module to the RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO state. This can be done by switching to the upper body action mode on the AimMaster. The subsequent detailed interface explanation will also cover how to use the program interface for switching.
+    
+2.  Call the following command to release the control of the upper body joints by the action playback module.
+    
+    Terminal window
+    
+    ```
+    curl -i \    -H 'content-type:application/json' \    -H 'timeout: 1000' \    -X POST http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableMotionPlayer \    -d '{}'
+    ```
+    
+
+Next, save the following script as /agibot/data/home/agi/Desktop/neck.py
+
+```
+#!/usr/bin/env python3import rclpyfrom rclpy.node import Nodefrom rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicyfrom sensor_msgs.msg import JointState
+class NeckPublisher(Node):    def __init__(self, neck_topic_name: str):        super().__init__("neck_publisher")
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST,            depth=10,            reliability=QoSReliabilityPolicy.BEST_EFFORT,        )
+        self.publisher = self.create_publisher(JointState, neck_topic_name, qos_profile)
+        timer_period = 0.02        self.timer = self.create_timer(timer_period, self.timer_callback)
+    def timer_callback(self):        msg = JointState()        msg.header.stamp = self.get_clock().now().to_msg()
+        # Position control only is supported.        # The first value represents head yaw, ranging from -0.785 to 0.785.        # The second value is unused but must still be provided.        msg.name = ["idx27_head_joint1", "idx28_head_joint2"]        msg.position = [0.5, 0.5]
+        # The following fields have no actual effect but must be set; otherwise, the motion controller may crash.        msg.velocity = [0.0, 0.0]        msg.effort = [0.0, 0.0]
+        self.publisher.publish(msg)
+def main(args=None):    rclpy.init(args=args)    neck_publisher = NeckPublisher("/motion/control/neck_joint_command")    try:        rclpy.spin(neck_publisher)    except KeyboardInterrupt:        pass    finally:        neck_publisher.destroy_node()        rclpy.shutdown()
+if __name__ == "__main__":    main()
+```
+
+Then run
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xmlpython3 /agibot/data/home/agi/Desktop/neck.py
+```
+

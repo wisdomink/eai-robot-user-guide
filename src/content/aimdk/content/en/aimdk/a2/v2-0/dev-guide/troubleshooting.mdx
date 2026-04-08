@@ -1,0 +1,91 @@
+---
+title: 10. Troubleshooting Interface Calls
+description: >-
+  The general troubleshooting methods for HTTP JSON RPC and ROS2 Topic are
+  different, but there are also some common troubleshooting methods for on-board
+  issues. 1. Check if the corresponding IP is the correct x86/orin ind…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - troubleshooting
+route: /en/a2/v2-0/dev-guide/troubleshooting
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/10-interface_issues'
+order: 42
+---
+# 10. Troubleshooting Interface Calls
+
+## 10.1 Troubleshooting Approach
+
+The general troubleshooting methods for HTTP JSON RPC and ROS2 Topic are different, but there are also some common troubleshooting methods for on-board issues.
+
+### 10.1.1 HTTP JSON RPC
+
+1.  Check if the corresponding IP is the correct x86/orin industrial PC IP and if it can be pinged.
+2.  Check if the HTTP URL is correct; you can refer to the example scripts or interface documentation.
+3.  Check if the corresponding port has a service running. After SSHing into the x86, you can use the command `lsof -i:xxxx` in the terminal to check if a service is running on the corresponding port.
+4.  If you get a “Connection Refused” error, it means the IP might not be reachable or the port service is not started.
+5.  If you get an “HTTP deserialize failed” error, it means the JSON body fields may be incorrectly filled. You can refer to the example scripts or interface documentation for comparison.
+
+### 10.1.2 ROS2 Topic
+
+1.  Check if the on-board ROS2 dds configuration includes the IP of the network card being used. Ensure that both privileged and non-privileged configurations correctly add the network card IP. After adding, a full reboot is required.
+    
+2.  Check if you are using the ROS2 Humble with Fastdds version.
+    
+3.  Check if the local environment variables `ROS_DOMAIN_ID=232` and `ROS_LOCALHOST_ONLY=0` are loaded. The exported environment variables only take effect in the current terminal. A new terminal will need to re-export these variables. You can use the command `env | grep ROS` to view the relevant environment variable settings in the current terminal.
+    
+4.  Ensure that the QoS of the topic is consistent with the default QoS on the board.
+    
+    ```
+      history: keep_last  depth: 10  reliability: best_effort
+    ```
+    
+5.  After SSHing into the x86/orin industrial PC, execute `aima em load-env` (to load the ROS2 environment variables) and then use the `ros2 topic` command to check if the related topics are being sent or received by any modules.
+    
+
+### 10.1.3 Common Troubleshooting Methods
+
+1.  Use AimMaster to check if the robot has any health alerts. In the case of a robot fault, it may affect some interface calls. For example, if there is a joint fault, the motion control interface may not work properly.
+2.  If AimMaster is not connected, you can log into the x86 industrial PC of the robot and execute the `aima doctor` command to quickly view the health alert information.
+
+## 10.2 Common Interface Questions
+
+1.  Why does calling the upper limb action interface or neck interface result in no response or severe shaking?
+    
+    1.  First, confirm that the robot is in the corresponding Action mode, which should have the suffix JOINT\_SERVO.
+    2.  In JOINT\_SERVO mode, the control of the upper limbs and neck is preempted by the motion playback module. You need to call the `DisableMotionPlayer` interface to disable the control of the motion playback module before you can normally call the upper limb or neck control interfaces.
+    
+    ```
+    curl -i \    -H 'content-type:application/json' \    -H 'timeout: 1000' \    -X POST http://192.168.100.100:56444/rpc/aimdk.protocol.MotionCommandService/DisableMotionPlayer \    -d '{}'
+    ```
+    
+2.  Why does calling any motion playback only result in the right hand raising action?
+    
+    1.  This is the default action of the motion playback module. When the `motion_id` parameter is incorrect, it will default to this action.
+        
+    2.  A correct motion path should find the corresponding .mcap (new version) or .db (old version) file and pass the complete path, for example:
+        
+        Terminal window
+        
+        ```
+        /agibot/data/resources/default/motion/敬礼/敬礼.mcap
+        ```
+        
+
+## 10.3 Feedback Channels
+
+If you encounter bugs in secondary development interfaces, you can provide feedback through the following channels:
+
+[https://agirobot.feishu.cn/share/base/form/shrcndpGW6r8FIdt2mT3uX02z6k](https://agirobot.feishu.cn/share/base/form/shrcndpGW6r8FIdt2mT3uX02z6k)
+
+Note
+
+1.  This channel is only for answering questions or reporting bugs related to secondary development interfaces. For robot body faults or after-sales maintenance, please contact the delivery, operation, and after-sales teams directly. Unrelated issues will not be responded to.
+2.  Please describe the problem in detail in the form, and provide reproducible steps if possible. Problems with rich information and clear descriptions will be prioritized for resolution. Vague and general problems will be given lower priority and may be ignored.
+3.  Please fill out all information carefully. Inconsistent or casually filled forms will be ignored.
+4.  Each ticket should focus on a single or similar issue. Do not mix multiple issues in one ticket, as this will significantly delay the processing time.
+

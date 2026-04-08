@@ -1,0 +1,234 @@
+---
+title: 7.7 Map Management Section
+description: >-
+  The Map Management (MM) module on ORIN is responsible for managing the robot’s
+  maps, including functions such as map acquisition, storage, and updates. SLAM
+  mapping, relocalization, and other features do not currently pr…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - map-management
+route: /en/a2/v2-0/dev-guide/map-management
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-07-map'
+order: 26
+---
+# 7.7 Map Management Section
+
+### 7.7.1 Overview
+
+The Map Management (MM) module on ORIN is responsible for managing the robot’s maps, including functions such as map acquisition, storage, and updates.
+
+SLAM mapping, relocalization, and other features do not currently provide secondary development interfaces and can only be used in conjunction with the AimMaster client software.
+
+Secondary development interfaces for querying map information are provided, making it convenient to obtain map feature data and navigation point data (for use with planning and control navigation interfaces).
+
+### 7.7.2 Get 2D Map Data RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.MappingService/Get2DWholeMap` |
+| --- | --- |
+| Function Summary | Get 2D map data |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/Get2DWholeMap |
+| Input Parameters | 
+```json
+{
+  "command": "MappingCommand_GET_2D_WHOLE_MAP",
+  "map_id": "1764059676131"
+}
+```
+
+-   command: Keep it as is
+-   map\_id: Fill in the ID of the map for which you want to get information
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "map_id": "1764059676131",
+    "map_name": "Park",
+    "width": 2898,
+    "height": 2603,
+    "resolution": 20,
+    "origin_x": 1274,
+    "origin_y": 1371,
+    "map_data": "...",
+    "rotate_angle": -5.512457272434708,
+    "map_url": ""
+  }
+}
+```
+
+-   map\_id: Map ID
+-   map\_name: Map name
+-   width: Map width
+-   height: Map height
+-   resolution: Resolution
+-   origin\_x, origin\_y: Origin coordinates at the time of mapping, can be considered as the map origin
+-   map\_data: Map data, in PNG format
+-   rotate\_angle: Rotation angle, indicates the display method for the client, can be ignored
+-   map\_url: Invalid field
+
+ |
+| Example Script | examples/mm/get\_2d\_whole\_map.sh |
+| Notes | 
+
+-   You can calculate the robot's position in the pixel map using the following formula:
+    
+    ```bash
+    pixel_x = origin_x + x * resolution
+    pixel_y = origin_y - y * resolution
+    ```
+    
+    Where x, y are the transformation coordinates from the map coordinate system to the robot's base\_link coordinate system, which can be obtained through the /tf topic.
+    
+
+ |
+
+### 7.7.3 Get Map List RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.MappingService/GetStoredMapNames` |
+| --- | --- |
+| Function Summary | Get map list |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/GetStoredMapNames |
+| Input Parameters | 
+```json
+{
+  "command": "MappingCommand_GET_STORED_MAP_NAME"
+}
+```
+
+-   Keep it fixed as is
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "map_lists": [
+      {
+        "map_id": "1764137567113",
+        "map_name": "River Park",
+        "map_index": 5
+      },
+      {
+        "map_id": "1764059676131",
+        "map_name": "Park",
+        "map_index": 3
+      },
+      {
+        "map_id": "1762584133656",
+        "map_name": "e2-8",
+        "map_index": 2
+      }
+    ]
+  }
+}
+```
+
+-   map\_id: Map ID
+-   map\_name: Map name
+-   map\_index: Map index
+
+ |
+| Example Script | examples/mm/get\_stored\_map\_names.sh |
+| Notes |  |
+
+### 7.7.4 Get Current Working Map ID RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.MappingService/GetCurrentWorkingMap` |
+| --- | --- |
+| Function Summary | Get current working map ID |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.MappingService/GetCurrentWorkingMap |
+| Input Parameters | 
+```json
+{
+  "command": "MappingCommand_GET_CURRENT_WORKING_MAP"
+}
+```
+
+Fixed as is |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "map_id": "1764059676131"
+  }
+}
+```
+
+map\_id: The ID of the currently used map |
+| Example Script | examples/mm/get\_current\_working\_map.sh |
+| Notes |  |
+
+### 7.7.5 Get Map Topology Data RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.LocalizationService/GetTopoMsgs` |
+| --- | --- |
+| Function Summary | Get map topology data |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:50807/rpc/aimdk.protocol.LocalizationService/GetTopoMsgs |
+| Input Parameters | 
+```json
+{
+  "command": "TopoCommand_GET_TOPO_MSG",
+  "map_id": 1764059676131
+}
+```
+
+-   command field should be fixed as TopoCommand\_GET\_TOPO\_MSG
+-   map\_id: Map ID
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "points": [
+      {
+        "point_id": 1,
+        "name": "Navigation Point 1",
+        "point_type": "NaviPointType_NAVI_POINT",
+        "pixel_pose": {
+          "position": {
+            "u": 1506,
+            "v": 1420
+          },
+          "angle": 0
+        },
+        "pose": {
+          "position": {
+            "x": 11.6,
+            "y": -2.45,
+            "z": 0
+          }
+        }
+      }
+    ],
+    "paths": [],
+    "regions": []
+  }
+}
+```
+
+-   points, paths, regions represent points, routes, and regions, respectively. Points can be used for route explanations and navigation, while the latter two are generally not used and do not need to be concerned about.
+-   point\_id: Point ID
+-   name: Point name
+-   point\_type: Point type
+-   pixel\_pose: Pixel coordinates
+-   pose: World coordinates
+
+ |
+| Example Script | examples/mm/get\_topo\_msgs.sh |
+| Notes |  |
+

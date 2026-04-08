@@ -1,0 +1,216 @@
+---
+title: Action模块详细说明
+description: >-
+  - PoseEstimation 6D位姿估计（只提供主线支持的箱子识别） - 功能概述 - 负责 调用远程 6D 目标位姿估计服务，把 2D 检测框 与
+  3D 位姿 解析成 cv::Mat(4×4) 与 BBox(x1,y1,x2,y2)，供后续模块直接使用。 - 输入参数
+  暂时无法在智元机器人文档外展示此内容 - 输出结果 暂时无法在智元机器人文档外展示此内容 - 调用示例 ``` ``` -
+  SendEnvObjectArrayI…
+product: a2w
+slug:
+  - a2w
+  - action-module
+route: /zh/a2w/action-module
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/development/action'
+order: 30
+---
+# Action模块详细说明
+
+## 感知模块
+
+-   PoseEstimation 6D位姿估计（只提供主线支持的箱子识别）
+    -   功能概述
+        -   负责 调用远程 6D 目标位姿估计服务，把 2D 检测框 与 3D 位姿 解析成 cv::Mat(4×4) 与 BBox(x1,y1,x2,y2)，供后续模块直接使用。
+    -   输入参数 暂时无法在智元机器人文档外展示此内容
+    -   输出结果 暂时无法在智元机器人文档外展示此内容
+    -   调用示例
+
+```
+#include "src/action/6d_object_pose_estimation/pose_estimation.h"void inference_pose(std::vector<cv::Mat>& mat_poses, std::vector<std::vector<double>>& boxes,aima::action::TargetType type){  aima::action::PoseEstimation pose_action;  aima::action::PoseParam &pose_param = pose_action.param;  pose_param.camera_id                = "realsense_d415_head_front";  pose_param.type = type;  // pose_param.obj = "";  Run(pose_action);  // AIMRTE_INFO("pose_action.result.state:{}",pose_action.result.state);  mat_poses = std::move(pose_action.result.mat_poses);  boxes     = std::move(pose_action.result.boxes);}
+```
+
+-   SendEnvObjectArrayInfo
+    -   功能概述
+        -   发送环境障碍物，需要在规划之前发送，目前只能发送长方体障碍物
+    -   调用示例
+
+```
+void send_env_objects(std::vector<cv::Mat> &T_objects_mc,std::vector<double> &box_size,std::string const &arm){  set_action("PLANNING_MOVE");  aima::action::perception_send_envobj::SendEnvObjectArrayInfo env_action;  aima::action::perception_send_envobj::SendEnvObjectArrayInfoRequest &req = env_action.param;  std::vector<aima::action::perception_send_envobj::param::EnvObjectInfo> Objects;  for(size_t i = 0;i <T_objects_mc.size();i++){    aima::action::perception_send_envobj::param::EnvObjectInfo obj;    aima::action::perception_send_envobj::param::Vec3 dim;    dim.x = box_size[0];    dim.y = box_size[1];    dim.z = box_size[2];
+    obj.name = std::string("box") + std::to_string(i);    obj.pose = endpose_to_reqse3_proto(RobotEndPose(T_objects_mc[i]));    obj.type = aima::action::perception_send_envobj::param::EnvObjectInfo::GeometryType::BOX;    obj.dims = dim;    obj.parent_frame = "base_link";    if(arm == "left"){      obj.disable_collision_arm_name = 2;//忽略右臂    }    else if(arm == "right"){      obj.disable_collision_arm_name = 1;//忽略左臂    }    else if(arm == "dual"){      obj.disable_collision_arm_name = 0;//都不忽略    }
+    Objects.push_back(obj);  }  req.objects = Objects;  Run(env_action);  AIMRTE_INFO("env_action.result.state:{}",env_action.result.state);  // aima::te::AssertTrue(env_action.result.state == aima::action:: mc::param::CommonState::Success);}
+```
+
+## TF模块
+
+-   GetTransformAction
+    -   功能概述 通过 RPC 服务 查询 任意两坐标系 之间的 实时 SE3 变换，并将结果封装成 4×4 齐次矩阵 (cv::Mat, CV\_64F) 返回。 矩阵格式： | R t | | 0 1 | 左上 3×3：旋转矩阵 右上 3×1：平移向量
+    -   参数说明
+    -   有以下坐标系：rgbd\_head（头部相机坐标系），base\_link（机器人基坐标系），arm\_base\_link（手臂基坐标系），right\_arm\_link07（右手末端坐标系），left\_arm\_link07（左手末端坐标系） 暂时无法在智元机器人文档外展示此内容
+    -   调用示例
+
+```
+#include "./get_transform.h"
+cv::Mat get_tf_transform(std::string const &source_frame, std::string const &target_frame){  aima::action::GetTransformAction get_transform_action;  auto &get_transform_param                   = get_transform_action.param;  *get_transform_param.mutable_source_frame() = source_frame;  *get_transform_param.mutable_target_frame() = target_frame;  Run(get_transform_action);
+  auto &ret                            = get_transform_action.result;  aimdk::protocol::SE3Pose const &pose = ret.transform_stamped().transform();  auto const &position                 = pose.position();  auto const &orientation              = pose.orientation();
+  // 初始化为单位矩阵  cv::Mat position_mat = cv::Mat::eye(4, 4, CV_64F);
+  // 设置平移分量  position_mat.at<double>(0,3) = position.x();  position_mat.at<double>(1,3) = position.y();  position_mat.at<double>(2,3) = position.z();
+  // 四元数转旋转矩阵  Eigen::Quaterniond q(orientation.w(), orientation.x(),                      orientation.y(), orientation.z());  Eigen::Matrix3d rotation_matrix = q.normalized().toRotationMatrix();
+  // 转换到OpenCV并填充  cv::Mat rotation_mat;  cv::eigen2cv(rotation_matrix, rotation_mat);  rotation_mat.copyTo(position_mat(cv::Rect(0, 0, 3, 3)));  return position_mat;}
+```
+
+## 运控模块MC
+
+-   SetMcAction
+    -   功能概述
+        -   设置MC规划模式，每次规划之前需要设置模式，主要模式为 “PLANNING\_MOVE”
+    -   调用示例
+
+```
+void set_action(std::string const& action_name) {  aima::action::SetMcAction mc_actionl;  aima::action::SetMcActionRequest &mc_action_req = mc_actionl.param;  mc_action_req                                   = action_name;  AIMRTE_INFO("set action: {}", action_name);  Run(mc_actionl);  bool result = mc_actionl.result;  if (!result) {    AIMRTE_ERROR("set action {} failed", action_name);  } else {    AIMRTE_INFO("set action {} success", action_name);  }  AIMRTE_INFO("mc_actionl.result.state:{}",mc_actionl.result);  // aima::te::AssertTrue(mc_actionl.result.state == aima::action:: mc::param::CommonState::Success);}
+```
+
+-   PlanningMove
+    -   功能概述 一次性规划 左臂 / 右臂 / 双臂 的 SE3 目标位姿，支持 是否带腰部，完成 轨迹规划并执行。 内部通过 PlanningMove RPC 与运动控制服务通信
+    -   输入参数 暂时无法在智元机器人文档外展示此内容
+    -   调用示例(各自运动）
+
+```
+#include "src/action/mc/mc.h"
+bool planning_move(std::string const &group, std::vector<cv::Mat> const &matrix_pose, std::vector<double> const &ref_joint_positions, bool use_waist){  set_action("PLANNING_MOVE");  aima::action::PlanningMove planning_move_action;  auto &planning_move_param = planning_move_action.param;  if (group == "left") {      if (use_waist) {        planning_move_param.group = aima::action::mc::param::Group::LeftArmWaist;      } else {        planning_move_param.group = aima::action::mc::param::Group::LeftArm;      }    }  else if(group == "right") {      if (use_waist) {        planning_move_param.group = aima::action::mc::param::Group::RightArmWaist;      } else {        planning_move_param.group = aima::action::mc::param::Group::RightArm;      }    }  else if(group == "dual"){    if (use_waist) {      planning_move_param.group = aima::action::mc::param::Group::DualArmWaist;    } else {      planning_move_param.group = aima::action::mc::param::Group::DualArm;    }
+  }
+  //AIMRTE_INFO("SE3Pose pose :{},{},{},{},{},{},{}",pose.position.x,pose.position.y,pose.position.z,pose.orientation->w,pose.orientation->x,pose.orientation->y,pose.orientation->z);  aima::action::mc::param::planning::PlanningTarget pt;  pt.type                                       = aima::action::mc::param::planning::PlanningTarget::Type::SE3;  if(group == "right"){    pt.right                                      = endpose_to_reqse3(RobotEndPose(matrix_pose[1]));  }  else if(group == "left"){    pt.left                                      = endpose_to_reqse3(RobotEndPose(matrix_pose[0]));  }  else if(group == "dual"){    pt.right                                      = endpose_to_reqse3(RobotEndPose(matrix_pose[1]));    pt.left                                      = endpose_to_reqse3(RobotEndPose(matrix_pose[0]));  }  planning_move_param.targets                   = {pt};  planning_move_param.reference.joint_positions = ref_joint_positions;  Run(planning_move_action);  AIMRTE_INFO("planning_move_action.result.state:{}",planning_move_action.result.state);  if(planning_move_action.result.state == aima::action:: mc::param::CommonState::Success){    return true;  }  if(planning_move_action.result.state == aima::action:: mc::param::CommonState::Failure){    return false;
+  }  return true;  // aima::te::AssertTrue(planning_move_action.result.state == aima::action:: mc::param::CommonState::Success);}
+```
+
+-   调用示例(闭链运动）
+
+```
+#include "src/action/mc/mc.h"
+bool planning_closure_move(RobotEndPose const& current_pose, RobotEndPose const& target_pose, std::vector<double> const& ref_joint_positions, bool use_waist) {  set_action("PLANNING_MOVE");  palnnging_grab_obj(current_pose,ref_joint_positions);  aima::action::PlanningMove planning_move_action;
+  auto &planning_move_param = planning_move_action.param;  if (use_waist) {    planning_move_param.group = aima::action::mc::param::Group::DualArmWaist;  } else {    planning_move_param.group = aima::action::mc::param::Group::DualArm;  }
+  planning_move_param.obj_info.pose = endpose_to_reqse3(target_pose);
+  planning_move_param.obj_info.type = aima::action::mc::param::planning::PlanningMoveObjectInfo::GeometryType::BOX;
+  aima::action::mc::param::planning::PlanningTarget pt;  pt.type                                       = aima::action::mc::param::planning::PlanningTarget::Type::SE3;  pt.left                                      = endpose_to_reqse3(target_pose);  planning_move_param.targets                   = {pt};
+  planning_move_param.obj_info.name = "box";
+  planning_move_param.obj_info.parent_frame = "box";  planning_move_param.mode = aima::action::mc::param::planning::PlanningMode::Closure;  planning_move_param.reference.joint_positions = ref_joint_positions;
+  Run(planning_move_action);  AIMRTE_INFO("planning_move_action.result.state:{}",planning_move_action.result.state);  if(planning_move_action.result.state == aima::action:: mc::param::CommonState::Success){    return true;  }  if(planning_move_action.result.state == aima::action:: mc::param::CommonState::Failure){    return false;  }}
+```
+
+-   LinearMove
+    -   功能概述 在 笛卡尔空间 中让 指定机械臂（左 / 右 / 双臂）沿 当前末端 TCP 做 线性平移；内部通过 LinearMove RPC 完成轨迹规划与执行。
+        -   输入 是 相对坐标系的 xyz 增量（m）。
+        -   不旋转，仅 平移。
+        -   支持单臂或双臂同步 。
+    -   调用示例
+
+```
+#include "src/action/mc/mc.h"
+bool liner_move(std::string const &arm_name, std::vector<double> const &move_distance_left, std::vector<double> const &move_distance_right){  set_action("PLANNING_MOVE");  if ((move_distance_left.size() == 0 && move_distance_right.size() == 0) || (move_distance_left.size() != 3 && move_distance_right.size() != 3)) {    AIMRTE_ERROR("move_distance_left and move_distance_right are empty");    return;  }  cv::Mat target_end_l = get_tf_transform("left_arm_link07", "base_link");  cv::Mat target_end_r = get_tf_transform("right_arm_link07", "base_link");  for (int i = 0; i < 3; ++i) {    if (move_distance_left.size() != 0) {      target_end_l.at<double>(i, 3) += move_distance_left[i];    }    if (move_distance_right.size() != 0) {      target_end_r.at<double>(i, 3) += move_distance_right[i];    }  }  PrintCVMat(target_end_l,"target_end_l");  PrintCVMat(target_end_r,"target_end_r");
+  AIMRTE_INFO("DEBUG 1");  aima::action::LinearMove mc_action;  aima::action::mc::param::planning::LinearMoveTaskRequest &linear_move_param = mc_action.param;  aima::action::mc::param::planning::PlanningTarget pt;  pt.type    = aima::action::mc::param::planning::PlanningTarget::Type::SE3;  if (arm_name == "left") {    linear_move_param.group           = aima::action::mc::param::Group::LeftArm;    pt.left = endpose_to_reqse3(RobotEndPose(target_end_l));  } else if (arm_name == "right") {    linear_move_param.group            = aima::action::mc::param::Group::RightArm;    pt.right = endpose_to_reqse3(RobotEndPose(target_end_r));  } else if (arm_name == "dual") {    linear_move_param.group            = aima::action::mc::param::Group::DualArm;    pt.left  = endpose_to_reqse3(RobotEndPose(target_end_l));    pt.right = endpose_to_reqse3(RobotEndPose(target_end_r));  } else {    AIMRTE_ERROR("arm_name is not valid");    return;  }  linear_move_param.targets                   = {pt};  Run(mc_action);  if(mc_action.result.state() != 1){    AIMRTE_ERROR("linearMove failed, state:{}", linear_action.result.state());    return false;  }else{    AIMRTE_INFO("linearMove success, state:{}", linear_action.result.state());    return true;  }}
+```
+
+-   GetJointParamAction
+    -   功能概述
+        -   获取各关节参数
+    -   调用示例
+
+```
+std::unordered_map<std::string, double> get_joint_param(){  set_action("PLANNING_MOVE");  std::unordered_map<std::string, double> joint_param;  aima::action::GetJointParamAction get_joint_state_action;  auto &get_joint_state_param = get_joint_state_action.param;  Run(get_joint_state_action);  //AIMRTE_INFO("get_joint_state_action.result.state:{}",get_joint_state_action.result.state);  //aima::te::AssertTrue(get_joint_state_action.result.state == aima::action:: mc::param::CommonState::Success);  auto &ret = get_joint_state_action.result;  for (auto const &joint : ret.joints()) {    joint_param[joint.name()] = joint.position();    AIMRTE_DEBUG("joint name: {}, position: {}", joint.name(), joint.position());  }  return joint_param;}- GetJointAngle  - 功能概述    - 获取各关节关节角度  - 调用示例std::unordered_map<std::string, double> get_joint_angle() {  set_action("PLANNING_MOVE");  // std::unordered_map<std::string, double> joint_angle;  aima::action::GetJointAngle get_joint_angle_action;  Run(get_joint_angle_action);  // AIMRTE_INFO("get_joint_angle_action.result.state:{}",get_joint_angle_action.result.state);  // aima::te::AssertTrue(get_joint_angle_action.result.state == aima::action:: mc::param::CommonState::Success);  auto &ret = get_joint_angle_action.result;  for (auto const&[name, angle] : ret.joint_angles) {    // joint_angle[joint.name()] = joint.position();    AIMRTE_INFO("joint name: {}, position: {}", name, angle);  }  return ret.joint_angles;}
+```
+
+-   JointControl
+    -   功能概述
+        -   设置单个关节角度并运动
+    -   调用示例
+
+```
+bool move_head_pitch(double angle){  set_action("PLANNING_MOVE");  using namespace aimdk::protocol;  aima::action::JointControl mc_action_head;  JointControlRequest &req_head = mc_action_head.param;  req_head.set_group(JointControlRequest::HEAD);  // move head pitch  auto cmd = req_head.add_cmds();  cmd->set_name("idx11_head_joint");  cmd->set_mode(JointControlRequest::Control::Mode::                  JointControlRequest_Control_Mode_ABSOLUTE);  cmd->set_angle(angle);  Run(mc_action_head);  if (mc_action_head.result.state() != 1) {    AIMRTE_ERROR("move_head_pitch failed, state:{}", mc_action_head.result.state());    return false;  } else {    AIMRTE_INFO("move_head_pitch success, state:{}", mc_action_head.result.state());    return true;  }}
+```
+
+-   MovjControl
+    -   功能概述
+        -   各关节movJ运动
+    -   调用示例
+
+```
+bool move_arm_joints(std::vector<double> const& joint_angles){  set_action("PLANNING_MOVE");  aima::action::MovjControl mc_action_joint;  aimdk::protocol::MovJRequest &req = mc_action_joint.param;  req.set_group(::aimdk::protocol::McPlanningGroup::McPlanningGroup_DUAL_ARM);  for(size_t i=0;i<joint_angles.size();i++){    req.add_angles(joint_angles[i]);  }  Run(mc_action_joint);  AIMRTE_INFO("mc_action_joint.result.state:{}",mc_action_joint.result.state());  if (mc_action_joint.result.state() != 1) {    AIMRTE_ERROR("move_head_pitch failed, state:{}", mc_action_head.result.state());    return false;  } else {    AIMRTE_INFO("move_head_pitch success, state:{}", mc_action_head.result.state());    return true;}
+```
+
+-   ClawControl
+    -   功能概述
+        -   控制夹爪闭合张开
+    -   调用示例
+
+```
+void close_gripper(std::string const &arm_name, uint32_t force, uint32_t pos,uint32_t vel){
+  aima::action::ClawControl claw_control;  aima::action::mc::param::ClawCommand &claw_command = claw_control.param;  claw_command.hasLeft = false;  claw_command.hasRight = false;  if (arm_name == "left") {    claw_command.left.mode  = aima::action::mc::param::SingleClawCommand::Mode::Close;    claw_command.left.force = force;    claw_command.left.pos   = pos;    claw_command.left.vel = vel;    claw_command.hasLeft = true;
+  } else if(arm_name == "right") {    claw_command.right.mode  = aima::action::mc::param::SingleClawCommand::Mode::Close;    claw_command.right.force = force;    claw_command.right.pos   = pos;    claw_command.right.vel = vel;    claw_command.hasRight = true;  } else if(arm_name == "dual"){    claw_command.left.mode  = aima::action::mc::param::SingleClawCommand::Mode::Close;    claw_command.left.force = force;    claw_command.left.pos   = pos;    claw_command.left.vel = vel;    claw_command.hasLeft = true;
+    claw_command.right.mode  = aima::action::mc::param::SingleClawCommand::Mode::Close;    claw_command.right.force = force;    claw_command.right.pos   = pos;    claw_command.right.vel = vel;    claw_command.hasRight = true;  }
+  Run(claw_control);  AIMRTE_INFO("claw_control.result.state:{}",claw_control.result);  claw_command.hasLeft = false;  claw_command.hasRight = false;  // aima::te::AssertTrue(claw_control.result.state == aima::action:: mc::param::CommonState::Success);}
+aima::action::ClawControl open_gripper_action(double open_width, uint32_t force){  aima::action::ClawControl claw_control;  // force =100; default  // pos = open_width ; default 90
+  auto &claw_command       = claw_control.param;  claw_command.left.mode  = aima::action::mc::param::SingleClawCommand::Mode::Open;  claw_command.left.force = force;  claw_command.left.pos   = open_width;  claw_command.hasLeft = true;
+  claw_command.right.mode  = aima::action::mc::param::SingleClawCommand::Mode::Open;  claw_command.right.force = force;  claw_command.right.pos   = open_width;  claw_command.hasRight = true;  Run(claw_control);  AIMRTE_INFO("claw_control.result.state:{}",claw_control.result.state);  claw_control.param.hasLeft = false;  claw_control.param.hasRight = false;  // aima::te::AssertTrue(claw_control.result.state == aima::action:: mc::param::CommonState::Success);}
+```
+
+## 语音模块
+
+-   PlayVoiceService
+    -   功能概述
+        -   播放语音
+    -   调用示例
+
+```
+#include <src/action/interaction/play_voice.h>
+void send_voice(std::string const &text){  aima::action::PlayVoiceService voice_action;  auto &voice_param       = voice_action.param;  voice_param.task.task_name = "interaction_task";  voice_param.task.task_type = aima::action::PlayVoice::param::InteractionTaskType::InteractionTaskType_Pass;  aima::action::PlayVoice::param::InteractionInfo task_info ;  task_info.text = text;
+  task_info.motion_name = "10001";  task_info.face_expression = "10005";  task_info.voice_type = "";  task_info.emotion = "";  voice_param.task.interaction_list.push_back(task_info);  AIMRTE_INFO("run voice_action:{}",text);
+  Run(voice_action);
+}
+```
+
+## 导航模块pnc
+
+-   PlanningNaviToGoal
+    -   功能概述
+        -   下发给定目标点ID的规划导航任务
+    -   调用示例
+
+```
+#include <src/action/pnc/pnc.h>
+aima::action::PlanningNaviToGoal planning_navi_to_goal;planning_navi_to_goal.param.target.map_id      = user_cfg.map_id.value; //设置地图planning_navi_to_goal.param.target.ackerman_mode = false;pose_navi_to_goal.param.is_avoid               = false;planning_navi_to_goal.param.target.target_id = user_cfg.place_point_1.value;//设定目标点Run(planning_navi_to_goal);aima::te::AssertTrue(planning_navi_to_goal.result.is_success);- PlanningNaviToPose2D  - 功能概述    - 下发给定目标点位姿的规划导航  - 调用示例aima::action::PoseNaviToGoal pose_navi_to_goal;pose_navi_to_goal.param.map_id = user_cfg.map_id.value;pose_navi_to_goal.param.ackerman_mode = false;pose_navi_to_goal.param.is_avoid               = false;pose_navi_to_goal.param.x     = 0;  //地图点位pose_navi_to_goal.param.y     = 0;pose_navi_to_goal.param.angle = 0;Run(pose_navi_to_goal);aima::te::AssertTrue(pose_navi_to_goal.result.is_success);
+```
+
+-   MoveForward
+    -   功能概述
+        -   下发直线平移任务
+    -   调用示例
+
+```
+aima::action::MoveForward move_forward;move_forward.param.map_id                 = user_cfg.map_id.value;move_forward.param.distance = 0.05;move_forward.param.angle = 0;Run(move_forward);aima::te::AssertTrue(move_forward.result.is_success);
+```
+
+-   DirectNaviToRelative
+    -   功能概述
+        -   下发给定相对目标点位姿的直接移动任务,一边平移一边旋转，仅适用于目标点与机器人朝向偏差较小的任务，否则可能导致到点偏差较大
+    -   调用示例
+
+```
+aima::action::DirectNaviToRelative direct_navi_to_relative;direct_navi_to_relative_goal.param.map_id = user_cfg.map_id.value;direct_navi_to_relative.param.map_id = user_cfg.map_id.value;direct_navi_to_relative.param.pose.position.x     = 0;direct_navi_to_relative.param.pose.position.y    = 0;direct_navi_to_relative.param.pose.angle  = -0.26;Run(direct_navi_to_relative);aima::te::AssertTrue(direct_navi_to_relative.result.is_success);
+```
+
+-   LinearNaviToGoal
+    -   功能概述
+        -   下发给定目标点ID的直线导航任务，先执行原地旋转，再执行直线移动
+    -   调用示例
+
+```
+aima::action::PlanningNaviToGoal linear_move_to_goal;linear_move_to_goal.param.target.map_id      = user_cfg.map_id.value; //设置地图linear_move_to_goal.param.target.target_id = user_cfg.place_point_1.value;//设定目标点Run(linear_move_to_goal);aima::te::AssertTrue(linear_move_to_goal.result.is_success);
+```
+
+-   SpinTurn
+    -   功能概述
+        -   下发原地旋转任务
+    -   调用示例
+
+```
+aima::action::SpinTurn spin;spin.param.angle = 0;Run(spin);aima::te::AssertTrue(spin.result.is_success);
+```
+

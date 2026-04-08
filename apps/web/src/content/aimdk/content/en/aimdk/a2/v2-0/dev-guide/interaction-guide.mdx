@@ -1,0 +1,422 @@
+---
+title: 9. Interaction Secondary Development Guide
+description: >-
+  Interaction-related secondary development on the device side provides two
+  types of development modes: 1. Agibot Interaction Simple Extension - Agibot
+  interaction capabilities are retained, with Agibot providing basic int…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - interaction-guide
+route: /en/a2/v2-0/dev-guide/interaction-guide
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/09-interactive_guide'
+order: 41
+---
+# 9. Interaction Secondary Development Guide
+
+Interaction-related secondary development on the device side provides two types of development modes:
+
+1.  Agibot Interaction Simple Extension
+    -   Agibot interaction capabilities are retained, with Agibot providing basic interfaces such as TTS and motion expressions. These interfaces can be used to control the robot for basic exhibition hall tours, explanations, etc., while the robot can still use the Agibot voice interaction solution.
+2.  Full Takeover by Secondary Development
+    -   Agibot interaction capabilities are disabled, and Agibot provides noise-reduced microphone input from the robot, along with speaker usage permissions and face recognition results. The secondary development program fully takes over the voice interaction content.
+
+The following is a detailed comparison table for both modes:
+
+| Mode | Agibot Interaction Capabilities Retained | Interfaces Provided by Agibot Side | Network Requirements | Applicable Scenarios | Development Difficulty and Workload |
+| --- | --- | --- | --- | --- | --- |
+| Agibot Interaction Simple Extension | Yes | TTS, motion, expression, and face recognition interfaces | Both Agibot interaction solution and TTS interface require internet connection | Developing simple exhibition hall tour demos, fixed process arrangements | Relatively simple, workload depends on the complexity of the process, generally small |
+| Full Takeover by Secondary Development | No | Noise-reduced audio, speaker, and face recognition interfaces | Internet connection required during robot initialization, not needed afterward | Independently developing a complete interaction solution | Higher difficulty, requires a full R&D team, larger workload |
+
+## 9.1 Agibot Interaction Simple Extension
+
+In this development mode, the available interfaces are as follows:
+
+| Interface Name/Subscription Topic | Interface Description | Request Message Type | Response Message Type | Notes | Communication Backend |
+| --- | --- | --- | --- | --- | --- |
+| `TTSService.PlayTTS` | Text-to-speech playback | `PlayTTSRequest` | `PlayTTSResponse` | Supports priority control and interruption strategy | http |
+| `TTSService.PlayMediaFile` | Play local audio file | `PlayMediaFileRequest` | `PlayTTSResponse` | Supports PCM/WAV format file playback | http |
+| `TTSService.GetAudioStatus` | Query TTS/audio file status | `GetTTSStatusRequest` | `GetTTSStatusResponse` | Get current playback status and queue information | http |
+| `/interaction/tts_status` | Query TTS/audio file status | `TTSStatus` | `-` | Get current playback status and queue information | ros2 |
+| `TTSService.StopTTSTraceId` | Stop TTS/audio file playback with specified id | `StopTTSTraceIdRequest` | `CommonResponse` | Only terminates the broadcast task with the specified trace\_id | http |
+| `TTSService.StopTTS` | Stop all TTS/audio file playback | `CommonRequest` | `CommonResponse` | Terminates the current broadcast and all tasks in the queue | http |
+| `HalAudioService.GetAudioVolume` | Get volume level | `CommonRequest` | `VolumeResponse` | Get current volume level | http |
+| `HalAudioService.SetAudioVolume` | Set volume level | `VolumeRequest` | `AudioCommonResponse` | Adjust current volume level | http |
+| `MotionCommandService.SendMotionCommand` | Play specified motion file | `MotionCommandRequest` | `CommonResponse` | Can only be called under JOINT\_SERVO suffix motion control Action | http |
+| `MotionCommandService.GetMotionStatus` | Query motion playback status | `CommonRequest` | `MotionCommandResponse` | Get current motion playback status | http |
+| `ResourceService.GetMotion` | Get motion list | `GetMotionReq` | `GetMotionResp` | Path can find corresponding files on x86 | http |
+| `RcMotionPlayerService.PlayerMotion` | Play motion with specified id | `RcPlayerMotionRequest` | `CommonResponse` | Can only be called under JOINT\_SERVO suffix motion control Action | http |
+| `ResourceService.GetEmoticon` | Get emoticon list | `GetEmoticonReq` | `GetEmoticonResp` | Path can find corresponding files on x86 | http |
+| `RcEmoticonPlayerService.PlayerEmoticon` | Play emoticon with specified id | `RcPlayerEmoticonRequest` | `RcPlayerEmoticonResponse` | Only plays the specified motion\_id emoticon | http |
+| `/agent/vision/face_id` | Face recognition result | `FaceIdResult` | `-` | Requires source environment to use | ros2 |
+
+For detailed information on interaction-related interfaces, refer to the documentation for motion playback, emoticon playback, TTS/audio playback, and microphone management. Example files for interaction-related interfaces are provided in the AimDK package under the directories examples/rc, examples/motion\_player, examples/agent, and examples/hal\_audio.
+
+## 9.2 Complete Takeover of Secondary Development
+
+The modules involved in the Agibot interaction chain are two, namely agent and hal\_audio, which can be simply understood as the agent module managing the microphone part, and the hal\_audio module managing the speaker part. The agent module collects audio and performs speech recognition, then interacts with the cloud model, and after obtaining the result, sends it to the hal\_audio module, which then performs corresponding voice playback, actions, expressions, etc., based on the result.
+
+### 9.2.1 Exit the Agibot Interaction Chain
+
+In this mode, it is necessary to have the Agibot interaction program exit the interaction chain, output only the noise-reduced microphone audio, face recognition results, and relinquish control of the speaker. Two operations need to be performed:
+
+1.  Adjust the agent module to only\_voice / voice\_face mode, using the `SetAgentPropertiesRequest` interface in the microphone management section.
+
+-   only\_voice: Outputs only the noise-reduced microphone audio /agent/process\_audio\_output, and all subsequent chains are disconnected.
+    
+-   voice\_face: Outputs the noise-reduced microphone audio /agent/process\_audio\_output and face recognition results /agent/vision/face\_id, and all subsequent chains are disconnected.
+    
+    For example, the rpc call required to adjust to only\_voice mode is as follows:
+    
+    Terminal window
+    
+    ```
+    curl -i \    -H 'content-type:application/json' \    -X POST 'http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetAgentPropertiesRequest' \    -d '{ "contents": { "properties": { "2": "only_voice" } } }'
+    ```
+    
+    After the call, the robot needs to be restarted for the changes to take effect. You can wait until the second step’s modifications are completed before restarting together. After the restart, you can use the `GetAgentPropertiesRequest` interface in the microphone management section to query the current interaction mode and determine if the mode has been successfully modified. (If recovery is needed, change “only\_voice / voice\_face” in the `SetAgentPropertiesRequest` interface to “normal” and restart the robot.)
+    
+
+2.  Modify the configuration to default not start the hal\_audio module (modify once, no need to repeat)
+    
+    First, back up the /agibot/software/v0/entry/bin/cfg/run\_agibot.yaml file on ORIN.
+    
+    Terminal window
+    
+    ```
+    cp /agibot/software/v0/entry/bin/cfg/run_agibot.yaml  /agibot/software/v0/entry/bin/cfg/run_agibot.yaml.backup
+    ```
+    
+    Then, in the run\_agibot.yaml file, delete the hal\_audio module from the default\_apps, do not modify other parts. After the modification, restart the robot. (If recovery is needed, restore the above file and restart the robot.)
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBQUG1X9G.png&w=598&h=594&f=webp)
+    
+
+After the above operations, the Agibot interaction has exited the interaction chain.
+
+### 9.2.2 Acquisition of Microphone Audio
+
+> Note: To obtain the following audio, the robot must be powered on and connected to the network for at least 2 minutes to complete audio-related authentication operations. Otherwise, there will be no raw audio output. For offline use, please ensure that this interface has audio output before disconnecting from the network.
+
+After exiting the interaction chain, you can obtain the denoised microphone audio information of the body through the denoised microphone audio Topic interface `/agent/process_audio_output`. The sample program for obtaining the denoised microphone audio of the body is as follows:
+
+```
+#!/usr/bin/env python3
+import rclpyfrom rclpy.node import Nodefrom rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicyfrom ros2_plugin_proto.msg import RosMsgWrapper
+from aimdk.protocol_pb2 import ProcessedAudioOutput, AudioVADState
+import datetimeimport os
+class AudioSubscriber(Node):    def __init__(self):        super().__init__("audio_subscriber")
+        # Audio buffer, stored separately by stream_id        self.audio_buffers = {}  # {stream_id: bytearray()}        self.recording_state = {}  # {stream_id: bool} Record whether recording is in progress
+        # Create audio file storage directory        self.audio_output_dir = "audio_recordings"        os.makedirs(self.audio_output_dir, exist_ok=True)
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST,            depth=10,            reliability=QoSReliabilityPolicy.BEST_EFFORT,        )
+        self.subscription = self.create_subscription(            RosMsgWrapper,            "/agent/process_audio_output/pb_3Aaimdk_2Eprotocol_2EProcessedAudioOutput",            self.audio_callback,            qos_profile,        )
+        self.get_logger().info("Start subscribing to denoised audio data...")
+    def audio_callback(self, msg):        try:            # Check if the serialization type is pb            if msg.serialization_type != "pb":                self.get_logger().warn(f"Unsupported serialization type: {msg.serialization_type}")                return
+            # Convert the data field from list[bytes] to bytes            audio_data_bytes = b"".join(msg.data)
+            # Use the generated protobuf class to parse the message            processed_audio = ProcessedAudioOutput()            processed_audio.ParseFromString(audio_data_bytes)
+            self.get_logger().info(                f"Received audio data: stream_id={processed_audio.stream_id}, "                f"vad_state={processed_audio.vad_state}, "                f"audio_size={len(processed_audio.audio_data)} bytes"            )
+            # Process audio based on VAD state            self.handle_vad_state(processed_audio)
+        except Exception as e:            self.get_logger().error(f"Error processing audio message: {e}")
+    def handle_vad_state(self, processed_audio):        """Process different VAD states"""        vad_state = processed_audio.vad_state        stream_id = processed_audio.stream_id        audio_data = processed_audio.audio_data
+        # Initialize the buffer for this stream_id (if it does not exist)        if stream_id not in self.audio_buffers:            self.audio_buffers[stream_id] = bytearray()            self.recording_state[stream_id] = False
+        # VAD state name mapping        vad_state_names = {            AudioVADState.AUDIO_VAD_STATE_NONE: "No Speech",            AudioVADState.AUDIO_VAD_STATE_BEGIN: "Speech Begin",            AudioVADState.AUDIO_VAD_STATE_PROCESSING: "Speech Processing",            AudioVADState.AUDIO_VAD_STATE_END: "Speech End",        }
+        stream_names = {1: "Built-in Microphone", 2: "External Microphone"}
+        self.get_logger().info(            f"[{stream_names.get(stream_id, f'Unknown Stream {stream_id}')}] "            f"VAD State: {vad_state_names.get(vad_state, f'Unknown State {vad_state}')} "            f"Audio Data: {len(audio_data)} bytes"        )
+        # Process audio data based on VAD state        if vad_state == AudioVADState.AUDIO_VAD_STATE_BEGIN:            self.get_logger().info("🎤 Speech detected, starting")            # Start a new recording, clear the buffer            self.audio_buffers[stream_id].clear()            self.recording_state[stream_id] = True            # Add current audio data            if len(audio_data) > 0:                self.audio_buffers[stream_id].extend(audio_data)
+        elif vad_state == AudioVADState.AUDIO_VAD_STATE_PROCESSING:            self.get_logger().info("🔄 Speech processing...")            # If recording, continue adding audio data to the buffer            if self.recording_state[stream_id] and len(audio_data) > 0:                self.audio_buffers[stream_id].extend(audio_data)
+        elif vad_state == AudioVADState.AUDIO_VAD_STATE_END:            self.get_logger().info("✅ Speech ended")            # Add the final audio data            if self.recording_state[stream_id] and len(audio_data) > 0:                self.audio_buffers[stream_id].extend(audio_data)
+            # Save the complete audio segment            if (                self.recording_state[stream_id]                and len(self.audio_buffers[stream_id]) > 0            ):                self.save_audio_segment(bytes(self.audio_buffers[stream_id]), stream_id)
+            # End recording            self.recording_state[stream_id] = False
+        elif vad_state == AudioVADState.AUDIO_VAD_STATE_NONE:            # No speech state, do not record            if self.recording_state[stream_id]:                self.get_logger().info("⏹️ Recording state reset")                self.recording_state[stream_id] = False
+        # Output current buffer status        if stream_id in self.audio_buffers:            buffer_size = len(self.audio_buffers[stream_id])            recording = self.recording_state[stream_id]            self.get_logger().debug(                f"[Stream {stream_id}] Buffer size: {buffer_size} bytes, Recording status: {recording}"            )
+    def save_audio_segment(self, audio_data, stream_id):        """Save audio segment 16kHz, 16-bit, mono PCM"""        if len(audio_data) > 0:            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            # Create subdirectory by stream_id            stream_dir = os.path.join(self.audio_output_dir, f"stream_{stream_id}")            os.makedirs(stream_dir, exist_ok=True)
+            # Generate filename            stream_names = {1: "internal_mic", 2: "external_mic"}            stream_name = stream_names.get(stream_id, f"stream_{stream_id}")            filename = f"{stream_name}_{timestamp}.pcm"            filepath = os.path.join(stream_dir, filename)
+            try:                with open(filepath, "wb") as f:                    f.write(audio_data)                self.get_logger().info(                    f"Audio segment saved: {filepath} (Size: {len(audio_data)} bytes)"                )
+                # Calculate audio duration (assuming 16kHz, 16-bit, mono)                sample_rate = 16000                bits_per_sample = 16                channels = 1                bytes_per_sample = bits_per_sample // 8                total_samples = len(audio_data) // (bytes_per_sample * channels)                duration_seconds = total_samples / sample_rate
+                self.get_logger().info(                    f"Audio duration: {duration_seconds:.2f} seconds ({total_samples} samples)"                )
+            except Exception as e:                self.get_logger().error(f"Failed to save audio file: {e}")
+    def get_buffer_info(self):        """Get information about all buffers (for debugging)"""        info = {}        for stream_id in self.audio_buffers:            info[stream_id] = {                "buffer_size": len(self.audio_buffers[stream_id]),                "recording": self.recording_state[stream_id],            }        return info
+def main(args=None):    rclpy.init(args=args)
+    audio_subscriber = AudioSubscriber()
+    try:        audio_subscriber.get_logger().info("Listening for denoised audio data, press Ctrl+C to exit...")        rclpy.spin(audio_subscriber)    except KeyboardInterrupt:        audio_subscriber.get_logger().info("Exit signal received, shutting down...")    finally:        audio_subscriber.destroy_node()        rclpy.shutdown()
+if __name__ == "__main__":    main()
+```
+
+The above program depends on the Python protocol package a2\_aimdk and the ROS2 protocol package ros2\_plugin\_proto. The corresponding packages have been placed in the prebuilt directory of the AimDK development kit. Install the Python package using `pip install prebuilt/a2_aimdk-1.0.0-py3-none-any.whl`, and source the ROS2 package using `source prebuilt/ros2_plugin_proto_aarch64/share/ros2_plugin_proto/local_setup.bash`.
+
+Please note that the above program receives ROS2 messages and requires the following environment variables to be set:
+
+Terminal window
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml
+```
+
+The audio data is 16kHz sample rate, 16-bit mono PCM data (little-endian). The output audio is clean human voice that has undergone denoising, echo cancellation, etc., and can be directly used for ASR recognition.
+
+The `ProcessedAudioOutput` message contains the following fields:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| header | Header | General message header containing timestamp and message ID |
+| stream\_id | uint32 | Audio stream ID (1: built-in microphone, 2: external microphone) |
+| vad\_state | AudioVADState | Voice Activity Detection (VAD) state |
+| audio\_data | bytes | Denoised PCM audio data |
+
+The `AudioVADState` enumeration is defined as:
+
+| Enum Value | Value | Description |
+| --- | --- | --- |
+| AUDIO\_VAD\_STATE\_NONE | 0 | No Speech |
+| AUDIO\_VAD\_STATE\_BEGIN | 1 | Speech Begin |
+| AUDIO\_VAD\_STATE\_PROCESSING | 2 | Speech Processing |
+| AUDIO\_VAD\_STATE\_END | 3 | Speech End |
+
+Note: In the current version, there is an issue with the vad\_state output by the external microphone interface. The expected state sequence for a single voice input is 122222222223, whereas the actual output is 0111111111112. This issue occurs exclusively with the external microphone (the built-in microphone functions normally) and is scheduled to be fixed in a subsequent release. For the current version, it is recommended to manually apply a +1 offset compensation to the state values.
+
+### 9.2.3 Speaker audio playback
+
+> Note: The robot’s speaker volume setting must not exceed 70%. Exceeding this range will cause the speaker to operate beyond its rated capacity after being amplified by the amplifier, resulting in damage to the speaker.
+
+You can use the following devices for playback. Please implement the program calls yourself. Audio channels, logical devices, and other configurations can be found in the /etc/asound.conf file on ORIN. For detailed instructions on audio playback, please refer to the next section.
+
+Terminal window
+
+```
+aplay -D multiplay_def -c 1 -r 24000 -f S16_LE /agibot/data/var/interaction/audio/wake.pcm
+```
+
+Here are the volume control instructions:
+
+1.  P1 Machine
+
+-   Set playback volume
+
+Terminal window
+
+```
+amixer cset name='x Headphone Volume' 15（0~31）
+```
+
+-   Get playback volume
+
+Terminal window
+
+```
+amixer cget name='x Headphone Volume'
+```
+
+-   Set mute
+
+Terminal window
+
+```
+amixer sset 'x Headphone Left' offamixer sset 'x Headphone Right' off
+```
+
+-   Unmute
+
+Terminal window
+
+```
+amixer sset 'x Headphone Left' onamixer sset 'x Headphone Right' on
+```
+
+2.  T3 Machine
+
+-   Set playback volume
+
+Terminal window
+
+```
+amixer -c DefPDevice sset Speaker 80%（0~100%）
+```
+
+-   Get playback volume
+
+Terminal window
+
+```
+amixer -c DefPDevice sget Speaker
+```
+
+-   Set mute
+
+Terminal window
+
+```
+amixer -c DefPDevice set Speaker off
+```
+
+-   Unmute
+
+Terminal window
+
+```
+amixer -c DefPDevice set Speaker on
+```
+
+### 9.2.4 Face Recognition
+
+> Notice：If the release operation for the interactive camera in “7.4.4 Camera Device Release” is executed before obtaining the face recognition result, the camera data stream will be interrupted, causing the face recognition to be unable to obtain image data, thus affecting the normal use of the function.
+
+If the agent is set to voice\_face mode, in addition to the denoised microphone audio Topic interface, it will simultaneously return the face recognition result Topic interface `/agent/vision/face_id`. This message is not available in only\_voice mode.
+
+The sample program for obtaining face recognition results is as follows:
+
+```
+#!/usr/bin/env python3
+import rclpyfrom rclpy.node import Nodefrom rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicyfrom ros2_plugin_proto.msg import RosMsgWrapper
+from aimdk.protocol_pb2 import FaceIdResult
+
+class FaceIdSubscriber(Node):    def __init__(self):        super().__init__("face_id_subscriber")
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST,            depth=10,            reliability=QoSReliabilityPolicy.BEST_EFFORT,        )
+        self.subscription = self.create_subscription(            RosMsgWrapper,            "/agent/vision/face_id/pb_3Aaimdk_2Eprotocol_2EFaceIdResult",            self.face_id_callback,            qos_profile,        )
+        self.get_logger().info("已开始订阅 FaceID 数据...")
+    def face_id_callback(self, msg):        try:            if msg.serialization_type != "pb":                self.get_logger().warn(                    f"收到不支持的序列化类型: {msg.serialization_type}"                )                return
+            # Concatenate bytes            raw_bytes = b"".join(msg.data)
+            # Parse protobuf            face_id_result = FaceIdResult()            face_id_result.ParseFromString(raw_bytes)
+            # log output            import json            from google.protobuf.json_format import MessageToDict            self.get_logger().info(                f"FaceID 结果: {json.dumps(MessageToDict(face_id_result, preserving_proto_field_name=True), ensure_ascii=False, indent=2)}")
+        except Exception as e:            self.get_logger().error(f"解析 FaceID 数据时出现错误: {e}")
+
+def main(args=None):    rclpy.init(args=args)    node = FaceIdSubscriber()
+    try:        node.get_logger().info("正在监听 FaceID 数据，按 Ctrl+C 退出...")        rclpy.spin(node)    except KeyboardInterrupt:        node.get_logger().info("退出中...")    finally:        node.destroy_node()        rclpy.shutdown()
+
+if __name__ == "__main__":    main()
+```
+
+The above program depends on the Python protocol package a2\_aimdk and the ROS2 protocol package ros2\_plugin\_proto. The corresponding packages have been placed in the prebuilt directory of the AimDK development kit. Install the Python package using `pip install prebuilt/a2_aimdk-1.0.0-py3-none-any.whl`, and source the ROS2 package using `source prebuilt/ros2_plugin_proto_aarch64/share/ros2_plugin_proto/local_setup.bash`.
+
+Please note that the above program receives ROS2 messages and requires the following environment variables to be set:
+
+Terminal window
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml
+```
+
+A local face registration interface is also provided. This interface is neither a conventional HTTP JSON RPC nor a ROS2 Topic; instead, a dedicated invocation script is provided: examples/agent/run\_face\_id\_register.sh. The content is as follows:
+
+```
+#!/bin/bash
+# 1. Directory containing images to be registered (same level as the sh script)RUN_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"IMAGES_DIR="${RUN_SCRIPT_DIR}/images"
+# 2. Faceid base directoryFACEID_SCRIPT_DIR="/agibot/software/v0/scripts/agent/face_id/"FACEID_LIB_DIR="/agibot/software/v0/bin"FACEID_OFFLINE_FEAT="/agibot/data/param/interaction/face_id/offline_face_features"
+# 3. Relative paths of the executable file and configuration fileEXEC="${FACEID_SCRIPT_DIR}/face_id_register"CONF="${FACEID_SCRIPT_DIR}/face_id_config.json"
+chmod +x "$EXEC"export LD_LIBRARY_PATH="${FACEID_LIB_DIR}":$LD_LIBRARY_PATH
+# 4. Callrm -rf "$FACEID_OFFLINE_FEAT"/*"$EXEC" "$CONF" "$IMAGES_DIR"
+```
+
+Place the facial data to be registered into the images directory located in the same folder as the script. Execute this script on the ORIN to complete the registration. After registration, the correspondence between IDs and images, along with the registration success status, will be stored in the Result.txt file in the same directory. See the example below (note that registration was successful even for blurred images and images where the face was too small; however, for actual usage, it is still recommended to use clear, frontal facial images as shown in the satisfied.png to avoid negative impacts on the recognition rate):
+
+```
+GID17648293009168001    满足.png          OK    注册成功GID17648293018063607    侧脸.png          FAIL  人脸质量不满足要求GID17648293020281011    过暗.png          FAIL  人脸质量不满足要求GID17648293021878934    模糊.png          OK    注册成功GID17648293024764703    过曝.png          FAIL  人脸质量不满足要求GID17648293026684491    无人脸.png       FAIL  未检测到人脸GID17648293028768487    非人脸.png       FAIL  未检测到人脸GID17648293030305970    人脸过小.png    OK    注册成功
+```
+
+Face Registration and Recognition Logic Rules:
+
+1.  Place facial images in the images directory. The images must be in JPG, PNG, or JPEG format and contain only one clear, frontal face. Run the script to register them. After registration, restart the agent by executing `aima em stop-app agent && aima em start-app agent` on the ORIN, or simply reboot the robot.
+2.  The registered facial features will be stored locally on the ORIN at the following path: /agibot/data/param/interaction/face\_id/offline\_face\_features.
+3.  The construction rule for the registered User ID (UID) is: “GID” + Timestamp + 4-digit random number. Upon publishing, the current machine’s Serial Number (SN) from /agibot/data/info/sn will replace “GID” to form the new UID.
+4.  Faces can also be uploaded via the Lingxin platform, which we refer to as the Cloud Face Database. This database allows configuration of greetings, etc. The corresponding content is downloaded and stored in the user\_info.json file on the ORIN at the following path: /agibot/data/param/interaction/face\_id/user\_info.json.
+5.  Important: Each execution of the aforementioned script will clear the existing local database. Therefore, you must re-register all facial data completely every time. Maintain a single images folder containing all faces that need to be recognized, and rerun the registration script whenever there are any additions, deletions, or modifications.
+6.  The matching rule always prioritizes the Cloud Face Database first, followed by the local database. Once the first successful match is found, the system will stop searching the remaining faces.
+
+### 9.2.5 Wake-Up Result Reporting
+
+If `agent` is set to `only_voice` mode, the wake-up result reporting topic is `/agent/wakeup/pb_3Aaimdk_2Eprotocol_2EWakeUpResult`.
+
+Example program for receiving wake-up result reports:
+
+```
+#!/usr/bin/env python3
+import rclpyfrom rclpy.node import Nodefrom rclpy.qos import (    QoSDurabilityPolicy,    QoSHistoryPolicy,    QoSProfile,    QoSReliabilityPolicy,)from ros2_plugin_proto.msg import RosMsgWrapper
+from aimdk.protocol_pb2 import WakeUpResult
+
+TOPIC = "/agent/wakeup/pb_3Aaimdk_2Eprotocol_2EWakeUpResult"
+
+class WakeUpSubscriber(Node):    def __init__(self):        super().__init__("wakeup_result_subscriber")
+        qos_profile = QoSProfile(            history=QoSHistoryPolicy.KEEP_LAST,            depth=10,            reliability=QoSReliabilityPolicy.RELIABLE,            durability=QoSDurabilityPolicy.VOLATILE,        )
+        self.subscription = self.create_subscription(            RosMsgWrapper,            TOPIC,            self.wakeup_callback,            qos_profile,        )
+        self.get_logger().info(f"已开始订阅 WakeUpResult: {TOPIC}")
+    def wakeup_callback(self, msg):        try:            if msg.serialization_type != "pb":                self.get_logger().warn(                    f"收到不支持的序列化类型: {msg.serialization_type}"                )                return
+            # Join bytes            raw_bytes = b"".join(msg.data)
+            # Parse protobuf            wakeup_result = WakeUpResult()            wakeup_result.ParseFromString(raw_bytes)
+            # Log output            import json            from google.protobuf.json_format import MessageToDict
+            self.get_logger().info(                f"WakeUpResult: {json.dumps(MessageToDict(wakeup_result, preserving_proto_field_name=True), ensure_ascii=False, indent=2)}"            )
+        except Exception as e:            self.get_logger().error(f"解析 WakeUpResult 数据时出现错误: {e}")
+
+def main(args=None):    rclpy.init(args=args)    node = WakeUpSubscriber()
+    try:        node.get_logger().info("正在监听 WakeUpResult，按 Ctrl+C 退出...")        rclpy.spin(node)    except KeyboardInterrupt:        node.get_logger().info("退出中...")    finally:        node.destroy_node()        rclpy.shutdown()
+
+if __name__ == "__main__":    main()
+```
+
+The above program depends on the Python protocol package `a2_aimdk` and the ROS2 protocol package `ros2_plugin_proto`. Both packages are already included in the `prebuilt` directory of the AimDK development package. Install the Python package with `pip install prebuilt/a2_aimdk-2.0.1-py3-none-any.whl`, and source the ROS2 package with `source prebuilt/ros2_plugin_proto_aarch64/share/ros2_plugin_proto/local_setup.bash`.
+
+Please note that the above program receives ROS2 messages and requires the following environment variables:
+
+Terminal window
+
+```
+source /opt/ros/humble/setup.bashexport ROS_DOMAIN_ID=232export ROS_LOCALHOST_ONLY=0export FASTRTPS_DEFAULT_PROFILES_FILE=/agibot/software/v0/entry/bin/cfg/ros_dds_configuration.xml
+```
+
+### 9.2.6 Wake Word Modification
+
+The secondary development interfaces provide wake-word modification for both built-in and external microphones. Wake words currently support Chinese only, and do not support English or special characters. **Note: Changing the wake word does not guarantee wake-up success rate.**  
+
+**Built-in microphone wake-word modification:**  
+Run the following command on x86. You can also refer to `examples/agent/SetCustomWakeUpWord.py`.
+
+```
+curl --location --request POST \  'http://192.168.100.110:59301/rpc/aimdk.protocol/AgentControlService/SetCustomWakeUpWord' \  --header 'Content-Type: application/json' \  --data-raw '{    "keywords": [      "你好你好"    ]  }'
+```
+
+Response:
+
+```
+{  "header": {    "code": "0",    "msg": "SetCustomWakeUpWord successfully",    "trace_id": "",    "domin": ""  },  "state": "CommonState_UNKNOWN"}
+```
+
+At this point, the built-in microphone wake word is set successfully. You can verify it via wake-up result reporting.
+
+**External microphone wake-word modification:**
+
+For the external microphone, modify `/agibot/data/var/agent/omnis_sdk/sherpa-onnx-kws/keywords.txt` on ORIN and add or remove phonetic entries.
+
+Wake-word format:
+
+```
+声母1(空格)韵母1(带声调)(空格)声母2(空格)韵母2(带声调) ......
+```
+
+1.  Wake words containing non-Chinese characters are not supported. English wake words must be converted into Chinese transliterations. Examples:
+
+```
+* 中文唤醒词1：x iǎo zh ì x iǎo zh ì @小智小智_zh_1
+* 中文唤醒词2(带ü)：x iǎo l ǚ x iǎo l ǚ @小吕小吕_zh_1
+* 中文唤醒词3(多音字)：x iǎo x ī x iǎo x ī @小茜小茜_zh_1
+* 英文唤醒词：h ā l óu t āng mǔ @哈喽汤姆_en_1
+```
+
+2.  Wake-word recommendations and constraints:  
+     **Length:** 3-6 Chinese characters are recommended.  
+     **Repetition pattern:** ABAB-style repetition is recommended to improve wake-up success rate.  
+     **Pronunciation:** Prefer open vowels such as a, o, and e.  
+     **Avoid common words:** Avoid common words and command words (such as “goodbye”, “good morning”, “watch TV”) to reduce false wake-ups.  
+     **Avoid repeated/similar sounds:** Avoid duplicated characters and consecutive similar pronunciations, such as “珍珍” and “花华”.  
+     **Avoid modal particles:** Avoid light-tone particles such as ‘吧’, ‘呢’, ‘啊’, ‘的’, ‘了’, ‘吗’.  
+     **Avoid zero-initial syllables:** Avoid characters such as ‘昂’, ‘恩’, ‘安’.  
+     **Tone diversity:** Avoid using the same tone for all characters, such as ‘喀咪喀咪’.  
+     **Limit closed vowels:** Reduce use of i, u, and ü.  
+    
+3.  Valid syllable list (using invalid syllables may crash the process):
+    
+
+<table><tbody><tr><td>a</td><td>án</td><td>áo</td><td>é</td><td>en</td><td>er</td><td>ì</td><td>iàn</td><td>iǎo</td></tr><tr><td>á</td><td>àn</td><td>ào</td><td>è</td><td>én</td><td>ér</td><td>ǐ</td><td>iǎn</td><td>iāo</td></tr><tr><td>à</td><td>ǎn</td><td>ǎo</td><td>ě</td><td>èn</td><td>èr</td><td>ī</td><td>iān</td><td>ié</td></tr><tr><td>ǎ</td><td>ān</td><td>āo</td><td>ē</td><td>ěn</td><td>ěr</td><td>ia</td><td>iáng</td><td>iè</td></tr><tr><td>ā</td><td>ang</td><td>b</td><td>ei</td><td>ēn</td><td>f</td><td>iá</td><td>iàng</td><td>iě</td></tr><tr><td>ái</td><td>áng</td><td>c</td><td>éi</td><td>éng</td><td>g</td><td>ià</td><td>iǎng</td><td>iē</td></tr><tr><td>ài</td><td>àng</td><td>ch</td><td>èi</td><td>èng</td><td>h</td><td>iǎ</td><td>iāng</td><td>ín</td></tr><tr><td>ǎi</td><td>ǎng</td><td>d</td><td>ěi</td><td>ěng</td><td>i</td><td>iā</td><td>iáo</td><td>ìn</td></tr><tr><td>āi</td><td>āng</td><td>e</td><td>ēi</td><td>ēng</td><td>í</td><td>ián</td><td>iào</td><td>ǐn</td></tr><tr><td>īn</td><td>iù</td><td>o</td><td>ou</td><td>sh</td><td>ū</td><td>uán</td><td>uè</td><td>ún</td></tr><tr><td>íng</td><td>iǔ</td><td>ó</td><td>óu</td><td>t</td><td>uá</td><td>uàn</td><td>uě</td><td>ùn</td></tr><tr><td>ìng</td><td>iū</td><td>ò</td><td>òu</td><td>u</td><td>uà</td><td>uǎn</td><td>uē</td><td>ǔn</td></tr><tr><td>ǐng</td><td>j</td><td>ǒ</td><td>ǒu</td><td>ú</td><td>uǎ</td><td>uān</td><td>üè</td><td>ūn</td></tr><tr><td>īng</td><td>k</td><td>ō</td><td>ōu</td><td>ù</td><td>uā</td><td>uáng</td><td>üě</td><td>uo</td></tr><tr><td>ióng</td><td>l</td><td>óng</td><td>p</td><td>ǔ</td><td>uái</td><td>uàng</td><td>uí</td><td>uó</td></tr><tr><td>iǒng</td><td>m</td><td>òng</td><td>q</td><td>ǘ</td><td>uài</td><td>uǎng</td><td>uì</td><td>uò</td></tr><tr><td>iōng</td><td>n</td><td>ǒng</td><td>r</td><td>ǜ</td><td>uǎi</td><td>uāng</td><td>uǐ</td><td>uǒ</td></tr><tr><td>iú</td><td>ń</td><td>ōng</td><td>s</td><td>ǚ</td><td>uāi</td><td>ué</td><td>uī</td><td>uō</td></tr><tr><td>w</td><td>x</td><td>y</td><td>z</td><td>zh</td><td></td><td></td><td></td><td></td></tr></tbody></table>
+

@@ -1,0 +1,256 @@
+---
+title: 7.2 动作播放部分
+description: >-
+  A2
+  青春款提供了基本的预设动作播放能力，机器出厂自带部分预设动作（此外还可以通过遥操作设备进行动作录制，满足更多个性化需求，相关内容请查阅遥操作相关文档），自带预设动作列表如下：
+  ```
+  双手挥手/双手挥手右手挥手/右手挥手右手握手/右手握手右手握手_长/右手握手_长向右张望/1758103570432482028向左张望/1758103588180395683左手挥手/左手挥手左手握手/左手握手左手握手_长/左手握手_长摆拍_我是大…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - action-playback
+route: /zh/a2-lite/v2-0/action-playback
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/07-02-action_play'
+order: 90
+---
+# 7.2 动作播放部分
+
+### 7.2.1 整体介绍
+
+A2 青春款提供了基本的预设动作播放能力，机器出厂自带部分预设动作（此外还可以通过遥操作设备进行动作录制，满足更多个性化需求，相关内容请查阅遥操作相关文档），自带预设动作列表如下：
+
+```
+双手挥手/双手挥手右手挥手/右手挥手右手握手/右手握手右手握手_长/右手握手_长向右张望/1758103570432482028向左张望/1758103588180395683左手挥手/左手挥手左手握手/左手握手左手握手_长/左手握手_长摆拍_我是大力士/摆拍_我是大力士敬礼/敬礼环顾四周/1758103607745291736看双手/1758104272873252746看右手/1758104294863353043看右臂/1758103484383524451看左手/175810431583786588看左臂/1758103505321711264
+```
+
+以上动作文件位于 x86 的 /agibot/data/resources/default/motion/motion\_player/default 目录下，自定义录制的动作应放置于 /agibot/data/resources/default/motion/motion\_player/custom 目录下。以上列表通过在对应目录下指定如下命令获得
+
+Terminal window
+
+```
+find . -name "*.db" -type f | sed 's|^\./\([^/]*\)/\(.*\)\.db|\1/\2|' | sort
+```
+
+具体动作效果可以使用后续章节提供的运控仿真进行查看，或直接使用真机进行查看。
+
+机上的动作播放由 motion\_player 模块进行，该模块会在 JOINT\_SERVO 模式下对手臂和脖子关节进行控制，基本控制原理为读取并解算指定的动作文件，按照 100 Hz 播放动作文件，发送 /motion/control/arm\_joint\_command 和 /motion/control/neck\_joint\_command 给到运动控制模块，由运控模块进行相应动作。
+
+### 7.2.2 动作播放 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/SendMotionCommand` |
+| --- | --- |
+| 功能概述 | 播放指定动作文件 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/SendMotionCommand |
+| 入参 | 
+```json
+{
+  "motion_id": "/agibot/data/resources/default/motion/motion_player/default/双手挥手/双手挥手",
+  "duration_ms": 10000,
+  "cmd_end": true,
+  "cmd_pause": false,
+  "cmd_reset": false
+}
+```
+
+-   motion\_id: 动作文件绝对路径，到最后一级 .db 文件，去除 .db 后缀的绝对路径，例如
+    
+    -   /agibot/data/resources/default/motion/motion\_player/default/双手挥手/双手挥手
+-   duration\_ms: 无效字段，保持不动即可
+    
+-   cmd\_end: 是否在动作执行后自动恢复到初始姿态，`true`表示自动复位，`false`表示不自动复位
+    
+-   cmd\_pause: 动作暂停标志，`true`表示暂停，将暂停向机器人发送控制信号，一般不使用
+    
+-   cmd\_reset: 复位标志，`true`表示复位，`false`表示不复位。复位操作会将当前动作的状态重置至初始状态
+    
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762851946",
+      "nanos": 693223585,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/send\_motion\_id.sh |
+| 备注 | 本接口调用码为 **T2**，仅可在 JOINT\_SERVO 后缀的运控 Action 下调用 |
+
+### 7.2.3 动作播放状态查询 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/`GetMotionStatus |
+| --- | --- |
+| 功能概述 | 获取动作播放状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/GetMotionStatus |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "",
+    "timestamp": {
+      "seconds": "1762852836",
+      "nanos": 502608623,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "time_to_end_ms": "235",
+  "status": "MotionCommandStatus_OPERATING",
+  "is_neck_enable": true,
+  "motion_id": "1见面招手"
+}
+```
+
+-   time\_to\_end\_ms: 动作距离结束时间，单位 ms
+    
+-   status: 动作播放状态
+    
+    -   MotionCommandStatus\_IDLE：无动作，空闲中
+    -   MotionCommandStatus\_START：动作开始播放
+    -   MotionCommandStatus\_OPERATING：动作播放中
+    -   MotionCommandStatus\_PAUSE：调用动作播放接口 cmd\_pause=true 的状态
+    -   MotionCommandStatus\_STOP：调用 DisableMotionPlayer 后的状态
+-   is\_neck\_enable: 脖子是否受 motion\_player 控制
+    
+-   motion\_id: 动作名称
+    
+
+ |
+| 示例脚本 | examples/motion\_player/get\_motion\_status.sh |
+| 备注 | 本接口调用码为 **T2**，仅可在 JOINT\_SERVO 后缀的运控 Action 下调用 |
+
+### 7.2.4 禁用、开启动作播放模块 RPC 接口
+
+动作播放模块会在 JOINT\_SREVO 模式下持续给运控发送 /motion/control/arm\_joint\_command 和 /motion/control/neck\_joint\_command 的控制指令，这时二开程序也发送指令会造成冲突问题，可以调用以下接口禁用和开启动作播放模块
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/DisableMotionPlayer` |
+| --- | --- |
+| 功能概述 | 禁用动作播放模块，进程不会退出，不发送指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/DisableMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/disable\_motion\_player.sh |
+| 备注 | 本接口无调用码限制 |
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/EnableMotionPlayer` |
+| --- | --- |
+| 功能概述 | 开启动作播放模块，开始持续发送指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/EnableMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/enable\_motion\_player.sh |
+| 备注 | 本接口无调用码限制 |
+
+### 7.2.5 禁用、开启动作播放脖子控制 RPC 接口
+
+有些情况下需要单独禁用脖子的动作播放功能，从而将脖子的控制权交给二开程序进行头部跟随等，可以调用如下接口进行禁用和开启动作播放的脖子控制。
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer` |
+| --- | --- |
+| 功能概述 | 禁用动作播放模块控制脖子电机，进程不会退出，不发送脖子指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/DisableNeckMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/disable\_neck\_motion\_player.sh |
+| 备注 | 本接口无调用码限制 |
+
+| 接口名 | `pb:/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer` |
+| --- | --- |
+| 功能概述 | 开启动作播放模块控制脖子接口，开始持续发送脖子控制指令给运动控制模块 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://127.0.0.1:56444/rpc/aimdk.protocol.MotionCommandService/EnableNeckMotionPlayer |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/motion\_player/enable\_neck\_motion\_player.sh |
+| 备注 | 本接口无调用码限制 |
+

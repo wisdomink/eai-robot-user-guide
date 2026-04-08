@@ -1,0 +1,815 @@
+---
+title: AimDK 公共协议
+description: >-
+  本页面包含所有模块公用（common）的协议内容定义。 2D空间中的矩形框 | Field | Type | Description | | :-- |
+  :-- | :-- | | x1 | float | 左上角x坐标 | | y1 | float | 左上角y坐标 | | x2 | float |
+  右下角x坐标 | | y2 | float | 右下角y坐标 | 控制源，由安全模块向MC设置，用于MC过滤不匹配的控制源输入 | Na…
+product: a2w
+slug:
+  - a2w
+  - protocol-common
+route: /zh/a2w/protocol-common
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/common/readme'
+order: 110
+---
+# AimDK 公共协议
+
+本页面包含所有模块公用（common）的协议内容定义。
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::Box`
+
+2D空间中的矩形框
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x1 | float | 左上角x坐标 |
+| y1 | float | 左上角y坐标 |
+| x2 | float | 右下角x坐标 |
+| y2 | float | 右下角y坐标 |
+
+### `aimdk::protocol::ControlSource`
+
+控制源，由安全模块向MC设置，用于MC过滤不匹配的控制源输入
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| ControlSource\_AUTO | 0 | 默认值，一般是自动算法发起 |
+| ControlSource\_MANUAL | 1 | 手动控制，从遥控模块发起 |
+| ControlSource\_SAFE | 2 | 安全模块，从安全模块发起 |
+| ControlSource\_DISABLED | 255 | 无效控制源，为MC的默认值 |
+
+### `aimdk::protocol::Header`
+
+一般消息的header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| seq | uint32 | sequence ID: consecutively increasing ID |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | timestamp |
+| frame\_id | string | Frame this data is associated with |
+| control\_source | [aimdk::protocol::ControlSource](#aimdk-protocol-controlsource) | 控制源（一般算法模块保持默认即可，无需设置） |
+| uuid | string | 设备ID（用于鉴别AIMMASTER设备, 通常无需设置） |
+
+### `aimdk::protocol::Image`
+
+图像消息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::Header](#aimdk-protocol-header) | 消息头 |
+| height | uint32 | 图像高度 |
+| width | uint32 | 图像宽度 |
+| encoding | string | 图像编码格式 |
+| step | uint32 | 每行字节数 |
+| data | bytes | 图像数据 |
+
+### `aimdk::protocol::IoPacket`
+
+通用二进制IO数据包
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| io\_data | bytes | 二进制数据 |
+
+### `aimdk::protocol::JointState`
+
+关节状态信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节名称 |
+| sequence | uint32 | 关节消息的序号 |
+| position | double | 关节角度，单位：弧度 or m |
+| velocity | double | 关节角速度，单位：弧度/秒 or m/s |
+| effort | double | 关节扭矩，单位：N or N\*m |
+
+### `aimdk::protocol::MocapJointState`
+
+动捕关节状态信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节名称 |
+| id | uint32 | 动捕tracker id |
+| status | uint32 | 动捕状态 |
+| err\_code | uint32 | 动捕错误码 |
+| position | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 位置坐标 |
+| orientation | [aimdk::protocol::Quaternion](#aimdk-protocol-quaternion) | 方向四元数 |
+
+### `aimdk::protocol::Odometry`
+
+里程计信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| child\_frame\_id | string | 子坐标系ID |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) | SE3位姿 |
+| twist | [aimdk::protocol::Twist](#aimdk-protocol-twist) | 速度信息 |
+
+### `aimdk::protocol::Pixel`
+
+2D像素坐标
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| u | int32 | 像素横坐标 |
+| v | int32 | 像素纵坐标 |
+
+### `aimdk::protocol::PixelPose`
+
+2D像素位姿
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Pixel](#aimdk-protocol-pixel) | 2D像素坐标 |
+| angle | double | 角度从u轴转向v轴的角度，单位：弧度 |
+
+### `aimdk::protocol::QRPose`
+
+QR码位姿信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| qr\_code | int32 | 二维码值 |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) | 6D位姿 |
+
+### `aimdk::protocol::Quaternion`
+
+四元数
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double | X分量 |
+| y | double | Y分量 |
+| z | double | Z分量 |
+| w | double | W分量 |
+
+### `aimdk::protocol::RequestHeader`
+
+RPC请求体的header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| control\_source | [aimdk::protocol::ControlSource](#aimdk-protocol-controlsource) | 控制源（一般算法模块保持默认即可，无需设置） |
+| uuid | string | 设备ID（用于鉴别AIMMASTER设备, 通常无需设置） |
+| trace\_id | string | RPC请求方ID |
+| domain | string | 请求方来源域 |
+
+### `aimdk::protocol::ResponseHeader`
+
+RPC响应体的header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| code | uint64 | 处理结果 - 为0: 成功 - 非0: 失败 |
+| msg | string | 处理结果描述 |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| trace\_id | string | RPC请求方ID |
+| domain | string | 请求方来源域 |
+
+### `aimdk::protocol::JointParam`
+
+关节参数配置
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节名称 |
+| position\_upper\_limit | double | 关节位置上限，单位：弧度或者米 |
+| position\_lower\_limit | double | 关节位置下限，单位：弧度或者米 |
+| velocity\_limit | double | 关节速度限制，单位：弧度/秒或者米/秒 |
+| acceleration\_limit | double | 关节加速度限制，单位：弧度/秒^2或者米/秒^2 |
+| effort\_limit | double | 关节扭矩限制，单位：N或者N·m |
+
+### `aimdk::protocol::Rpy`
+
+RPY角度姿态表示
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| rx | double | 绕固定轴X旋转角度，单位：rad |
+| ry | double | 绕固定轴Y旋转角度，单位：rad |
+| rz | double | 绕固定轴Z旋转角度，单位：rad |
+
+### `aimdk::protocol::ScalarTrajectoryPoint`
+
+标量轨迹点
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| time\_since\_reference | double | 相对参考时间的时间，单位：秒 |
+| positions | double\[\] | 轨迹位置，单位：弧度或米 |
+| velocities | double\[\] | 轨迹速度，单位：弧度/秒或米/秒 |
+| accelerations | double\[\] | 轨迹加速度，单位：弧度/秒^2或米/秒^2 |
+
+### `aimdk::protocol::ScalarTrajectory`
+
+标量轨迹
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| reference\_time | double | 所有轨迹点相对的参考时间 |
+| points | [aimdk::protocol::ScalarTrajectoryPoint](#aimdk-protocol-scalartrajectorypoint)\[\] | 轨迹点列表 |
+
+### `aimdk::protocol::SE2Acceleration`
+
+SE2 加速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 线加速度，单位：米/秒^2 |
+| angular | double | 角加速度，单位：弧度/秒^2 |
+
+### `aimdk::protocol::SE2Pose`
+
+SE2位姿
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 2D位置，单位：米 |
+| angle | double | 角度，单位：弧度 |
+
+### `aimdk::protocol::SE2Velocity`
+
+SE2 速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 线速度，单位：米/秒 |
+| angular | double | 角速度，单位：弧度/秒 |
+
+### `aimdk::protocol::SE3Acceleration`
+
+SE3 加速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 线加速度，单位：米/秒^2 |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 角加速度，单位：弧度/秒^2 |
+
+### `aimdk::protocol::SE3Pose`
+
+SE3位姿（四元数姿态表示）
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 3D位置，单位：米 |
+| orientation | [aimdk::protocol::Quaternion](#aimdk-protocol-quaternion) | 四元数 |
+
+### `aimdk::protocol::SE3TrajectoryPoint`
+
+SE3轨迹点
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| time\_since\_reference | double | 相对参考时间的时间，单位：秒 |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) | SE3位姿 |
+| velocity | [aimdk::protocol::SE3Velocity](#aimdk-protocol-se3velocity) | SE3速度 |
+| acceleration | [aimdk::protocol::SE3Acceleration](#aimdk-protocol-se3acceleration) | SE3加速度 |
+
+### `aimdk::protocol::SE3Trajectory`
+
+SE3轨迹
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| reference\_time | double | 所有轨迹点相对的参考时间，单位：秒 |
+| points | [aimdk::protocol::SE3TrajectoryPoint](#aimdk-protocol-se3trajectorypoint)\[\] | SE3轨迹点列表 |
+
+### `aimdk::protocol::SE3Velocity`
+
+SE3 速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 线速度，单位：米/秒 |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 角速度，单位：弧度/秒 |
+
+### `aimdk::protocol::Timestamp`
+
+时间戳
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| seconds | int64 | UTC时间秒数，自Unix epoch 1970-01-01T00:00:00Z开始。必须在0001-01-01T00:00:00Z到9999-12-31T23:59:59Z范围内。 |
+| nanos | int32 | 纳秒精度的非负秒数分数。即使秒数为负值，纳秒值也必须为非负且向前计时。必须在0到999,999,999范围内。 |
+| ms\_since\_epoch | int64 | 前端使用的自epoch开始的毫秒数 |
+
+### `aimdk::protocol::Twist`
+
+速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 线速度 |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 角速度 |
+
+### `aimdk::protocol::Vec2`
+
+二维向量
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double | X分量 |
+| y | double | Y分量 |
+
+### `aimdk::protocol::Vec3`
+
+三维向量
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double | X分量 |
+| y | double | Y分量 |
+| z | double | Z分量 |
+
+### `aimdk::protocol::Wrench`
+
+力矩
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| force | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 力，单位：N |
+| torque | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 扭矩，单位：N\*m |
+
+## 通用状态和请求响应类型
+
+### `aimdk::protocol::CommonState`
+
+通用状态定义
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| CommonState\_UNKNOWN | 0 | 未知 |
+| CommonState\_SUCCESS | 1 | 成功 |
+| CommonState\_FAILURE | 2 | 失败 |
+| CommonState\_ABORTED | 3 | 中止 |
+| CommonState\_TIMEOUT | 4 | 超时 |
+| CommonState\_INVALID | 5 | 无效 |
+| CommonState\_IN\_MANUAL | 6 | 手动模式 |
+| CommonState\_NOT\_READY | 100 | 未就绪 |
+| CommonState\_PENDING | 200 | 等待中 |
+| CommonState\_CREATED | 300 | 已创建 |
+| CommonState\_RUNNING | 400 | 运行中 |
+
+### `aimdk::protocol::CommonRequest`
+
+通用请求类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](#aimdk-protocol-requestheader) | 请求头 |
+
+### `aimdk::protocol::CommonResponse`
+
+通用响应类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](#aimdk-protocol-responseheader) | 响应头 |
+| state | [aimdk::protocol::CommonState](#aimdk-protocol-commonstate) | 状态 |
+
+### `aimdk::protocol::CommonTaskRequest`
+
+通用任务请求类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](#aimdk-protocol-requestheader) | 请求头 |
+| task\_id | uint64 | 任务ID |
+
+### `aimdk::protocol::CommonTaskResponse`
+
+通用任务响应类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](#aimdk-protocol-responseheader) | 响应头 |
+| task\_id | uint64 | 任务ID |
+| state | [aimdk::protocol::CommonState](#aimdk-protocol-commonstate) | 状态 |
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节名称 |
+| position\_upper\_limit | double | 关节位置上限，单位：弧度或者米 |
+| position\_lower\_limit | double | 关节位置下限，单位：弧度或者米 |
+| velocity\_limit | double | 关节速度限制，单位：弧度/秒或者米/秒 |
+| acceleration\_limit | double | 关节加速度限制，单位：弧度/秒^2或者米/秒^2 |
+| effort\_limit | double | 关节扭矩限制，单位：N或者N·m |
+
+### `aimdk::protocol::Rpy`
+
+RPY角度姿态表示
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| rx | double | 绕固定轴X旋转角度，单位：rad |
+| ry | double | 绕固定轴Y旋转角度，单位：rad |
+| rz | double | 绕固定轴Z旋转角度，单位：rad |
+
+### `aimdk::protocol::SE2Acceleration`
+
+SE2 加速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 线加速度，单位：米/秒^2 |
+| angular | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 角加速度，单位：弧度/秒^2 |
+
+### `aimdk::protocol::Vec2`
+
+二维向量
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double |  |
+| y | double |  |
+
+### `aimdk::protocol::PubImageData`
+
+给客户端推送视频流的图像数据格式
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| height | int32 | 单帧高 |
+| width | int32 | 单帧宽 |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| image\_data | bytes | 图片数据 |
+
+### `aimdk::protocol::SE3Velocity`
+
+SE3 速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 线速度，单位：米/秒 |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 角速度，单位：弧度/秒 |
+
+### `aimdk::protocol::Odometry`
+
+odometry
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) |  |
+| child\_frame\_id | string |  |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) |  |
+| twist | [aimdk::protocol::Twist](#aimdk-protocol-twist) |  |
+
+### `aimdk::protocol::ScalarTrajectoryPoint`
+
+Scalar轨迹点
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| time\_since\_reference | double | time since reference. Unit s. |
+| positions | double\[\] | The position of the trajectory. Unit rad or m. |
+| velocities | double\[\] | The velocity of the trajectory. Unit rad/s or m/s. |
+| accelerations | double\[\] | The acceleration of the trajectory. Unit rad/s^2 or m/s^2. |
+
+### `aimdk::protocol::ScalarTrajectory`
+
+Scalar轨迹
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| reference\_time | double | All trajectories specify times relative to this reference time. |
+| points | [aimdk::protocol::ScalarTrajectoryPoint](#aimdk-protocol-scalartrajectorypoint)\[\] | The trajectory points. |
+
+### `aimdk::protocol::Box`
+
+A box in a 2D space.
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x1 | float |  |
+| y1 | float |  |
+| x2 | float |  |
+| y2 | float |  |
+
+### `aimdk::protocol::Header`
+
+一般消息的 header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| seq | uint32 | sequence ID: consecutively increasing ID |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | timestamp |
+| frame\_id | string | Frame this data is associated with |
+| control\_source | [aimdk::protocol::ControlSource](#aimdk-protocol-controlsource) | 控制源（一般算法模块保持默认即可，无需设置） |
+| uuid | string | 设备ID（用于鉴别AIMMASTER设备, 通常无需设置） |
+
+### `aimdk::protocol::RequestHeader`
+
+RPC 请求体的 header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | timestamp |
+| control\_source | [aimdk::protocol::ControlSource](#aimdk-protocol-controlsource) | 控制源（一般算法模块保持默认即可，无需设置） |
+| uuid | string | 设备ID（用于鉴别AIMMASTER设备, 通常无需设置） |
+| trace\_id | string | rpc请求方id |
+| domin | string | 请求方来源域 |
+
+### `aimdk::protocol::ResponseHeader`
+
+RPC 响应体的 header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| code | uint64 | 处理结果 - 为0: 成功 - 非0: 失败 |
+| msg | string | 处理结果描述 |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| trace\_id | string | rpc请求方id |
+| domin | string | 请求方来源域 |
+
+### `aimdk::protocol::BlockableRequestHeader`
+
+可阻塞的 RPC 请求体的 header
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| blocked | bool | 是否阻塞调用（默认 false） |
+| control\_source | [aimdk::protocol::ControlSource](#aimdk-protocol-controlsource) | 控制源（一般算法模块保持默认即可，无需设置） |
+| uuid | string | 设备ID（用于鉴别AIMMASTER设备, 通常无需设置） |
+| trace\_id | string | rpc请求方id |
+| domin | string | 请求方来源域 |
+
+### `aimdk::protocol::BlockableResponseHeader`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| code | uint64 | 处理结果 - 为0: 成功 - 非0: 失败 |
+| msg | string | 处理结果描述 |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| id | uint64 | 请求关联的 rpc id，若设置了非阻塞模式，该字段可用于调用者向执行者定期查询 rpc 执行情况， 该值需由执行者维护并设置，默认为零无效。 |
+| trace\_id | string | rpc请求方id |
+| domin | string | 请求方来源域 |
+
+### `aimdk::protocol::Wrench`
+
+力矩
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| force | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | force 单位：N |
+| torque | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | torque 单位：N\*m |
+
+### `aimdk::protocol::WrenchStamped`
+
+力矩，带时间戳
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) |  |
+| wrench | [aimdk::protocol::Wrench](#aimdk-protocol-wrench) |  |
+
+### `aimdk::protocol::SE3Pose`
+
+SE3位姿（四元数姿态表示）
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 3d 位姿，单位：米 |
+| orientation | [aimdk::protocol::Quaternion](#aimdk-protocol-quaternion) | 四元数 |
+
+### `aimdk::protocol::SE3RpyPose`
+
+SE3位姿（RPY角度表示）
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 3d 位姿，单位：米 |
+| rpy | [aimdk::protocol::Rpy](#aimdk-protocol-rpy) | RPY角度 |
+
+### `aimdk::protocol::SE3Acceleration`
+
+SE3 加速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 线加速度，单位：米/秒^2 |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) | 角加速度，单位：弧度/秒^2 |
+
+### `aimdk::protocol::CommonState`
+
+状态定义
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| CommonState\_UNKNOWN | 0 | 未知 |
+| CommonState\_SUCCESS | 1 | 成功 |
+| CommonState\_FAILURE | 2 | 失败 |
+| CommonState\_ABORTED | 3 | 中止 |
+| CommonState\_TIMEOUT | 4 | 超时 |
+| CommonState\_INVALID | 5 | 无效 |
+| CommonState\_IN\_MANUAL | 6 | 手动 |
+| CommonState\_NOT\_READY | 100 | 未就绪 |
+| CommonState\_PENDING | 200 | 等待中 |
+| CommonState\_CREATED | 300 | 已创建 |
+| CommonState\_RUNNING | 400 | 运行中 |
+
+### `aimdk::protocol::CommonRequest`
+
+通用请求类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](#aimdk-protocol-requestheader) |  |
+
+### `aimdk::protocol::CommonResponse`
+
+通用返回类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](#aimdk-protocol-responseheader) |  |
+| state | [aimdk::protocol::CommonState](#aimdk-protocol-commonstate) |  |
+
+### `aimdk::protocol::CommonTaskRequest`
+
+通用Task请求类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](#aimdk-protocol-requestheader) |  |
+| task\_id | uint64 |  |
+
+### `aimdk::protocol::CommonTaskResponse`
+
+通用Task返回类型
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](#aimdk-protocol-responseheader) |  |
+| task\_id | uint64 |  |
+| state | [aimdk::protocol::CommonState](#aimdk-protocol-commonstate) |  |
+
+### `aimdk::protocol::SE2Velocity`
+
+SE2 速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 线速度，单位：米/秒 |
+| angular | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 角速度，单位：弧度/秒 |
+
+### `aimdk::protocol::IoPacket`
+
+通用二进制IO packet
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| io\_data | bytes | 图片数据 |
+
+### `aimdk::protocol::IoPackets`
+
+通用二进制IO packet queue
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) | 时间戳 |
+| data\_queue | bytes\[\] | 图片数据 |
+
+### `aimdk::protocol::Vec3`
+
+三维向量
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double |  |
+| y | double |  |
+| z | double |  |
+
+### `aimdk::protocol::Timestamp`
+
+时间戳
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| seconds | int64 | Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive. |
+| nanos | int32 | Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive. |
+| ms\_since\_epoch | int64 | miliseconds since epoch for counts using by frontend. |
+
+### `aimdk::protocol::SE3TrajectoryPoint`
+
+SE3轨迹点
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| time\_since\_reference | double | time since reference. Unit s. |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) | The se3 pose of the trajectory. |
+| velocity | [aimdk::protocol::SE3Velocity](#aimdk-protocol-se3velocity) | The se3 velocity of the trajectory. |
+| acceleration | [aimdk::protocol::SE3Acceleration](#aimdk-protocol-se3acceleration) | The se3 acceleration of the trajectory. |
+
+### `aimdk::protocol::SE3Trajectory`
+
+SE3轨迹
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| reference\_time | double | time since reference. Unit s. |
+| points | [aimdk::protocol::SE3TrajectoryPoint](#aimdk-protocol-se3trajectorypoint)\[\] | The se3 trajectory points. |
+
+### `aimdk::protocol::QRPose`
+
+QR位姿
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| qr\_code | int32 | 二维码值 |
+| pose | [aimdk::protocol::SE3Pose](#aimdk-protocol-se3pose) | 6D位姿 |
+
+### `aimdk::protocol::ControlSource`
+
+控制源，由安全模块向 MC 设置，用于 MC 过滤不匹配的控制源输入
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| ControlSource\_AUTO | 0 | 默认值，一般是自动算法发起 |
+| ControlSource\_MANUAL | 1 | 手动控制，从遥控模块发起 |
+| ControlSource\_SAFE | 2 | 安全模块，从安全模块发起 |
+| ControlSource\_DISABLED | 255 | 无效控制源，为 MC 的默认值 |
+
+### `aimdk::protocol::SE2Pose`
+
+SE2位姿
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Vec2](#aimdk-protocol-vec2) | 2d 位姿，单位：米 |
+| angle | double | 角度，单位：弧度 |
+
+### `aimdk::protocol::Pixel`
+
+2d 像素坐标
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| u | int32 | 像素横坐标 |
+| v | int32 | 像素纵坐标 |
+
+### `aimdk::protocol::PixelPose`
+
+2d 像素位姿
+
+坐标系示意
+
++--------> u
+
+| \- (angle) |
+| --- |
+| \* |
+| v |
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| position | [aimdk::protocol::Pixel](#aimdk-protocol-pixel) | 2d 像素坐标 |
+| angle | double | 角度从u轴转向v轴的角度，单位：弧度 |
+
+### `aimdk::protocol::Quaternion`
+
+四元数
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| x | double |  |
+| y | double |  |
+| z | double |  |
+| w | double |  |
+
+### `aimdk::protocol::Twist`
+
+速度
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| linear | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) |  |
+| angular | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) |  |
+
+### `aimdk::protocol::TwistStamped`
+
+速度 带时间戳
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](#aimdk-protocol-timestamp) |  |
+| twist | [aimdk::protocol::Twist](#aimdk-protocol-twist) |  |
+
+### `aimdk::protocol::MocapJointState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string |  |
+| id | uint32 | 动捕tracker id |
+| status | uint32 | 动捕状态 |
+| err\_code | uint32 | 动捕错误码 |
+| position | [aimdk::protocol::Vec3](#aimdk-protocol-vec3) |  |
+| orientation | [aimdk::protocol::Quaternion](#aimdk-protocol-quaternion) |  |
+

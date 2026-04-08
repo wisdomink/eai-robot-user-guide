@@ -1,0 +1,152 @@
+---
+title: 2. Overview of the Software System
+description: >-
+  The robot is equipped with an x86\_64 architecture industrial PC and an arm64
+  architecture AGX Jetson Orin industrial PC, referred to as x86 and orin,
+  respectively. Both are installed with Ubuntu 22.04 and use systemd as…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - software-system
+route: /en/a2/v2-0/dev-guide/software-system
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/02-software_overview'
+order: 11
+---
+# 2. Overview of the Software System
+
+## 2.1 Basic Startup Mode
+
+The robot is equipped with an x86\_64 architecture industrial PC and an arm64 architecture AGX Jetson Orin industrial PC, referred to as x86 and orin, respectively. Both are installed with Ubuntu 22.04 and use systemd as the system service manager. Both are configured with `agibot_em.service` as the entry point for the Agibot software system. This service starts automatically on boot and launches the EM (process startup management) and SM (process status management) modules. The EM and SM then work together to start the remaining module processes. The SM manages the startup and shutdown states of the process list under different system modes (to avoid issues with shared memory resource anomalies caused by process start and stop, since version 1.3, the system mode switching no longer turns processes on and off but instead calls the activate and deactivate interfaces of the processes, which remain active).
+
+The configuration file paths for EM and SM are `/agibot/software/v0/entry/bin/cfg/run_agibot.yaml` (for x86 & orin) and `/agibot/software/v0/entry/bin/cfg/sm.yaml` (for x86), respectively. The former lists the default processes to be started, while the latter lists which functional groups of processes are enabled under each system mode.
+
+## 2.2 Module Function Overview
+
+Some modules exist on both orin and X86, with a suffix of 1 for orin and 0 for X86.
+
+| Module Type | Industrial PC |  | Name | Description / Function |
+| --- | --- | --- | --- | --- |
+| SoC External Devices |  | AimMaster | Client Software | Used to operate and control the robot’s basic functions |
+|  |  | OMP | Zhiyuan Cloud Platform | Responsible for receiving and reporting edge-side embedded data |
+|  |  | VR | Virtual Reality Device | Used for robot teleoperation |
+|  |  | MCU | Microcontroller Unit | Controls robot motors at the lower level; receives motor and IMU data; communicates upward with HAL EtherCAT to receive control commands and upload motor and IMU data |
+| Common Services  
+Infrastructure Services | ORIN | MQTT broker (mosquitto) | MQTT Gateway | MQTT gateway node, interfacing with AimMaster and onboard software |
+|  |  | data\_exporter | Log Export Service | Provides batch and time-range log export capabilities |
+|  | ORIN & X86 | iox\_roudi | Iceoryx Shared Memory Daemon | Central scheduling node for iceoryx communication, providing shared memory storage locations |
+|  |  | setting | Settings Module | Provides basic industrial PC settings such as Wi-Fi and Bluetooth |
+|  |  | recordbag | Bag Recording | Continuously records bag files |
+|  |  | reboot | Reboot Command | Performs system reboot when invoked by SM |
+|  |  | poweroff | Power-off Command | Executes system shutdown when invoked by SM |
+| Management Modules | X86 | SM | System State Management Module | Responsible for switching system states and managing the process list |
+|  | ORIN & X86 | EM | Process Management Module | Responsible for launching processes and querying process status |
+| Functional Modules | X86 | sota\_ota  
+ota\_gateway  
+ota\_master | OTA Functional Modules | Responsible for downloading OTA packages and executing OTA workflows |
+|  |  | hal\_ethercat | Hardware Abstraction Layer | Handles EtherCAT communication with the MCU, transmitting hardware status and control commands |
+|  |  | mc | Motion Control Module | Responsible for overall robot motion control and issuing motion commands |
+|  |  | motion\_streamer | Motion Streaming Module | Dedicated to teleoperation, mapping VR motion-capture suit data to robot motions |
+|  |  | rc | Remote Control Module | Provides interfaces for AimMaster to call robot basic functions and status, and records related information into logs |
+|  |  | motion\_player | Motion Playback Module | Responsible for solving, mapping, and playing specified motion files |
+|  |  | tf | Coordinate Transformation Module | Provides coordinate transformation services |
+|  |  | fota\_slave | Firmware Upgrade Module | Responsible for FOTA upgrade processes |
+|  |  | health\_monitor | Health Monitoring Module | Monitors the health of all business modules and underlying hardware |
+|  |  | legged\_odometry | Perception & Localization Module | Reads joint angles of each leg and IMU data to compute the robot pose, and sends it to navigation or control modules |
+|  |  | open\_long\_server | Persistent Connection Service | Maintains a 24-hour persistent connection, allowing external devices to remotely control the robot, issue real-time motion commands, or retrieve logs |
+|  |  | hds | Health Diagnosis Service | Receives fault reports from various modules |
+|  | ORIN | hal\_audio | Audio Playback Module | Provides atomic audio playback capability for agent invocation |
+|  |  | agent | Voice Intelligent Agent Module | Executes voice large language models, handles cloud interaction logic, and issues speech, motion, and expression commands |
+|  |  | task\_engine | Task Management Module | Responsible for executing tasks created by AimMaster |
+|  |  | pnc | Planning and Navigation Control Module | Responsible for navigation path planning |
+|  |  | slam  
+agivslam | Mapping and Localization Module | Responsible for mapping and localization |
+|  |  | mm | Map Management Module | Handles map data loading and parsing, map fusion, and map updates |
+|  |  | perception  
+perception\_object  
+perception\_qr | Perception Modules | Collects and processes navigation-related sensor data for pnc and operation modules |
+|  |  | hal\_dcw2  
+hal\_d415  
+hal\_lidar  
+hal\_xinying (T3)  
+tz\_camera (P1) | Sensor Driver Modules | Loads camera and sensor drivers and publishes raw image frames via ROS 2 topics |
+|  |  | gateway | External Gateway Communication | Forwards external requests to internal modules |
+|  |  | data\_proxy | Data Transfer Module | Packages robot logs, status, video streams, and files for on-demand forwarding to cloud, host PC, or debugging tools; also distributes external upgrade packages, motion files, and configuration commands to corresponding modules |
+|  |  | colistener  
+coencoder  
+cobridge | Data Closed-loop Modules | Responsible for closed-loop data interaction between the robot and cloud |
+|  |  | embodied\_agent | Embodied Intelligence Orchestration Module | The core intelligent controller of the robot, enabling it to understand, reason, and act correctly to accomplish high-level tasks |
+|  |  | manipulator | Embodied Execution Module | Provides low-level atomic capabilities such as grasping and dispatching |
+|  |  | skillpilot | Skill Scheduling Module | Unified management, arbitration, and scheduling of robot basic skills |
+|  |  | resource\_manager | Resource Management Module | Unified management of onboard motion, expression, and audio resource files |
+
+```
+                                                                                                                                          |
+```
+
+### 2.2.1 System Mode
+
+The modules activated and started in each system mode are different, as shown below (excerpt from sm.yaml).
+
+```
+  # System status  system_modes:    "Startup":      next_mode_list: [ "Ready", "OTA", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "RC", "MoCap", "Gateway", "Perception", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]
+    "Poweroff":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Poweroff ]
+    "Reboot":      next_mode_list: []      active_FG_list: []      action_list:        - [ open Reboot ]
+    # The system's ready state, which starts the business management module and HAL    "Ready":      next_mode_list: [ "Manual", "EStop", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]      # post_process:      #   - level: 34      #     action_list: [ [ forbid Manual ] ]
+    # OTA state, which starts the OTA functional group to complete OTA-related functions    "OTA":      next_mode_list: [ "Reboot", "Ready", "Poweroff" ]      active_FG_list: [ "System", "HAL", "Manager", "SLAM", "RC", "MoCap", "Gateway","Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ deactivate agent ]        - [ deactivate pnc ]        - [ deactivate mc ]        - [ deactivate slam ]        - [ deactivate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ deactivate motion_player ]
+    # Manual state, which starts the RC and MC functional groups    "Manual":      next_mode_list: [ "OTA", "Auto", "Reset", "EStop", "Calibration", "Poweroff", "MotionStream", "DataCollection", "FreeExploration", "Mapping", "Manipulator" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"  # State entered by calling the enable script under tools          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate rc ]            - [ close Motion ]            - [ close EStop ]      post_process:        - level: 47          action_list: [ [ fallback mc ] ]
+    # Mapping state    "Mapping":      next_mode_list: [ "Manual" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ deactivate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]
+    # Auto state, which starts the task engine and all business functional groups    "Auto":      next_mode_list: [ "Manual", "EStop", "Poweroff", "FreeExploration" ]```      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ activate task_engine ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate task_engine ]            - [ close Motion ]            - [ close EStop ]      # post_process:      #   # - level: 47      #   #   action_list: [ [ MAID ] ]      #   # - level: 43      #   #   action_list: [ [ fallback motion_player ], [ fallback task_engine XXModule B ], [ Move Manual ] ]      #   # - level: 40      #   #   action_list: [ [ MAID ] ]      #   - level: 37      #     action_list: [ [ fallback task_engine ], [ move Manual ] ]      #   - level: 34      #     action_list: [ [ fallback task_engine, fallback mc ] ]      #   # - level: 31      #   #   action_list: [ [ MAID ] ]
+    # Embodied Operation Mode    "Manipulator":      next_mode_list: [ "OTA", "Reset", "EStop", "Poweroff", "FreeExploration", "Manual" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ deactivate motion_player ]
+    # Free Exploration Mode    "FreeExploration":      next_mode_list: [ "Manual", "EStop", "Poweroff", "Auto" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ activate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ activate task_engine ]        - [ activate motion_player ]      child_modes:        - mode_name: "Safety"          extra_next_modes: [ "OTA", "Reset" ]          action_list:            - [ deactivate task_engine ]            - [ close Motion ]            - [ close EStop ]
+    # Reset State, used for restoring factory settings    "Reset":      next_mode_list: [ "Reboot", "Poweroff" ]      active_FG_list: [ "System", "OTA", "Gateway" ]      action_list:        - [ DIFF ]
+    # Emergency Stop State, used for emergency stop    "EStop":      next_mode_list: [ "Ready", "OTA", "Poweroff" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]        - [ activate motion_player ]
+    # Safety State, used for safety state    # "Safe":    #   next_mode_list: [ "Manual", "EStop", "Poweroff" ]    #   active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoCap", "Gateway", "Perception", "Motion" ]    #   action_list:    #     - [ DIFF ]    #     - [ deactivate mc, deactivate rc ]
+    # Real-time Remote Operation State, used for real-time remote operation```yaml    "MotionStream":      next_mode_list: [ "Manual", "EStop", "Poweroff", "RemoteMotionStream", "DataCollection" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+    "RemoteMotionStream":      next_mode_list: [ "Manual", "EStop", "Poweroff", "MotionStream" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA", "RTC" ]      action_list:        - [ deactivate tz_camera ]        - [ deactivate hal_d415 ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ DIFF ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ activate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+    # Calibration state, used for calibration, enter upon client request for calibration    "Calibration":      next_mode_list: [ "Ready" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "Gateway", "Motion", "Perception", "OTA", "Calibration" ]      action_list:        - [ DIFF ]        - [ activate recordbag0 ]        - [ activate recordbag1 ]        - [ activate tz_camera ]        - [ activate hal_d415 d415 Calibration ]        - [ deactivate agent ]        - [ deactivate pnc ]        - [ deactivate mc ]        - [ deactivate slam ]        - [ deactivate perception ]        - [ deactivate rc ]        - [ deactivate task_engine TaskMaster cancel ]      # post_process:      # #   - level: 43      # #     action_list: [ [ fallback calibration ] ]      # #   - level: 37      # #     action_list: [ [ fallback calibration ] ]      #   - level: 34      #     action_list: [ [ fallback task_engine, fallback mc ] ]
+    "DataCollection":      next_mode_list: [ "Manual", "EStop", "Poweroff", "MotionStream" ]      active_FG_list: [ "System", "HAL", "EStop", "Manager", "SLAM", "RC", "MoStream", "Gateway", "Motion", "Perception", "OTA", "Data_Collector" ]      action_list:        - [ DIFF ]        - [ deactivate recordbag0 ]        - [ deactivate recordbag1 ]        - [ activate tz_camera tzcamera DataCollection ]        - [ activate hal_d415 d415 DataCollection ]        - [ activate agent ]        - [ activate pnc ]        - [ deactivate mc ]        - [ activate slam ]        - [ deactivate perception ]        - [ activate rc ]        - [ deactivate task_engine TaskMaster cancel ]
+```
+
+### 2.2.2 Module Disabling Method (Caution)
+
+Due to the numerous features, ORIN now has a high load. If you need to replace certain functional modules through secondary development, you must configure the system so that the module does not start.
+
+Modules are managed in two ways, depending on whether they are controlled by `run_agibot.yaml` (x86 & orin) or `sm.yaml` (orin). Modules managed by the former will start by default at startup and remain resident, unaffected by `sm` management. Modules managed by the latter will switch between different system modes.
+
+1.  If you need to disable a module managed by `run_agibot.yaml` (i.e., part of `default_apps`), simply remove it from `default_apps`.
+2.  If you need to disable a module managed by `sm`, add a line with `deactivate` in the corresponding system mode to specify the module to be disabled.
+
+Taking the motion\_play module as an example, follow the steps below to disable it. First, remove the motion\_play module from the default\_apps list in run\_agibot.yaml (x86):
+
+```
+@@ -20,7 +20,6 @@ process_manager:     "iox_roudi",     "hal_ethercat",     "recordbag0",-    "motion_player",     "ota_gateway",     "ota_master",     "fota_slave",
+```
+
+Then, remove motion\_player from the group in SystemManagerModule within sm.yaml (orin), update the MoCap configuration to empty, and remove the activate / deactivate operations for motion\_player in all states.
+
+```
+@@ -14,7 +14,7 @@ SystemManagerModule:-      group: [ota_master, motion_player, motion_streamer, sota_slave0, mc, tf, dr, rc, hal_ethercat, poweroff0, reboot0, setting0, recordbag0, data_collector, health_monitor0]+      group: [ota_master, motion_streamer, sota_slave0, mc, tf, dr, rc, hal_ethercat, poweroff0, reboot0, setting0, recordbag0, data_collector, health_monitor0]       url: "http://${AGIBOT_NEIGHBOR_HOST_IP}:50081"
+```
+
+```
+@@ -40,7 +40,7 @@ SystemManagerModule:     "RC":       [ "rc" ]     "MoCap":-      [ "motion_player" ]+      []     "MoStream":       [ "motion_streamer" ]
+```
+
+```
+    "Ready":@@ -100,7 +100,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]    "OTA":@@ -122,7 +121,6 @@ SystemManagerModule:         - [ deactivate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ deactivate motion_player]    "Manual":@@ -140,7 +138,6 @@ SystemManagerModule:         - [ activate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]    "Mapping":@@ -169,7 +166,6 @@ SystemManagerModule:         - [ deactivate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]     "Auto":@@ -188,7 +184,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ activate task_engine ]-        - [ activate motion_player ]    "Manipulator":@@ -227,7 +222,6 @@ SystemManagerModule:         - [ activate perception ]         - [ activate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ deactivate motion_player ]    "FreeExploration":@@ -246,7 +240,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ activate task_engine ]-        - [ activate motion_player ]    "EStop":@@ -279,7 +272,6 @@ SystemManagerModule:         - [ activate perception ]         - [ deactivate rc ]         - [ deactivate task_engine TaskMaster cancel ]-        - [ activate motion_player ]
+```
+
+## 2.3 Onboard Disk Directories
+
+**orin**
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBbjIg9x7.png&w=2390&h=5638&f=webp)
+
+**X86**
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FevQ4FJaQ.png&w=2824&h=4726&f=webp)
+

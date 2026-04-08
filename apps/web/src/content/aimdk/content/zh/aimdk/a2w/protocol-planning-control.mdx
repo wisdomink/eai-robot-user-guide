@@ -1,0 +1,376 @@
+---
+title: 规划控制模块
+description: >-
+  本页面包含了规划控制模块（Planning and Control, PNC）包含的话题和服务的相关文档协议，以支持系统的规划控制功能。 本模块位于
+  orin 开发板上，http 后端监听的端口为 53176。 | 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 频率 | 通信后端 | |
+  :-- | :-: | :-: | --- | --- | --- | | `/body_drive/wheel_joint_comm…
+product: a2w
+slug:
+  - a2w
+  - protocol-planning-control
+route: /zh/a2w/protocol-planning-control
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/pnc/readme'
+order: 160
+---
+# 规划控制模块
+
+本页面包含了规划控制模块（Planning and Control, PNC）包含的话题和服务的相关文档协议，以支持系统的规划控制功能。
+
+本模块位于 orin 开发板上，http 后端监听的端口为 53176。
+
+## Channel 接口
+
+| 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 频率 | 通信后端 |
+| :-- | :-: | :-: | --- | --- | --- |
+| `/body_drive/wheel_joint_command` | 关节指令 | 发布 | [joint\_msg\_interface::msg::JointCommand](../common/README.md#jointmsginterface-msg-jointcommand) | 100hz | ros2 |
+| `/cmd_vel` | 速度指令 | 发布 | geometry\_msgs/msg/Twist | 20hz | ros2 |
+| `/pnc/human_detect` | pnc的行人检测结果 | 发布 | std\_msg::msg::Bool | 20hz | ros2 |
+| `/path` | pnc的路径规划path | 发布 | nav\_msgs/msg/Path | 事件触发 | ros2 |
+
+## RPC 接口
+
+任务下发接口统一说明：  
+1.执行任务前，需要机器人重定位成功，且下发任务的地图id需要与重定位的地图一致  
+2.下发任务时，需要设置task\_id，若不设置（默认为0），PNC会自动生成一个task\_id，并在response中返回，客户端需要保存该task\_id以便后续下发控制指令或查询任务状态
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToGoal` | 下发给定目标点ID的规划导航任务 | [aimdk::protocol::PncPlanningNaviToGoalRequest](#aimdk-protocol-pncplanningnavitogoalrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 到点精度范围约0.05米 | http |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToPose2D` | 下发给定目标点位姿的规划导航任务 | [aimdk::protocol::PncPlanningNaviToPose2DRequest](#aimdk-protocol-pncplanningnavitopose2drequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 到点精度范围约0.05米 | http |
+| `pb:/aimdk.protocol.PncService/MobileNaviToGoal` | 下发给定目标点ID的短距离导航任务, 适用拆垛任务 | [aimdk::protocol::PncPlanningNaviToGoalRequest](#aimdk-protocol-pncplanningnavitogoalrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 到点精度范围约0.05米 | http |
+| `pb:/aimdk.protocol.PncService/MobileNaviToPose2D` | 下发给定目标点位姿的短距离导航任务, 适用拆垛任务 | [aimdk::protocol::PncPlanningNaviToPose2DRequest](#aimdk-protocol-pncplanningnavitopose2drequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 到点精度范围约0.05米 | http |
+| `pb:/aimdk.protocol.PncService/LinearNaviToRelative` | 下发给定相对目标点位姿的直线导航任务 | [aimdk::protocol::PncLinearNaviToRelativeRequest](#aimdk-protocol-pnclinearnavitorelativerequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 先执行原地旋转，再执行直线移动 | http |
+| `pb:/aimdk.protocol.PncService/LinearNaviToGoal` | 下发给定目标点ID的直线导航任务 | [aimdk::protocol::PncLinearNaviToGoalRequest](#aimdk-protocol-pnclinearnavitogoalrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 先执行原地旋转，再执行直线移动 | http |
+| `pb:/aimdk.protocol.PncService/LinearNaviToPose2D` | 下发给定目标点位姿的直线导航任务 | [aimdk::protocol::PncLinearNaviToPose2DRequest](#aimdk-protocol-pnclinearnavitopose2drequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 先执行原地旋转，再执行直线移动 | http |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelativeGoal` | 下发给定目标点ID的直接移动任务 | [aimdk::protocol::PncDirectNaviToRelativeGoalRequest](#aimdk-protocol-pncdirectnavitorelativegoalrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 一边平移一边旋转，仅适用于目标点与机器人朝向偏差较小的任务，否则可能导致到点偏差较大 | http |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelative` | 下发给定相对目标点位姿的直接移动任务 | [aimdk::protocol::PncDirectNaviToRelativeRequest](#aimdk-protocol-pncdirectnavitorelativerequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 一边平移一边旋转，仅适用于目标点与机器人朝向偏差较小的任务，否则可能导致到点偏差较大 | http |
+| `pb:/aimdk.protocol.PncService/SpinTurnAndMoveForward` | 下发给原地旋转+直线前进任务，会先执行原地旋转，再执行直线前进 | [aimdk::protocol::PncSpinTurnAndMoveForwardRequest](#aimdk-protocol-pncspinturnandmoveforwardrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) |  | http |
+| `pb:/aimdk.protocol.PncService/SpinTurn` | 下发原地旋转任务 | [aimdk::protocol::PncSpinTurnRequest](#aimdk-protocol-pncspinturnrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) |  | http |
+| `pb:/aimdk.protocol.PncService/MoveForward` | 下发直线平移任务, 该Action会根据用户设置的angle的范围决定采用纵向移动模式或是横向移动模式，当angle在\[-30, 30\]度、\[-150, -180\]度、\[150, 180\]度范围内时，机器人会采用纵向移动模式，即机器人会沿着angle方向移动distance距离；当angle在\[60, 120\]度或\[-60, -120\]度范围内时，机器人会采用横向移动模式，即机器人会沿着angle方向移动distance距离。其它情况下任务返回失败。 | [aimdk::protocol::PncMoveForwardRequest](#aimdk-protocol-pncmoveforwardrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 任务执行后机器朝向不会发生变化 | http |
+| `pb:/aimdk.protocol.PncService/PreciseNaviToGoal` | 下发给定目标点ID的高精度导航任务 | [aimdk::protocol::PncPreciseNaviToGoalRequest](#aimdk-protocol-pncprecisenavitogoalrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 仅适用于特殊场景下的高精到点任务，机器人会先以普通规划导航模式走到目标点后方约0.5米的位置，再直接移动到目标点，直接移动过程中不避障，并可能多次调整。到点精度约0.1米左右。需要保证目标点后方有足够空间。非特殊需求不建议使用此模式 | http |
+| `pb:/aimdk.protocol.PncService/ActionCancel` | 下发取消任务指令 | [aimdk::protocol::CommonTaskRequest](../common/README.md#aimdk-protocol-commontaskrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskrequest) | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE | http |
+| `pb:/aimdk.protocol.PncService/ActionPause` | 下发暂停任务指令 | [aimdk::protocol::CommonTaskRequest](../common/README.md#aimdk-protocol-commontaskrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskrequest) | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE | http |
+| `pb:/aimdk.protocol.PncService/ActionResume` | 下发恢复暂停中的任务指令 | [aimdk::protocol::CommonTaskRequest](../common/README.md#aimdk-protocol-commontaskrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskrequest) | 仅当task\_id匹配时才响应指令，否则返回CommonState\_FAILURE | http |
+| `pb:/aimdk.protocol.PncService/ActionGetState` | 获取导航任务状态 | [aimdk::protocol::CommonTaskRequest](../common/README.md#aimdk-protocol-commontaskrequest) | [aimdk::protocol::PncServiceStateResponse](#aimdk-protocol-pncservicestateresponse) | 仅当task\_id匹配时才返回正确的任务状态，否则返回PncServiceState\_FAILED | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::PncPathChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 自定义消息头，指定路线所在的坐标系 |
+| pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose)\[\] | 路径点位姿 |
+
+### `aimdk::protocol::OccupancyGrid`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| info | [aimdk::protocol::MapMetaData](#aimdk-protocol-mapmetadata) | 地图元数据信息 |
+| data | int32\[\] | 占用栅格数据，-1表示未知，0表示空闲，100表示占用 |
+
+### `aimdk::protocol::MapMetaData`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| map\_load\_time | [aimdk::protocol::Timestamp](../common/README.md#aimdk-protocol-timestamp) | 地图加载时间 |
+| resolution | float | 地图分辨率，米/像素 |
+| width | uint32 | 地图宽度，像素 |
+| height | uint32 | 地图高度，像素 |
+| origin | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) | 地图原点位姿 |
+
+### `aimdk::protocol::PncAvoidStatusChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| avoid\_status | [aimdk::protocol::AvoidStatus](#aimdk-protocol-avoidstatus) | 避障状态 |
+
+### `aimdk::protocol::AvoidStatus`
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| AvoidStatus\_UNKNOWN | 0 | 未知状态 |
+| AvoidStatus\_NORMAL | 1 | 正常状态 |
+| AvoidStatus\_AVOIDING | 2 | 避障中 |
+| AvoidStatus\_BLOCKED | 3 | 被阻挡 |
+
+### `aimdk::protocol::PncPlanningNaviToGoalRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| target\_id | int64 | 目标点id |
+| guide\_line\_id | int64 | 引导路线id，保留字段，未使用 |
+| ackerman\_mode | bool | 阿克曼模式，保留字段，未使用 |
+| enable\_obstacle\_avoidance | bool | 是否开启实时避障 |
+
+### `aimdk::protocol::PncPlanningNaviToPose2DRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| pose | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 目标点位姿 |
+| ackerman\_mode | bool | 阿克曼模式，保留字段，未使用 |
+| enable\_obstacle\_avoidance | bool | 是否开启实时避障 |
+
+### `aimdk::protocol::PncMobileNaviToGoalRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| target\_id | int64 | 目标点id |
+| guide\_line\_id | int64 | 引导路线id，保留字段，未使用 |
+| ackerman\_mode | bool | 阿克曼模式，保留字段，未使用 |
+| waypoints | repeated \[aimdk::protocol::SE2Pose\] | 途经点坐标，保留字段，未使用 |
+| enable\_obstacle\_avoidance | bool | 是否开启实时避障 |
+
+### `aimdk::protocol::PncMobileNaviToPose2DRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| pose | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 目标点位姿 |
+| ackerman\_mode | bool | 阿克曼模式，保留字段，未使用 |
+| waypoints | repeated \[aimdk::protocol::SE2Pose\] | 途经点坐标，保留字段，未使用 |
+| enable\_obstacle\_avoidance | bool | 是否开启实时避障 |
+
+### `aimdk::protocol::PncLinearNaviToRelativeRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| pose | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 相对机器本体的目标点位姿 |
+
+### `aimdk::protocol::PncLinearNaviToGoalRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| target\_id | int64 | 目标点id |
+
+### `aimdk::protocol::PncLinearNaviToPose2DRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| pose | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 目标点位姿 |
+
+### `aimdk::protocol::PncDirectNaviToRelativeGoalRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| target\_id | int64 | 目标点id |
+
+### `aimdk::protocol::PncDirectNaviToRelativeRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| pose | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 相对机器本体的目标点位姿 |
+
+### `aimdk::protocol::PncSpinTurnAndMoveForwardRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| angle | double | 相对机器当前朝向的旋转角度，单位：弧度 |
+| distance | double | 相对机器当前位置的前进距离，单位：米 |
+
+### `aimdk::protocol::PncSpinTurnRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| angle | double | 相对机器当前朝向的旋转角度，单位：弧度 |
+
+### `aimdk::protocol::PncMoveForwardRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| angle | double | 相对机器当前朝向的平移方向，单位：弧度 |
+| distance | double | 相对机器当前位置的平移距离，单位：米 |
+
+### `aimdk::protocol::PncPreciseNaviToGoalRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+| map\_id | uint64 | 地图id |
+| target\_id | int64 | 目标点id |
+| pose\_offset | [aimdk::protocol::SE2Pose](../common/README.md#aimdk-protocol-se2pose)\[\] | 目标点相对偏移 |
+
+### `aimdk::protocol::PncActionCancelRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+
+### `aimdk::protocol::PncActionPauseRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+
+### `aimdk::protocol::PncActionResumeRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+
+### `aimdk::protocol::PncActionGetStateRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| task\_id | uint64 | 任务id |
+
+### `aimdk::protocol::PncServiceStateResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| task\_id | uint64 | 当前任务id |
+| state | [aimdk::protocol::PncServiceState](#aimdk-protocol-pncservicestate)\[\] | PNC运行状态 |
+
+### `aimdk::protocol::PncServiceState`
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| PncServiceState\_UNDEFINED | 0 | 未知状态 |
+| PncServiceState\_IDLE | 1 | 任务空闲中 |
+| PncServiceState\_RUNNING | 2 | 任务运行中 |
+| PncServiceState\_PAUSED | 3 | 任务暂停中 |
+| PncServiceState\_SUCCESS | 4 | 任务完成 |
+| PncServiceState\_FAILED | 5 | 任务失败 |
+
+### `aimdk::protocol::PncRcTwistChannel`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | aimdk::protocol::Header | 请求头 |
+| twist | aimdk::protocol::pnc::Twist |  |
+
+## 使用示例
+
+#### 1\. 下发PlanningNaviToGoal任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToGoal' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "target_id": 0,              "guide_line_id": 0,              "ackerman_mode": false,              "enable_obstacle_avoidance": true            }'
+```
+
+### 2\. 下发PlanningNaviToPose2D任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToPose2D' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "pose": {                "position": {                  "x": 10.0,                  "y": 5.0                },                "angle": 3.14159              },              "ackerman_mode": false,              "enable_obstacle_avoidance": true            }'
+```
+
+#### 3\. 下发MobileNaviToGoal任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/MobileNaviToGoal' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "target_id": 0,              "guide_line_id": 0,              "ackerman_mode": false,              "enable_obstacle_avoidance": true            }'
+```
+
+### 4\. 下发MobileNaviToPose2D任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/MobileNaviToPose2D' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "pose": {                "position": {                  "x": 10.0,                  "y": 5.0                },                "angle": 3.14159              },              "ackerman_mode": false,              "enable_obstacle_avoidance": true            }'
+```
+
+### 5\. 下发LinearNaviToRelative任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToRelative' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "pose": {                "position": {                  "x": 1.0,                  "y": 1.0                },                "angle": 1.57              }            }'
+```
+
+#### 6\. 下发LinearNaviToGoal任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToGoal' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "target_id": 0            }'
+```
+
+#### 7\. 下发LinearNaviToPose2D任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToPose2D' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "pose": {                "position": {                  "x": 1.0,                  "y": 1.0                },                "angle": 1.57              }            }'
+```
+
+#### 8\. 下发DirectNaviToRelativeGoal任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelativeGoal' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "target_id": 0            }'
+```
+
+#### 9\. 下发DirectNaviToRelative任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelative' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "pose": {                "position": {                  "x": 1.0,                  "y": 1.0                },                "angle": 0.0              }            }'
+```
+
+#### 10\. 下发SpinTurnAndMoveForward任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurnAndMoveForward' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "angle": 3.14159,              "distance": 1.0            }'
+```
+
+#### 11\. 下发SpinTurn任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurn' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "angle": 3.14159            }'
+```
+
+#### 12\. 下发MoveForward任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/MoveForward' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "angle": 0.0,              "distance": 1.0            }'
+```
+
+#### 13\. 下发PreciseNaviToGoal任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PreciseNaviToGoal' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 0,              "map_id": 1,              "target_id": 0,              "pose_offset": {                "position": {                  "x": 1.0,                  "y": 1.0                },                "angle": 0.0              }            }'
+```
+
+### 14\. 取消任务
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionCancel' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 6874745825616545102            }'
+```
+
+### 15\. 查询任务状态
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionGetState' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "task_id": 6874745825616545102            }'
+```
+

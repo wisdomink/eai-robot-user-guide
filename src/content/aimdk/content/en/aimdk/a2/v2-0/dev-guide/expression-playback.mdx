@@ -1,0 +1,152 @@
+---
+title: 7.3 Expression Playback Section
+description: >-
+  The display of the Agibot Ultra model is connected to the X86 industrial PC
+  and controlled through the AimMaster Face module. The rc module encapsulates
+  the interface calls of AimMaster Face for secondary development. Th…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - expression-playback
+route: /en/a2/v2-0/dev-guide/expression-playback
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-03-expression_play'
+order: 22
+---
+# 7.3 Expression Playback Section
+
+### 7.3.1 Overview
+
+The display of the Agibot Ultra model is connected to the X86 industrial PC and controlled through the AimMaster Face module. The rc module encapsulates the interface calls of AimMaster Face for secondary development.
+
+The default list of expressions on the machine (the corresponding resource files are located in the /agibot/data/resources/default/emoticon folder on the x86) is as follows:
+
+| id | Description | Cover Image |
+| --- | --- | --- |
+| 1 | Typically used in specific explanation scenarios, telling the user what the current robot’s wake-up word is | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDtFYl8ik.png&w=248&h=148&f=webp) |
+| 2 | Typically used in greeting scenarios | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBxLUp16t.png&w=248&h=148&f=webp) |
+| 3 | Typically used in dancing scenarios | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDQjqLcW9.png&w=248&h=148&f=webp) |
+| 4 | Typically used in expressing gratitude by giving a heart to the user | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCW6dGBhO.png&w=248&h=148&f=webp) |
+| 5 | Typically used in saying goodbye to the user | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FB-658xsh.png&w=248&h=148&f=webp) |
+| 6 | Typically used in expressing care and delivering love to the user | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FChZC_c4r.png&w=248&h=148&f=webp) |
+| 7 | Typically used in happy and joyful scenes, smiling with squinted eyes | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDG2dF_X_.png&w=248&h=148&f=webp) |
+| 8 | Typically used in boldly expressing love | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCocuKQmp.png&w=248&h=148&f=webp) |
+| 9 | Typically used in wishing good luck and conveying positive energy | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FC-JMxpZj.png&w=248&h=148&f=webp) |
+| 10 | Typically used in indicating “no problem” or “completed” | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBZCgzY1B.png&w=248&h=148&f=webp) |
+| 11 | A general expression, indicating that the robot is in normal working condition | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCuqtqifp.png&w=248&h=148&f=webp) |
+| 12 | Typically used in scenarios where the mood is not good, or pretending to be in a bad mood | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCjpF8BND.png&w=248&h=148&f=webp) |
+| 13 | Typically used in warmly welcoming scenarios | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FrsAlh9G_.png&w=248&h=148&f=webp) |
+| 14 | Typically used in expressing likes and agreeing with the other party | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDnFQ2dmt.png&w=248&h=148&f=webp) |
+| 15 | Typically used in specific explanation scenarios, telling the user that the current robot cannot perform voice interaction | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FM0GWPVwC.png&w=248&h=148&f=webp) |
+| 16 | Expression used when switching between Chinese and English | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FWnhg3fDA.png&w=248&h=148&f=webp) |
+| 17 | Expression used in homework mode | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBLEQ_6wx.png&w=248&h=148&f=webp) |
+| 18 | The first expression in a three-shot sequence | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FUGb9hKO9.png&w=248&h=148&f=webp) |
+| 19 | The second expression in a three-shot sequence | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F8lVQ8xlL.png&w=248&h=148&f=webp) |
+| 20 | The third expression in a three-shot sequence | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCGMgVz4A.png&w=248&h=148&f=webp) |
+| 21 | In multimodal interaction, enabling the query function | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCnsfKgAy.png&w=248&h=148&f=webp) |
+| 22 | The user’s input is unrecognized, exclusive to voice use | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCG6CjRsj.png&w=248&h=148&f=webp) |
+| 23 | Listening to what the user is saying, exclusive to voice use | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCTnlbfdR.png&w=248&h=148&f=webp) |
+| 24 | An expression in the Tic-Tac-Toe game, indicating the countdown state | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FnvALSD--.png&w=248&h=148&f=webp) |
+| 25 | An expression in the Tic-Tac-Toe game, indicating a draw | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FUGb9hKO9.png&w=248&h=148&f=webp) |
+| 26 | An expression in the Tic-Tac-Toe game, indicating that the game is in progress | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F2QRCXfhm.png&w=248&h=148&f=webp) |
+| 27 | An expression in the Tic-Tac-Toe game, indicating that A2 lost | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDKQrWXto.png&w=248&h=148&f=webp) |
+| 28 | An expression in the Tic-Tac-Toe game, indicating that A2 won | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBpmwqdlH.png&w=248&h=148&f=webp) |
+| 29 | An expression in the Tic-Tac-Toe game, indicating an abnormal recognition of the current game state | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCol_nYv2.png&w=248&h=148&f=webp) |
+| 30 | The user has initiated the leading process | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBzBerqbD.png&w=248&h=148&f=webp) |
+| 31 | Typically used in specific explanation scenarios, telling the user what the current robot’s wake-up word is (in English) | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCW6h3R9F.png&w=248&h=148&f=webp) |
+
+### 7.3.2 Get Expression List RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/GetEmoticon` |
+| --- | --- |
+| Function Summary | Get the list of expressions |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetEmoticon |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "emoticons": [
+    {
+      "emoticon_id": 10001,
+      "emoticon_name": "蓝改",
+      "emoticon_path": "/agibot/data/resources/custom/emoticon/蓝改/emoticon.mp4",
+      "cover_expand_name": "",
+      "emoticon_url": "/agibot/data/resources/custom/emoticon/蓝改/emoticon.mp4",
+      "thumbnail_url": "/agibot/data/resources/custom/emoticon/蓝改/thumbnail.mp4",
+      "cover_url": "/agibot/data/resources/custom/emoticon/蓝改/cover.png",
+      "duration": 136,
+      "is_change": true,
+      "display_name_zh": "",
+      "display_name_en": "",
+      "description": "",
+      "create_time_stamp": "0",
+      "update_time_stamp": "0"
+    },
+    {
+      "emoticon_id": 23,
+      "emoticon_name": "emoticon_human_voice_input",
+      "emoticon_path": "/agibot/data/resources/default/emoticon/emoticon_human_voice_input/emoticon.mp4",
+      "cover_expand_name": "",
+      "emoticon_url": "default/emoticon/emoticon_human_voice_input/emoticon.mp4",
+      "thumbnail_url": "default/emoticon/emoticon_human_voice_input/thumbnail.mp4",
+      "cover_url": "default/emoticon/emoticon_human_voice_input/cover.png",
+      "duration": 2,
+      "is_change": false,
+      "display_name_zh": "有人声输入",
+      "display_name_en": "Human voice input",
+      "description": "正在倾听用户说的话，语音专属使用",
+      "create_time_stamp": "1765185451",
+      "update_time_stamp": "1765185451"
+    },
+    ...
+  ]
+}
+```
+
+-   emoticon\_id: ID used for the expression playback interface
+
+The rest of the fields can be ignored; the paths can be found on the x86 for the corresponding files. |
+| Example Script | examples/rc/a2\_GetEmoticonList.sh |
+| Notes |  |
+
+### 7.3.3 Play Expression RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.RcEmoticonPlayerService/PlayerEmoticon` |
+| --- | --- |
+| Function Summary | Play the specified expression ID |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:59001/rpc/aimdk.protocol.RcEmoticonPlayerService/PlayerEmoticon |
+| Input Parameters | 
+```json
+{
+  "emoticon_id": "1"
+}
+```
+
+-   emoticon\_id: Expression ID. Retrieve available IDs first through the GetEmoticon interface.
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: Request call status
+
+ |
+| Example Script | examples/rc/a2\_PlayerEmoticon.sh |
+| Notes |  |
+

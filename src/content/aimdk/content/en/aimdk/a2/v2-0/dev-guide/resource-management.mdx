@@ -1,0 +1,612 @@
+---
+title: Untitled
+description: >-
+  A2 flagship edition’s local resource management feature opens access to six
+  categories of resources: actions, expressions, audio, skills, maps, and
+  creative works. Users can perform management operations on the above res…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - resource-management
+route: /en/a2/v2-0/dev-guide/resource-management
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-13-resource_manager'
+order: 32
+---
+## 7.13.1 Overall Introduction
+
+A2 flagship edition’s local resource management feature opens access to six categories of resources: actions, expressions, audio, skills, maps, and creative works.
+
+Users can perform management operations on the above resource types, including creation, deletion, retrieval, import, and export, to meet robot capability configuration and content customization needs.For detailed supported features, please refer to the resource overview.
+
+The following sections will provide a detailed explanation of each resource module and its corresponding functions.
+
+Operation procedure:
+
+Creation and storage: Users must first place the data in the temporary directory `/agibot/data/resources/tmp` under the Orin node and trigger the synchronization operation via the RPC interface. The system will automatically identify the resource source and persist it by category into one of the following directories:
+
+User-created resource directory: `/agibot/data/resources/custom`
+
+Default resource directory: `/agibot/data/resources/default`
+
+Please note that the `/agibot/data/resources/tmp` temporary directory will be automatically cleared after the robot restarts (including any `.gz` files generated during export). Ensure that all important resources have been successfully synchronized and persisted.
+
+Retrieval and maintenance: The system supports real-time queries of resources, including resource lists and detailed resource information. It also provides deletion interfaces, allowing users to promptly remove unused resources and keep the resource space organized and manageable.
+
+Distribution and migration: The system supports fast export and import of created resources via the RPC interface, suitable for the following scenarios:
+
+Rapid resource backup
+
+Batch migration across devices
+
+Efficient reuse of configured resources
+
+Resource overview:
+
+| resource type | function description  
+ | create/delete  
+ | import/export  
+ | get information | update | display position |
+| --- | --- | --- | --- | --- | --- | --- |
+| motion | head LED display animation | ✔ | ✔ | ✔ | ✔ | AimMaster → Skills → Expressions |
+| emoticon | mostly upper limb actions such as raising hand, making a heart, or thumbs up | ✔ | ✔ | ✔ | Only `resource_name` can be modified. | AimMaster → Skills → Motions |
+| audio | robot voice resources | ✔ | ✖ | ✔ | ✖ | AimMaster → Skills → Voice |
+| skill | robot full-body dance | ✖ | ✖ | ✔ | ✖ | AimMaster → Skills → Talents |
+| Work Creation | Through coordinated orchestration of the expression, action, audio, and skill modules,  
+complex and coherent full-body dance performances or upper-limb motion sequences can be achieved. | ✔ | ✔ | ✔  
+ | ✖ | AimMaster → Skills → My Creations |
+| Maps | Maps used for robot navigation and positioning | ✖  
+ | ✔ | ✔ | ✖ | AimMaster → Maps |
+
+all of the above resources are stored under orin; x86 only contains built-in resource information and no user-added resource data. users can use them with AimMaster when using the RPC interfaces.
+
+## 7.13.2 Partial Parameter Declarations
+
+resource\_type categories:
+
+```
+  RESOURCE_TYPE_MOTION = 1;            // motion  RESOURCE_TYPE_EMOTICON = 2;          // emoticon  RESOURCE_TYPE_AUDIO = 3;             // audio  RESOURCE_TYPE_SKILL = 6;             // skill  RESOURCE_TYPE_MAP = 7;              // maps  RESOURCE_TYPE_OFFRING_WORK = 8;      // Work Creation
+```
+
+xxx\_extra\_info declaration:
+
+```
+// tmp/xxx indicates the creation path is /agibot/data/resources/tmp// Motion resources are created using the x86 path, only for parsing and generating resources// Other resources are created using the Orin path// Variables indicate when they can be used. For example, variables marked for creation must be included when creating a resource.// Variables without creation functionality do not need to be included during creation
+/** * @brief Additional information for emoticons */// resource_type = RESOURCE_TYPE_EMOTICON"emoticon_extra_info" {    "display_name" {        "zh_CN": "右手比心",        "en_US": "Finger heart_right hand",    }, // Display names in Chinese and English, format: map<string, string> (retrieval)    "emoticon_file_url": "tmp/e.mp4",  // Emoticon file URL (create/retrieve/update)    "thumbnail_file_url": "tmp/t.mp4", // Thumbnail file URL (create/retrieve/update)    "cover_file_url": "tmp/1.png",     // Cover image URL (create/retrieve/update)}
+/** * @brief Additional information for motion */// resource_type = RESOURCE_TYPE_MOTION// Motion resource metadata must be provided on x86 during creation"motion_extra_info": {    "record_file_path": "/agibot/data/home/agi/测试/点赞右手_长", // Recording file path (x86 path), folder name is "测试", .macp file is "点赞右手_长" (creation only)    "display_name" {        "zh_CN": "右手比心",        "en_US": "Finger heart_right hand",    }, // Display names in Chinese and English (retrieval)    "cover_file_url": "",  // Preview image URL (retrieval)    "preview_video_url": "" // Preview video URL (retrieval)}
+/** * @brief Additional information for audio */// resource_type = RESOURCE_TYPE_AUDIO"audio_extra_info": {    "audio_file_url": "", // Audio file URL (create/retrieve)    "display_name": {        "zh_CN": "",        "en_US": "",    }, // Display names in Chinese and English (retrieval)    "cover_file_url": "" // Preview image URL (retrieval)}
+/** * @brief Additional information for creative works */// resource_type = RESOURCE_TYPE_OFFRING_WORK"offring_work_extra_info": {    "cover_file_url": "", // Cover file URL (retrieval)    "preview_video_url": "", // Preview video URL (retrieval)    "display_name": {        "display_name_zh": "测试创作作品",        "display_name_en": "Test Creative Work"    }, // Display names in Chinese and English (retrieval)    "motions": [        {            // When motions.resources contains motion resources, use "NormalMotion"            // When motions.resources contains talent resources, use "WholeBodyDance"            "type": "NormalMotion",            "resources": [                {                    "source_type": 1,   // 1 = local resource, 2 = skill package resource                    "path": "/agibot/data/resources/custom/motion/摆拍_我是大力士/摆拍_我是大力士.mcap" // Orin resource file path                }            ]        }    ],    "emoticons": [        {            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/emoticon/emoticon_guiding/emoticon.mp4"                }            ]        }    ],    "audios": [        {            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/audio/测试/test.wav"                }            ]        }    ]}
+/** * @brief Additional information for maps */// resource_type = RESOURCE_TYPE_MAP"map_extra_info": {    "map_info": {        "index": 2,        "map_path": "/agibot/data/var/MapManagerModule/1762584133656/",        "width": 1216.0,   // Map width in pixels        "height": 1262.0,  // Map height in pixels        "resolution": 20.0, // Each pixel represents 20 mm        "origin": {            "u": 524,  // Column index of world coordinate origin            "v": 594   // Row index of world coordinate origin        }    },    "topology_info": [  // Topology info, stores robot navigation points (matches AimMaster → Map → Points settings)        {            "topo_msg": {                "cur_path_id": 0,                "cur_point_id": 1,                "cur_region_id": 0,                "hr_points": null,                "navi_points": [                    {                        "id": 1,                        "name": "Navigation Point 1",                        "pose": {                            "x": 7.85,   // meters                            "y": -2.15,                            "theta": -2.503741636798901 // radians                        },                        "type": 1                    }                ],                "paths": null,                "qr_points": null,                "regions": null,                "rotate_angle": 6.001279822735171,                "user_name": "",                "user_sn": 0            },            "user_name": ""        }    ]}
+```
+
+## 7.13.3 Create Resource
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/CreateResource` |
+| --- | --- |
+| Function Summary | Create Resource |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/CreateResource |
+| Input Parameters  
+ | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource":{
+       "resource_id": "10003",
+       "duration":"3000",
+       "resource_name": "测试",
+       "resource_type": 2,
+       "tags":["展厅讲解","动态避障"],
+       "emoticon_extra_info":{
+          "emoticon_file_url":"tmp/e.mp4",
+          "thumbnail_file_url":"tmp/t.mp4",
+          "cover_file_url":"tmp/1.png"
+        }
+    }
+}
+```
+
+-   `resource_type`: Can be passed as either a number or the parameter name. For example, `2` corresponds to `"RESOURCE_TYPE_EMOTICON"`. The exact mapping is detailed in section 7.13.2. (Using the parameter name is recommended; numeric form is kept only for compatibility.)
+-   `resource_name`: The name of the resource.
+-   `tags`: Tags associated with the resource.
+-   `xxxx_extra_info`: Must correspond to the `resource_type`. Details are provided in the parameter declarations for each resource type.
+-   After creating a resource, each one is assigned a `resource_id`. This ID is automatically generated by the system and does **not** need to be provided during creation.
+
+ |
+| Output Parameters  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource create success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   the output parameters are the same as those returned by getting the resource list
+-   when creation is successful, msg shows: Resource create success
+-   when creation fails, msg shows: Failed to create emoticon (emoticon refers to an emoji; for example, if creating an action fails, it will show motion). the output depends on the resource type.
+
+ |
+| Example Script | examples/resource\_manager/CreateResource.py |
+| Notes | 
+
+-   note that skill resources cannot be created.
+
+ |
+
+## 7.13.4 Delete Resource
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/DeleteResource` |
+| --- | --- |
+| Function Summary | Delete a Resource |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/DeleteResource |
+| Input Parameters  
+ | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource":{
+       "resource_name": "测试",
+       "resource_type": 2,
+       "resource_id": "1",
+    }
+}
+```
+
+-   either resource\_id or resource\_name must be provided.
+-   **resource\_type must be provided. if not provided, all resources will be deleted by default.** 2 corresponds to RESOURCE\_TYPE\_EMOTICON = 2. for detailed information, see section 7.13.2.
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "1441801",
+    "msg": "Resource delete success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   when deletion is successful, msg shows: Resource delete success
+-   when deletion fails, msg shows: Failed to delete resource
+
+ |
+| Example Script | examples/resource\_manager/DeleteResource.py |
+| Notes | 
+
+-   deleting skill resources is not supported
+
+ |
+
+## 7.13.5 Resource Update
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/UpdateResource` |
+| --- | --- |
+| Function Summary | Emoticon Resource Update |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/UpdateResource |
+| Input Parameters | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource": {
+        "resource_id": 10001,
+        "resource_type": "RESOURCE_TYPE_EMOTICON",
+        "resource_name": "2222222222222222",
+        "emoticon_extra_info":{
+           "emoticon_file_url":"",
+           "thumbnail_file_url":"",
+           "cover_file_url":""
+        }
+    }
+}
+```
+
+-   except for emoticon resources, only the resource\_name of motion resources can be modified; updating other resources is not currently supported.
+-   modifying resource\_id or resource\_type is not supported
+
+ |
+| Output Parameters | 
+
+```json
+
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource update success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   when the update is successful, msg shows: Resource update success
+-   when the update fails, msg shows: Failed to get original resource (usually caused by an incorrect resource\_id)
+
+ |
+| Example Script | examples/resource\_manager/UpdateResource.py |
+| Notes |  |
+
+## 7.13.6 Get Resource List
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/GetResourceList` |
+| --- | --- |
+| Function Summary | Get Resource List |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResourceList |
+| Input Parameters | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+}
+```
+
+-   resource\_type: see the resource\_type categories introduced in section 7.13.2.
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource list get success",
+    "trace_id": "",
+    "domin": ""
+  },
+  "resources": [
+    {
+      "id": 36,
+      "resource_id": 16,
+      "resource_key": "",
+      "resource_version": "",
+      "resource_name": "emoticon_language_change",
+      "duration": 3000,
+      "resource_type": "RESOURCE_TYPE_EMOTICON",
+      "resource_path": "/agibot/data/resources/default/emoticon/emoticon_language_change/emoticon.mp4",
+      "source": "default",
+      "charge_type": "CHARGE_TYPE_FREE",
+      "is_change": false,
+      "create_time_stamp": "1767785325",
+      "update_time_stamp": "1767785325",
+      "expire_time_stamp": "0",
+      "last_used_time_stamp": "0",
+      "md5": "4a605dcb92af92adeaf874e1e4970ea2",
+      "description": "中英文切换时的表情",
+      "tags": [],
+      "scenes": [],
+      "emoticon_extra_info": {
+        "display_name": {
+          "zh_CN": "语言切换",
+          "en_US": "Language switch"
+        },
+        "emoticon_file_url": "default/emoticon/emoticon_language_change/emoticon.mp4",
+        "thumbnail_file_url": "default/emoticon/emoticon_language_change/thumbnail.mp4",
+        "cover_file_url": "default/emoticon/emoticon_language_change/cover.png"
+      },
+      "usagerights": ["Agent"]
+    },
+    {
+      "id": 51,
+      "resource_id": 22,
+      "resource_name": "emoticon_voice_rejection",
+      "duration": 4000,
+      "resource_type": "RESOURCE_TYPE_EMOTICON",
+      "description": "用户输入的话被拒识，语音专属使用",
+      "emoticon_extra_info": {
+        "display_name": {
+          "zh_CN": "语音拒识",
+          "en_US": "Voice rejection"
+        }
+      },
+      "usagerights": ["Agent", "AimMaster"]
+    }
+    // …… 中间省略若干条 resources
+  ],
+  "tags": [],
+  "scenes": [
+    "normal-emoticon_list",
+    "task-associated_emoticon"
+  ],
+  "usagerights": [
+    "Agent",
+    "AimMaster"
+  ]
+}
+```
+
+-   resource\_id: resource ID
+-   resource\_name： resource name
+-   `double duration`: Duration of the resource, in milliseconds. (If the resource is imported and created via AimMaster, this field does not need to be provided. If creating directly through the API (not via import), it must be specified.)
+-   resource\_type：resource type, see section 7.13.2
+-   resource\_path：resource path
+-   source：currently there are only two types: custom / default
+-   is\_change：whether modification is supported
+-   create\_time\_stamp：creation timestamp
+-   update\_time\_stamp ：update timestamp
+-   md5：md5 of the primary resource file
+-   description：description
+-   tags：tags
+-   scenes：scenes
+-   emoticon\_extra\_info：as for xxx\_extra\_info, it is described in the declaration of specific parameters in section 7.13.2
+-   usagerights：usage permission
+-   the remaining output parameters are redundant outputs
+
+ |
+| Example Script | examples/resource\_manager/GetResourceList.py |
+| Notes |  |
+
+## 7.13.7 Get Resource Details
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/GetResource` |
+| --- | --- |
+| Function Summary | Get Resource Details |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResource |
+| Input Parameters | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_id": "1",
+    "resource_name": "emoticon_prompt_words"    
+    "source": "custom"
+}
+```
+
+-   resource\_type：RESOURCE\_TYPE\_EMOTICON indicates the emoticon type, which is consistent with the resource types used in Get Resource List
+-   resource\_type：must be provited
+-   resource\_id：corresponds to the resource\_id in the retrieved resource list
+-   resource\_name：corresponds to the resource\_name in the retrieved resource list
+-   source：indicates the resource source, custom or default; resources created via RPC are generally custom
+-   Either `resource_id` or `resource_name` must be provided. If `resource_name` is used, the `source` must also be specified. The default `source` is `default`, but resources created via RPC must use `source=custom`. If `resource_id` is provided, `source` is not required. It is recommended to use `resource_id` whenever possible.
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource get success",
+    "trace_id": "",
+    "domin": ""
+  },
+  "resource": {
+    "id": 34,
+    "resource_id": 1,
+    "resource_key": "",
+    "resource_version": "",
+    "resource_name": "emoticon_prompt_words",
+    "duration": 3000,
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_path": "/agibot/data/resources/default/emoticon/emoticon_prompt_words/emoticon.mp4",
+    "source": "default",
+    "charge_type": "CHARGE_TYPE_FREE",
+    "is_change": false,
+    "create_time_stamp": "1767785325",
+    "update_time_stamp": "1767785325",
+    "expire_time_stamp": "0",
+    "last_used_time_stamp": "0",
+    "md5": "efc6bbed41993c078f85cd9231365544",
+    "description": "通常用在特定的说明场景，告诉用户当前机器人的唤醒词是什么",
+    "tags": [],
+    "scenes": [],
+    "emoticon_extra_info": {
+      "display_name": {
+        "zh_CN": "唤醒词",
+        "en_US": "Prompt words"
+      },
+      "emoticon_file_url": "default/emoticon/emoticon_prompt_words/emoticon.mp4",
+      "thumbnail_file_url": "default/emoticon/emoticon_prompt_words/thumbnail.mp4",
+      "cover_file_url": "default/emoticon/emoticon_prompt_words/cover.png"
+    },
+    "usagerights": [
+      "Agent"
+    ]
+  }
+}
+```
+
+-   the output parameters are consistent with those of Get Resource List
+
+ |
+| Example Script | examples/resource\_manager/GetResource.py |
+| Notes |  |
+
+## 7.13.8 Migrate Resource Out
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/ResourceMigrationOut` |
+| --- | --- |
+| Function Summary | Migrate Resource Out |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/ResourceMigrationOut |
+| Input Parameters | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_list": ["测试用"]
+}
+```
+
+-   resource\_list: the resource name is equivalent to resource\_name in other interfaces. if not provided, all resources of this type will be migrated out.
+-   only motion and emoticon resources are supported for migration out
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource migration out processing!",
+    "trace_id": "",
+    "domin": ""
+  },
+  "migration_type": "MIGRATION_TYPE_UNKNOWN",
+  "task_id": "f3da3e78-1cb5-47ed-9c11-593030d2fe80"
+}
+```
+
+-   the migration file directory can be viewed in the migration status and is generally under the /agibot/data/resources/tmp directory
+-   If `resource_list` contains any resources that do not exist, the response will return `"msg": "No resource found"`.
+-   `task_id`: Used to check the names of migrated files in the migration status interface.
+-   migration\_type is a redundant parameter
+
+ |
+| Example Script | examples/resource\_manager/ResourceMigrationOut.py |
+| Notes |  |
+
+## 7.13.9 Migrate In Resource
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/ResourceMigrationIn` |
+| --- | --- |
+| Function Summary | Migrate In Resource |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/ResourceMigrationIn |
+| Input Parameters | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "migration_file": {
+        "file_url": "tmp/1767839589.gz"
+    }
+}
+```
+
+-   file\_url: under the /agibot/data/resources/tmp directory
+-   there is no type parameter。
+
+ |
+| Output Parameters | 
+
+```json
+{
+    "header": {
+        "code": "0",
+        "msg": "Resource migration task status get success",
+        "trace_id": "",
+        "domin": ""
+    },
+    "task_id":"23123123"
+}
+```
+
+ |
+| Example Script | examples/resource\_manager/ResourceMigrationIn.py |
+| Notes |  |
+
+## 7.13.10 Migration Status
+
+| Interface Name | `pb:/aimdk.protocol.ResourceService/GetResourceMigrationTaskStatus` |
+| --- | --- |
+| Function Summary | Migration Status |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResourceMigrationTaskStatus |
+| Input Parameters  
+ | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "task_id": "65987072-f9e6-495f-99ed-df1a437fd337"
+}
+```
+
+-   ttask\_id: obtained from the output parameters of the Migrate Out Resource interface
+
+ |
+| Output Parameters | 
+
+```json
+{
+    "header": {
+        "code": "0",
+        "msg": "Resource migration task status get success",
+        "trace_id": "",
+        "domin": ""
+    },
+    "status": "MIGRATION_TASK_STATUS_COMPLETED",
+    "migration_file": {
+        "file_url": "tmp/1765265387.gz",
+        "client_md5": "ce857c64507b1d8c19cbfccb3bc9106b"
+    }
+}
+```
+
+-   file\_url: the directory where the migrated-out files are located, generally under the /agibot/data/resources/tmp directory
+-   supports downloading migrated-out files on x86 via wget [http://192.168.100.110:64515/tmp/1769135144.gz](http://192.168.100.110:64515/tmp/1769135144.gz)
+
+ |
+| Example Script | examples/resource\_manager/GetResourceMigrationTaskStatus.py |
+| Notes |  |
+

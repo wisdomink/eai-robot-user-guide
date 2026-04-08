@@ -29,17 +29,19 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CONTENT_DIR = PROJECT_ROOT / "apps" / "web" / "src" / "content"
 SIDEBAR_PATH = CONTENT_DIR / "sidebar.json"
+DEVELOPER_SIDEBAR_PATH = CONTENT_DIR / "developer-sidebar.json"
 PAGES_DIR = CONTENT_DIR / "pages"
 
 VECTOR_STORE_ENV_KEY = "OPENAI_VECTOR_STORE_ROBOT_ALL_ID"
 
 
 def build_file_list() -> list[Path]:
-    """Collect all page markdown files referenced in sidebar.json."""
+    """Collect all page markdown files referenced in sidebar.json and developer-sidebar.json."""
+    files: list[Path] = []
+
     with open(SIDEBAR_PATH, "r", encoding="utf-8") as f:
         all_sidebars: dict = json.load(f)
 
-    files: list[Path] = []
     for product_id, product_sidebar in all_sidebars.items():
         for section in product_sidebar.get("sections", []):
             for page in section.get("pages", []):
@@ -48,6 +50,22 @@ def build_file_list() -> list[Path]:
                     files.append(filepath)
                 else:
                     print(f"⚠️  [{product_id}] {page['file']} not found, skipping")
+
+    if DEVELOPER_SIDEBAR_PATH.exists():
+        with open(DEVELOPER_SIDEBAR_PATH, "r", encoding="utf-8") as f:
+            dev_sidebars: dict = json.load(f)
+        for locale_id, product_sidebar in dev_sidebars.items():
+            for section in product_sidebar.get("sections", []):
+                for page in section.get("pages", []):
+                    rel = page["file"]
+                    filepath = CONTENT_DIR / rel
+                    if filepath.exists():
+                        files.append(filepath)
+                    else:
+                        print(f"⚠️  [dev:{locale_id}] {rel} not found, skipping")
+    else:
+        print(f"ℹ️  No {DEVELOPER_SIDEBAR_PATH.name} — skipping developer MDX files")
+
     return files
 
 

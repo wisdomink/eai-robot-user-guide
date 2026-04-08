@@ -1,0 +1,561 @@
+{
+  "en": {
+    "title": "Developer documentation (English)",
+    "basePath": "/developer/en",
+    "sections": [
+      {
+        "id": "developer-en-hub",
+        "title": "Overview",
+        "pages": [
+          {
+            "title": "AimDK Documentation",
+            "slug": "/developer/en",
+            "file": "aimdk/content/en/aimdk/hub.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-en-downloads",
+        "title": "Downloads",
+        "pages": [
+          {
+            "title": "Downloads",
+            "slug": "/developer/en/downloads",
+            "file": "aimdk/content/en/aimdk/downloads/index.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-en-a2-dev-guide",
+        "title": "A2 developer guide",
+        "pages": [
+          {
+            "title": "Untitled",
+            "slug": "/developer/en/a2/v2-0/dev-guide/doc-updates",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/doc-updates.mdx"
+          },
+          {
+            "title": "1. A2 Ultra Overview",
+            "slug": "/developer/en/a2/v2-0/dev-guide/overview",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/overview.mdx"
+          },
+          {
+            "title": "2. Overview of the Software System",
+            "slug": "/developer/en/a2/v2-0/dev-guide/software-system",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/software-system.mdx"
+          },
+          {
+            "title": "3. Overview of Secondary Development Interfaces",
+            "slug": "/developer/en/a2/v2-0/dev-guide/interface-overview",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/interface-overview.mdx"
+          },
+          {
+            "title": "4. Basic Constraints for Secondary Development",
+            "slug": "/developer/en/a2/v2-0/dev-guide/constraints",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/constraints.mdx"
+          },
+          {
+            "title": "5. Secondary Development Program Deployment",
+            "slug": "/developer/en/a2/v2-0/dev-guide/deployment",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/deployment.mdx"
+          },
+          {
+            "title": "6. Quick Start for Secondary Development",
+            "slug": "/developer/en/a2/v2-0/dev-guide/quick-start",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/quick-start.mdx"
+          },
+          {
+            "title": "7. Detailed Interface Documentation",
+            "slug": "/developer/en/a2/v2-0/dev-guide/detailed-interface",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/detailed-interface.mdx"
+          },
+          {
+            "title": "7.1 Motion Control Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/motion-control",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/motion-control.mdx"
+          },
+          {
+            "title": "7.2 Action Playback Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/action-playback",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/action-playback.mdx"
+          },
+          {
+            "title": "7.3 Expression Playback Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/expression-playback",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/expression-playback.mdx"
+          },
+          {
+            "title": "7.4 Sensor Data Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/sensor-data",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/sensor-data.mdx"
+          },
+          {
+            "title": "7.5 TTS/Audio Playback Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/tts-audio",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/tts-audio.mdx"
+          },
+          {
+            "title": "7.6 Microphone Management Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/microphone",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/microphone.mdx"
+          },
+          {
+            "title": "7.7 Map Management Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/map-management",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/map-management.mdx"
+          },
+          {
+            "title": "7.8 Navigation Control Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/navigation",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/navigation.mdx"
+          },
+          {
+            "title": "7.9 Task Execution Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/task-execution",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/task-execution.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/en/a2/v2-0/dev-guide/diagnostics",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/diagnostics.mdx"
+          },
+          {
+            "title": "7.11 System Status Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/system-status",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/system-status.mdx"
+          },
+          {
+            "title": "7.12 Light Strip Control Section",
+            "slug": "/developer/en/a2/v2-0/dev-guide/light-strip",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/light-strip.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/en/a2/v2-0/dev-guide/resource-management",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/resource-management.mdx"
+          },
+          {
+            "title": "8. Guide to Motion Control Simulation",
+            "slug": "/developer/en/a2/v2-0/dev-guide/simulation",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/simulation.mdx"
+          },
+          {
+            "title": "9. Interaction Secondary Development Guide",
+            "slug": "/developer/en/a2/v2-0/dev-guide/interaction-guide",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/interaction-guide.mdx"
+          },
+          {
+            "title": "10. Troubleshooting Interface Calls",
+            "slug": "/developer/en/a2/v2-0/dev-guide/troubleshooting",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/troubleshooting.mdx"
+          },
+          {
+            "title": "11. Frequently Asked Questions",
+            "slug": "/developer/en/a2/v2-0/dev-guide/faq",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/dev-guide/faq.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-en-a2-motion",
+        "title": "A2 motion",
+        "pages": [
+          {
+            "title": "Untitled",
+            "slug": "/developer/en/a2/v2-0/motion/motion-safety",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/motion/motion-safety.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/en/a2/v2-0/motion/motion-deployment",
+            "file": "aimdk/content/en/aimdk/a2/v2-0/motion/motion-deployment.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-en-a2w",
+        "title": "A2W",
+        "pages": [
+          {
+            "title": "Introduction",
+            "slug": "/developer/en/a2w/introduction",
+            "file": "aimdk/content/en/aimdk/a2w/introduction.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-en-a2-lite",
+        "title": "A2-lite",
+        "pages": [
+          {
+            "title": "A2-lite — Overview",
+            "slug": "/developer/en/a2-lite/v2-0/overview",
+            "file": "aimdk/content/en/aimdk/a2-lite/v2-0/overview.mdx"
+          }
+        ]
+      }
+    ]
+  },
+  "zh": {
+    "title": "开发者文档（中文）",
+    "basePath": "/developer/zh",
+    "sections": [
+      {
+        "id": "developer-zh-hub",
+        "title": "概览",
+        "pages": [
+          {
+            "title": "AimDK 文档",
+            "slug": "/developer/zh",
+            "file": "aimdk/content/zh/aimdk/hub.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-zh-downloads",
+        "title": "下载",
+        "pages": [
+          {
+            "title": "下载",
+            "slug": "/developer/zh/downloads",
+            "file": "aimdk/content/zh/aimdk/downloads/index.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-zh-a2-dev-guide",
+        "title": "A2 开发指南",
+        "pages": [
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/doc-updates",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/doc-updates.mdx"
+          },
+          {
+            "title": "1. A2 旗舰款概述",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/overview",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/overview.mdx"
+          },
+          {
+            "title": "2. 软件系统概述",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/software-system",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/software-system.mdx"
+          },
+          {
+            "title": "3. 二次开发接口概述",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/interface-overview",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/interface-overview.mdx"
+          },
+          {
+            "title": "4. 二次开发基本约束",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/constraints",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/constraints.mdx"
+          },
+          {
+            "title": "5. 二次开发程序部署",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/deployment",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/deployment.mdx"
+          },
+          {
+            "title": "6. 二次开发快速上手",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/quick-start",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/quick-start.mdx"
+          },
+          {
+            "title": "7. 详细接口文档",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/detailed-interface",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/detailed-interface.mdx"
+          },
+          {
+            "title": "7.1 运动控制部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/motion-control",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/motion-control.mdx"
+          },
+          {
+            "title": "7.2 动作播放部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/action-playback",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/action-playback.mdx"
+          },
+          {
+            "title": "7.3 表情播放部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/expression-playback",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/expression-playback.mdx"
+          },
+          {
+            "title": "7.4 传感器数据部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/sensor-data",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/sensor-data.mdx"
+          },
+          {
+            "title": "7.5 TTS/音频播放部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/tts-audio",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/tts-audio.mdx"
+          },
+          {
+            "title": "7.6 麦克风管理部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/microphone",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/microphone.mdx"
+          },
+          {
+            "title": "7.7 地图管理部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/map-management",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/map-management.mdx"
+          },
+          {
+            "title": "7.8 规控导航部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/navigation",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/navigation.mdx"
+          },
+          {
+            "title": "7.9 任务执行部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/task-execution",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/task-execution.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/diagnostics",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/diagnostics.mdx"
+          },
+          {
+            "title": "7.11 系统状态部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/system-status",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/system-status.mdx"
+          },
+          {
+            "title": "7.12 灯带控制部分",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/light-strip",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/light-strip.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/resource-management",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/resource-management.mdx"
+          },
+          {
+            "title": "8. 运控仿真使用指南",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/simulation",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/simulation.mdx"
+          },
+          {
+            "title": "9. 交互二开使用指南",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/interaction-guide",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/interaction-guide.mdx"
+          },
+          {
+            "title": "10. 接口调用问题排查",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/troubleshooting",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/troubleshooting.mdx"
+          },
+          {
+            "title": "11. 常见问题解答",
+            "slug": "/developer/zh/a2/v2-0/dev-guide/faq",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/dev-guide/faq.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-zh-a2-motion",
+        "title": "A2 运控",
+        "pages": [
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2/v2-0/motion/motion-safety",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/motion/motion-safety.mdx"
+          },
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2/v2-0/motion/motion-deployment",
+            "file": "aimdk/content/zh/aimdk/a2/v2-0/motion/motion-deployment.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-zh-a2w",
+        "title": "A2W",
+        "pages": [
+          {
+            "title": "A2W-AimDK",
+            "slug": "/developer/zh/a2w/introduction",
+            "file": "aimdk/content/zh/aimdk/a2w/introduction.mdx"
+          },
+          {
+            "title": "环境配置",
+            "slug": "/developer/zh/a2w/getting-started",
+            "file": "aimdk/content/zh/aimdk/a2w/getting-started.mdx"
+          },
+          {
+            "title": "Action模块详细说明",
+            "slug": "/developer/zh/a2w/action-module",
+            "file": "aimdk/content/zh/aimdk/a2w/action-module.mdx"
+          },
+          {
+            "title": "编译拆垛场景可执行程序",
+            "slug": "/developer/zh/a2w/palletizing-build",
+            "file": "aimdk/content/zh/aimdk/a2w/palletizing-build.mdx"
+          },
+          {
+            "title": "开发环境介绍",
+            "slug": "/developer/zh/a2w/environment-setup",
+            "file": "aimdk/content/zh/aimdk/a2w/environment-setup.mdx"
+          },
+          {
+            "title": "开发、编译、部署",
+            "slug": "/developer/zh/a2w/development-environment",
+            "file": "aimdk/content/zh/aimdk/a2w/development-environment.mdx"
+          },
+          {
+            "title": "SDK依赖",
+            "slug": "/developer/zh/a2w/sdk-dependencies",
+            "file": "aimdk/content/zh/aimdk/a2w/sdk-dependencies.mdx"
+          },
+          {
+            "title": "第三方库依赖",
+            "slug": "/developer/zh/a2w/third-party-dependencies",
+            "file": "aimdk/content/zh/aimdk/a2w/third-party-dependencies.mdx"
+          },
+          {
+            "title": "开发环境更新指南",
+            "slug": "/developer/zh/a2w/update-guide",
+            "file": "aimdk/content/zh/aimdk/a2w/update-guide.mdx"
+          },
+          {
+            "title": "开发、编译、部署",
+            "slug": "/developer/zh/a2w/build-deploy",
+            "file": "aimdk/content/zh/aimdk/a2w/build-deploy.mdx"
+          },
+          {
+            "title": "Environment FAQ",
+            "slug": "/developer/zh/a2w/environment-faq",
+            "file": "aimdk/content/zh/aimdk/a2w/environment-faq.mdx"
+          },
+          {
+            "title": "AimDK 公共协议",
+            "slug": "/developer/zh/a2w/protocol-common",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-common.mdx"
+          },
+          {
+            "title": "地图管理模块",
+            "slug": "/developer/zh/a2w/protocol-map-management",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-map-management.mdx"
+          },
+          {
+            "title": "运动控制模块",
+            "slug": "/developer/zh/a2w/protocol-motion-control",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-motion-control.mdx"
+          },
+          {
+            "title": "HAL硬件抽象层模块",
+            "slug": "/developer/zh/a2w/protocol-hal",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-hal.mdx"
+          },
+          {
+            "title": "遥控模块",
+            "slug": "/developer/zh/a2w/protocol-remote-control",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-remote-control.mdx"
+          },
+          {
+            "title": "规划控制模块",
+            "slug": "/developer/zh/a2w/protocol-planning-control",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-planning-control.mdx"
+          },
+          {
+            "title": "任务执行引擎模块",
+            "slug": "/developer/zh/a2w/protocol-task-engine",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-task-engine.mdx"
+          },
+          {
+            "title": "SLAM定位建图模块",
+            "slug": "/developer/zh/a2w/protocol-slam",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-slam.mdx"
+          },
+          {
+            "title": "感知模块",
+            "slug": "/developer/zh/a2w/protocol-perception",
+            "file": "aimdk/content/zh/aimdk/a2w/protocol-perception.mdx"
+          }
+        ]
+      },
+      {
+        "id": "developer-zh-a2-lite",
+        "title": "A2-lite",
+        "pages": [
+          {
+            "title": "Untitled",
+            "slug": "/developer/zh/a2-lite/v2-0/updates",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/updates.mdx"
+          },
+          {
+            "title": "1. A2 青春款概述",
+            "slug": "/developer/zh/a2-lite/v2-0/overview",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/overview.mdx"
+          },
+          {
+            "title": "2. 常见问题解答",
+            "slug": "/developer/zh/a2-lite/v2-0/faq",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/faq.mdx"
+          },
+          {
+            "title": "3. 软件系统概述",
+            "slug": "/developer/zh/a2-lite/v2-0/software-system",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/software-system.mdx"
+          },
+          {
+            "title": "4. 二次开发接口概述",
+            "slug": "/developer/zh/a2-lite/v2-0/interface-overview",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/interface-overview.mdx"
+          },
+          {
+            "title": "5. 二次开发基本约束",
+            "slug": "/developer/zh/a2-lite/v2-0/constraints",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/constraints.mdx"
+          },
+          {
+            "title": "6. 二次开发快速上手",
+            "slug": "/developer/zh/a2-lite/v2-0/quick-start",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/quick-start.mdx"
+          },
+          {
+            "title": "7. 详细接口文档",
+            "slug": "/developer/zh/a2-lite/v2-0/detailed-interface",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/detailed-interface.mdx"
+          },
+          {
+            "title": "7.1 运动控制部分",
+            "slug": "/developer/zh/a2-lite/v2-0/motion-control",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/motion-control.mdx"
+          },
+          {
+            "title": "7.2 动作播放部分",
+            "slug": "/developer/zh/a2-lite/v2-0/action-playback",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/action-playback.mdx"
+          },
+          {
+            "title": "7.3 音频播放部分",
+            "slug": "/developer/zh/a2-lite/v2-0/audio-video",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/audio-video.mdx"
+          },
+          {
+            "title": "7.4 故障诊断部分",
+            "slug": "/developer/zh/a2-lite/v2-0/diagnostics",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/diagnostics.mdx"
+          },
+          {
+            "title": "7.5 系统状态部分",
+            "slug": "/developer/zh/a2-lite/v2-0/system-status",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/system-status.mdx"
+          },
+          {
+            "title": "8. 运控仿真使用指南",
+            "slug": "/developer/zh/a2-lite/v2-0/simulation",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/simulation.mdx"
+          },
+          {
+            "title": "9. 接口调用问题排查",
+            "slug": "/developer/zh/a2-lite/v2-0/troubleshooting",
+            "file": "aimdk/content/zh/aimdk/a2-lite/v2-0/troubleshooting.mdx"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import clsx from 'clsx'
-import allSidebars from '@/content/sidebar.json'
+import { normalizePathname } from '@/utils/normalizePathname'
+import manualSidebars from '@/content/sidebar.json'
+import developerSidebars from '@/content/developer-sidebar.json'
 import SidebarNavItem from './SidebarNavItem'
 import SearchBar from '@/components/search/SearchBar'
 
-const sidebarEntries = Object.entries(allSidebars)
+type ManualSidebarEntry = (typeof manualSidebars)[keyof typeof manualSidebars]
+type DeveloperLocaleSidebar = (typeof developerSidebars)['en']
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -14,15 +17,19 @@ interface SidebarProps {
 function ProductGroup({
   productId,
   sidebar,
+  basePathOverride,
   onNavigate,
 }: {
   productId: string
-  sidebar: (typeof allSidebars)[keyof typeof allSidebars]
+  sidebar: ManualSidebarEntry | DeveloperLocaleSidebar
+  basePathOverride?: string
   onNavigate?: () => void
 }) {
   const { pathname } = useLocation()
-  const productBasePath = `/${productId}`
-  const isActive = pathname === productBasePath || pathname.startsWith(`${productBasePath}/`)
+  const pathNorm = normalizePathname(pathname)
+  const productBasePath = basePathOverride ?? `/${productId}`
+  const baseNorm = normalizePathname(productBasePath)
+  const isActive = pathNorm === baseNorm || pathNorm.startsWith(`${baseNorm}/`)
   const [isExpanded, setIsExpanded] = useState(isActive)
 
   useEffect(() => {
@@ -66,8 +73,25 @@ function ProductGroup({
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
+  const { pathname } = useLocation()
+  const isDeveloper = pathname.startsWith('/developer')
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>('a[aria-current="page"]')
+    active?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [pathname])
+
+  const sidebarEntries = isDeveloper
+    ? (Object.entries(developerSidebars) as [string, DeveloperLocaleSidebar][])
+    : (Object.entries(manualSidebars) as [string, ManualSidebarEntry][])
+
   return (
-    <nav className="py-4 px-3 space-y-1" aria-label="Manual navigation">
+    <nav
+      ref={navRef}
+      className="py-4 px-3 space-y-1"
+      aria-label={isDeveloper ? 'Developer documentation' : 'Manual navigation'}
+    >
       <div className="px-1 pb-3">
         <SearchBar />
       </div>
@@ -78,6 +102,11 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           <ProductGroup
             productId={productId}
             sidebar={sidebar}
+            basePathOverride={
+              'basePath' in sidebar && typeof (sidebar as { basePath?: unknown }).basePath === 'string'
+                ? (sidebar as { basePath: string }).basePath
+                : undefined
+            }
             onNavigate={onNavigate}
           />
         </div>

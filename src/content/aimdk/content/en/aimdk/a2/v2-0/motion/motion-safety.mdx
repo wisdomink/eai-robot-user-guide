@@ -1,0 +1,41 @@
+---
+title: Untitled
+description: >-
+  Before conducting simulation verification and real-world deployment of custom
+  motion control models, it is essential to fully understand and assess the
+  associated risks. Even when strictly following the SDK-recommended s…
+product: a2
+version: v2-0
+section: motion
+slug:
+  - a2
+  - v2-0
+  - motion
+  - motion-safety
+route: /en/a2/v2-0/motion/motion-safety
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/index_motion'
+order: 50
+---
+## 1\. Risk Statement
+
+Before conducting simulation verification and real-world deployment of custom motion control models, it is essential to fully understand and assess the associated risks.
+
+Even when strictly following the SDK-recommended sim2sim-sim2real motion control model development and validation process, there are still potential risks such as robot imbalance, falls, or severe abnormal movements during actual deployment. The severity of these risks directly depends on the stability, generalization ability, and parameter configuration of the RL model. If the model has not been sufficiently validated or if the parameters are improperly configured, real-world operation may cause damage to the robot hardware and the surrounding environment.
+
+Please note: Using the SDK to deploy custom RL models is an experimental operation that carries the potential risk of damaging the robot’s hardware structure or causing unexpected incidents. Hardware damage resulting from algorithm debugging or loss of control of the model is not covered under the product warranty policy. Developers must operate under the premise of ensuring safety. Before proceeding with subsequent simulation, deployment, and debugging operations, please confirm that you fully understand and accept the aforementioned risks.
+
+## 2\. Motion Control Development Precautions
+
+-   Simulation and Controller Operation
+    
+    -   The tutorial includes simulation-related content, and the SDK provides a virtual controller for model debugging and operation validation.
+    -   It supports connecting a physical controller to the computer, but you need to correctly configure the access permissions for the relevant devices under `/dev/input`.
+    -   It is strongly recommended that developers first familiarize themselves with the key logic and control behavior of the physical controller in the simulation environment. Ensure that the operations meet expectations before testing on the real robot to reduce the risk of misoperation.
+-   Safety Measures
+    
+    To ensure personal and equipment safety during the debugging process, please strictly follow the following safety guidelines:
+    
+    -   The A2 robot is equipped with an emergency stop button. Before debugging the motion control model, make sure the emergency stop button is powered on and fully charged, ensuring it can be triggered immediately in case of an anomaly.
+    -   The A2 robot usually comes with a suspension frame. It is recommended to use the suspension frame during debugging to minimize the risk of hardware damage caused by model anomalies.
+    -   During the debugging process, always maintain a reasonable safe distance from the robot. Even with the emergency stop and suspension frame protection measures, it is necessary to fully guard against potential personal safety risks and avoid personnel entering areas where the robot may move significantly.
+

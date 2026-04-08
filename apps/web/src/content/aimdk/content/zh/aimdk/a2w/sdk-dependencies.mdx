@@ -1,0 +1,84 @@
+---
+title: SDK依赖
+description: >-
+  所有SDK依赖已预先集成在本地开发环境(aimde)中,通过Bazel统一管理。用户无需手动下载安装,只需在业务代码中按规范引入即可使用。
+  通过YAML配置文件指定不同架构的SDK路径: x86\_64架构: projects/sdk\_defs/x86\_64.yaml ``` sdk:
+  local: path: /sdk/dev_tools/x86_64/ ``` ARM架构: projects/sdk\_defs/orin\_aa…
+product: a2w
+slug:
+  - a2w
+  - sdk-dependencies
+route: /zh/a2w/sdk-dependencies
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/sdk_dependency'
+order: 70
+---
+# SDK依赖
+
+## 概述
+
+所有SDK依赖已预先集成在本地开发环境(aimde)中,通过Bazel统一管理。用户无需手动下载安装,只需在业务代码中按规范引入即可使用。
+
+## 集成仓配置
+
+### 架构路径定义
+
+通过YAML配置文件指定不同架构的SDK路径: x86\_64架构: projects/sdk\_defs/x86\_64.yaml
+
+```
+sdk:  local:    path: /sdk/dev_tools/x86_64/
+```
+
+ARM架构: projects/sdk\_defs/orin\_aarch64.yaml
+
+```
+sdk:  local:    path: /sdk/dev_tools/orin_aarch64/
+```
+
+## SDK仓结构
+
+### 目录说明
+
+```
+/sdk/dev_tools/{x86_64|orin_aarch64}/    ├── aimdk/                              # Protobuf协议生成的头文件目录    ├── aimrte/                             # HDS头文件目录    ├── all_plugins/                        # 插件库目录(mqtt_plugin/ros2_plugin/net_plugin等)及其依赖    ├── BUILD                               # SDK库的Bazel target定义文件    ├── google/                             # Google Protobuf公共头文件(如any.pb.h)    ├── libzy_aimrt_comm.so                 # aimrt_comm仓库API动态链接库    ├── libzy_aimrt.so                      # aimrt仓库API动态链接库    ├── libzy_health_diag_generation.so     # health_diag_generation仓库API动态链接库    ├── libzy_task_engine.so                # aimrt_task_engine仓库API动态链接库    ├── libzy_task_sdk.so                   # aima_task_sdk仓库API动态链接库    ├── ros2/                               # ROS2协议生成的头文件目录    ├── src/                                # 核心头文件目录(aimrt/aimrt_comm/aima_task_sdk/aimrt_task_engine)    └── WORKSPACE                           # SDK仓库的Bazel WORKSPACE配置文件
+```
+
+### 核心库说明
+
+| 库名称 | 功能描述 |
+| --- | --- |
+| libaimrt | 运行时核心库,提供基础运行时功能(网络、配置等) |
+| libaimrt\_comm | 通信层库,包含Protobuf/ROS2协议及通用工具 |
+| libtask\_sdk | 任务SDK库,提供任务开发接口和模型调用能力 |
+| libtask\_engine | 任务引擎库,负责任务调度和同步协调 |
+| libhealth\_diag\_generation | 健康诊断库,提供模块健康监控功能 |
+| all\_plugins | 插件集合(mqtt\_plugin/ros2\_plugin等) |
+
+### BUILD定义示例
+
+/sdk/dev\_tools/x86\_64/BUILD
+
+```
+# 导出所有SDK资源package(default_visibility = ["//visibility:public"])exports_files(glob(["**/*.h*", "**/*.inl", "**/*.so*"]))
+# 核心库定义cc_library(    name = "libaimrt",    srcs = ["libzy_aimrt.so"],    hdrs = [        "src/common/net/asio_http_cli.h",        "src/runtime/core/util/yaml_tools.h",        # ...    ],    deps = ["@asio//:asio", ...],    linkopts = ["-ldl"],    defines = ["BOOST_ASIO_NO_DEPRECATED"],)
+cc_library(    name = "libaimrt_comm",    srcs = ["libzy_aimrt_comm.so"],    hdrs = [        "aimdk/protocol/action/arm.pb.h",        "ros2/.../msg/detail/region__rosidl_typesupport_fastrtps_cpp.hpp",        "src/all_in_one/include/aimrte.h",        # ...    ],    includes = ["ros2/perception", "aimdk/protocol/interaction", ...],    deps = [        "@boost_x86_64//:boost",        "@ros2_common_interfaces//:cpp_geometry_msgs",        "@sdk//:libaimrt",        "@sdk//:libhealth_diag_generation",        # ...    ],    defines = ["AIMRT_USE_FMT_LIB"],)...
+# 插件文件组filegroup(    name = "all_plugins",    srcs = glob(["all_plugins/**"]),)
+```
+
+## 业务仓引入方式
+
+### 引入核心库
+
+通过 @sdk//: 前缀直接引用核心库target:
+
+```
+cc_binary(    name = "aimdk_examples",    srcs = [        "main.cpp",    ],    deps = [        ...        "@sdk//:libaimrt",        "@sdk//:libaimrt_comm",    ],)
+```
+
+### 插件引入
+
+在 pkg\_tar 的 deps 中通过 @integration//:all\_plugins\_tar 打包:
+
+```
+pkg_tar(    name = "aimdk_examples_tar",    srcs = [    ],    extension = "tar",    mode = "0755",    strip_prefix = ".",    tags = ["tar"],    include_runfiles = True,    deps = [        ...        "@integration//:all_plugins_tar",        ...    ],)
+```
+

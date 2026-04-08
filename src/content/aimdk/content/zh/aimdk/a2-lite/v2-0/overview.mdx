@@ -1,0 +1,114 @@
+---
+title: 1. A2 青春款概述
+description: >-
+  ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDl69Wl-f.png&w=1024&h=681&f=webp)
+  A2 青春款有两种不同硬件机型，供应商有所不同，所以网络拓扑也有所不同，这里 称之为 T3 款和 P1 款。 实机可以通过 ip a
+  指令查看网卡名称来确定为哪一款。 硬件架构框图 ![](https://open.agibot.com/doc…
+product: a2-lite
+version: v2-0
+slug:
+  - a2-lite
+  - v2-0
+  - overview
+route: /zh/a2-lite/v2-0/overview
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2-lite/v2_0/01-a2_lite_overview'
+order: 20
+---
+# 1. A2 青春款概述
+
+## 1.1 部件说明
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDl69Wl-f.png&w=1024&h=681&f=webp)
+
+## 1.2 网络拓扑
+
+A2 青春款有两种不同硬件机型，供应商有所不同，所以网络拓扑也有所不同，这里 称之为 T3 款和 P1 款。
+
+实机可以通过 ip a 指令查看网卡名称来确定为哪一款。
+
+### 1.2.1 T3 款
+
+硬件架构框图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FD2UhnF6R.png&w=2230&h=1212&f=webp)
+
+软件网络拓扑图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBh0tvuKr.png&w=1452&h=1118&f=webp)
+
+其中
+
+-   右 debug 网口即为机器人背后的调试网口，固定 ip 为 192.168.2.50。
+-   enp3s0 为预留加装算力平台的网口，推荐在加装算力平台时连接使用。
+
+### 1.2.2 P1 款
+
+硬件架构框图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDOVrwGw9.png&w=2744&h=1108&f=webp)
+
+软件网络拓扑图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCDxUKrHo.png&w=1236&h=1320&f=webp)
+
+其中
+
+-   右 debug 网口即为机器人背后的调试网口，固定 ip 为 192.168.2.50。
+-   eth\_to\_orin 为预留加装算力平台的网口，推荐在加装算力平台时连接使用。
+
+## 1.3 机器人规格参数
+
+| **一级分类** | **二级分类** | **条目** | **具体内容** |
+| --- | --- | --- | --- |
+| **产品基础信息** |  | 身高 | 169cm |
+|  |  | 尺寸 | 169(H)\*75(W)\*30(L)cm |
+|  |  | 净重 | ≈63kg |
+|  |  | 主动自由度 | 双臂5\*2dof、双腿6\*2dof、头部1dof |
+| **产品特性** | **电气性能** | 续航 | 整机力控站立续航时间为：4h35min整机行走续航时间：1h35min |
+|  |  | 电池容量 | 14.4Ah |
+|  |  | 充电时间 | 2h |
+|  |  | 充电功率 | ≤500W |
+|  |  | 充电输入电压 | 110V-220V |
+|  |  | 充电器输出 | 54.6V 8A |
+|  | **环境适应性** | 工作温湿度 | 0~ 40℃，相对湿度10% ~ 90%，无结露 |
+|  |  | 存储温湿度 | \-20℃~ 70℃，相对湿度10% ~ 90%，无结露 |
+|  |  | IP等级 | 关节模组：IP5X |
+|  | **场地适应性** | 最小通过宽度 | 目前本体遥控通过最小宽度>1m，导航通过最小宽度>2m |
+|  |  | 最大越障高度 | 20mm |
+|  |  | 最大运行坡度 | 8%（角度4.57度） |
+|  | **操作与交互** | 感知能力 | 不支持 |
+|  |  | 语音能力 | 不支持 |
+|  |  | 轻作业能力 | 不支持 |
+|  |  | 遥控操作 | 无线遥控器 |
+|  |  | 扬声器 | 5W |
+|  |  | 舞蹈开发 | 支持 |
+|  |  | 群控软件 | 支持 |
+|  | **移动能力** | 最大移动速度 | 最大速度0.8m/s,日常使用≤0.6m/s |
+|  |  | 移动模式 | 支持平移、斜移、原地转向 |
+|  | **物联能力** | 通讯协议 | TCP/IP |
+|  |  | 通讯模块 | Wifi |
+|  | **智控参数** | 基础算力板 | 16核高性能CPU |
+|  | **手臂典型参数** | 灵巧手 | 软体假手 |
+|  |  | 单臂额定负载 | 1.5kg（不含末端执行器） |
+|  |  | 末端线速度 | 1m/s |
+|  |  | 手臂活动空间 | J1(Shoulder pitch）: ±170° |
+|  |  |  | J2(Shoulder roll): -30°~95° |
+|  |  |  | J3(Shoulder yaw): ±170° |
+|  |  |  | J4(Elbow pitch): -1°~118° |
+|  |  |  | J5(Wrist roll): ±170° |
+|  | **腿部典型参数** | 腿部活动空间（存在一定偏差） | J1(Hip roll):-37~40° |
+|  |  |  | J2(Hip yaw): ±75° |
+|  |  |  | J3(Hip pitch): -50°~110° |
+|  |  |  | J4(Knee pitch): -5°~140° |
+|  |  |  | J5(Ankle pitch): -30°~52° |
+|  |  |  | J6(Ankle roll): ±28° |
+|  | **头部典型参数** | 头部活动空间 | 旋转关节: ±45° |
+
+## 1.4 整机工作空间
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FrX_ZN62Y.png&w=1024&h=1280&f=webp)
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDWGSrrXL.png&w=1024&h=1280&f=webp)
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBiIwlz1e.png&w=1024&h=1280&f=webp)
+

@@ -1,0 +1,482 @@
+---
+title: 7.6 麦克风管理部分
+description: >-
+  机器人默认可用两种不同麦克风作为交互输入源，分别为外置麦（depusheng
+  手持麦和闪客领夹麦）和内置麦（机器人自带麦克风），另外可以设置静默模式不进行交互，可以通过 AimMaster
+  软件进行麦克风切换和静默模式设置，同时我们也提供了 RPC 接口来进行麦克风来源切换和静默模式设置。
+  此外我们还提供了麦克风原始音频输出（带本体降噪、回声消除 + VAD 后的音频），可用于关闭智元本身交互链路后使用该接口获取机器人麦克风音频接入其他…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - microphone
+route: /zh/a2/v2-0/dev-guide/microphone
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-06-microphone'
+order: 25
+---
+# 7.6 麦克风管理部分
+
+### 7.6.1 整体介绍
+
+机器人默认可用两种不同麦克风作为交互输入源，分别为外置麦（depusheng 手持麦和闪客领夹麦）和内置麦（机器人自带麦克风），另外可以设置静默模式不进行交互，可以通过 AimMaster 软件进行麦克风切换和静默模式设置，同时我们也提供了 RPC 接口来进行麦克风来源切换和静默模式设置。
+
+此外我们还提供了麦克风原始音频输出（带本体降噪、回声消除 + VAD 后的音频），可用于关闭智元本身交互链路后使用该接口获取机器人麦克风音频接入其他交互系统。
+
+内置麦交互逻辑（声音，人脸，嘴形，距离）：
+
+1.  机器人内部风扇噪音比较大，建议客户唤醒和对话的声音尽量大一些
+2.  人脸主要使用中间相机最大的三个人脸，人脸大小有较大变化时才切换锁定人脸
+3.  对话的时候会去结合唇形判断是否对话，用于抗干扰，分离不同说话人
+4.  距离推荐机器人正前方 0.5m～2m。身高过高或者（180+）的用户站的过近有一定概率人脸已经不在相机范围内，最主要还是要让人脸处于相机范围内
+
+外置麦为指向性麦，对着话筒说话即可，无人脸识别等逻辑。
+
+另外交互为支持二次开发，agent 可设置不同模式，供退出智元云端音频链路，仅输出原始音频和人脸数据，以便用户自行开发交互智能体。
+
+静默模式为 normal 模式下的一种状态，可以在不重启 agent 的情况下灵活切换。
+
+### 7.6.2 内外置麦切换 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/SetMicSourceRequest` |
+| --- | --- |
+| 功能概述 | 切换内外置麦克风来源 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetMicSourceRequest |
+| 入参 | 
+```json
+{
+  "mic_source": 1
+}
+```
+
+-   mic\_source: 0 代表内置麦，1 代表外置麦，其余值无效
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state: 无需关注
+
+ |
+| 示例脚本 | examples/agent/SetMicSource.sh |
+| 备注 |  |
+
+### 7.6.3 内外置麦状态获取 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/GetMicSourceRequest` |
+| --- | --- |
+| 功能概述 | 获取当前使用的麦克风来源 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetMicSourceRequest |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Get mic source successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "mic_source": 0
+}
+```
+
+-   mic\_source: 0 代表内置麦，1 代表外置麦，其余值无效
+
+ |
+| 示例脚本 | examples/agent/GetMicSource.sh |
+| 备注 |  |
+
+### 7.6.4 设置静默模式 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/SetVoiceEnable` |
+| --- | --- |
+| 功能概述 | 设置静默模式 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetVoiceEnable |
+| 入参 | 
+```json
+{
+  "enable_voice": false
+}
+```
+
+-   enable\_voice: 设为 false 为开启静默模式，设为 true 为正常模式
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state：无需关注
+
+ |
+| 示例脚本 | examples/agent/SetVoiceEnable.sh |
+| 备注 |  |
+
+### 7.6.5 查询静默模式 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/GetVoiceEnable` |
+| --- | --- |
+| 功能概述 | 查询静默模式状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetVoiceEnable |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "GetVoiceEnable successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "enable_voice": true
+}
+```
+
+-   enable\_voice: 设为 false 为开启静默模式，设为 true 为正常模式
+
+ |
+| 示例脚本 | examples/agent/GetVoiceEnable.sh |
+| 备注 |  |
+
+### 7.6.6 设置交互运行模式 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/SetAgentPropertiesRequest` |
+| --- | --- |
+| 功能概述 | 设置交互运行模式 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetAgentPropertiesRequest |
+| 入参 | 
+```json
+{
+  "contents": {
+    "properties": {
+      "2": "only_voice"
+    }
+  }
+}
+```
+
+模式：
+
+-   only\_voice：仅输出降噪麦克音频 /agent/process\_audio\_output，后续链路全部断开
+-   voice\_face：输出降噪麦克音频 /agent/process\_audio\_output 和人脸识别结果 /agent/vision/face\_id，后续链路全部断开
+-   normal：常规运行模式，交互正常运行
+
+ |
+| 出参 | 
+
+```json
+{
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+ |
+| 示例脚本 | examples/agent/SetAgentPropertiesRequest.sh |
+| 备注 | 
+
+-   调用后需要重启 agent 或重启机器人方可生效
+-   调用后返回值为CommonState\_UNKNOWN是正常现象，可以调用GetAgentPropertiesRequest接口，查看交互运行模式是否切换成功
+
+ |
+
+### 7.6.7 获取交互运行模式 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/GetAgentPropertiesRequest` |
+| --- | --- |
+| 功能概述 | 查询交互运行模式 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/GetAgentPropertiesRequest |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "contents": {
+    "properties": {
+      "2": "only_voice"
+    }
+  }
+}
+```
+
+模式：
+
+-   only\_voice：仅输出降噪麦克音频 /agent/process\_audio\_output，后续链路全部断开
+-   voice\_face：输出降噪麦克音频 /agent/process\_audio\_output 和人脸识别结果 /agent/vision/face\_id，后续链路全部断开
+-   normal：常规运行模式，交互正常运行
+
+ |
+| 示例脚本 | examples/agent/GetAgentPropertiesRequest.sh |
+| 备注 |  |
+
+### 7.6.8 降噪麦克音频 Topic 接口
+
+| 接口名 | `/agent/process_audio_output` |
+| --- | --- |
+| 功能概述 | 降噪麦克音频接口 |
+| 接口类型 | ROS2 Topic |
+| 出参 | 
+```bash
+{
+  "stream_id": 2,
+  "vad_state": "AUDIO_VAD_STATE_PROCESSING",
+  "audio_data": "..."
+}
+```
+
+-   stream\_id： 麦克风标识，1 为内置麦，2 为外置麦
+    
+-   vad\_state：活动音频检测状态
+    
+    -   AUDIO\_VAD\_STATE\_NONE = 0
+    -   AUDIO\_VAD\_STATE\_BEGIN = 1
+    -   AUDIO\_VAD\_STATE\_PROCESSING = 2
+    -   AUDIO\_VAD\_STATE\_END = 3
+-   audio\_data：音频字节流数据
+    
+
+ |
+| 示例脚本 | examples/agent/get\_voice.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+-   注意：要获取以下音频需要机器人开机时至少联网 2 分钟以上完成音频相关鉴权操作，否则将无原始音频输出，如需离线使用，请首先保证该接口有音频输出后再断网。
+-   注意：当前版本外置麦克风的接口输出 vad\_state 存在问题，预期一条语音输入的状态为 122222222223，实际输出的状态为 0111111111112，此问题仅在外置麦场景下出现（内置麦正常），并计划在后续版本修复。当前版本建议手动对状态执行 +1 补偿。
+
+ |
+
+### 7.6.9 本地人脸注册接口
+
+该接口非常规 HTTP JSON RPC 或 ROS2 Topic，而是单独提供了一个调用脚本 examples/agent/run\_face\_id\_register.sh，其内容如下：
+
+```
+#!/bin/bash
+# 1. 要注册的 images 目录（sh脚本同级）RUN_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"IMAGES_DIR="${RUN_SCRIPT_DIR}/images"
+# 2. Faceid base目录FACEID_SCRIPT_DIR="/agibot/software/v0/scripts/agent/face_id/"FACEID_LIB_DIR="/agibot/software/v0/bin"FACEID_OFFLINE_FEAT="/agibot/data/param/interaction/face_id/offline_face_features"
+# 3. 可执行文件与配置文件的相对路径EXEC="${FACEID_SCRIPT_DIR}/face_id_register"CONF="${FACEID_SCRIPT_DIR}/face_id_config.json"
+chmod +x "$EXEC"export LD_LIBRARY_PATH="${FACEID_LIB_DIR}":$LD_LIBRARY_PATH
+# 4. 调用rm -rf "$FACEID_OFFLINE_FEAT"/*"$EXEC" "$CONF" "$IMAGES_DIR"
+```
+
+将需要注册的人脸数据放置到脚本同目录下的 images 目录中，在 ORIN 上执行该脚本即可完成注册，注册完成后 ID 与图片对应关系以及是否成功注册的结果都存储在同目录下的 Result.txt 文件中，示例如下（其中模糊和人脸过小也注册成功了，但是实际使用中仍推荐使用 满足.png 中展示的清晰正面人脸图像，以免对识别率等造成不良影响）：
+
+Terminal window
+
+```
+GID17648293009168001    满足.png          OK    注册成功GID17648293018063607    侧脸.png          FAIL  人脸质量不满足要求GID17648293020281011    过暗.png          FAIL  人脸质量不满足要求GID17648293021878934    模糊.png          OK    注册成功GID17648293024764703    过曝.png          FAIL  人脸质量不满足要求GID17648293026684491    无人脸.png       FAIL  未检测到人脸GID17648293028768487    非人脸.png       FAIL  未检测到人脸GID17648293030305970    人脸过小.png    OK    注册成功
+```
+
+人脸注册识别逻辑规则说明：
+
+1.  images 目录中存放 jpg、png、jpeg类型的人脸图片，图片只存在一个正面清晰的人脸，运行脚本即可注册。注册后需要重启 agent，在 ORIN 上运行 `aima em stop-app agent && aima em start-app agent` 即可，也可直接重启机器人。
+2.  本地注册的人脸特征会存放在 ORIN 上 /agibot/data/param/interaction/face\_id/offline\_face\_features 目录下。
+3.  注册的用户 ID 的构建规则是：“GID” + 时间戳 + 随机4位数；发布时会将当前机器的 SN （/agibot/data/info/sn）替换 “GID” 作为新的 UID 发布
+4.  另外灵心平台一样可以上传人脸，我们称之为云端人脸数据库，云端人脸数据库可配置打招呼等等信息，相应内容下发后会下发后存储在 ORIN 上 /agibot/data/param/interaction/face\_id/user\_info.json 文件中**。**
+5.  上述脚本每次注册会将原有的本地数据库清空，请每次都完整将所有人脸数据都重新注册，即维护一个 images 文件夹，其中包含所有需要识别的人脸图像，有任何增删改需重新运行注册脚本。
+6.  匹配规则永远是优先匹配云端数据库然后再匹配本地数据库，找到第一个匹配成功的人脸后不会继续匹配剩余人脸。
+
+### 7.6.10 人脸识别结果 Topic接口
+
+| 接口名 | `/agent/vision/face_id` |
+| --- | --- |
+| 功能概述 | 人脸识别结果 |
+| 接口类型 | ROS2 Topic |
+| 出参 | 
+```yaml
+{
+  "faces": [
+    {
+      "timestamp": "1764829536028",
+      "face_id": "A210041B50001917648293023663264",
+      "confidence": 0.9811308,
+      "face_rect": {
+        "x": 326.0,
+        "y": 961.0,
+        "width": 105.0,
+        "height": 119.0
+      },
+      "captured_feature_base64": "...",
+      "reference_feature_base64": "..."
+    }
+  ]
+}
+```
+
+-   timestamp：时间戳，使用的交互相机帧的时间戳，可订阅 /aima/hal/camera/interactive/color 话题，根据该时间戳找到对应的图像
+-   face\_id：A210041B50001917648293023663264，其中前 14 位为 SN 号，后续为数据库人脸 ID 部分
+-   confidence：人脸匹配置信度，0-1 之间的数值
+-   face\_rect：人脸矩形框，可据此在相机图像中框出人脸位置
+-   captured\_feature\_base64：抓取到的人脸特征 base64 编码，一般无需使用
+-   reference\_feature\_base64：参考的人脸特征 base64 编码，一般无需使用
+
+ |
+| 示例脚本 | examples/agent/get\_face\_id.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+-   该接口需要将交互运行模式设置为 normal 或 voice\_face 模式才会发布，only\_voice 模式下无消息
+
+ |
+
+## 7.6.11 唤醒结果上报
+
+| 接口名 | `/agent/wakeup` |
+| --- | --- |
+| 功能概述 | 唤醒结果上报 |
+| 接口类型 | ROS2 Topic |
+| 出参  
+ | 
+```json
+{
+    "language":"zh",
+    "keyword":"远征远征"，
+    "timestamp":"1768812507657",
+    "confidence":1.0,
+    "wakeup_id":"event_wMXK9pT05JMXeRAOSc706",
+    "is_success":true,
+    "wakeup_type":"WAKEUP_NORMAL"
+}
+```
+
+-   confidence：语音匹配置信度，0-1 之间的数值
+    
+-   Keyword: 唤醒词
+    
+-   language:目前仅支持中文
+    
+-   wakeup\_type:
+    
+    -   `WAKEUP_UNKNOWN` ：无法确定来源或状态的唤醒（占位/异常场景）
+    -   `WAKEUP_NORMAL` ：正常语音唤醒，例如用户说出默认唤醒词。
+    -   `WAKEUP_FACE_TRIGGERED` ：通过人脸识别触发的唤醒。
+    -   `WAKEUP_CUSTOM_TRIGGERED` ：由自定义方式触发的唤醒，比如自定义唤醒词或外部事件。
+
+ |
+| 示例脚本 | examples/agent/get\_wakeup\_result.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+
+ |
+
+## 7.6.12 内置麦唤醒词设置
+
+| 接口名 | `pb:/aimdk.protocol.AgentControlService/SetCustomWakeUpWord` |
+| --- | --- |
+| 功能概述 | 内置麦唤醒词设置 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.AgentControlService/SetCustomWakeUpWord |
+| 入参 | 
+```json
+{
+  "keywords":["你好你好"]
+}
+```
+
+-   Keywords:唤醒词
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetCustomWakeUpWord successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_UNKNOWN"
+}
+```
+
+-   state=CommonState\_UNKNOWN为正常现象
+-   code=0设置成功 code=1设置失败
+
+ |
+| 示例脚本 | examples/agent/SetCustomWakeUpWord.sh |
+| 备注 | -   避免绑定智能体，否则重启agent不生效
+-   只支持一个唤醒词 |
+
+## 7.6.13 外置麦唤醒词设置
+
+当前外置麦唤醒需修改orin下面/agibot/data/var/agent/omnis\_sdk/sherpa-onnx-kws/keywords.txt文件，增加或者删除注音即可
+
+唤醒词格式：
+
+```
+声母1(空格)韵母1(带声调)(空格)声母2(空格)韵母2(带声调) ......
+```
+
+1.  禁止使用含非中文字的唤醒词，英文唤醒词需转换为谐音的中文词，例子：
+
+```
+* 中文唤醒词1：x iǎo zh ì x iǎo zh ì @小智小智_zh_1
+* 中文唤醒词2(带ü)：x iǎo l ǚ x iǎo l ǚ @小吕小吕_zh_1
+* 中文唤醒词3(多音字)：x iǎo x ī x iǎo x ī @小茜小茜_zh_1
+* 英文唤醒词：h ā l óu t āng mǔ @哈喽汤姆_en_1
+```
+
+2.  唤醒词设置注意事项和推荐等：  
+     **字数建议：** 推荐唤醒词的字数为3-6个汉字  
+     **重复结构：** 推荐使用ABAB重复模式，提高唤醒率  
+     **发音特点：** 推荐多使用开口音，如韵母为a, o, e  
+     **常用词规避：** 避免使用常用词、指令词，减少误唤醒的可能，如”再见”、“早上好”、“看电视”  
+     **叠字限制：** 避免使用叠字和连续的读音相近的字，如”珍珍”、“花华”等  
+     **语气词限制：** 避免使用轻声字、语气词，如’吧’, ‘呢’, ‘啊’, ‘的’, ‘了’, ‘吗’  
+     **零声母限制：** 避免使用零声母字，如’昂’, ‘恩’, ‘安’  
+     **声调多样：** 避免所有字的声调一致，如’喀咪喀咪’  
+     **闭口音限制：** 减少闭口音的使用，如i, u, ü  
+    
+3.  合规音节列表（使用不合规的音节会 crash ）：
+    
+
+<table><tbody><tr><td>a</td><td>án</td><td>áo</td><td>é</td><td>en</td><td>er</td><td>ì</td><td>iàn</td><td>iǎo</td></tr><tr><td>á</td><td>àn</td><td>ào</td><td>è</td><td>én</td><td>ér</td><td>ǐ</td><td>iǎn</td><td>iāo</td></tr><tr><td>à</td><td>ǎn</td><td>ǎo</td><td>ě</td><td>èn</td><td>èr</td><td>ī</td><td>iān</td><td>ié</td></tr><tr><td>ǎ</td><td>ān</td><td>āo</td><td>ē</td><td>ěn</td><td>ěr</td><td>ia</td><td>iáng</td><td>iè</td></tr><tr><td>ā</td><td>ang</td><td>b</td><td>ei</td><td>ēn</td><td>f</td><td>iá</td><td>iàng</td><td>iě</td></tr><tr><td>ái</td><td>áng</td><td>c</td><td>éi</td><td>éng</td><td>g</td><td>ià</td><td>iǎng</td><td>iē</td></tr><tr><td>ài</td><td>àng</td><td>ch</td><td>èi</td><td>èng</td><td>h</td><td>iǎ</td><td>iāng</td><td>ín</td></tr><tr><td>ǎi</td><td>ǎng</td><td>d</td><td>ěi</td><td>ěng</td><td>i</td><td>iā</td><td>iáo</td><td>ìn</td></tr><tr><td>āi</td><td>āng</td><td>e</td><td>ēi</td><td>ēng</td><td>í</td><td>ián</td><td>iào</td><td>ǐn</td></tr><tr><td>īn</td><td>iù</td><td>o</td><td>ou</td><td>sh</td><td>ū</td><td>uán</td><td>uè</td><td>ún</td></tr><tr><td>íng</td><td>iǔ</td><td>ó</td><td>óu</td><td>t</td><td>uá</td><td>uàn</td><td>uě</td><td>ùn</td></tr><tr><td>ìng</td><td>iū</td><td>ò</td><td>òu</td><td>u</td><td>uà</td><td>uǎn</td><td>uē</td><td>ǔn</td></tr><tr><td>ǐng</td><td>j</td><td>ǒ</td><td>ǒu</td><td>ú</td><td>uǎ</td><td>uān</td><td>üè</td><td>ūn</td></tr><tr><td>īng</td><td>k</td><td>ō</td><td>ōu</td><td>ù</td><td>uā</td><td>uáng</td><td>üě</td><td>uo</td></tr><tr><td>ióng</td><td>l</td><td>óng</td><td>p</td><td>ǔ</td><td>uái</td><td>uàng</td><td>uí</td><td>uó</td></tr><tr><td>iǒng</td><td>m</td><td>òng</td><td>q</td><td>ǘ</td><td>uài</td><td>uǎng</td><td>uì</td><td>uò</td></tr><tr><td>iōng</td><td>n</td><td>ǒng</td><td>r</td><td>ǜ</td><td>uǎi</td><td>uāng</td><td>uǐ</td><td>uǒ</td></tr><tr><td>iú</td><td>ń</td><td>ōng</td><td>s</td><td>ǚ</td><td>uāi</td><td>ué</td><td>uī</td><td>uō</td></tr><tr><td>w</td><td>x</td><td>y</td><td>z</td><td>zh</td><td></td><td></td><td></td><td></td></tr></tbody></table>
+

@@ -1,0 +1,31 @@
+---
+title: 7. 详细接口文档
+description: >-
+  为减少重复描述，增加信息密度，以下接口文档中有如下约定： 1. HTTP JSON RPC 中的请求和回复消息的 header
+  字段不进行详细解释，示例消息中有些 header 被省略，实际请求时也可不填，以实际可运行示例脚本为准； 2. HTTP JSON RPC 中的 URL
+  IP 均填写为 192.168.100.110 或 192.168.100.100，分别对应 ORIN 工控机 IP 和 X86 工控机
+  IP，可按需改为其他…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - detailed-interface
+route: /zh/a2/v2-0/dev-guide/detailed-interface
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-00-detailed_interface'
+order: 16
+---
+# 7. 详细接口文档
+
+为减少重复描述，增加信息密度，以下接口文档中有如下约定：
+
+1.  HTTP JSON RPC 中的请求和回复消息的 header 字段不进行详细解释，示例消息中有些 header 被省略，实际请求时也可不填，以实际可运行示例脚本为准；
+2.  HTTP JSON RPC 中的 URL IP 均填写为 192.168.100.110 或 192.168.100.100，分别对应 ORIN 工控机 IP 和 X86 工控机 IP，可按需改为其他可访问到对应工控机的 IP；
+3.  HTTP JSON RPC 的所有请求方法均为 POST，不在下面接口文档中单独列出；
+4.  ROS2 Topic 中消息类型一列若为入参，则由二开程序发布该话题，机上程序接收该话题，若为出参则相反；
+5.  ROS2 Topic 接口消息类型部分为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用，这里的 ros2\_plugin\_proto\_aarch64 如果在 x86 架构的机器上执行需要替换为 ros2\_plugin\_proto\_x86\_64，接口备注中不过多赘述；
+6.  未解释参数一般即为无效参数，按照示例填写默认值不做修改即可；
+7.  未注明单位的，角度默认使用 rad，长度默认使用 m；
+

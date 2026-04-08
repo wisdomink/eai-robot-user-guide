@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useIsDesktop } from '@/hooks/useMediaQuery'
 import Header from './Header'
 import Sidebar from './Sidebar'
@@ -13,10 +14,18 @@ interface ContentLayoutProps {
 
 export default function ContentLayout({ children, fullWidth }: ContentLayoutProps) {
   const isDesktop = useIsDesktop()
+  const { pathname } = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const toggle = () => setSidebarOpen(prev => !prev)
   const close = () => setSidebarOpen(false)
+
+  // Developer docs: keep nav visible when opening or following links so the active page stays in view.
+  useEffect(() => {
+    if (pathname.startsWith('/developer')) {
+      setSidebarOpen(true)
+    }
+  }, [pathname])
 
   return (
     <div className="min-h-screen bg-white pt-[var(--header-height)]">

@@ -1,0 +1,335 @@
+---
+title: SLAM定位建图模块
+description: >-
+  本页面包含了SLAM定位建图模块（Simultaneous Localization and Mapping,
+  SLAM）包含的话题和服务的相关文档协议，以支持系统的定位建图功能。 本模块位于 orin 开发板上，http 后端监听的端口为 53175。 | 话题名
+  | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 | | :-- | :-: | :-: | --- | --- | --- | |
+  `/body_…
+product: a2w
+slug:
+  - a2w
+  - protocol-slam
+route: /zh/a2w/protocol-slam
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/slam/readme'
+order: 180
+---
+# SLAM定位建图模块
+
+本页面包含了SLAM定位建图模块（Simultaneous Localization and Mapping, SLAM）包含的话题和服务的相关文档协议，以支持系统的定位建图功能。
+
+本模块位于 orin 开发板上，http 后端监听的端口为 53175。
+
+## Channel 接口
+
+| 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 |
+| :-- | :-: | :-: | --- | --- | --- |
+| `/body_drive/imu/data` | imu | 订阅 | [sensor\_msgs::msg::Imu](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Imu.html) | imu | ros2 |
+| `/body_drive/wheel_joint_state` | 关节状态 | 订阅 | [joint\_msg\_interface::msg::JointState](../hal/README.md#jointmsginterface-msg-jointstate) | 关节状态 | ros2 |
+| `/aima/hal/lidar/top/pointcloud` | 头部激光雷达点云 | 订阅 | [sensor\_msgs::msg::PointCloud2](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/PointCloud2.html) | 头部激光雷达点云 | ros2 |
+| `/aima/hal/lidar/top/imu` | 头部imu | 订阅 | [sensor\_msgs::msg::Imu](https://docs.ros.org/en/ros2_packages/humble/api/sensor_msgs/msg/Imu.html) | 头部imu | ros2 |
+| `/ranger_base_node/odom` | 里程计 | 发布 | [nav\_msgs::msg::Odometry](https://docs.ros.org/en/ros2_packages/humble/api/nav_msgs/msg/Odometry.html) | 里程计 | ros2 |
+| `/slam/mapping/odometry` | SLAM建图前端里程计 | 发布 | [nav\_msgs::msg::Odometry](https://docs.ros.org/en/ros2_packages/humble/api/nav_msgs/msg/Odometry.html) | SLAM建图前端里程计 | ros2 |
+| `/slam/mapping/realtime_2d_map` | 实时2D地图 | 发布 | [aimdk::protocol::SLAMRealtimeMappingChannel](#aimdk-protocol-slamrealtimemappingchannel) | 实时2D地图 | ros2 |
+| `/slam/localization/odometry` | SLAM定位结果 | 发布 | [nav\_msgs::msg::Odometry](https://docs.ros.org/en/ros2_packages/humble/api/nav_msgs/msg/Odometry.html) | SLAM定位结果 | ros2 |
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.SLAMMappingService/SLAMStartMapping` | 开始建图 | [aimdk::protocol::SLAMStartMappingRequest](#aimdk-protocol-slamstartmappingrequest) | [aimdk::protocol::SLAMStartMappingResponse](#aimdk-protocol-slamstartmappingresponse) | 启动SLAM建图模式 | http |
+| `pb:/aimdk.protocol.SLAMMappingService/SLAMStopMapping` | 停止建图 | [aimdk::protocol::SLAMStopMappingRequest](#aimdk-protocol-slamstopmappingrequest) | [aimdk::protocol::SLAMStopMappingResponse](#aimdk-protocol-slamstopmappingresponse) | 停止建图 | http |
+| `pb:/aimdk.protocol.SLAMMappingService/SLAMGetCurrentMappingState` | 获取当前SLAM算法状态的接口 | [aimdk::protocol::SLAMGetCurrentStateRequest](#aimdk-protocol-slamgetcurrentstaterequest) | [aimdk::protocol::SLAMGetCurrentStateResponse](#aimdk-protocol-slamgetcurrentstateresponse) | 用于支持MM状态同步 | http |
+| `pb:/aimdk.protocol.SLAMMappingService/SLAMStartIncrementalMapping` | 开始增量建图 | [aimdk::protocol::SLAMStartIncrementalMappingRequest](#aimdk-protocol-slamstartincrementalmappingrequest) | [aimdk::protocol::SLAMStartIncrementalMappingResponse](#aimdk-protocol-slamstartincrementalmappingresponse) | 开始增量建图 | http |
+| `pb:/aimdk.protocol.SLAMRelocalizationService/SLAMStartNormalRelocalization` | 启动常规重定位 | [aimdk::protocol::SLAMStartNormalRelocRequest](#aimdk-protocol-slamstartnormalrelocrequest) | [aimdk::protocol::SLAMStartNormalRelocResponse](#aimdk-protocol-slamstartnormalrelocresponse) | 启动常规重定位 | http |
+| `pb:/aimdk.protocol.SLAMRelocalizationService/SLAMStopNormalRelocalization` | 停止常规重定位 | [aimdk::protocol::SLAMStopNormalRelocRequest](#aimdk-protocol-slamstopnormalrelocrequest) | [aimdk::protocol::SLAMStopNormalRelocResponse](#aimdk-protocol-slamstopnormalrelocresponse) | 停止常规重定位 | http |
+| `pb:/aimdk.protocol.SLAMRelocalizationService/SLAMGetCurrentRelocalizationState` | 获取当前SLAM算法状态的接口 | [aimdk::protocol::SLAMGetCurrentStateRequest](#aimdk-protocol-slamgetcurrentstaterequest) | [aimdk::protocol::SLAMGetCurrentStateResponse](#aimdk-protocol-slamgetcurrentstateresponse) | 获取当前SLAM算法状态的接口 | http |
+| `pb:/aimdk.protocol.SLAMQRRecordService/SLAMGetCurrentQRRecordState` | 获取当前SLAM算法状态的接口 | [aimdk::protocol::SLAMGetCurrentStateRequest](#aimdk-protocol-slamgetcurrentstaterequest) | [aimdk::protocol::SLAMGetCurrentStateResponse](#aimdk-protocol-slamgetcurrentstateresponse) | 获取当前SLAM算法状态的接口 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMStartLocalization` | 启动定位请求 | [aimdk::protocol::SLAMStartLocalizationRequest](#aimdk-protocol-slamstartlocalizationrequest) | [aimdk::protocol::SLAMStartLocalizationResponse](#aimdk-protocol-slamstartlocalizationresponse) | 启动定位请求 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMStopLocalization` | 停止定位请求 | [aimdk::protocol::SLAMStopLocalizationRequest](#aimdk-protocol-slamstoplocalizationrequest) | [aimdk::protocol::SLAMStopLocalizationResponse](#aimdk-protocol-slamstoplocalizationresponse) | 停止定位请求 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMGetCurrentLocalizationState` | 获取当前SLAM算法状态的接口 | [aimdk::protocol::SLAMGetCurrentStateRequest](#aimdk-protocol-slamgetcurrentstaterequest) | [aimdk::protocol::SLAMGetCurrentStateResponse](#aimdk-protocol-slamgetcurrentstateresponse) | 获取当前SLAM算法状态的接口 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMUpdateOccupancyMap` | 发起更新栅格地图请求 | [aimdk::protocol::SLAMUpdateOccupancyMapRequest](#aimdk-protocol-slamupdateoccupancymaprequest) | [aimdk::protocol::SLAMUpdateOccupancyMapResponse](#aimdk-protocol-slamupdateoccupancymapresponse) | 发起更新栅格地图请求 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMToogleUpdateOccupancyMap` | 开启或关闭实时更新栅格地图功能 | [aimdk::protocol::SLAMToggleUpdateOccupancyMapRequest](#aimdk-protocol-slamtoggleupdateoccupancymaprequest) | [aimdk::protocol::SLAMToggleUpdateOccupancyMapResponse](#aimdk-protocol-slamtoggleupdateoccupancymapresponse) | 开启或关闭实时更新栅格地图功能 | http |
+| `pb:/aimdk.protocol.SLAMLocalizationService/SLAMCheckUpdateOccupancyMapState` | 查询实时更新栅格地图功能的状态是开启还是关闭 | [aimdk::protocol::SLAMOccupancyMapStateRequest](#aimdk-protocol-slamoccupancymapstaterequest) | [aimdk::protocol::SLAMOccupancyMapStateResponse](#aimdk-protocol-slamoccupancymapstateresponse) | 查询实时更新栅格地图功能的状态是开启还是关闭 | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::SLAMRealtimeMappingChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| occupancy\_grid | [aimdk::protocol::OccupancyGrid](../pnc/README.md#aimdk-protocol-occupancygrid) | 实时占用栅格地图数据 |
+| map\_update\_time | [aimdk::protocol::Timestamp](../common/README.md#aimdk-protocol-timestamp) | 地图更新时间 |
+
+### `aimdk::protocol::SlamPoseChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) | 机器人在地图坐标系下的位姿 |
+| covariance | double\[\] | 位姿协方差矩阵(6x6) |
+| quality | float | 定位质量评分，范围\[0,1\] |
+
+### `aimdk::protocol::SlamMapChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| map | [aimdk::protocol::OccupancyGrid](../pnc/README.md#aimdk-protocol-occupancygrid) | 占用栅格地图数据 |
+| map\_id | uint64 | 地图唯一标识 |
+
+### `aimdk::protocol::SlamStatusChannel`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::Header](../common/README.md#aimdk-protocol-header) | 消息头 |
+| mode | [aimdk::protocol::SlamMode](#aimdk-protocol-slammode) | SLAM运行模式 |
+| status | [aimdk::protocol::SlamStatus](#aimdk-protocol-slamstatus) | SLAM运行状态 |
+| map\_id | uint64 | 当前使用的地图ID |
+| localization\_quality | float | 定位质量，范围\[0,1\] |
+
+### `aimdk::protocol::SlamMode`
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| SlamMode\_UNKNOWN | 0 | 未知模式 |
+| SlamMode\_MAPPING | 1 | 建图模式 |
+| SlamMode\_LOCALIZATION | 2 | 定位模式 |
+| SlamMode\_IDLE | 3 | 空闲模式 |
+
+### `aimdk::protocol::SlamStatus`
+
+| Name | Number | Description |
+| :-- | :-: | --- |
+| SlamStatus\_UNKNOWN | 0 | 未知状态 |
+| SlamStatus\_INITIALIZING | 1 | 初始化中 |
+| SlamStatus\_RUNNING | 2 | 正常运行 |
+| SlamStatus\_LOST | 3 | 定位丢失 |
+| SlamStatus\_ERROR | 4 | 错误状态 |
+
+### `aimdk::protocol::SLAMStartMappingRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| map\_name | string | 新建地图的名称 |
+| resolution | float | 地图分辨率，单位：米/像素，默认0.05 |
+
+### `aimdk::protocol::SLAMStartMappingResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMStopMappingRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| save\_map | bool | 是否保存当前地图 |
+
+### `aimdk::protocol::SLAMStopMappingResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMGetCurrentStateRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+
+### `aimdk::protocol::SLAMGetCurrentStateResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| state | [aimdk::protocol::SlamStatus](#aimdk-protocol-slamstatus) | 当前SLAM状态 |
+| message | string | 状态描述信息 |
+
+### `aimdk::protocol::SLAMStartIncrementalMappingRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| base\_map\_id | uint64 | 基础地图ID |
+| new\_map\_name | string | 新增量地图名称 |
+
+### `aimdk::protocol::SLAMStartIncrementalMappingResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMStartNormalRelocRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| map\_id | uint64 | 用于重定位的地图ID |
+
+### `aimdk::protocol::SLAMStartNormalRelocResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMStopNormalRelocRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+
+### `aimdk::protocol::SLAMStopNormalRelocResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMStartLocalizationRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| map\_id | uint64 | 用于定位的地图ID |
+| initial\_pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) | 可选的初始位姿 |
+
+### `aimdk::protocol::SLAMStartLocalizationResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMStopLocalizationRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+
+### `aimdk::protocol::SLAMStopLocalizationResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMUpdateOccupancyMapRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| map\_id | uint64 | 要更新的地图ID |
+
+### `aimdk::protocol::SLAMUpdateOccupancyMapResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMToggleUpdateOccupancyMapRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+| enable | bool | 是否开启实时更新 |
+
+### `aimdk::protocol::SLAMToggleUpdateOccupancyMapResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| result | bool | 操作结果 |
+| message | string | 结果描述信息 |
+
+### `aimdk::protocol::SLAMOccupancyMapStateRequest`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | RPC 请求的 header |
+
+### `aimdk::protocol::SLAMOccupancyMapStateResponse`
+
+| Field | Type | Description |
+| :-- | :-: | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | RPC 响应的 header |
+| is\_enabled | bool | 实时更新功能是否开启 |
+| message | string | 状态描述信息 |
+
+## 使用示例
+
+### 1\. 开始建图
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMMappingService/SLAMStartMapping' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "map_name": "office_map_001",              "resolution": 0.05            }'
+```
+
+### 2\. 停止建图
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMMappingService/SLAMStopMapping' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "save_map": true            }'
+```
+
+### 3\. 开始定位
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMLocalizationService/SLAMStartLocalization' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "map_id": 1,              "initial_pose": {                "position": {                  "x": 0.0,                  "y": 0.0,                  "z": 0.0                },                "orientation": {                  "x": 0.0,                  "y": 0.0,                  "z": 0.0,                  "w": 1.0                }              }            }'
+```
+
+### 4\. 启动常规重定位
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMRelocalizationService/SLAMStartNormalRelocalization' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "map_id": 1            }'
+```
+
+### 5\. 获取SLAM建图状态
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMMappingService/SLAMGetCurrentMappingState' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              }            }'
+```
+
+### 6\. 获取SLAM定位状态
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMLocalizationService/SLAMGetCurrentLocalizationState' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              }            }'
+```
+
+### 7\. 更新占用栅格地图
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMLocalizationService/SLAMUpdateOccupancyMap' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "map_id": 1            }'
+```
+
+### 8\. 开启/关闭实时更新栅格地图
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMLocalizationService/SLAMToogleUpdateOccupancyMap' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "enable": true            }'
+```
+
+### 9\. 查询实时更新栅格地图状态
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMLocalizationService/SLAMCheckUpdateOccupancyMapState' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              }            }'
+```
+
+### 10\. 启动增量建图
+
+```
+#!/bin/bash#curl使用示例(以 ORIN ip: 192.168.100.110 为例)：curl -i -H 'content-type:application/json' \        -H 'timeout: 60000' \        -X POST 'http://192.168.100.110:53175/rpc/aimdk.protocol.SLAMMappingService/SLAMStartIncrementalMapping' \        -d '{              "header": {                "timestamp": {                  "seconds": 0,                  "nanos": 0,                  "ms_since_epoch": 0                },                "control_source": 0              },              "base_map_id": 1,              "new_map_name": "incremental_map_001"            }'
+```
+

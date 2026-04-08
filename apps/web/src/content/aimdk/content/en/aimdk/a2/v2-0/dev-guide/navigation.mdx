@@ -1,0 +1,394 @@
+---
+title: 7.8 Navigation Control Section
+description: >-
+  The A2 Ultra robot comes pre-installed with basic mapping, localization, and
+  navigation capabilities. Users can perform various tasks such as navigating to
+  waypoints, target points, and specified routes through secondary…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - navigation
+route: /en/a2/v2-0/dev-guide/navigation
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-08-navigation'
+order: 27
+---
+# 7.8 Navigation Control Section
+
+### 7.8.1 Overview
+
+The A2 Ultra robot comes pre-installed with basic mapping, localization, and navigation capabilities. Users can perform various tasks such as navigating to waypoints, target points, and specified routes through secondary development interfaces. Additionally, it includes features like dynamic obstacle recognition and avoidance.
+
+The navigation task issuance interfaces vary based on the navigation logic. Instead of listing each interface’s documentation separately, we will provide a unified explanation of the differences in input and output parameters for these interfaces.
+
+Unified Explanation of Navigation Task Issuance Interfaces:
+
+1.  Before executing a task, the robot must successfully relocalize, and the map ID for the task must match the relocalized map.
+2.  Before executing a task, the MC state must be switched to RL\_LOCOMOTION\_DEFAULT (reinforced straight leg) mode; otherwise, the robot may not respond correctly to PNC speed commands.
+3.  When issuing a task, a `task_id` must be set. If not set (default is 0), PNC will generate a `task_id` and return it in the response. The client needs to save this `task_id` for subsequent control instructions or to query the task status.
+
+Code examples are located in the `examples/pnc/` directory. Each interface has a corresponding script, and the filenames indicate their purpose. There is a complete end-to-end example in `example/pnc/pnc_demo.py` that covers obtaining the map ID, selecting waypoint IDs, issuing navigation tasks, and monitoring task status.
+
+Field Unified Explanation
+
+-   `task_id`: Task ID. If not set (default is 0), PNC will generate a `task_id` and return it in the response. The client needs to save this `task_id` for subsequent control instructions or to query the task status.
+-   `map_id`: Map ID. The current map ID must be provided.
+-   `target_id`: Navigation point ID.
+-   `pose`: 2D world coordinate pose.
+-   `pose_offset`: Relative offset from the target point.
+-   `state`: Unless otherwise specified, this indicates whether the request was successfully sent and received. A return value of `CommonState_SUCCESS` indicates success, while other values indicate failure.
+-   `ackerman_mode`: Reserved field, not in use. Follow the example for filling.
+-   `guide_line_id`: Reserved field, not in use. Follow the example for filling.
+
+### 7.8.2 Point Navigation RPC Interface
+
+| **Interface Name** | **Interface Description** | **URL** | **Input Parameters** | **Output Parameters** | **Remarks** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToGoal` | Issue a planning navigation task for a given target point ID | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToGoal | 
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0,
+  "guide_line_id": 0,
+  "ackerman_mode": false
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The accuracy range is approximately 0.4 meters |
+| `pb:/aimdk.protocol.PncService/PlanningNaviToPose2D` | Issue a planning navigation task for a given target pose | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PlanningNaviToPose2D | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 10,
+      "y": 5
+    },
+    "angle": 3.14159
+  },
+  "ackerman_mode": false
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The accuracy range is approximately 0.4 meters |
+| `pb:/aimdk.protocol.PncService/LinearNaviToRelative` | Issue a linear navigation task for a given relative target pose | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToRelative | 
+
+```json
+{
+  "task_id": 1,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 1.57
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | First perform an in-place rotation, then execute a linear movement |
+| `pb:/aimdk.protocol.PncService/LinearNaviToGoal` | Issue a linear navigation task for a given target point ID | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | First perform an in-place rotation, then execute a linear movement |
+| `pb:/aimdk.protocol.PncService/LinearNaviToPose2D` | Issue a linear navigation task for a given target pose | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/LinearNaviToPose2D | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 1.57
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | First perform an in-place rotation, then execute a linear movement |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelativeGoal` | Issue a direct movement task for a given target point ID | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelativeGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | Translate and rotate simultaneously, suitable only for tasks where the deviation between the target point and the robot's orientation is small; otherwise, it may result in significant positioning errors |
+| `pb:/aimdk.protocol.PncService/DirectNaviToRelative` | Issue a direct movement task for a given relative target pose | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/DirectNaviToRelative | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "pose": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 0
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/PreciseNaviToGoal` | Issue a high-precision navigation task for a given target point ID | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/PreciseNaviToGoal | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "target_id": 0,
+  "pose_offset": {
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "angle": 0
+  }
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | This is only applicable for high-precision point-to-point tasks in special scenarios. The robot will first navigate to a position approximately 0.5 meters behind the target using normal planning and navigation mode, and then move directly to the target without obstacle avoidance, possibly making multiple adjustments. The precision of reaching the target is about 0.1 meters. It is necessary to ensure that there is sufficient space behind the target. This mode is not recommended for non-special requirements. |
+
+### 7.8.3 Simple Movement RPC Interface
+
+| **Interface Name** | **Interface Description** | **URL** | **Input Parameters** | **Output Parameters** | **Remarks** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/SpinTurnAndMoveForward` | Issue a task for on-the-spot rotation followed by straight-line movement. The on-the-spot rotation will be executed first, followed by the straight-line movement. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurnAndMoveForward | 
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 3.14159,
+  "distance": 1
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/SpinTurn` | Issue a task for on-the-spot rotation. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/SpinTurn | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 3.14159
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ |  |
+| `pb:/aimdk.protocol.PncService/MoveForward` | Issue a task for straight-line translation. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/MoveForward | 
+
+```json
+{
+  "task_id": 0,
+  "map_id": 1,
+  "angle": 0,
+  "distance": 1
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The orientation of the machine will not change after the task is executed. |
+
+### 7.8.4 Task Query and Control RPC Interface
+
+| **Interface Name** | **Interface Description** | **URL** | **Input Parameters** | **Output Parameters** | **Remarks** |
+| --- | --- | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.PncService/ActionCancel` | Issue a command to cancel a task. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionCancel | 
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The command will only respond if the task\_id matches; otherwise, it returns CommonState\_FAILURE. |
+| `pb:/aimdk.protocol.PncService/ActionPause` | Issue a command to pause a task. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionPause | 
+
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The command will only respond if the task\_id matches; otherwise, it returns CommonState\_FAILURE. |
+| `pb:/aimdk.protocol.PncService/ActionResume` | Issue a command to resume a paused task. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionResume | 
+
+```json
+{
+  "task_id": 6874745825616545102
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "CommonState_SUCCESS"
+}
+```
+
+ | The command will only respond if the task\_id matches; otherwise, it returns CommonState\_FAILURE. |
+| `pb:/aimdk.protocol.PncService/ActionGetState` | Get the navigation task state. | http://192.168.100.110:53176/rpc/aimdk.protocol.PncService/ActionGetState | 
+
+```json
+{
+  "task_id": 0
+}
+```
+
+ | 
+
+```json
+{
+  "task_id": "9820900024371944166",
+  "state": "PncServiceState_RUNNING"
+}
+```
+
+-   state: Task state
+    
+    -   PncServiceState\_UNDEFINED: Unknown state
+    -   PncServiceState\_IDLE: Task is idle
+    -   PncServiceState\_RUNNING: Task is running
+    -   PncServiceState\_PAUSED: Task is paused
+    -   PncServiceState\_SUCCESS: Task completed successfully
+    -   PncServiceState\_FAILED: Task failed
+
+ | If the requested task\_id is 0, it returns the task\_id and corresponding state of the most recent task. For other task\_id mismatches, it returns PncServiceState\_FAILED. |
+

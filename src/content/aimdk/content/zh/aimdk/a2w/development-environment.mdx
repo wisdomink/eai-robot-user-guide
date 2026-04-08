@@ -1,0 +1,174 @@
+---
+title: 开发、编译、部署
+description: >-
+  以aimdk\_examples为例, 合理的目录结构和文件命名如下： ``` aimdk_examples/├── config/ # 配置文件目录│
+  └── aimdk_examples/ # 模块配置和数据文件│ ├── BUILD # Bazel 构建文件│ ├──
+  aimdk_examples_config.yaml # 模块运行配置│ └── ... # 其他配置文件│├── scripts/ # 启动脚本目录│
+  ├── a…
+product: a2w
+slug:
+  - a2w
+  - development-environment
+route: /zh/a2w/development-environment
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/develop'
+order: 60
+---
+# 开发、编译、部署
+
+## 代码仓结构
+
+以aimdk\_examples为例, 合理的目录结构和文件命名如下：
+
+```
+aimdk_examples/├── config/                          # 配置文件目录│   └── aimdk_examples/             # 模块配置和数据文件│       ├── BUILD                   # Bazel 构建文件│       ├── aimdk_examples_config.yaml  # 模块运行配置│       └── ...                     # 其他配置文件│├── scripts/                         # 启动脚本目录│   ├── aimdk_examples/              # 模块名目录│   │   ├── BUILD│   │   └── start_aimdk_examples.sh # 模块启动脚本│   └── ...                         # 其他脚本│├── src/                            # 源代码目录│   ├── app/                        # 应用程序入口│   │   ├── xxx/                    # 具体应用模块│   │   │   ├── BUILD│   │   │   └── main.cc            # 主函数入口文件│   │   └── ...│   ││   └── module/                     # 模块实现│       ├── xxx/                    # 具体功能模块│       │   ├── BUILD│       │   ├── xxx_module.cc      # 模块实现文件│       │   ├── xxx_module.h       # 模块头文件│       │   └── ...                # 其他相关文件│       └── ...│├── tools/                          # 工具脚本目录│   ├── build_module.sh            # 模块编译脚本│   └── run_module.sh              # 模块运行脚本│├── WORKSPACE                       # Bazel 工作空间配置├── .bazelrc                        # Bazel 运行时配置├── .bazelversion                   # Bazel 版本锁定├── .clang-format                   # 代码格式化规则├── .gitignore                      # Git 忽略规则└── README.md                       # 项目说明文档
+```
+
+## 编译链设计
+
+以aimdk\_examples模块为例 配置相关 config/aimdk\_examples/BUILD
+
+```
+load("@integration//rules/utils:pkg_lib.bzl", "pkg_lib")package(default_visibility = ["//visibility:public"])
+filegroup(    name = "aimdk_examples_config",    srcs = glob(["*.yaml","*.conf"]),)
+pkg_lib(    name = "aimdk_examples_config_tar",    srcs = [        ":aimdk_examples_config",    ],)
+```
+
+## 启动脚本相关
+
+scripts/aimdk\_examples/BUILD
+
+```
+package(default_visibility = ["//visibility:public"])
+filegroup(    name = "aimdk_examples_script",    srcs = [        "start_aimdk_examples.sh",    ],)
+```
+
+## App相关
+
+src/app/BUILD
+
+```
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")load("@integration//rules/utils:flattern_tar.bzl", "flatten_tar")
+package(default_visibility = ["//visibility:public"])
+cc_binary(    name = "aimdk_examples",    srcs = [        "main.cpp",    ],    deps = [        "//src/module/ik:ik_module",        "@sdk//:libaimrt",        "@sdk//:libaimrt_comm",    ],)
+pkg_files(    name = "aimdk_examples_script",    srcs = [        "//scripts/aimdk_examples:aimdk_examples_script",    ],    attributes = pkg_attributes(        mode = "0755",    ),    prefix = "scripts/aimdk_examples",)
+pkg_filegroup(    name = "aimdk_examples_filegroup",    srcs = [        ":aimdk_examples_script",    ],)
+pkg_tar(    name = "aimdk_examples_without_bin_tar",    srcs = [        ":aimdk_examples_filegroup",    ],    extension = "tar",    mode = "0755",    tags = ["tar"],)
+pkg_tar(    name = "aimdk_examples_bin_tar",    srcs = [        ":aimdk_examples",    ],    extension = "tar",    include_runfiles = True,    mode = "0755",    tags = ["tar"],)
+flatten_tar(    name = "aimdk_examples_bin_flatten_tar",    src = ":aimdk_examples_bin_tar",    prefix = "bin",)
+```
+
+## module代码相关
+
+```
+load("@integration//rules/utils:header_utils.bzl", "cc_library_with_top_header")
+package(default_visibility = ["//visibility:public"])
+cc_library(    name = "ik_module",    srcs = glob([        "*.cpp",    ]),    hdrs = glob([        "*.h",    ]),    includes = [".."],    deps = [        "@sdk//:libaimrt_comm",    ],)
+```
+
+## 单模块完整包相关
+
+BUILD
+
+```
+load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")load("@rules_pkg//pkg:mappings.bzl", "pkg_files")load("@integration//rules/utils:patchelf_tar.bzl", "patchelf_tar")
+package(default_visibility = ["//visibility:public"])
+pkg_tar(    name = "aimdk_examples_tar",    srcs = [    ],    extension = "tar",    mode = "0755",    strip_prefix = ".",    tags = ["tar"],    include_runfiles = True,    deps = [        "//config/aimdk_examples:aimdk_examples_config_tar",        "@integration//:all_plugins_tar",        "//src/app:aimdk_examples_bin_flatten_tar",        "//src/app:aimdk_examples_without_bin_tar",    ],)
+```
+
+编译后在bazel-bin中生成aimdk\_examples\_tar.tar包，包含模块运行所需binary及其依赖so、配置和脚本，解压后包结构： bazel-bin/aimdk\_examples\_tar
+
+```
+├── bin│   ├── aimdk_examples│   ├── aimrt_main│   ├── iox-roudi│   ├── ...│   ├── libiceoryx_binding_c.so│   ├── libiceoryx_hoofs.so│   └── ...├── config│   └── aimdk_examples│       ├── aimdk_examples_config.yaml│       ├── ...└── scripts    └── aimdk_examples        └── start_aimdk_examples.sh
+```
+
+在 aimdk\_examples 中提供统一的模块构建脚本 tools/build\_module.sh，用于本地编译和构建模块。
+
+```
+#!/bin/bashset -e
+# Display help information for script usageUsage() {    cat <<EOF    build_moudle.sh [options]    -t: build target module name    -c: clean the local bazel cache    -a: build with the arch type(x86_64, orin_aarch64), default is x86_64    -j: specify the number of concurrent jobs to run during the build process    -g: build with '--copt=-g'    -e: extra options    -h: help    e.g. build_module.sh -t aimdk_examples -a x86_64 -j 8 -g -e "--config=xxx --define=xxx=xxx"EOF    exit 1}
+# Parse command line arguments using getoptARGS=$(getopt -o a:chgt:j:e: --long arch:,clean_cache,help,debug,target:,jobs:,extra_options: -n "$0" -- "$@")if [ $? != 0 ]; then    Usagefi
+# Helper function to get formatted timestamp for loggingfunction get_time() {    local time=$(date "+%H:%M:%S")    echo "($time)"}
+# Process parsed argumentseval set -- "${ARGS}"echo $(get_time) INFO: formatted parameters=[$@]
+# Initialize default valuesARCH_TYPE="x86_64"BUILD_TARGET=""
+# Process command line optionswhile true; do    case "$1" in    -a | --arch)        echo "$(get_time) INFO: Building for arch type: $2"        ARCH_TYPE=${2}        shift 2        ;;    -j | --jobs)        echo "$(get_time) INFO: Building using jobs: $2"        JOBS_OPTIONS="--jobs=$2"        shift 2        ;;    -e | --extra_options)        echo "$(get_time) INFO: Building with extra options: $2"        EXTRA_OPTIONS=${2}        if [[ $EXTRA_OPTIONS == *"--config=source"* ]]; then            CONFIG_SOURCE="--config=source"        fi        shift 2        ;;    -g | --debug)        echo "$(get_time) INFO: Building in debug mode"        GDB_FLAG="--copt=-g --copt=-O0"        shift        ;;    -c | --clean_cache)        echo "$(get_time) INFO: Building with cleaning cache first"        CLEAN_CACHE_FLAG=true        shift        ;;    -t | --target)        echo "$(get_time) INFO: Build target"        BUILD_TARGET=${2}_tar        shift 2        ;;    --)        shift        break        ;;    -h | --help)        Usage        ;;    *)        Usage        ;;    esacdone
+# Validate required target parameterif [ -z "$BUILD_TARGET" ]; then    echo "$(get_time) ERROR: Target must be specified, please use -t parameter"    Usagefi
+# Main build function that executes bazel build commandbuild_module() {    target=$1    SHELL_FOLDER=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)    pushd "$SHELL_FOLDER"/../ || exit    set -x    bazel build \        ${COMPILER} \        ${GDB_FLAG} \        ${JOBS_OPTIONS} \        ${EXTRA_OPTIONS} \        "${target}"    set +x    popd || exit}
+# Configure compiler settings based on target architectureif [[ "x$ARCH_TYPE" == "xx86_64" ]]; then    COMPILER="--config=x86_64"elif [[ "x$ARCH_TYPE" == "xorin_aarch64" ]]; then    COMPILER="--config=orin_aarch64"else    echo "$(get_time) ERROR: Unsupported ARCH_TYPE for ${ARCH_TYPE}"    exit 1fi
+# Clean bazel cache if requestedif [ "${CLEAN_CACHE_FLAG}" == true ]; then    set -x    bazel clean --expunge || true    set +xfi
+build_module ${BUILD_TARGET}
+```
+
+脚本使用： build\_module.sh -t aimdk\_examples -a x86\_64 -j 8 -g -c -e “—config=xxx —define=xxx=xxx” 参数解释：
+
+-   \-t: 指定编译模块的名字, 必选
+-   \-a: 执行模块的架构类型，默认为x86\_64，可选值为：x86\_64和orin\_aarch64, 可选
+-   \-j: 指定编译使用的线程数，默认值为0,表示会自动根据当前PC负载动态调整线程数，可选
+-   \-g: 是否编译成调试版本，可选
+-   \-c: 编译前是否清除之前的编译缓存， 可选
+-   \-e: 可以指定额外的编译选型，如—config参数，—define参数等等
+
+在 aimdk\_examples 中提供统一的模块运行脚本 tools/run\_module.sh，用于在 AIMDE 环境中运行 x86 架构的模块。
+
+```
+#!/bin/bashset -e
+# Function to display usage informationUsage() {    cat <<EOF    run_module.sh [options]    -t: run target module name    -c: config file absolute path, default file is in bazel-bin/"\$module_name"_tar/config/"\$module_name"/running_"\$module_name"_cfg.yaml    -p: debug port    -g: run with debug mode    -h: help    e.g.: 1) run_module.sh -t aimdk_examples -c config/aimdk_examples/aimdk_examples_config.yamlEOF    exit 1}
+# Parse command line argumentsARGS=$(getopt -o t:c:p:gh --long target:,config:,port:,debug,help -n "$0" -- "$@")if [ $? != 0 ]; then    Usagefi
+# Get current timestamp for loggingfunction get_time() {    local time=$(date "+%H:%M:%S")    echo "($time)"}
+eval set -- "${ARGS}"echo $(get_time) INFO: formatted parameters=[$@]
+# Initialize variablesRUN_TARGET=""PORT=6215
+# Process command line optionswhile true; do    case "$1" in    -t | --target)        echo "$(get_time) INFO: Run target: $2"        RUN_TARGET=${2}        shift 2        ;;    -c | --config)        echo "$(get_time) INFO: Run with config: $2"        CONFIG_PATH=${2}        shift 2        ;;    -g | --debug)        echo "$(get_time) INFO: Run with debug mode"        DEBUG_FLAG=true        shift        ;;    -p | --port)        PORT=${2}        shift 2        ;;    --)        shift        break        ;;    -h | --help)        Usage        ;;    *)        Usage        ;;    esacdone
+# Validate required parametersif [ -z "$RUN_TARGET" ]; then    echo "$(get_time) ERROR: Target must be specified, please use -t parameter"    Usagefi
+# Store current directory and change to script locationSHELL_FOLDER=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)pushd "$SHELL_FOLDER"/../ || exit    # Setup paths and check target existence    MODULE_TARGET_TAR_PATH="bazel-bin/${RUN_TARGET}_tar.tar"    if [ ! -f "$MODULE_TARGET_TAR_PATH" ]; then        echo "$(get_time) ERROR: Target tar does not exist: $MODULE_TARGET_TAR_PATH, please run build_module.sh to build the target tar first"        exit 1    fi
+    # Prepare target directory and extract files    rm -rf bazel-bin/${RUN_TARGET}_tar || true    mkdir -p bazel-bin/${RUN_TARGET}_tar    tar -xvf "$MODULE_TARGET_TAR_PATH" -C bazel-bin/${RUN_TARGET}_tar
+    # Prepare execution command    EXEC_SHELL_SCRIPT_PATH="bazel-bin/${RUN_TARGET}_tar/scripts/${RUN_TARGET}/start_${RUN_TARGET}.sh"    chmod a+x ${EXEC_SHELL_SCRIPT_PATH}    EXEC_COMMAND="${EXEC_SHELL_SCRIPT_PATH}"
+    # Add optional parameters to command    if [ -n "$CONFIG_PATH" ]; then        EXEC_COMMAND+=" -c ${CONFIG_PATH}"    fi    if [ -n "$DEBUG_FLAG" ] && [ -n "$PORT" ]; then        EXEC_COMMAND+=" -g -p ${PORT}"    fi
+    # Execute the command    ${EXEC_COMMAND}popd || exit
+```
+
+脚本使用： run\_module.sh -t aimdk\_examples -c config/aimdk\_examples/aimdk\_examples\_config.yaml 参数解释：
+
+-   \-t: 指定编译模块的名字, 必选
+-   \-c: 指定配置文件的绝对路径，如何未指定，使用打包后默认的配置文件, 可选
+-   \-g: 是否启动调试模式，可选
+-   \-p：指定调试端口，默认值为6125， 可选
+
+## 编译单模块包
+
+针对目标芯片架构编译模块：
+
+```
+bash tools/build_module.sh -t aimdk_examples -a orin_aarch64  # ARM架构(Orin)# 或bash tools/build_module.sh -t aimdk_examples -a x86_64        # x86架构
+```
+
+## 部署到目标设备
+
+### 传输编译产物
+
+将编译生成的tar包传输至目标设备：
+
+```
+sshpass -p 1 scp \  -o UserKnownHostsFile=/dev/null \  -o StrictHostKeyChecking=no \  -o ConnectTimeout=120 \  -P 61120 \  /workspaces/aimde/aimdk_examples/bazel-bin/aimdk_examples_tar.tar \  agi@192.168.111.140:/agibot/data/home/agi/ggm/
+```
+
+### 登录设备并解压
+
+登录Orin板：
+
+```
+ssh agi@IP -p 61120
+```
+
+### 解压并清理安装包：
+
+```
+cd /agibot/data/home/agi/ggm/tar -xvf aimdk_examples_tar.tarrm -rf aimdk_examples_tar.tar
+```
+
+## 运行程序
+
+进入部署目录并启动服务：
+
+```
+cd /agibot/data/home/agi/ggm/bash scripts/aimdk_examples/start_aimdk_examples.sh
+```
+

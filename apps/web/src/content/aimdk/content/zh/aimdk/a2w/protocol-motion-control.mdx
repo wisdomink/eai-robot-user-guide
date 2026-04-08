@@ -1,0 +1,557 @@
+---
+title: 运动控制模块
+description: >-
+  本文档包含了运动控制模块（Motion Control, MC）包含的话题和服务的相关文档协议，以支持系统的运动控制功能。 本模块位于 x86
+  开发板上，http 后端监听的端口为 56322。 | 序号 | 动作名称 | 功能 | 详细说明 | 类型 | 可调用接口 | | --- | --- |
+  --- | --- | --- | --- | | 0 | DEFAULT | 默认模式 | 运控启动之后的默认action | | | …
+product: a2w
+slug:
+  - a2w
+  - protocol-motion-control
+route: /zh/a2w/protocol-motion-control
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/mc/readme'
+order: 130
+---
+# 运动控制模块
+
+本文档包含了运动控制模块（Motion Control, MC）包含的话题和服务的相关文档协议，以支持系统的运动控制功能。
+
+本模块位于 x86 开发板上，http 后端监听的端口为 56322。
+
+## 运动控制状态
+
+| 序号 | 动作名称 | 功能 | 详细说明 | 类型 | 可调用接口 |
+| --- | --- | --- | --- | --- | --- |
+| 0 | DEFAULT | 默认模式 | 运控启动之后的默认action |  |  |
+| 1 | GO\_HOME\_A2W | 复位到home模式 |  |  |  |
+| 2 | PLANNING\_MOVE | mc规划执行模式 |  |  |  |
+| 3 | ARM\_PANEL\_CONTROL | A2W全身关节控制模式 |  | 通过手动点按、长按控制关节运动和法兰末端笛卡尔控制运动 |  |
+| 4 | STOP | 安全停止模式 |  |  |  |
+
+## Channel 接口
+
+| 接口调用码 | 话题名 | 话题描述 | 订阅 or 发布 | 消息类型 | 备注 | 通信后端 |
+| --- | :-- | :-: | :-: | --- | --- | --- |
+| T2 | `/body_drive/arm_joint_command` | 手臂控制指令 | 发布 | [joint\_msg\_interface::msg::JointCommand](../hal/README.md#jointmsginterface-msg-jointcommand) | 需要传入 14 个关节角度值，前7个为左手，后7个为右手 | iceoryx |
+| T3 | `/body_drive/lift_joint_command` | 腰部升降控制指令 | 发布 | [joint\_msg\_interface::msg::JointCommand](../hal/README.md#jointmsginterface-msg-jointcommand) | 腰部升降控制指令，位置控制 | iceoryx |
+| T4 | `/body_drive/waist_joint_command` | 腰部俯仰控制指令 | 发布 | [joint\_msg\_interface::msg::JointCommand](../hal/README.md#jointmsginterface-msg-jointcommand) | 腰部俯仰控制指令，位置控制 | iceoryx |
+| T\* | `/body_drive/neck_joint_command` | 头部控制指令 | 发布 | [joint\_msg\_interface::msg::JointCommand](../hal/README.md#jointmsginterface-msg-jointcommand) | 头部控制指令，位置控制 | iceoryx |
+| T\* | `/body_drive/claw_joint_command` | 手爪控制指令 | 发布 | [aimdk::protocol::HandCommandChannel](../hal/README.md#aimdk-protocol-handcommandchannel) | 手爪控制指令, 主要为透传 | iceoryx |
+| T\* | `/body_drive/arm_joint_state` | 手臂关节状态 | 订阅 | [joint\_msg\_interface::msg::JointState](../hal/README.md#jointmsginterface-msg-jointstate) | position、velocity字段为有效值；  
+发布频率为 125 hz | iceoryx |
+| T\* | `/body_drive/lift_joint_state` | 腰部升降关节状态 | 订阅 | [joint\_msg\_interface::msg::JointState](../hal/README.md#jointmsginterface-msg-jointstate) | position、velocity字段为有效值； | iceoryx |
+| T\* | `/body_drive/waist_joint_state` | 腰部俯仰关节状态 | 订阅 | [joint\_msg\_interface::msg::JointState](../hal/README.md#jointmsginterface-msg-jointstate) | position、velocity字段为有效值； | iceoryx |
+| T\* | `/body_drive/claw_joint_state` | 手爪关节状态 | 订阅 | [aimdk::protocol::HandStateChannel](../hal/README.md#aimdk-protocol-handstatechannel) | 手爪关节状态，position、velocity、effort 字段为有效值； | iceoryx |
+| T\* | `/body_drive/arm_pose_state` | Jaka手臂6维力传感器状态 | 订阅 | [joint\_msg\_interface::msg::PoseStates](../hal/README.md##jointmsginterface-msg-posestates) | Jaka手臂6维力传感器状态，包含左右臂法兰末端6维力传感器数据 | ros2 |
+
+上肢关节控制的关节限位以及动态范围限制：
+
+| 关节索引 | 关节名称 | 最小角度（rad） | 最大角度（rad） | 最大速度绝对值（rad/s） | 最大加速度绝对值（rad/s²） |
+| --- | --- | --- | --- | --- | --- |
+| idx09 | 升降关节 | \-0.265 | 0.265 | 0.11 | 0.50 |
+| idx10 | 腰关节 | 0.053 | 2.33 | 1.35 | 1.396 |
+| idx11 | 头关节 | \-1.11 | 1.11 | 3.14 | 40.00 |
+| idx12 | 左臂 J1 | \-6.26 | 6.26 | 1.57 | 6.97 |
+| idx13 | 左臂 J2 | \-2.07 | 2.07 | 1.57 | 6.97 |
+| idx14 | 左臂 J3 | \-6.26 | 6.26 | 2.09 | 6.97 |
+| idx15 | 左臂 J4 | \-2.51 | 1.02 | 2.09 | 6.97 |
+| idx16 | 左臂 J5 | \-6.26 | 6.26 | 2.62 | 6.97 |
+| idx17 | 左臂 J6 | \-1.77 | 1.77 | 2.62 | 6.97 |
+| idx18 | 左臂 J7 | \-6.26 | 6.26 | 2.61 | 6.97 |
+| idx19 | 右臂 J1 | \-6.26 | 6.26 | 1.57 | 6.97 |
+| idx20 | 右臂 J2 | \-2.07 | 2.07 | 1.57 | 6.97 |
+| idx21 | 右臂 J3 | \-6.26 | 6.26 | 2.09 | 6.97 |
+| idx22 | 右臂 J4 | \-2.51 | 1.02 | 2.09 | 6.97 |
+| idx23 | 右臂 J5 | \-6.26 | 6.26 | 2.62 | 6.97 |
+| idx24 | 右臂 J6 | \-1.77 | 1.77 | 2.62 | 6.97 |
+| idx25 | 右臂 J7 | \-6.26 | 6.26 | 2.62 | 6.97 |
+
+## RPC 接口
+
+考虑目前软件日志以及网络资源占用问题，所有 RPC 服务接口建议以 1Hz 及以下的频率调用。
+
+SetAction/GetAction 操作规范：
+
+-   SetAction 接口为异步接口，调用后会立即返回，返回成功不代表 Action 切换完成，需要通过 GetAction 接口轮询确认 Action 切换完成后，方可进行下一步操作
+-   GetAction 轮询间隔建议设置为1秒（避免高频RPC调用），如认为 1s 延迟过大，可设置为 500ms，更小间隔不推荐
+
+| 接口调用码 | 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| --- | :-- | :-: | --- | --- | --- | --- |
+| S\* | `pb:/aimdk.protocol.McActionService/SetAction` | 设置Action | [aimdk::protocol::McActionRequest](#aimdk-protocol-mcactionrequest) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McActionService/GetAction` | 获取Action | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::McActionResponse](#aimdk-protocol-mcactionresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McActionService/GetAvailableActions` | 获取可用Action列表 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::AvailableActionsResponse](#aimdk-protocol-availableactionsresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McActionService/GetAvailableCommands` | 获取Action切换命令 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::AvailableCommandResponse](#aimdk-protocol-availablecommandresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McDataService/GetTaskState` | 获取任务状态 | [aimdk::protocol::CommonTaskRequest](../common/README.md#aimdk-protocol-commontaskrequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McDataService/GetJointState` | 获取关节状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::McJointStatesResponse](#aimdk-protocol-mcjointstatesresponse) | 获取当前Task状态 | http |
+| S\* | `pb:/aimdk.protocol.McDataService/GetJointAngle` | 获取关节角度 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::McJointAnglesResponse](#aimdk-protocol-mcjointanglesresponse) | 获取所有主动active关节角度信息 | http |
+| S\* | `pb:/aimdk.protocol.McMotionService/SetHandCommand` | 设置手部命令 | [aimdk::protocol::HandCommandRequest](#aimdk-protocol-handcommandrequest) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) | 暂时可以通过HalHandService设置命令 | http |
+| S\* | `pb:/aimdk.protocol.McDataService/GetHandState` | 获取灵巧手状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::HandStateResponse](#aimdk-protocol-handstateresponse) | 获取灵巧手状态 | http |
+| S\* | `pb:/aimdk.protocol.McMotionService/SetNeckCommand` | 设置头部命令 | [aimdk::protocol::NeckCommandRequest](#aimdk-protocol-neckcommandrequest) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) |  | http |
+| S\* | `pb:/aimdk.protocol.McDataService/GetNeckState` | 获取头部状态 | [aimdk::protocol::CommonRequest](../common/README.md#aimdk-protocol-commonrequest) | [aimdk::protocol::NeckStateResponse](#aimdk-protocol-neckstateresponse) |  | http |
+| S1 | `pb:/aimdk.protocol.McMotionService/PlanningMove` | 上肢规划运动 | [aimdk::protocol::PlanningMoveRequest](#aimdk-protocol-planningmoverequest) | [aimdk::protocol::CommonTaskResponse](../common/README.md#aimdk-protocol-commontaskresponse) | 给上肢发送目标点，机器人自行规划路径并执行；  
+返回的任务ID，可用于查询任务状态；  
+有自碰撞检测，对环境的碰撞检测依赖于传感器数据，不能完全保证不与环境发生碰撞；  
+使用时必须指定需要运动的手臂和对应的位姿 | http |
+| S\* | `pb:/aimdk.protocol.McMotionService/ActiveMotionControl` | 主动动作暂停/继续 | [aimdk::protocol::ActiveMotionControlRequest](#aimdk-protocol-neckcommandrequest) | [aimdk::protocol::CommonResponse](../common/README.md#aimdk-protocol-commonresponse) | mc主动动作暂停/继续rpc, 应用于task动作暂停/继续； | http |
+
+## 上肢规划控制接口使用说明
+
+### 功能
+
+通过rpc发给机器人期望的上肢目标点，目标点表是在机器人的base\_link基坐标系下，左右臂法兰中心SE3位姿; 机器人会根据当前机器人状态进行规划，上肢包含1个头部关节，两个腰部关节，14个双臂关节。
+
+PLANNING\_MOVE主要负责上肢臂+腰的规划任务，任务类型包括：
+
+1.  SE3规划：从当前state让末端运动到指定位姿，解水后进行Joint规划
+2.  Joint规划：从当前state运动到指定关节角
+3.  Grab：输入抓取物体信息，保存物体和左右未端的相对位置，将物体加入碰撞模型
+4.  SE3闭链规划：前置Grab，根据输入的抓取物体位姿，计算期望末端位姿，解ik后进行Joint闭链规划
+5.  Jointi闭链规划：规划在保持末端相对位姿不变的条件下到目标状态的运动
+6.  LinearMove规划：与SE3规划类似，但需要保证末端在笛卡尔空间下是线性运动到期望位置
+
+### 操作步骤
+
+1.  切换到PLANNING\_MOVE Action
+    
+2.  发送目标位置
+    
+    发送方式为rpc服务，接口为 `pb:/aimdk.protocol.McMotionService/PlanningMove`, 具体示例请参考examples/mc/planning\_move\_demo.py。
+    
+3.  查询任务状态（可选）
+    
+    参见get\_task\_state.sh，调用rpc接口后会返回当前执行的任务状态，常见返回值和含义如下：
+    
+    | 序号 | 状态 | 描述 |
+    | :-- | :-- | :-: |
+    | 0 | CommonState\_UNKNOWN | 任务不存在 |
+    | 1 | CommonState\_SUCCESS | 规划运动成功完成 |
+    | 2 | CommonState\_FAILURE | 规划运动成功失败 |
+    | 3 | CommonState\_ABORTED | 当前状态不能进行规划运动，任务被取消 |
+    | 4 | CommonState\_PENDING | 前序任务规划或执行中，当前任务处于等待状态 |
+    | 5 | CommonState\_RUNNING | 任务规划或执行中 |
+    
+    若在轮巡查询任务状态时，已经返回了状态量1，2，3中任意一个，标志当前任务已经结束，运控将不再保存任务信息，所以如果后续继续查询同一任务，则会返回状态0，表示任务不存在。
+    
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::McActionStatus`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| McActionStatus\_UNKNOWN | 0 | 未知状态 |
+| McActionStatus\_PREPARE | 100 | 准备中 |
+| McActionStatus\_RUNNING | 200 | 运行中 |
+| McActionStatus\_DONE | 300 | 完成 |
+
+### `aimdk::protocol::McActionInfo`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| current\_action | [aimdk::protocol::McAction](#aimdk-protocol-mcaction) | 当前运行的Action |
+| ext\_action | string | 扩展Action |
+| status | [aimdk::protocol::McActionStatus](#aimdk-protocol-mcactionstatus) | Action状态 |
+
+### `aimdk::protocol::McActionCommand`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| action | [aimdk::protocol::McAction](#aimdk-protocol-mcaction) | Action |
+| ext\_action | string | 扩展Action |
+
+### `aimdk::protocol::McActionRequest`
+
+机器人Action命令请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::McActionCommand](#aimdk-protocol-mcactioncommand) |  |
+
+### `aimdk::protocol::McActionResponse`
+
+机器人Action命令响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| info | [aimdk::protocol::McActionInfo](#aimdk-protocol-mcactioninfo) |  |
+
+### `aimdk::protocol::AvailableActionsResponse`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| actions | string\[\] |  |
+
+### `aimdk::protocol::AvailableCommandResponse`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| commands | [aimdk::protocol::McActionCommand](#aimdk-protocol-mcactioncommand)\[\] |  |
+
+### `aimdk::protocol::McJointStatesResponse`
+
+运控公共状态响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| states | [aimdk::protocol::JointState](../common/README.md#aimdk-protocol-jointstate)\[\] | 关节状态，包括角度和速度、扭矩 |
+
+### `aimdk::protocol::McJointPosition`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 关节名称 |
+| position | double | 关节角度 |
+
+### `aimdk::protocol::McJointAnglesResponse`
+
+运控公共角度响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| joints | [aimdk::protocol::McJointPosition](#aimdk-protocol-mcjointposition)\[\] | 关节角度，单位：弧度 or m |
+
+### `aimdk::protocol::HandCommandRequest`
+
+设置机器人手部控制请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| data | [aimdk::protocol::HandCommand](#aimdk-protocol-handcommand) | 手部控制 |
+
+### `aimdk::protocol::HandCommand`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| left | [aimdk::protocol::SingleHandCommand](#aimdk-protocol-singlehandcommand) | 左手指令 |
+| right | [aimdk::protocol::SingleHandCommand](#aimdk-protocol-singlehandcommand) | 右手指令 |
+
+### `aimdk::protocol::SingleHandCommand`
+
+A2W 机器人应使用 agi\_hand。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| hand | oneof &#123;InspireHand inspire&#125; &#123;ClawHand claw&#125; &#123;AgiClawHandCommand agi\_claw\_cmd&#125; &#123;AgibotHandState agi\_hand&#125; |  |
+
+### `aimdk::protocol::AgibotHandState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| finger | [aimdk::protocol::FingerState](#aimdk-protocol-fingerstate) | 手指 |
+
+### `aimdk::protocol::FingerState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| pos | [aimdk::protocol::FingerPos](#aimdk-protocol-fingerpos) |  |
+| toq | [aimdk::protocol::FingerToq](#aimdk-protocol-fingertoq) |  |
+
+### `aimdk::protocol::FingerPos`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| thumb\_pos\_0 | int32 | 拇指第一关节，取值范围：0-2000 |
+| thumb\_pos\_1 | int32 | 拇指第二关节，取值范围：0-2000 |
+| index\_pos | int32 | 食指，取值范围：0-2000 |
+| middle\_pos | int32 | 中指，取值范围：0-2000 |
+| ring\_pos | int32 | 无名指，取值范围：0-2000 |
+| pinky\_pos | int32 | 小指，取值范围：0-2000 |
+
+### `aimdk::protocol::FingerToq`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| thumb\_toq\_0 | int32 | 拇指第一关节，取值范围：0-5700（5700代表57N） |
+| thumb\_toq\_1 | int32 | 拇指第二关节，取值范围：0-5700（5700代表57N） |
+| index\_toq | int32 | 食指，取值范围：0-5700（5700代表57N） |
+| middle\_toq | int32 | 中指，取值范围：0-5700（5700代表57N） |
+| ring\_toq | int32 | 无名指，取值范围：0-5700（5700代表57N） |
+| pinky\_toq | int32 | 小指，取值范围：0-5700（5700代表57N） |
+
+### `aimdk::protocol::HandStateResponse`
+
+获取机器人手部状态响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::HandState](#aimdk-protocol-handstate) | 手部状态 |
+
+### `aimdk::protocol::HandState`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| left | [aimdk::protocol::SingleHandState](#aimdk-protocol-singlehandstate) | 左手状态 |
+| right | [aimdk::protocol::SingleHandState](#aimdk-protocol-singlehandstate) | 右手状态 |
+
+### `aimdk::protocol::SingleHandState`
+
+A2W 机器人应使用 agi\_hand。
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| hand | oneof &#123;InspireHand inspire&#125; &#123;ClawHand claw&#125; &#123;AgiClawHandState agi\_claw\_state&#125; &#123;AgibotHandCommand agi\_hand&#125; |  |
+
+### `aimdk::protocol::AgibotHandCommand`
+
+Agibot手部
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| finger | [aimdk::protocol::FingerCommand](#aimdk-protocol-fingercommand) | 手指 |
+
+### `aimdk::protocol::FingerCommand`
+
+手指
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| pos | [aimdk::protocol::FingerPos](#aimdk-protocol-fingerpos) |  |
+| toq | [aimdk::protocol::FingerToq](#aimdk-protocol-fingertoq) |  |
+
+### `aimdk::protocol::NeckState`
+
+脖子关节状态
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| shake | [aimdk::protocol::JointState](../common/README.md#aimdk-protocol-jointstate) |  |
+| nod | [aimdk::protocol::JointState](../common/README.md#aimdk-protocol-jointstate) |  |
+
+### `aimdk::protocol::NeckCommand`
+
+脖子关节控制指令
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| shake | [aimdk::protocol::JointCommand](../common/README.md#aimdk-protocol-jointcommand) |  |
+| nod | [aimdk::protocol::JointCommand](../common/README.md#aimdk-protocol-jointcommand) |  |
+
+### `aimdk::protocol::NeckStateResponse`
+
+获取机器人脖子状态响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::NeckState](#aimdk-protocol-neckstate) | 脖子状态 |
+
+### `aimdk::protocol::NeckCommandRequest`
+
+设置机器人脖子控制请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| data | [aimdk::protocol::NeckCommand](#aimdk-protocol-neckcommand) | 脖子控制 |
+
+### `aimdk::protocol::PlanningMoveRequest`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| world\_model | [aimdk::protocol::McPlanningWorldModel](#aimdk-protocol-mcplanningworldmodel) |  |
+| group | [aimdk::protocol::McPlanningGroup](#aimdk-protocol-mcplanninggroup) | 规划组 |
+| mode | [aimdk::protocol::McPlanningMode](#aimdk-protocol-mcplanningmode) | 模式 |
+| target | [aimdk::protocol::PlanningTarget](#aimdk-protocol-planningtarget) | 目标位置 |
+| targets | [aimdk::protocol::PlanningTarget](#aimdk-protocol-planningtarget)\[\] | 多目标位置 |
+| reference | [aimdk::protocol::PlanningReference](#aimdk-protocol-planningreference) | 参考位置 |
+| obj\_info | [aimdk::protocol::PlanningMoveObjectInfo](#aimdk-protocol-planningmoveobjectinfo) |  |
+| param | [aimdk::protocol::MotionParam](#aimdk-protocol-motionparam) | 运动参数 |
+
+### `aimdk::protocol::McPlanningMode`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| McPlanningMode\_DEFAULT | 0 | 默认避障规划。left\_target right\_target |
+| McPlanningMode\_CLOSURE | 100 | 闭链规划，抓物体后调用，obj\_center |
+| McPlanningMode\_GRAB | 200 | 抓取，obj\_center |
+| McPlanningMode\_PLACE | 300 | 放置 |
+| McPlanningMode\_LINEAR\_MOVE | 400 | 线性运动 |
+
+### `aimdk::protocol::PlanningMoveObjectInfo`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string |  |
+| pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) |  |
+| type | [aimdk::protocol::PlanningMoveObjectInfo::GeometryType](#aimdk-protocol-planningmoveobjectinfo-geometrytype) |  |
+| parent\_frame | string |  |
+
+### `aimdk::protocol::PlanningMoveObjectInfo::GeometryType`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| UNKNOWN | 0 |  |
+| BOX | 1 |  |
+| CYLINDER | 2 |  |
+| SPHERE | 3 |  |
+
+### `aimdk::protocol::PlanningTarget`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| type | [aimdk::protocol::PlanningTarget::Type](#aimdk-protocol-planningtarget-type) |  |
+| left | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) |  |
+| right | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) |  |
+| joints | double\[\] |  |
+
+### `aimdk::protocol::PlanningTarget::Type`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| UNKNOWN | 0 |  |
+| SE3 | 1 |  |
+| JOINT | 2 |  |
+| EE | 3 |  |
+
+### `aimdk::protocol::PlanningReference`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| joint\_position | double\[\] | 参考的关节角度，数量需要与group的关节数量一致 |
+| trajectory | [aimdk::protocol::ScalarTrajectory](../common/README.md#aimdk-protocol-scalartrajectory) |  |
+
+### `aimdk::protocol::McPlanningGroup`
+
+规划组
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| McPlanningGroup\_UNKNOWN | 0 | 未知 |
+| McPlanningGroup\_LEFT\_ARM | 1 | 左臂 |
+| McPlanningGroup\_LEFT\_ARM\_WAIST | 2 | 左臂腰部 |
+| McPlanningGroup\_LEFT\_ARM\_WAIST\_WHEEL | 3 | 左臂腰部轮子 |
+| McPlanningGroup\_RIGHT\_ARM | 4 | 右臂 |
+| McPlanningGroup\_RIGHT\_ARM\_WAIST | 5 | 右臂腰部 |
+| McPlanningGroup\_RIGHT\_ARM\_WAIST\_WHEEL | 6 | 右臂腰部轮子 |
+| McPlanningGroup\_DUAL\_ARM | 7 | 双臂 |
+| McPlanningGroup\_DUAL\_ARM\_WAIST | 8 | 双臂腰部 |
+| McPlanningGroup\_DUAL\_ARM\_WAIST\_WHEEL | 9 | 双臂腰部轮子 |
+| McPlanningGroup\_DUAL\_ARM\_WAIST\_HEAD | 10 | 双臂腰部头部 |
+| McPlanningGroup\_WAIST\_LIFT | 11 | 腰部升降 |
+| McPlanningGroup\_WAIST\_PITCH | 12 | 腰部俯仰 |
+| McPlanningGroup\_HEAD | 13 | 头部 |
+
+### `aimdk::protocol::McPlanningMode`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| McPlanningMode\_DEFAULT | 0 | 默认避障规划。left\_target right\_target |
+| McPlanningMode\_CLOSURE | 100 | 闭链规划，抓物体后调用，obj\_center |
+| McPlanningMode\_GRAB | 200 | 抓取，obj\_center |
+| McPlanningMode\_PLACE | 300 | 放置 |
+| McPlanningMode\_LINEAR\_MOVE | 400 | 线性运动 |
+
+### `aimdk::protocol::McPlanningWorldModel`
+
+任务规划世界模型
+
+本类型无字段
+
+### `aimdk::protocol::McPlanningScene`
+
+任务规划场景
+
+本类型无字段
+
+### `aimdk::protocol::MotionParam`
+
+运动参数
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| velocity\_scale | double |  |
+| acceleration\_scale | double |  |
+
+### `aimdk::protocol::McMotionService`
+
+运动控制服务
+
+运动控制模块的主要RPC服务接口，包含手部控制、头部控制和路径规划等功能。
+
+### `aimdk::protocol::McActionService`
+
+Action控制服务
+
+提供机器人Action状态的设置、获取和查询功能。
+
+### `aimdk::protocol::McDataService`
+
+数据查询服务
+
+提供机器人各种状态数据的查询接口，包括关节状态、任务状态等。
+
+### `aimdk::protocol::McServoService`
+
+伺服控制服务
+
+提供机器人关节伺服控制相关的接口。
+
+### `aimdk::protocol::McSimulationService`
+
+仿真控制服务
+
+提供仿真环境下的机器人控制接口。
+
+### `aimdk::protocol::McSafetyService`
+
+安全控制服务
+
+提供机器人安全相关的控制和监控接口。
+
+### `aimdk::protocol::McRemoteService`
+
+远程控制服务
+
+提供机器人远程控制相关的接口。
+
+### `aimdk::protocol::McForceService`
+
+力控服务
+
+提供机器人力控制相关的接口。
+
+### `aimdk::protocol::McKinematicsService`
+
+运动学服务
+
+提供机器人运动学计算相关的接口。
+
+### `aimdk::protocol::McBaseService`
+
+基础服务
+
+提供机器人基础控制功能的接口。
+
+### `aimdk::protocol::McTestService`
+
+测试服务
+
+提供测试和调试相关的接口。
+
+### `aimdk::protocol::McToolsService`
+
+工具服务
+
+提供各种工具和辅助功能的接口。
+
+## 运动控制示例脚本
+
+运动控制模块接口提供了多种运动控制功能，为此提供了一些示例脚本，位于 AimDK 包中 examples/mc 路径下，可以参考这些脚本进行运动控制相关的开发，一些脚本的说明如下：
+
+| 名称 | 功能 | 备注 |
+| --- | --- | --- |
+| planning\_move\_demo.py | 上肢规划demo | 包含了mc的不同规划接口 |
+| set\_action.py | 设置 Action | 按照状态机切换机器人动作 |
+| get\_joint\_state.py | 获取上肢关节state数据 |  |
+| get\_tf.py | 通过rpc查询TF |  |
+| active\_motion\_control.py | mc主动动作暂停/继续rpc, 应用于task动作暂停/继续 |  |
+

@@ -1,0 +1,123 @@
+---
+title: Untitled
+description: >-
+  机器人本身提供了基础的故障诊断和健康监测的能力，能够对一些基本的异常和故障进行监控，例如关节过温、传感器失效、系统占用持续过高、电池电量过低等。
+  针对故障诊断有两个基本概念，分别为 Exception 故障和 Alert 告警，Exception 是指某个具体的故障，Alert 则是
+  Exception 在 AimMaster 客户端展示的用户友好的文案提示。例如，“IMU 消息严重延迟”故障，对应“系统异常”告警。Exception …
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - diagnostics
+route: /zh/a2/v2-0/dev-guide/diagnostics
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-10-troubleshooting'
+order: 29
+---
+### 7.10.1 整体介绍
+
+机器人本身提供了基础的故障诊断和健康监测的能力，能够对一些基本的异常和故障进行监控，例如关节过温、传感器失效、系统占用持续过高、电池电量过低等。
+
+针对故障诊断有两个基本概念，分别为 Exception 故障和 Alert 告警，Exception 是指某个具体的故障，Alert 则是 Exception 在 AimMaster 客户端展示的用户友好的文案提示。例如，“IMU 消息严重延迟”故障，对应“系统异常”告警。Exception 跟 Alert 通常为一对一的关系，即一个故障对应一个告警码。不同告警码可能有相同的告警文案。
+
+如果需要持续监控机器人的异常状态，建议每隔一段时间查询一次当前的告警列表（频率不要太高，推荐 0.2 Hz 及以下的频率）。
+
+全量故障和告警可在 orin 机上 /agibot/software/v0/config/hds/database/exception\_info.yaml 文件中找到。
+
+### 7.10.2 获取当前告警列表 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HDSService/GetAlertList` |
+| --- | --- |
+| 功能概述 | 获取当前告警列表 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:50587/rpc/aimdk.protocol.HDSService/GetAlertList |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "data": {
+    "alerts": [
+      {
+        "id": "c39f6ccc-85d9-4976-a2e9-08f2906cc237",
+        "appeared_timestamp": "1762933137153",
+        "disappeared_timestamp": "0",
+        "alert_code": "A2000003",
+        "state": "AlertState_ACTIVE",
+        "description": "急停拍下",
+        "level": "AlertLevel_H5_STATUS",
+        "alert_text": {
+          "zh_CN": "急停拍下",
+          "en_US": "Emergency Stop Triggered"
+        },
+        "alert_module": {
+          "zh_CN": "monitor",
+          "en_US": "健康管理HDS"
+        }
+      }
+    ]
+  }
+}
+```
+
+-   id: 本条告警 id
+    
+-   appeared\_timestamp: 告警出现的时间戳
+    
+-   disappeared\_timestamp: 告警消失的时间戳
+    
+-   alert\_code: 告警码
+    
+-   state: 告警状态
+    
+    -   AlertState\_UNDEFINED: 未知
+    -   AlertState\_ACTIVE: 告警中
+    -   AlertState\_CLEARED: 已清除
+-   description: 告警描述
+    
+-   level: 告警等级
+    
+    -   AlertLevel\_UNDEFINED: 无告警
+    -   AlertLevel\_H1\_FATAL: 机器人发生不可逆异常，无法继续工作
+    -   AlertLevel\_H2\_CRITICAL: 机器人发生故障，有摔倒风险
+    -   AlertLevel\_H2\_PERMANENT: 机器人发生不可逆异常，部分功能已经停用
+    -   AlertLevel\_H3\_ERROR: 机器人发生故障，有摔倒风险
+    -   AlertLevel\_H3\_PERMANENT: 机器人发生不可逆异常，影响部分功能体验
+    -   AlertLevel\_H4\_WARNING: 机器人发生故障，影响部分功能体验
+    -   AlertLevel\_H4\_EVENT: 机器人状态不佳，有摔倒风险
+    -   AlertLevel\_H5\_EVENT: 机器人状态不佳，影响部分功能体验
+    -   AlertLevel\_H5\_TRIVIAL: 机器人发生故障，可能影响部分功能体验
+    -   AlertLevel\_H5\_STATUS: 不提示
+    -   AlertLevel\_H6\_RESERVE: 灰度发布
+    -   AlertLevel\_H7\_EVENT: 正常功能
+    -   AlertLevel\_H7\_DELETE: 非故障事件
+-   alert\_text: 客户端告警文案，支持多语言
+    
+-   alert\_module: 故障上报模块，支持多语言
+    
+
+ |
+| 示例脚本 | examples/hds/get\_alert\_list.sh |
+| 备注 |  |
+
+### 7.10.3 其他健康诊断接口
+
+除上述 `GetAlertList` 接口外，还有如下接口开放
+
+1.  `GetTotalAlertList` ：获取系统中所有告警，包含历史信息
+    
+2.  `GetAlertCount`：获取系统中当前存在的所有告警个数
+    
+3.  `GetExceptionEvent`：获取系统中的故障事件
+    
+
+但以上接口获取信息过于冗杂或使用不方便，推荐仅使用 `GetAlertList` 接口进行基本告警信息的获取操作，以上各个开放接口均有示例位于 examples/hds 目录下，不详细展示其出入参等。
+

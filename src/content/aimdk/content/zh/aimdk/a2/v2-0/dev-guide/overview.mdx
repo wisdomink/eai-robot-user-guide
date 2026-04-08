@@ -1,0 +1,184 @@
+---
+title: 1. A2 旗舰款概述
+description: >-
+  ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FbAd0FXFA.png&w=2262&h=1814&f=webp)
+  | **一级分类** | **二级分类** | **条目** | **具体内容** | | --- | --- | --- | --- | |
+  **产品基础信息** | | 身高 | 169cm | | | | 尺寸 | 169(H)\*75…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - overview
+route: /zh/a2/v2-0/dev-guide/overview
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/01-a2_overview'
+order: 10
+---
+# 1. A2 旗舰款概述
+
+## 1.1 部件说明
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FbAd0FXFA.png&w=2262&h=1814&f=webp)
+
+## 1.2 机器人规格参数
+
+| **一级分类** | **二级分类** | **条目** | **具体内容** |
+| --- | --- | --- | --- |
+| **产品基础信息** |  | 身高 | 169cm |
+|  |  | 尺寸 | 169(H)\*75(W)\*30(L)cm |
+|  |  | 净重 | ≈69kg |
+|  |  | 主动自由度 | 双臂7\*2dof、双腿6\*2dof、头部2dof、灵巧手6\*2dof |
+| **产品特性** | **电气性能** | 续航 | 整机力控站立+语音播报的续航时间：约3h机器在平整地面直腿行走的续航时间：约1.5h |
+|  |  | 电池容量 | 14.4Ah |
+|  |  | 充电时间 | 2h |
+|  |  | 充电功率 | ≤500W |
+|  |  | 充电电压 | 48V DC |
+|  | **环境适应性** | 工作温湿度 | 0 ~ 40℃，相对湿度10% ~ 90%，无结露 |
+|  |  | 存储温湿度 | \-20℃ ~ 70℃，相对湿度10% ~ 90%，无结露 |
+|  |  | IP等级 | 关节模组：IP5X |
+|  | **场地适应性** | 最小通过宽度 | 目前本体遥控通过最小宽度>1m，导航通过最小宽度>2m |
+|  |  | 最大越障高度 | 20mm |
+|  |  | 最大运行坡度 | 8%（角度4.57度） |
+|  | **安全性** | 手臂碰撞感知 | 支持 |
+|  |  | 最大避障感知距离 | 5m |
+|  |  | 最小避障感知高度 | 30cm |
+|  | **操作与交互** | 遥控操作 | 无线遥控器 |
+|  |  | 交互屏 | 面部交互屏具备表情显示功能 模块整体尺寸：105.50 × 67.20 × 3.0 mm（包括边框） 实际显示区域：95.04 × 53.86 mm 屏幕尺寸: 4.3 英寸 屏幕分辨率：800 × 480 像素 亮度：500 cd/m² 对比度：典型值 1500:1，最小值 1000:1 |
+|  |  | 麦克风 | 阵列麦克风用于采集周围声音，用于语音交互，参数如下：灵敏度：-38dbv/Pa信噪比：65dB |
+|  |  | 扬声器 | 双5W |
+|  |  | 指示灯 | 多色彩氛围灯 |
+| **产品能力** | **感知能力** | 环境感知 | 激光雷达：用于采集周围信息，用于建图导航，参数如下：量程：0.2 - 40 m @ 10% 反射率，0.2 - 70 m @ 80% 反射率FOV：H：360, V：-7～52测距误差：2 cm @ 10 mRGBD摄像头(头部)用于目标检测，参数如下：深度图分辨率：最高1280x720，640x480深度检测范围：0.3 ~ 10 mFOV：HFOV：65° ± 2°，VFOV：40° ± 1°RGB摄像头(胸部)用于目标检测，参数如下：FOV：H196V154分辨率：1920Hx1536VRGBD摄像头(裆部)用于目标检测，参数如下：深度图分辨率：640 x 400@5/10/15fps深度检测范围：常规能级模式 0.15-3m，高能级模式 0.15-5mFOV：HFOV：RGB FOV：16:9：H86° V55° 鱼眼相机(胸口左侧/右侧)用于前向感知，参数如下：FOV：H196V154分辨率：1920Hx1536 V |
+|  | **导航能力** | 定位精度 | ±10cm , ±10° |
+|  |  | 导航避障 | 支持实时自主导航避障 |
+|  | **移动能力** | 最大移动速度 | 1.2m/s |
+|  |  | 移动模式 | 支持前进、左转、右转 |
+|  | **物联能力** | 通讯协议 | TCP、IP |
+|  |  | 通讯模块 | WiFi、蜂窝网络 |
+|  | **手臂典型参数** | 灵巧手递送能力 | 抓握重量（手心向下）：&lt;3kg 勾握重量（手心向上）：&lt;8kg |
+|  |  | 整机（带灵巧手）手臂最大抓取重物 | 2kg |
+|  |  | 末端线速度 | 1m/s |
+|  |  | 手臂活动空间 | J1(Shoulder pitch）: ±170° |
+|  |  |  | J2(Shoulder roll): -30°~95° |
+|  |  |  | J3(Shoulder yaw): ±170° |
+|  |  |  | J4(Elbow pitch): -1°~118° |
+|  |  |  | J5(Wrist roll): ±170° |
+|  |  |  | J6(Wrist pitch): ±45° |
+|  |  |  | J7(Wrist yaw): ±30° |
+|  | **腿部典型参数** | 腿部活动空间（存在一定偏差） | J1(Hip roll):-37~40° |
+|  |  |  | J2(Hip yaw): ±75° |
+|  |  |  | J3(Hip pitch): -50°~110° |
+|  |  |  | J4(Knee pitch): -5°~140° |
+|  |  |  | J5(Ankle pitch): -30°~52° |
+|  |  |  | J6(Ankle roll): ±28° |
+|  | **头部典型参数** | 头部活动空间 | 俯仰关节: ±23° |
+|  |  |  | 旋转关节: ±45° |
+
+## 1.3 工控机规格参数
+
+A2 旗舰款机器人预装两块上位机开发板，两块开发板之间通过以太网直连通信，其中一块为小脑运控所在开发板，该开发板不允许二开；另一块为大脑开发板，使用 Nvidia Jetson AGX Orin 64 GB，规格参数可以查阅 [Nvidia 官方说明](https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/)。
+
+## 1.4 整机工作空间
+
+以腕部关节中心点计算
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FrX_ZN62Y.png&w=1024&h=1280&f=webp)
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBiIwlz1e.png&w=1024&h=1280&f=webp)
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDWGSrrXL.png&w=1024&h=1280&f=webp)
+
+## 1.5 网络拓扑
+
+A2 机器人有两种不同硬件机型，供应商和硬件设计有所不同，所以网络拓扑也有所不同，这里 称之为 T3 款和 P1 款。
+
+实机可以通过 ip a 指令查看网卡名称来确定为哪一款。
+
+### 1.5.1 T3 款
+
+硬件架构框图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FB0ye6HiK.png&w=1562&h=821&f=webp)
+
+软件网络拓扑图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2Fry07CMXE.png&w=1549&h=712&f=webp)
+
+其中
+
+-   左 debug 网口为 orin 调试网口，固定 ip 为 192.168.2.50，右 debug 网口为 x86 调试网口，使用 dhcp 模式。
+
+### 1.5.2 P1 款
+
+硬件架构图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBHKeT73f.png&w=1823&h=1014&f=webp)
+
+软件网络拓扑图
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FYtPzdv1d.png&w=1756&h=751&f=webp)
+
+其中
+
+-   左 debug 网口为 orin 调试网口，固定 ip 为 192.168.2.50，右 debug 网口为 x86 调试网口，使用 dhcp 模式。
+
+### 1.5.3 网络 NAT 配置
+
+自机上软件 V1.2 版本起，由于硬件和软件架构原因，机器人默认网络策略调整为 ORIN 自身 WiFi 禁用，转为使用 x86 WiFi NAT 上网，策略详情如下：
+
+1.  X86 WiFi 开启时，ORIN 模块上网默认走 192.168.100.1 网关流向 X86 NAT 上网。
+    
+2.  X86 WiFi 关闭后，ORIN 对外上网流量默认走 5G 模块，此时若 5G 模块未插卡或无网络，则无法连接互联网
+    
+
+这样的网络策略随之带来了一个用户访问 ORIN 上服务无法直连的问题，为此我们提供了两种解决方案
+
+1.  可以通过连接 ORIN 的 AP 热点，默认密码可在 AimDK 包中查看 password.md 文件，此时可以直接访问 ORIN 热点 IP
+    
+2.  可以通过在 X86 上配置端口转发，通过访问 X86 对应端口来转发到 ORIN 对应端口，相应配置文件位于 X86 上 /opt/orin\_use\_x86\_wifi/x86\_cfg.sh，其中转发条目示例如下（不同机型网卡名可能有所不同，但原理类似）：
+    
+    Terminal window
+    
+    ```
+    sudo iptables -t nat -A PREROUTING -i wifi_x86 -p tcp --dport 51056 -j DNAT --to-destination 192.168.100.110:51056sudo iptables -t nat -A POSTROUTING -d 192.168.100.110 -p tcp --dport 51056 -j SNAT --to-source 192.168.100.100
+    ```
+    
+    可以通过添加新的转发条目，修改转发端口和目标端口来支持更多端口转发。
+    
+
+## 1.6 相机视角
+
+A2 旗舰款头部和腰部搭载 RGB-D 相机，胸部搭载鱼眼相机，具体位置可以参考本文档概述中的部件说明。
+
+1.  FOV 示意图
+    
+    侧视图下头部/腰部 RGB-D 相机 FOV 示意图：
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBuhAQI1q.jpg&w=616&h=680&f=webp)
+    
+    正视图下头部/腰部 RGB-D 相机 FOV 示意图：
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBqdOrSIN.jpg&w=744&h=616&f=webp)
+    
+    俯视图下头部/腰部 RGB-D 相机和胸部鱼眼相机的 FOV 示意图
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCApBoly2.jpg&w=657&h=561&f=webp)
+    
+2.  鱼眼相机去畸变 FOV 示意图
+    
+    去畸变前鱼眼相机的 FOV 示意图：
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBcHAPfyC.png&w=1870&h=756&f=webp)
+    
+    去畸变后鱼眼相机的 FOV 示意图，实际使用中鱼眼相机采用该示意图所表示的视场范围。
+    
+    ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FB4zJb9NQ.png&w=1884&h=736&f=webp)
+    
+    去畸变采取散点距离 Baselink = 2m，每个点纵向分辨率为 5cm，横向角度分辨率为 5 度。去畸变前后的效果对比如下图所示：
+    
+    |  |  |
+    | :-: | :-: |
+    | 去畸变前 | 去畸变后 |
+    | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FCm83mE8F.png&w=1280&h=696&f=webp) | ![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F5LFCsmJy.png&w=1280&h=724&f=webp) |
+

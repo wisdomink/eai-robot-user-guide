@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import clsx from 'clsx'
 import logoDark from '@/assets/icons/logo-dark.svg'
 
 interface HeaderProps {
@@ -6,9 +7,12 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
+  const { pathname } = useLocation()
+  const isDeveloper = pathname.startsWith('/developer')
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-[var(--header-height)] px-[clamp(12px,1.2vw,24px)] bg-white border-b border-gray-200">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <button
           onClick={onMenuToggle}
           className="p-[clamp(4px,0.5vw,10px)] text-navy hover:bg-gray-100 rounded-md transition-colors"
@@ -28,6 +32,29 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
+        <nav className="hidden sm:flex items-center gap-1 text-[clamp(11px,1vw,13px)] font-roboto">
+          <Link
+            to="/futurist"
+            className={clsx(
+              'px-2 py-1 rounded-md font-medium transition-colors',
+              !isDeveloper ? 'bg-purple/10 text-purple' : 'text-navy hover:bg-gray-100'
+            )}
+          >
+            Product manuals
+          </Link>
+          <span className="text-gray-300 select-none" aria-hidden>
+            |
+          </span>
+          <Link
+            to="/developer/en"
+            className={clsx(
+              'px-2 py-1 rounded-md font-medium transition-colors',
+              isDeveloper ? 'bg-purple/10 text-purple' : 'text-navy hover:bg-gray-100'
+            )}
+          >
+            Developer docs
+          </Link>
+        </nav>
       </div>
 
       <div className="flex items-center gap-2">

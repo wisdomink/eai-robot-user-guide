@@ -1,0 +1,1064 @@
+---
+title: 7.1 运动控制部分
+description: >-
+  A2
+  机器人出厂预搭载了运动控制程序，用户只需发送高层线速度和角速度指令即可直接控制机器人行走，无需开发行走等功能的底层控制模型，同时上肢、脖子等关节接口开放了直通
+  HAL 层的硬件接口。 >
+  默认情况下不开放下肢关节电机的底层控制接口，仅能通过高层速度指令进行整体控制，如需自行开发运动控制算法替换智元出厂自带算法，请参考文档中的 A2
+  旗舰款底层运控开发指南。替换前请务必阅读运控开发风险提示与安全注意事项。 智元运控程序内部设计了状态…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - motion-control
+route: /zh/a2/v2-0/dev-guide/motion-control
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-01-motion_control'
+order: 20
+---
+# 7.1 运动控制部分
+
+### 7.1.1 整体介绍
+
+A2 机器人出厂预搭载了运动控制程序，用户只需发送高层线速度和角速度指令即可直接控制机器人行走，无需开发行走等功能的底层控制模型，同时上肢、脖子等关节接口开放了直通 HAL 层的硬件接口。
+
+> 默认情况下不开放下肢关节电机的底层控制接口，仅能通过高层速度指令进行整体控制，如需自行开发运动控制算法替换智元出厂自带算法，请参考文档中的 A2 旗舰款底层运控开发指南。替换前请务必阅读运控开发风险提示与安全注意事项。
+
+智元运控程序内部设计了状态机，在不同状态下会切换不同的模型，同时开放不同的上肢控制接口等。状态机如下图所示：
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F2w2MRczn.png&w=5520&h=3492&f=webp)
+
+对于各个状态说明如下：
+
+| **Action 类型** | **Action 代码** | **中文名称** | **详细说明** | **可调用的控制接口** |
+| --- | --- | --- | --- | --- |
+| 安全 Action | DEFAULT | 默认模式 | 运控启动之后的默认 action |  |
+| 位控 Action | RL\_JOINT\_DEFAULT | 强化位控站立模式 | 上机器人强化位控站立，直腿站立 |  |
+| 位控 Action | PASSIVE\_UPPER\_BODY\_JOINT\_SERVO | 下肢被动上肢伺服模式 | 下肢不使能，手臂可以接收外部关节伺服指令 | 
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+
+ |
+| 位控 Action | PASSIVE\_UPPER\_BODY\_PLANNING\_MOVE | 下肢被动上肢RRT规划模式 | 下肢不使能，上肢路径规划，rpc接收目标关节角或SE3位置 | 
+
+-   PlanningMove
+
+ |
+| 位控 Action | PASSIVE\_UPPER\_BODY\_COLLISON\_ESCAPE | 下肢被动上肢躲避碰撞模式 | 下肢不使能，上肢躲避自碰撞，可在发生碰撞后无法调用规划接口时使用，切到该action后可以自动分开 |  |
+| 位控 Action | PASSIVE\_UPPER\_BODY\_ONLINE\_PLANNING | 下肢被动上肢NMPC规划模式 | 下肢不使能，上肢路径规划，rpc接收目标关节角或SE3位置，可中断当前目标 | 
+
+-   PlanningMove
+
+ |
+| 位控 Action | SIT\_DOWN | 位控坐下模式 | 下肢动作，上肢保持不动，配合椅子实现坐下 |  |
+| 位控 Action | STAND\_UP | 位控站起模式 | 下肢动作，上肢保持不动，配合椅子实现站起 |  |
+| 位控 Action | MOBILE\_PLATFORM\_STAND\_UP | 移动平台位控站起模式 | 下肢动作，上肢保持不动 |  |
+| 位控 Action | MOBILE\_PLATFORM\_SIT\_DOWN | 移动平台位控坐下模式 | 下肢动作，上肢保持不动 |  |
+| 位控 Action | RL\_SIT\_DOWN\_PASSIVE\_POWER\_OFF | 强化深坐坐下后辅助靠在椅背上 | 下肢动作，上肢保持不动，实验性功能不建议使用 |  |
+| 位控 Action | RL\_STAND\_UP\_PREP\_POWER\_OFF | 强化深坐站起前辅助到达初始姿态 | 下肢动作，上肢保持不动，实验性功能不建议使用 |  |
+| 力控 Action | RL\_LOCOMOTION\_DEFAULT | 强化行走模式 | 强化学习训练的拟人行走模式，走路时手臂会摆动 | 
+
+-   /motion/control/locomotion\_velocity
+
+ |
+| 力控 Action | RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO | 强化行走上肢伺服模式 | 下肢拟人行走或站立，上肢接受外部关节伺服指令，行走或站立时做动作（使用全身控制的强化模型，更具有稳定性） | 
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+
+ |
+| 力控 Action | RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE | 强化站立上肢RRT规划模式 | 下肢力控站立，上肢路径规划，rpc接收目标关节角或SE3位置 | 
+
+-   /motion/control/locomotion\_velocity
+-   PlanningMove
+
+ |
+| 力控 Action | RL\_LOCOMOTION\_ARM\_EXT\_COLLISON\_ESCAPE | 强化站立上肢躲避碰撞模式 | 下肢力控站立，上肢躲避自碰撞，可在发生碰撞后无法调用规划接口时使用，切到该action后可以自动分开 | 
+
+-   /motion/control/locomotion\_velocity
+
+ |
+| 力控 Action | RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO | 全身动作上肢伺服模式 | 下肢力控站立，手臂可以接收外部关节伺服指令，额外可控制腰部动作，A2 机器人腰部无实际自由度，腰部动作是通过腿部电机配合实现 | 
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+-   /motion/control/move\_waist
+-   /motion/control/move\_waist\_lift
+-   /motion/control/move\_waist\_pitch
+-   /motion/control/move\_waist\_twist
+
+ |
+| 力控 Action | RL\_WHOLE\_BODY\_DANCE | 全身舞蹈模式 | 可运行指定的全身舞蹈动作 | 
+
+-   SelectDanceType
+-   GetDanceTypeList
+
+ |
+| 力控 Action | RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING | 强化站立上肢NMPC规划模式 | 下肢力控站立，上肢路径规划，rpc接收目标关节角或SE3位置，可中断当前目标 | 
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/move\_waist
+-   /motion/control/move\_waist\_lift
+-   /motion/control/move\_waist\_pitch
+-   /motion/control/move\_waist\_twist
+-   PlanningMove
+
+ |
+| 力控 Action | RL\_SIT\_DOWN | 强化浅坐 | 下肢力控坐下，上肢保持不动，实验性功能不建议使用 |  |
+| 力控 Action | RL\_STAND\_UP | 强化浅坐站起 | 下肢力控站起，上肢保持不动，实验性功能不建议使用 |  |
+| 力控 Action | RL\_SIT\_DOWN\_POWER\_OFF | 强化深坐，需人辅助 | 下肢力控坐下，上肢保持不动，实验性功能不建议使用 |  |
+| 力控 Action | RL\_STAND\_UP\_POWER\_OFF | 强化深坐站起 | 下肢力控站起，上肢保持不动，实验性功能不建议使用 |  |
+
+> 一般情况下不推荐使用程序进行力控之外的切换，仅推荐程序在各个力控状态下切换，其余切换因涉及机器人吊起放下等操作仅可手动操作。
+
+> 控制类接口一般有 Action 要求，未注明 Action 要求的接口以及查询类接口一般无 Action 限制。
+
+### 7.1.2 状态机切换、查询 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McActionService/SetAction` |
+| --- | --- |
+| 功能概述 | 切换运动控制状态机 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McActionService/SetAction |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763614279,
+      "nanos": 847810000,
+      "ms_since_epoch": 1763614279847
+    },
+    "control_source": "ControlSource_SAFE"
+  },
+  "command": {
+    "action": "McAction_USE_EXT_CMD",
+    "ext_action": "RL_LOCOMOTION_DEFAULT"
+  }
+}
+```
+
+-   action: 固定填写为 McAction\_USE\_EXT\_CMD
+-   ext\_action: 实际需要切换的运控 Action
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763643079",
+      "nanos": 849593506,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/mc/SetAction.py |
+| 备注 | 
+
+-   异步接口，调用完成不代表切换即完成，需配合 GetAction 接口查询切换是否完成
+-   本接口无 Action 限制
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.McActionService/GetAction` |
+| --- | --- |
+| 功能概述 | 查询运动控制状态机 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McActionService/GetAction |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763643026",
+      "nanos": 8207141,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "info": {
+    "current_action": "McAction_RL_LOCOMOTION_ARM_EXT_JOINT_SERVO",
+    "ext_action": "",
+    "status": "McActionStatus_RUNNING"
+  }
+}
+```
+
+-   current\_action: 当前运行的 Action
+-   ext\_action: 扩展 Action，一般不使用
+-   status：Action 状态，一般不使用
+
+ |
+| 示例脚本 | example/mc/actions.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+
+ |
+
+一般上述两个接口会配合使用，如下代码示例
+
+```
+def ensure_action(action_name: str, retries=3, retry_interval=1.0, mc_ip: str = "127.0.0.1"):    try:        for i in range(retries):            if get_action(mc_ip) == action_name:                return True            set_action(action_name, mc_ip)            time.sleep(0.1 if i == 0 else retry_interval)    except Exception as e:        print(f"Failed to set action: {e}")        return False    return False
+```
+
+### 7.1.3 行走控制指令 Topic 接口
+
+| 接口名 | `/motion/control/locomotion_velocity` |
+| --- | --- |
+| 功能概述 | 行走控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "data": {
+    "mode": 0,
+    "forward_velocity": 0.1,
+    "lateral_velocity": 0.0,
+    "angular_velocity": 0.0
+  }
+}
+```
+
+-   mode: 速度控制模式
+    
+    -   0 用于遥控场景
+    -   1 用于导航模式，速度响应更快，0.05m/s 激活踏步,踏步后 500ms 内无速度指令会停止踏步
+-   forward\_velocity: 前进速度，RL\_LOCOMOTION\_DEFAULT 模式下范围 -0.3 到 1.2 m/s，其余模式 -0.4 到 0.6 m/s
+    
+-   lateral\_velocity: 水平速度，RL\_LOCOMOTION\_DEFAULT 模式下范围 -0.25 到 0.25 m/s，其余模式 -0.3 到 0.3 m/s
+    
+-   angular\_velocity: 旋转速度，RL\_LOCOMOTION\_DEFAULT 模式下范围 -1.0 到 1.0 rad/s，其余模式 -0.8 到 0.8 m/s
+    
+
+ |
+| 示例脚本 | examples/mc/walk.py |
+| 备注 | 
+
+-   受限于关节散热，1.0 m/s 及以上的速度持续长时间行走会造成电机过温，请注意尽量避免长时间操控机器人高速行走，高速行走时请密切关注相关告警，出现过温等电机异常时及时停止高速行走操作。
+    
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+    
+-   本接口有调用限制，仅可在以下 Action 调用，其中在 RL\_LOCOMOTION\_DEFAULT 下指令遵循效果较好，其他模式下指令速度范围较小
+    
+    -   RL\_LOCOMOTION\_DEFAULT
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE
+    -   RL\_LOCOMOTION\_ARM\_EXT\_COLLISION\_ESCAPE
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+### 7.1.4 腰部控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/move_waist` |
+| --- | --- |
+| 功能概述 | 腰部控制指令，可同时控制所有自由度 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "data": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.1,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": 0.0
+  }
+}
+```
+
+-   x: 无效字段
+    
+-   y: 无效字段
+    
+-   z: 下蹲，范围 -0.25 到 0.00 m
+    
+-   roll: 无效字段
+    
+-   pitch: 俯身，范围 0 到 0.5236 rad，注意与 z 下蹲有耦合关系
+    
+    -   随着 z 的增大，可俯身程度（pitch 最大值）从 0 先线性变大 到 0.5236，然后维持到最大值 0.5236 不变，最后线性减小到 0.436，对应三段 z 的范围为 \[0, -0.08\]，\[-0.08, -0.17\]，\[-0.17, -0.25\]
+    -   pitch 最小值为 0，只能前倾无法后仰
+-   yaw: 转身，范围 -0.5236 到 0.5236 rad
+    
+
+ |
+| 示例脚本 | examples/mc/move\_waist.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+    
+-   A2 机器人物理设计上不存在独立的腰部自由度，该腰部自由度为虚拟自由度，通过腿部关节电机由强化学习算法模拟得到
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/move_waist_lift` |
+| --- | --- |
+| 功能概述 | 腰部下蹲控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_lift_value": 0.0
+}
+```
+
+-   waist\_lift\_value: 腰部下蹲，范围 -0.25 到 0.00 m
+
+ |
+| 示例脚本 | examples/mc/move\_waist\_lift.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+    
+-   A2 机器人物理设计上不存在独立的腰部自由度，该腰部自由度为虚拟自由度，通过腿部关节电机由强化学习算法模拟得到
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/move_waist_twist` |
+| --- | --- |
+| 功能概述 | 腰部扭转（转身）控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_twist_value": 0.0
+}
+```
+
+-   waist\_twist\_value: 扭转角度，范围 -0.5236 到 0.5236 rad
+
+ |
+| 示例脚本 | examples/mc/move\_waist\_twist.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+    
+-   A2 机器人物理设计上不存在独立的腰部自由度，该腰部自由度为虚拟自由度，通过腿部关节电机由强化学习算法模拟得到
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/move_waist_pitch` |
+| --- | --- |
+| 功能概述 | 腰部俯身指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_pitch_value": 0.0
+}
+```
+
+-   waist\_pitch\_value: 俯身角度，范围 0 到 0.5236 rad，与下蹲有一定耦合关系，详细请查阅 /motion/control/move\_waist 接口说明文档
+
+ |
+| 示例脚本 | examples/mc/move\_waist\_pitch.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+    
+-   A2 机器人物理设计上不存在独立的腰部自由度，该腰部自由度为虚拟自由度，通过腿部关节电机由强化学习算法模拟得到
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/waist_state` |
+| --- | --- |
+| 功能概述 | 腰部状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | 
+```json
+{
+  "x": 0.0,
+  "y": 0.0,
+  "z": 0.0,
+  "roll": 0.0,
+  "pitch": 0.0,
+  "yaw": 0.0
+}
+```
+
+-   各个字段含义可以参考 /motion/control/move\_waist 接口的说明
+
+ |
+| 示例脚本 | examples/mc/waist\_state.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用
+-   其中 RosMsgWrapper 中的 data 字段为序列化后的 pb 数据，类型为 McWaistValue，需要安装协议包 pip install prebuilt/a2\_aimdk-1.3.0-py3-none-any.whl 进行安装
+
+ |
+
+### 7.1.5 脖子控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/neck_joint_command` |
+| --- | --- |
+| 功能概述 | 脖子控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name：关节名称，固定填写为 \["idx27\_head\_joint1", "idx28\_head\_joint2"\]
+-   position：关节角度，第一个值代表摇头自由度，范围 -0.785 到 0.785 rad，第二个值代表点头自由度，范围 -0.401 到 0.401 rad
+-   velocity: 无效字段，不填
+-   effort: 无效字段，不填
+
+ |
+| 示例脚本 | examples/mc/neck.py |
+| 备注 | 
+
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player.sh 禁用后再发送指令
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/neck_joint_state` |
+| --- | --- |
+| 功能概述 | 脖子状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   position：关节角度，第一个值代表摇头自由度，范围 -0.785 到 0.785 rad，第二个值代表点头自由度，范围 -0.401 到 0.401 rad
+
+ |
+| 示例脚本 | examples/mc/joint\_state.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+
+ |
+
+### 7.1.6 脖子控制指令、状态 RPC 接口
+
+上述脖子控制话题接口适用于需要持续精确控制脖子角度，例如遥操作等场景，且仅可在 JOINT\_SERVO 模式下调用，某些场景下仅需简单控制到特定角度，可以使用如下 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/SetNeckCommand` |
+| --- | --- |
+| 功能概述 | 设置脖子命令 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/SetNeckCommand |
+| 入参 | 
+```json
+{
+  "data": {
+    "shake": {
+      "name": "idx27_head_joint1",
+      "position": 0.5,
+      "velocity": 0.0,
+      "effort": 0.0
+    },
+    "nod": {
+      "name": "idx28_head_joint2",
+      "position": 0.0,
+      "velocity": 0.0,
+      "effort": 0.0
+    }
+  }
+}
+```
+
+-   其中仅 shake 和 nod 中的 position 有意义，其余字段保持不变即可，shake 范围 -0.785 到 0.785 rad，nod 范围 -0.401 到 0.401 rad
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762845079",
+      "nanos": 921954699,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/mc/SetNeckCommand.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player.sh 禁用后再发送指令
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.McDataService/GetNeckState` |
+| --- | --- |
+| 功能概述 | 获取脖子状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McDataService/GetNeckState |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762846182",
+      "nanos": 679221245,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "shake": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    },
+    "nod": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    }
+  }
+}
+```
+
+-   其中仅 shake 和 nod 中的 position 有意义，其余字段保持不变即可，shake 范围 -0.785 到 0.785 rad，nod 范围 -0.401 到 0.401 rad
+
+ |
+| 示例脚本 | examples/mc/GetNeckState.py |
+| 备注 | 本接口无 Action 限制 |
+
+### 7.1.7 手指控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/hand_joint_command` |
+| --- | --- |
+| 功能概述 | 手指控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   frame\_id: A2 的手部类型。A2 支持 AgiHand 和 O10Hand 两种类型；不填写时默认 AgiHand。当前手部类型可通过 hand\_joint\_state 话题中 header.frame\_id 字段识别
+-   name：关节名称，可不填，保持默认即可,或从hand\_joint\_state话题中的name字段获取
+-   position：关节角度，顺序与name字段关节对应，范围 0 到 2000，抽象值无单位，0 代表完全张开，2000 代表完全并拢
+-   velocity: 无效字段，不填
+-   effort: 关节力矩，顺序与name字段关节对应，手部为AgiHand时，范围 0 到 5700，0 代表对应推杆电机无力矩，5700 代表力矩达到最大 5.7N，手部为O10Hand时不填
+
+ |
+| 示例脚本 | examples/mc/hand.py |
+| 备注 | 
+
+-   手指的控制逻辑是力矩和位置二者满足其一就会停止运动，例如针对某根手指传入 1000 的位置，5700 的力矩，如果没有外物卡住手指，当位置达到 1000 时，力矩不会继续加大，此时力矩会处于一个较小的值，如果外物卡住手指（抓住某物体等），力矩会持续加大到 5700 附近，对应电缸输出 5.7N 的力矩
+    
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player.sh 禁用后再发送指令
+    
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/hand_joint_state` |
+| --- | --- |
+| 功能概述 | 手指状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name：各个手指的关节名称
+-   frame\_id：A2手部类型
+-   position：各个手指的关节角度，范围 0 到 2000
+-   velocity：无效字段
+-   effort：各个手指的力矩，范围 0 到 5700。  
+    AgiHand的出参为12维对应每个关节，O10Hand出参由多维数组拼接。  
+    包含双手的压力传感器阵列数据。数据排列如下：  
+    \- 左手压力: 16维 thumb + 16维 index + 16维 middle + 16维 ring + 16维 pinky + 25维 palm (掌心) + 25维 back\_of\_hand (手背)  
+    \- 右手压力：结构和顺序与左手相同，追加在左手数据之后
+
+ |
+| 示例脚本 | examples/mc/joint\_state.py |
+| 备注 | 
+
+-   位置因零位影响，可能范围略微有所漂移，为正常现象
+-   力矩因手指内的连杆机构、转轴、以及弹簧等级机构都会带来一些影响，可能会出现略小于 0 的负值（-1000 以内），为正常现象
+-   手指受外力影响时同样会出现负值，为正常现象
+-   本接口无 Action 限制
+
+ |
+
+### 7.1.8 手指控制指令、状态 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/SetHandCommand` |
+| --- | --- |
+| 功能概述 | 设置手指命令 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/SetHandCommand |
+| 入参 | 
+```json
+{
+  "data": {
+    "left": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 0,
+            "thumb_pos_1": 0,
+            "index_pos": 0,
+            "middle_pos": 1000,
+            "ring_pos": 1000,
+            "pinky_pos": 1000
+          },
+          "toq": {
+            "thumb_toq_0": 100,
+            "thumb_toq_1": 100,
+            "index_toq": 100,
+            "middle_toq": 100,
+            "ring_toq": 100,
+            "pinky_toq": 100
+          }
+        }
+      }
+    },
+    "right": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 0,
+            "thumb_pos_1": 1000,
+            "index_pos": 1000,
+            "middle_pos": 1000,
+            "ring_pos": 1000,
+            "pinky_pos": 1000
+          },
+          "toq": {
+            "thumb_toq_0": 100,
+            "thumb_toq_1": 100,
+            "index_toq": 100,
+            "middle_toq": 100,
+            "ring_toq": 100,
+            "pinky_toq": 100
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+-   位置范围 0 到 2000，力矩范围 0 到 5700
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763696261",
+      "nanos": 18212539,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: 调用请求状态
+
+ |
+| 示例脚本 | examples/mc/SetHandCommand.py |
+| 备注 | 
+
+-   本接口无 Action 限制
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player.sh 禁用后再发送指令
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.McDataService/GetHandState` |
+| --- | --- |
+| 功能概述 | 获取手指状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/GetHandState |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": {
+    "left": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 500,
+            "thumb_pos_1": 1001,
+            "index_pos": 998,
+            "middle_pos": 998,
+            "ring_pos": 999,
+            "pinky_pos": 998
+          },
+          "toq": {
+            "thumb_toq_0": 0,
+            "thumb_toq_1": 0,
+            "index_toq": 0,
+            "middle_toq": 0,
+            "ring_toq": 0,
+            "pinky_toq": 0
+          }
+        }
+      }
+    },
+    "right": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 500,
+            "thumb_pos_1": 1000,
+            "index_pos": 998,
+            "middle_pos": 998,
+            "ring_pos": 999,
+            "pinky_pos": 998
+          },
+          "toq": {
+            "thumb_toq_0": 0,
+            "thumb_toq_1": 0,
+            "index_toq": 0,
+            "middle_toq": 0,
+            "ring_toq": 0,
+            "pinky_toq": 0
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+-   各个数值分别代表手指的位置和力矩，位置范围 0 到 2000，力矩范围 0 到 5700
+
+ |
+| 示例脚本 | examples/mc/GetHandState.py |
+| 备注 | 
+
+-   位置因零位影响，可能范围略微有所漂移，为正常现象
+-   力矩因手指内的连杆机构、转轴、以及弹簧等级机构都会带来一些影响，可能会出现略小于 0 的负值（-1000 以内），为正常现象
+-   手指受外力影响时同样会出现负值，为正常现象
+-   本接口无 Action 限制
+
+ |
+
+### 7.1.9 手臂控制指令、状态 Topic 接口
+
+| 接口名 | `/motion/control/arm_joint_command` |
+| --- | --- |
+| 功能概述 | 手臂关节控制指令 |
+| 接口类型 | ROS2 Topic |
+| 入参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name：关节名称，固定填写为\["idx13\_left\_arm\_joint1", "idx14\_left\_arm\_joint2", "idx15\_left\_arm\_joint3", "idx16\_left\_arm\_joint4", "idx17\_left\_arm\_joint5", "idx18\_left\_arm\_joint6", "idx19\_left\_arm\_joint7", "idx20\_right\_arm\_joint1", "idx21\_right\_arm\_joint2", "idx22\_right\_arm\_joint3", "idx23\_right\_arm\_joint4", "idx24\_right\_arm\_joint5", "idx25\_right\_arm\_joint6", "idx26\_right\_arm\_joint7"\]
+-   position：关节角度，必须填写 14 个关节的角度值
+-   velocity: 无效字段，置为 0.0 即可
+-   effort: 无效字段，置为 0.0 即可
+
+ |
+| 示例脚本 | examples/mc/arm.py |
+| 备注 | 
+
+-   注意在 JOINT\_SERVO 模式下该接口默认会被动作播放模块 motion\_player 接管，请调用 examples/motion\_player/disable\_motion\_player.sh 禁用后再发送指令
+    
+-   本接口推荐以 100 Hz 的频率进行调用，调用时需要注意相邻指令间隔不要超过 0.03，确保**速度不超过 3 rad/s，最大加速度不超过 6.28** rad/s^2，并且指令尽量顺滑，否则可能会有抖动，推荐起码使用基本的低通滤波方法：y(k) = (1 - a) \* y(k - 1) + a \* x(k)。
+    
+-   角度限位如下（单位 rad）
+    
+    -   idx13\_left\_arm\_joint1: -2.91 ~ 2.91
+    -   idx14\_left\_arm\_joint2: -0.46 ~ 1.60
+    -   idx15\_left\_arm\_joint3: -2.91 ~ 2.91
+    -   idx16\_left\_arm\_joint4: -2.00 ~ -0.03
+    -   idx17\_left\_arm\_joint5: -2.94 ~ 2.94
+    -   idx18\_left\_arm\_joint6: -0.45 ~ 0.45
+    -   idx19\_left\_arm\_joint7: -0.35 ~ 0.35
+    -   idx20\_right\_arm\_joint1: -2.91 ~ 2.91
+    -   idx21\_right\_arm\_joint2: -1.60 ~ 0.46
+    -   idx22\_right\_arm\_joint3: -2.91 ~ 2.94
+    -   idx23\_right\_arm\_joint4: 0.03 ~ 2.00
+    -   idx24\_right\_arm\_joint5: -2.94 ~ 2.94
+    -   idx25\_right\_arm\_joint6: -0.45 ~ 0.45
+    -   idx26\_right\_arm\_joint7: 0.35 ~ 0.35
+-   本接口有调用限制，仅可在以下 Action 调用
+    
+    -   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| 接口名 | `/motion/control/arm_joint_state` |
+| --- | --- |
+| 功能概述 | 手臂关节状态话题 |
+| 接口类型 | ROS2 Topic |
+| 出参 | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: 14 个关节名称
+-   position: 14 个关节角度
+-   velocity: 14 个关节速度
+-   effort: 14 个关节力矩
+
+其中双臂的 6 7 关节为等效串联关节的数据，仅有 position 字段，无 velocity 和 effort 字段 |
+| 示例脚本 | examples/mc/joint\_state.py |
+| 备注 | 本接口无 Action 限制 |
+
+注：双臂的6 7关节通过并联机构实现腕部控制，受并联机构的几何约束的影响，推杆的并联自由度映射到 pitch/roll 串联自由度后，得到的活动空间并不是矩形区域，而是类似一个菱形区域，示意图如下图蓝色区域所示：
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDtD8nkop.png&w=2004&h=1452&f=webp)
+
+如需获得跟踪性能较好的区域可以使用图中的黄色区域，对应 6、7 关节的限位范围为 \[-0.3, 0.3\] , \[-0.2, 0.2\]
+
+以下为应用上述黄色限位后双臂所有关节的整体限位范围：
+
+lower\_bound: \[-3.0, -0.524, -2.967, -2.094, -2.967, -0.3, -0.2, -3.0, -1.5358897, -2.967, 0.1, -2.967, -0.3, -0.2\]
+
+upper\_bound: \[3.0, 1.5358897, 2.967, -0.1, 2.967, 0.3, 0.2, 3.0, 0.524, 2.967, 2.094, 2.967, 0.3, 0.2\]
+
+### 7.1.10 手臂控制指令 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.McMotionService/PlanningMove` |
+| --- | --- |
+| 功能概述 | 上肢规划控制接口 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/PlanningMove |
+| 入参 | 可以传入两种类型的入参，即可接收末端 SE3 位姿，也可以接收关节角
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763696866,
+      "nanos": 231707000,
+      "ms_since_epoch": 1763696866231
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "group": "McPlanningGroup_LEFT_ARM",
+  "mode": "McPlanningMode_DEFAULT",
+  "target": {
+    "type": "SE3",
+    "left": {
+      "position": {
+        "x": 0.35,
+        "y": 0.35,
+        "z": 0.25
+      },
+      "orientation": {
+        "x": 0.570822,
+        "y": -0.0606913,
+        "z": -0.0106989,
+        "w": 0.818758
+      }
+    },
+    "right": {
+      "position": {
+        "x": 0.35,
+        "y": -0.35,
+        "z": 0.25
+      },
+      "orientation": {
+        "x": -0.570817,
+        "y": -0.0606912,
+        "z": 0.0106992,
+        "w": 0.818761
+      }
+    }
+  },
+  "reference": {
+    "joint_position": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}
+```
+
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763697224,
+      "nanos": 63165000,
+      "ms_since_epoch": 1763697224063
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "mode": "McPlanningMode_DEFAULT",
+  "group": "McPlanningGroup_LEFT_ARM",
+  "target": {
+    "type": "JOINT",
+    "joints": [
+      0.142856,
+      1.06998,
+      -0.152017,
+      -1.42857,
+      2.3139,
+      -0.100991,
+      -0.269986
+    ]
+  }
+}
+```
+
+-   group 表示本次要运动的手臂，McPlanningGroup\_LEFT\_ARM 表示左臂，McPlanningGroup\_RIGHT\_ARM 表示右臂
+    
+-   target 表示手臂要运动到的目标点，
+    
+    -   position 表示目标点位置
+    -   orientation 表示目标点四元数
+    -   joints 表示需传入的手臂关节角，依次为 J1 到 J7
+-   reference 中的 joint\_position 表示参考关节角，一般设为 0 即可，若不全为 0，且长度与机器人手臂关节数一致，即 7 个参考值，机器人会以尽量接近该关节角到达目标点
+    
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763697146",
+      "nanos": 154213397,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "task_id": "755481177558037",
+  "state": "CommonState_PENDING"
+}
+```
+
+-   由于该接口为异步接口，无法直接返回任务调用是否完成，只需保存 task\_id 然后调用 GetTaskState 接口查询是否调用完成
+
+ |
+| 示例脚本 | examples/mc/PlanningMoveSE3.pyexamples/mc/PlanningMoveJoint.py |
+| 备注 | 
+
+-   本接口有 Action 限制，仅可在以下 Action 调用
+    
+    -   PASSIVE\_UPPER\_BODY\_PLANNING\_MOVE
+    -   PASSIVE\_UPPER\_BODY\_ONLINE\_PLANNING
+    -   RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+-   ONLINE\_PLANNING 模式下可中断当前正在执行的目标直接执行下一个目标，同时该模式下无法查询任务执行状态，因为允许中断也意味着把执行情况判定交给了更上层
+    
+-   ONLINE\_PLANNING 模式下指令和当前位置差距不能太大，比如让手从身前运动到身后，就容易规划不出来，停在一个很奇怪的位置
+    
+-   SE3 目标点表示在机器人的基座坐标系下，机器人掌心的位置和姿态。相对于 URDF 中的手臂末端有一定的偏移，这样是为了使左右手臂的末端连杆姿态一致，便于计算。
+    
+    -   左臂目标点相对 left\_arm\_link07 位置偏移 \[-0.1, 0.0, 0.0\]，四元数姿态偏移 \[0.0, 0.0, 0.70710678, 0.70710678\]
+    -   右臂目标点相对 right\_arm\_link07 位置偏移 \[0.1, 0.0, 0.0\]，四元数姿态偏移 \[-0.70710678, 0.70710678, 0.0, 1.0\]
+-   如果要计算掌心的位姿，可以先订阅 ros2 的 tf 话题，然后再计算掌心位置，计算示例如下：
+    
+    ```python
+    import numpy as np
+    from scipy.spatial.transform import Rotation as R
+    ```
+    
+
+ |
+

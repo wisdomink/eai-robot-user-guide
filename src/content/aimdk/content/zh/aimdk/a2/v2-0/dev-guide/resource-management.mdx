@@ -1,0 +1,615 @@
+---
+title: Untitled
+description: >-
+  A2 旗舰款本地资源管理功能共开放六类资源：动作、表情、音频、技能、地图及创作作品。
+  用户可对上述各类资源执行创建、删除、获取、迁入、迁出等管理操作，以满足机器人能力配置与内容定制需求。详细支持功能请参考资源介绍。
+  下文将分别对各资源模块及其对应功能进行详细说明。 操作流程： 创建和存储：用户需先将数据放置于 Orin
+  节点下的临时目录`/agibot/data/resources/tmp`并通过 RPC 接口触发同步操作。系统将自动识…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - resource-management
+route: /zh/a2/v2-0/dev-guide/resource-management
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-13-resource_manager'
+order: 32
+---
+## 7.13.1 整体介绍
+
+A2 旗舰款本地资源管理功能共开放六类资源：动作、表情、音频、技能、地图及创作作品。 用户可对上述各类资源执行创建、删除、获取、迁入、迁出等管理操作，以满足机器人能力配置与内容定制需求。详细支持功能请参考资源介绍。
+
+下文将分别对各资源模块及其对应功能进行详细说明。
+
+操作流程：
+
+创建和存储：用户需先将数据放置于 Orin 节点下的临时目录`/agibot/data/resources/tmp`并通过 RPC 接口触发同步操作。系统将自动识别资源来源，并将其分类持久化至以下目录之一：
+
+-   用户创建资源目录:`/agibot/data/resources/custom`
+    
+-   默认资源目录：`/agibot/data/resources/default`
+    
+
+需要注意的是，`/agibot/data/resources/tmp` 临时目录在机器人重启后将被自动清空（迁出生成的 .gz 文件也属于 tmp 目录内容）请确保重要资源已完成同步与持久化。
+
+获取与维护：系统支持对资源的实时查询，包括资源列表与资源详情信息。同时提供删除接口，便于用户及时清理不再使用的资源，保持资源空间整洁可控。
+
+分发与迁移：支持用户通过 RPC 接口对已创建的资源进行快速迁出与迁入，适用于以下场景：
+
+-   资源快速备份
+    
+-   跨设备的批量迁移
+    
+-   已配置资源的高效复用
+    
+
+资源介绍：
+
+| 资源类型 | 功能描述 | 创建/删除 | 迁入/迁出 | 获取信息 | 更新 | 展示位置 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 表情 | 头部LED显示的动画 | ✔ | ✔ | ✔ | ✔ | AimMaster → 技能 → 表情 |
+| 动作 | 多为举手、比心、点赞等上肢动作 | ✔ | ✔ | ✔ | 仅可修改 resource\_name | AimMaster → 技能 → 动作 |
+| 音频 | 机器人语音资源 | ✔ | ✖ | ✔ | ✖ | AimMaster → 技能 → 语音 |
+| 技能 | 机器人全身舞蹈 | ✖ | ✖ | ✔ | ✖ | AimMaster → 技能 → 才艺 |
+| 创作作品 | 通过表情、动作、音频和技能四个模块的协同编排，  
+可实现复杂且连贯的全身舞蹈或上肢动作表现。 | ✔  
+ | ✔ | ✔  
+ | ✖ | AimMaster → 技能 → 我的创作 |
+| 地图 | 机器人导航定位等使用的地图 | ✖  
+ | ✔ | ✔ | ✖ | AimMaster → 地图 |
+
+以上所有资源均保存在orin下，x86仅参与动作资源的创建解析流程，不持久化资源结果。用户可在使用RPC接口时配合AimMaster使用。
+
+## 7.13.2 部分参数声明
+
+resource\_type种类：
+
+```
+  RESOURCE_TYPE_MOTION = 1;            // 动作  RESOURCE_TYPE_EMOTICON = 2;          // 表情  RESOURCE_TYPE_AUDIO = 3;             // 音频  RESOURCE_TYPE_SKILL = 6;             // 技能  RESOURCE_TYPE_MAP = 7;              // 地图  RESOURCE_TYPE_OFFRING_WORK = 8;      // 创作作品
+```
+
+xxx\_extra\_info声明：
+
+```
+//tmp/xxx表示的创建路径为/agibot/data/resources/tmp//动作资源创建阶段使用x86路径，仅用于解析生成资源//其余资源创建阶段使用orin路径//变量后有写明什么情况下可以使用该变量，如注明有创建功能的变量，创建时要加入该变量信息，//没注明创建功能的变量，在创建时不需要添加
+ /** * @brief 表情额外信息 */ //resource_type=RESOURCE_TYPE_EMOTICON "emoticon_extra_info" {    "display_name" {      "zh_CN": "右手比心",      "en_US": "Finger heart_right hand",    }, // 显示的中文名和英文名,数据格式为map<string, string>  (获取)  "emoticon_file_url": "tmp/e.mp4",  // 表情文件URL (创建/获取/更新)tmp/xxx表示的创建路径为orin下的/agibot/data/resources/tmp  "thumbnail_file_url": "tmp/t.mp4", // 缩略图文件URL (创建/获取/更新)  "cover_file_url" = "tmp/1.png",     // 封面文件URL (创建/获取/更新)}
+/** * @brief 动作额外信息 */ //resource_type=RESOURCE_TYPE_MOTION //创建的动作资源元数据需要在x86上提供 "motion_extra_info":{      "record_file_path":"/agibot/data/home/agi/测试/点赞右手_长", // 录制文件路径，这是x86下的路径，测试是文件夹名，点赞右手_长是.macp文件名 (仅创建时使用)      "display_name" {          "zh_CN": "右手比心",          "en_US": "Finger heart_right hand",      }, // 显示的中文名和英文名 (获取)      "cover_file_url": ""  ,  // 预览图URL (获取)      "preview_video_url":"" ,// 预览视频URL (获取)}
+/** * @brief 音频额外信息 */ //resource_type=RESOURCE_TYPE_AUDIO"audio_extra_info": {  "audio_file_url" :"" // 音频文件URL (创建/获取)  "display_name" {      "zh_CN": "",      "en_US": "",  }, // 显示的中文名和英文名 (获取)  "cover_file_url":"" ,// 预览图URL (获取)}
+/** * @brief 创作作品额外信息 */  //resource_type=RESOURCE_TYPE_OFFRING_WORK"offring_work_extra_info": {    "cover_file_url": "",//封面文件URL (获取)    "preview_video_url": "",//预览文件URL（获取）    "display_name": {        "display_name_zh": "测试创作作品",        "display_name_en": "Test Creative Work"    },//显示的中文名和英文名 (获取)    "motions": [        {        //当motions的resources内为动作资源时使用normalMotion，当resources内为才艺资源时为WholeBodyDance。下面也有展示            "type": "NormalMotion",            "resources": [                {                    "source_type": 1,   //1表示SKILL_DETAIL_SOURCE_TYPE_LOCAL_RESOURCE(本地资源) 2表示SKILL_DETAIL_SOURCE_TYPE_SKILL_PACKAGE_RESOURCE（技能包自带资源）                    "path": "/agibot/data/resources/custom/motion/摆拍_我是大力士/摆拍_我是大力士.mcap"//orin下的资源文件路径                }            ]        }    ],    "emoticons": [        {
+            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/emoticon/emoticon_guiding/emoticon.mp4"                }            ]        }    ],    "audios": [        {            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/audio/测试/test.wav"                }            ]        }    ],}/** * @brief 创作作品额外信息 */ //resource_type=RESOURCE_TYPE_OFFRING_WORK"offring_work_extra_info": {    "cover_file_url": "",    "preview_video_url": "",    "display_name": {        "display_name_zh": "测试创作作品",        "display_name_en": "Test Creative Work"    },    "motions": [        {        //motions内为才艺资源时，参考以下示例            "type": "WholeBodyDance",            "resources": [                {                    "source_type": 1,                    "path": "加速时刻"                }            ]        }    ],    "emoticons": [        {
+            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/emoticon/emoticon_guiding/emoticon.mp4"                }            ]        }    ],    "audios": [        {            "resources": [                {                    "source_type": 1,                    "path": "/agibot/data/resources/custom/audio/测试/test.wav"                }            ]        }    ],}/** * @brief 地图额外信息 */  //resource_type=RESOURCE_TYPE_MAP  "map_extra_info": {    "map_info": {      "index": 2,      "map_path": "/agibot/data/var/MapManagerModule/1762584133656/",      "width": 1216.0,  //地图宽高，单位为像素      "height": 1262.0,      "resolution": 20.0, //每个像素代表的实际距离，单位毫米      "origin": {        "u": 524,  //世界坐标原点在地图的列索引        "v": 594   //世界坐标原点在地图的行索引      }    },    "topology_info": [  //拓扑信息，主要保存机器人导航点信息，对应AimMaster → 地图 → 点位功能设置的内容      {        "topo_msg": {          "cur_path_id": 0,          "cur_point_id": 1,          "cur_region_id": 0,          "hr_points": null,          "navi_points": [            {              "id": 1,              "name": "导航点1",              "pose": {                "x": 7.85,  //单位米                "y": -2.15,                "theta": -2.503741636798901 //单位弧度              },              "type": 1            }          ],          "paths": null,          "qr_points": null,          "regions": null,          "rotate_angle": 6.001279822735171,          "user_name": "",          "user_sn": 0        },        "user_name": ""      }    ]  },
+```
+
+## 7.13.3 创建资源
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/CreateResource` |
+| --- | --- |
+| 功能概述 | 创建资源 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/CreateResource |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource":{
+       "duration":3000,
+       "resource_name": "测试",
+       "resource_type": 2,
+       "tags":["展厅讲解","动态避障"],
+       "emoticon_extra_info":{
+          "emoticon_file_url":"tmp/e.mp4",
+          "thumbnail_file_url":"tmp/t.mp4",
+          "cover_file_url":"tmp/1.png"
+        }
+    }
+}
+```
+
+-   resource\_type：可在传参时输入参数的num或者参数名称，如2对应 “RESOURCE\_TYPE\_EMOTICON "，具体对应关系可参考7.13.2（推荐使用参数名称，数值形式仅为兼容保留）
+-   resource\_name：资源名称
+-   tags：标签
+-   xxxx\_extra\_info项需要与 resource\_type 对应，具体在部分参数声明中介绍。
+-   在创建资源后，每个资源会有resource\_id，resource\_id在创建时无需入参，为系统自增ID
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource create success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   出参内容与获取资源列表一致
+-   创建成功时 msg 显示：Resource create success
+-   创建失败时 msg 显示：Failed to create emoticon(emoticon是表情，如动作创建失败时为motion，会根据资源类型进行输出)
+
+ |
+| 示例脚本 | examples/resource\_manager/CreateResource.py |
+| 备注 | 
+
+-   注意技能资源不可创建。
+
+ |
+
+## 7.13.4 删除资源
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/DeleteResource` |
+| --- | --- |
+| 功能概述 | 删除某个资源 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/DeleteResource |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource":{
+       "resource_name": "测试",
+       "resource_type": 2,
+       "resource_id": "1",
+    }
+}
+```
+
+-   resource\_id 和 resource\_name 二者必须提供一个
+-   resource\_type **必须提供,不提供则默认删除所有资源**，2为RESOURCE\_TYPE\_EMOTICON = 2 具体介绍可参考7.13.2
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "1441801",
+    "msg": "Resource delete success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   删除成功msg显示：Resource delete success
+-   删除失败msg显示：Failed to delete resource
+
+ |
+| 示例脚本 | examples/resource\_manager/DeleteResource.py |
+| 备注 | 
+
+-   不支持对技能资源的删除
+
+ |
+
+## 7.13.5 表情资源更新
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/UpdateResource` |
+| --- | --- |
+| 功能概述 | 更新资源 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/UpdateResource |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource": {
+        "resource_id": 10001,
+        "resource_type": "RESOURCE_TYPE_EMOTICON",
+        "resource_name": "2222222222222222",
+        "emoticon_extra_info":{
+           "emoticon_file_url":"",
+           "thumbnail_file_url":"",
+           "cover_file_url":""
+        }
+    }
+}
+```
+
+-   除表情资源外，动作资源仅可修改resource\_name,其他资源更新暂不开放，若进行更新其他资源，出参会显示成功，但在获取资源信息时会发现资源信息没变。
+-   不支持对resource\_id、resource\_type修改
+
+ |
+| 出参  
+ | 
+
+```json
+
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource update success",
+    "trace_id": "",
+    "domin": ""
+  }
+}
+```
+
+-   更新成功msg显示：Resource update success
+-   更新失败msg显示：Failed to get original resource（一般为resource\_id输入错误导致）
+
+ |
+| 示例脚本 | examples/resource\_manager/UpdateResource.py |
+| 备注 |  |
+
+## 7.13.6 获取资源列表
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/GetResourceList` |
+| --- | --- |
+| 功能概述 | 获取资源列表 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResourceList |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+}
+```
+
+-   resource\_type：可参考7.13.2中 resource\_type 种类介绍
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource list get success",
+    "trace_id": "",
+    "domin": ""
+  },
+  "resources": [
+    {
+      "id": 36,
+      "resource_id": 16,
+      "resource_key": "",
+      "resource_version": "",
+      "resource_name": "emoticon_language_change",
+      "duration": 3000,
+      "resource_type": "RESOURCE_TYPE_EMOTICON",
+      "resource_path": "/agibot/data/resources/default/emoticon/emoticon_language_change/emoticon.mp4",
+      "source": "default",
+      "charge_type": "CHARGE_TYPE_FREE",
+      "is_change": false,
+      "create_time_stamp": "1767785325",
+      "update_time_stamp": "1767785325",
+      "expire_time_stamp": "0",
+      "last_used_time_stamp": "0",
+      "md5": "4a605dcb92af92adeaf874e1e4970ea2",
+      "description": "中英文切换时的表情",
+      "tags": [],
+      "scenes": [],
+      "emoticon_extra_info": {
+        "display_name": {
+          "zh_CN": "语言切换",
+          "en_US": "Language switch"
+        },
+        "emoticon_file_url": "default/emoticon/emoticon_language_change/emoticon.mp4", //在orin的agibot/data/resources/目录下
+        "thumbnail_file_url": "default/emoticon/emoticon_language_change/thumbnail.mp4",
+        "cover_file_url": "default/emoticon/emoticon_language_change/cover.png"
+      },
+      "usagerights": ["Agent"]
+    },
+    {
+      "id": 51,
+      "resource_id": 22,
+      "resource_name": "emoticon_voice_rejection",
+      "duration": 4000,
+      "resource_type": "RESOURCE_TYPE_EMOTICON",
+      "description": "用户输入的话被拒识，语音专属使用",
+      "emoticon_extra_info": {
+        "display_name": {
+          "zh_CN": "语音拒识",
+          "en_US": "Voice rejection"
+        }
+      },
+      "usagerights": ["Agent", "AimMaster"]
+    }
+    // …… 中间省略若干条 resources
+  ],
+  "tags": [],
+  "scenes": [
+    "normal-emoticon_list",
+    "task-associated_emoticon"
+  ],
+  "usagerights": [
+    "Agent",
+    "AimMaster"
+  ]
+}
+```
+
+-   resource\_id：资源ID
+-   resource\_name：资源名称
+-   double duration：资源时长，单位为毫秒(如果通过AimMatser导入和创建不需要传，如果直接通过api创建(非导入)需要填写)
+-   resource\_type：资源类型，参考7.13.2
+-   resource\_path：资源路径
+-   source：来源，目前只有两种类型：custom / default
+-   is\_change：是否支持修改
+-   create\_time\_stamp：创建时间戳
+-   update\_time\_stamp ：更新时间戳
+-   md5：主资源文件的md5
+-   description：描述
+-   tags：标签
+-   scenes：场景
+-   emoticon\_extra\_info：为 xxx\_extra\_info 已在7.13.2部分参数声明中介绍
+-   usagerights：使用权限
+-   其余出参为冗余输出
+
+ |
+| 示例脚本 | examples/resource\_manager/GetResourceList.py |
+| 备注 |  |
+
+## 7.13.7 获取单个资源信息
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/GetResource` |
+| --- | --- |
+| 功能概述 | 获取某个资源信息 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResource |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_id": "1",
+    "resource_name": "emoticon_prompt_words"    
+    "source": "custom"
+}
+```
+
+-   resource\_type：RESOURCE\_TYPE\_EMOTICON 表示使用表情类型，类型与获取资源列表类型一致
+-   resource\_type：必须提供
+-   resource\_id：与获取到的资源列表中的 resource\_id 对应
+-   resource\_name：与获取到的资源列表中的 resource\_name 对应
+-   source：表示资源来源 custom/default，通过RPC创建一般为 custom
+-   resource\_id 与 resource\_name 必须提供一个，如果提供的是 resource\_name 则必须提供 source，source 默认为default，通过 RPC 创建的资源必须提供 source=custom，提供 resource\_id 后 source 无需提供，建议以resource\_id为准。
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource get success",
+    "trace_id": "",
+    "domin": ""
+  },
+  "resource": {
+    "id": 34,
+    "resource_id": 1,
+    "resource_key": "",
+    "resource_version": "",
+    "resource_name": "emoticon_prompt_words",
+    "duration": 3000,
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_path": "/agibot/data/resources/default/emoticon/emoticon_prompt_words/emoticon.mp4",
+    "source": "default",
+    "charge_type": "CHARGE_TYPE_FREE",
+    "is_change": false,
+    "create_time_stamp": "1767785325",
+    "update_time_stamp": "1767785325",
+    "expire_time_stamp": "0",
+    "last_used_time_stamp": "0",
+    "md5": "efc6bbed41993c078f85cd9231365544",
+    "description": "通常用在特定的说明场景，告诉用户当前机器人的唤醒词是什么",
+    "tags": [],
+    "scenes": [],
+    "emoticon_extra_info": {
+      "display_name": {
+        "zh_CN": "唤醒词",
+        "en_US": "Prompt words"
+      },
+      "emoticon_file_url": "default/emoticon/emoticon_prompt_words/emoticon.mp4",
+      "thumbnail_file_url": "default/emoticon/emoticon_prompt_words/thumbnail.mp4",
+      "cover_file_url": "default/emoticon/emoticon_prompt_words/cover.png"
+    },
+    "usagerights": [
+      "Agent"
+    ]
+  }
+}
+```
+
+-   出参内容与获取资源列表一致
+
+ |
+| 示例脚本 | examples/resource\_manager/GetResource.py |
+| 备注 |  |
+
+## 7.13.8 资源迁出
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/ResourceMigrationOut` |
+| --- | --- |
+| 功能概述 | 资源迁出 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/ResourceMigrationOut |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "resource_type": "RESOURCE_TYPE_EMOTICON",
+    "resource_list": ["测试用"]
+}
+```
+
+-   resource\_list：内部填入需要导出资源的 resource\_name，可一次性填写多个，不可跨类别填写，如果不填则迁出该类所有资源，不可填入resource\_id信息。
+-   仅支持迁出动作、表情
+
+ |
+| 出参  
+ | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "Resource migration out processing!",
+    "trace_id": "",
+    "domin": ""
+  },
+  "migration_type": "MIGRATION_TYPE_UNKNOWN",
+  "task_id": "f3da3e78-1cb5-47ed-9c11-593030d2fe80"
+}
+```
+
+-   迁出文件目录可在迁移状态查看，一般在 /agibot/data/resources/tmp 目录下
+-   若resource\_list内有不存在的资源则返回"msg": "No resource found"
+-   task\_id：用于在迁移状态接口查看迁移文件名
+-   migration\_type暂未使用
+
+ |
+| 示例脚本 | examples/resource\_manager/ResourceMigrationOut.py |
+| 备注 |  |
+
+## 7.13.9 资源迁入
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/ResourceMigrationIn` |
+| --- | --- |
+| 功能概述 | 资源迁入 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/ResourceMigrationIn |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "migration_file": {
+        "file_url": "tmp/1767839589.gz"
+    }
+}
+```
+
+-   file\_url：在 /agibot/data/resources/tmp 目录下
+-   无 type 类型参数。
+
+ |
+| 出参  
+ | 
+
+```json
+{
+    "header": {
+        "code": "0",
+        "msg": "Resource migration task status get success",
+        "trace_id": "",
+        "domin": ""
+    },
+    "task_id":"23123123"
+}
+```
+
+ |
+| 示例脚本 | examples/resource\_manager/ResourceMigrationIn.py |
+| 备注 |  |
+
+## 7.13.10 迁移状态
+
+| 接口名 | `pb:/aimdk.protocol.ResourceService/GetResourceMigrationTaskStatus` |
+| --- | --- |
+| 功能概述 | 资源迁移状态 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:51049/rpc/aimdk.protocol.ResourceService/GetResourceMigrationTaskStatus |
+| 入参 | 
+```json
+{
+    "header": {
+        "timestamp": {
+            "seconds": "0",
+            "nanos": 0,
+            "ms_since_epoch": "1744598548952"
+        },
+        "control_source": 0
+    },
+    "task_id": "65987072-f9e6-495f-99ed-df1a437fd337"
+}
+```
+
+-   task\_id：从资源迁出接口的出参中获取
+
+ |
+| 出参  
+ | 
+
+```json
+{
+    "header": {
+        "code": "0",
+        "msg": "Resource migration task status get success",
+        "trace_id": "",
+        "domin": ""
+    },
+    "status": "MIGRATION_TASK_STATUS_COMPLETED",
+    "migration_file": {
+        "file_url": "tmp/1765265387.gz",
+        "client_md5": "ce857c64507b1d8c19cbfccb3bc9106b"
+    }
+}
+```
+
+-   file\_url：迁出文件所在的目录，一般在 /agibot/data/resources/tmp 目录下
+-   支持在x86上通过 wget http://192.168.100.110:64515/tmp/1769135144.gz 下载迁出文件
+
+ |
+| 示例脚本 | examples/resource\_manager/GetResourceMigrationTaskStatus.py |
+| 备注 |  |
+

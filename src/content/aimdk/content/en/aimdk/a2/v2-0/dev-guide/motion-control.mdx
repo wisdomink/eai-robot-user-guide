@@ -1,0 +1,1059 @@
+---
+title: 7.1 Motion Control Section
+description: >-
+  The A2 robot comes pre-installed with motion control programs, allowing users
+  to directly control the robot’s movement by sending high-level linear and
+  angular velocity commands. There is no need to develop low-level con…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - motion-control
+route: /en/a2/v2-0/dev-guide/motion-control
+sourceUrl: 'https://open.agibot.com/docs/en/aimdk/a2/v2_0/dev_guide/07-01-motion_control'
+order: 20
+---
+# 7.1 Motion Control Section
+
+### 7.1.1 Overall Introduction
+
+The A2 robot comes pre-installed with motion control programs, allowing users to directly control the robot’s movement by sending high-level linear and angular velocity commands. There is no need to develop low-level control models for walking or other functions. Additionally, the upper limb and neck joint interfaces provide direct access to hardware interfaces at the HAL layer.
+
+> By default, the low-level control interface for the lower limb joint motors is not open; they can only be controlled through high-level speed commands. If you need to develop your own motion control algorithms to replace the Agibot factory-installed algorithms, please refer to the “A2 Ultra Low-Level Motion Control Development Guide” in the documentation. Please read the risk warnings and safety precautions for motion control development carefully before proceeding.
+
+The Agibot motion control program is designed with a state machine that switches between different models and opens different upper limb control interfaces based on the current state. The state machine is shown in the following diagram:
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2F2w2MRczn.png&w=5520&h=3492&f=webp)
+
+Descriptions of each state are as follows:
+
+| **Action Type** | **Action Code** | **Chinese Name** | **Detailed Description** | **Callable Control Interfaces** |
+| --- | --- | --- | --- | --- |
+| Safety Action | DEFAULT | Default Mode | The default action after the motion control starts |  |
+| Position Control Action | RL\_JOINT\_DEFAULT | Reinforced Position Control Standing Mode | The robot stands with reinforced position control, straight legs |  |
+| Position Control Action | PASSIVE\_UPPER\_BODY\_JOINT\_SERVO | Lower Limb Passive, Upper Limb Servo Mode | Lower limbs are not enabled, arms can receive external joint servo commands | 
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+
+ |
+| Position Control Action | PASSIVE\_UPPER\_BODY\_PLANNING\_MOVE | Lower Limb Passive, Upper Limb RRT Planning Mode | Lower limbs are not enabled, upper limb path planning, RPC receives target joint angles or SE3 positions | 
+
+-   PlanningMove
+
+ |
+| Position Control Action | PASSIVE\_UPPER\_BODY\_COLLISON\_ESCAPE | Lower Limb Passive, Upper Limb Collision Avoidance Mode | Lower limbs are not enabled, upper limb avoids self-collision, can be used when the planning interface cannot be called after a collision, switching to this action will automatically separate |  |
+| Position Control Action | PASSIVE\_UPPER\_BODY\_ONLINE\_PLANNING | Lower Limb Passive, Upper Limb NMPC Planning Mode | Lower limbs are not enabled, upper limb path planning, RPC receives target joint angles or SE3 positions, can interrupt the current target | 
+
+-   PlanningMove
+
+ |
+| Position Control Action | SIT\_DOWN | Position Control Sitting Mode | Lower limb action, upper limbs remain still, works with a chair to sit down |  |
+| Position Control Action | STAND\_UP | Position Control Standing Up Mode | Lower limb action, upper limbs remain still, works with a chair to stand up |  |
+| Position Control Action | MOBILE\_PLATFORM\_STAND\_UP | Mobile Platform Position Control Standing Up Mode | Lower limb action, upper limbs remain still |  |
+| Position Control Action | MOBILE\_PLATFORM\_SIT\_DOWN | Mobile Platform Position Control Sitting Down Mode | Lower limb action, upper limbs remain still |  |
+| Position Control Action | RL\_SIT\_DOWN\_PASSIVE\_POWER\_OFF | Reinforced Deep Sit and Lean Back Mode | Lower limb action, upper limbs remain still, experimental feature, not recommended for use |  |
+| Position Control Action | RL\_STAND\_UP\_PREP\_POWER\_OFF | Reinforced Deep Sit and Stand Up Preparation Mode | Lower limb action, upper limbs remain still, experimental feature, not recommended for use |  |
+| Force Control Action | RL\_LOCOMOTION\_DEFAULT | Reinforced Walking Mode | Human-like walking mode trained with reinforcement learning, arms swing while walking | 
+
+-   /motion/control/locomotion\_velocity
+
+ |
+| Force Control Action | RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO | Reinforced Walking with Upper Limb Servo Mode | Lower limbs walk or stand in a human-like manner, upper limbs accept external joint servo commands, perform actions while walking or standing (uses a full-body control reinforcement model, more stable) | 
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+
+ |
+| Force Control Action | RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE | Reinforced Standing with Upper Limb RRT Planning Mode | Lower limbs stand with force control, upper limb path planning, RPC receives target joint angles or SE3 positions | 
+
+-   /motion/control/locomotion\_velocity
+-   PlanningMove
+
+ |
+| Force Control Action | RL\_LOCOMOTION\_ARM\_EXT\_COLLISON\_ESCAPE | Reinforced Standing with Upper Limb Collision Avoidance Mode | Lower limbs stand with force control, upper limb avoids self-collision, can be used when the planning interface cannot be called after a collision, switching to this action will automatically separate | 
+
+-   /motion/control/locomotion\_velocity
+
+ |
+| Force Control Action | RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO | Whole Body Action with Upper Limb Servo Mode | Lower limbs stand with force control, arms can receive external joint servo commands, additional waist control, the A2 robot does not have actual degrees of freedom in the waist, waist movements are achieved through leg motor coordination | 
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/arm\_joint\_command
+-   /motion/control/neck\_joint\_command
+-   /motion/control/hand\_joint\_command
+-   /motion/control/move\_waist
+-   /motion/control/move\_waist\_lift
+-   /motion/control/move\_waist\_pitch
+-   /motion/control/move\_waist\_twist
+
+ |
+| Force Control Action | RL\_WHOLE\_BODY\_DANCE | Whole Body Dance Mode | Can run specified whole-body dance actions | 
+
+-   SelectDanceType
+-   GetDanceTypeList
+
+ |
+| Force Control Action | RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING | Reinforced Standing with Upper Limb NMPC Planning Mode |
+
+Lower limb force control standing, upper limb path planning, rpc receives target joint angles or SE3 positions, can interrupt the current target
+
+-   /motion/control/locomotion\_velocity
+-   /motion/control/move\_waist
+-   /motion/control/move\_waist\_lift
+-   /motion/control/move\_waist\_pitch
+-   /motion/control/move\_waist\_twist
+-   PlanningMove
+
+Force Control Action RL\_SIT\_DOWN Reinforced shallow sitting Lower limb force control sitting, upper limb remains stationary, experimental feature not recommended for use Force Control Action RL\_STAND\_UP Reinforced shallow sitting stand up Lower limb force control standing up, upper limb remains stationary, experimental feature not recommended for use Force Control Action RL\_SIT\_DOWN\_POWER\_OFF Reinforced deep sitting, requires human assistance Lower limb force control sitting, upper limb remains stationary, experimental feature not recommended for use Force Control Action RL\_STAND\_UP\_POWER\_OFF Reinforced deep sitting stand up Lower limb force control standing up, upper limb remains stationary, experimental feature not recommended for use
+
+> Generally, it is not recommended to use the program for switching other than force control. It is only recommended to switch between different force control states using the program. Other switches, which involve operations such as lifting and lowering the robot, should only be performed manually.
+
+> Control interfaces generally have Action requirements. Interfaces that do not specify Action requirements and query interfaces generally have no Action restrictions.
+
+### 7.1.2 State Machine Switching and Querying RPC Interfaces
+
+| Interface Name | `pb:/aimdk.protocol.McActionService/SetAction` |
+| --- | --- |
+| Function Overview | Switch the motion control state machine |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McActionService/SetAction |
+| Input Parameters | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763614279,
+      "nanos": 847810000,
+      "ms_since_epoch": 1763614279847
+    },
+    "control_source": "ControlSource_SAFE"
+  },
+  "command": {
+    "action": "McAction_USE_EXT_CMD",
+    "ext_action": "RL_LOCOMOTION_DEFAULT"
+  }
+}
+```
+
+-   action: Fixed to McAction\_USE\_EXT\_CMD
+-   ext\_action: The actual motion control Action to switch to
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763643079",
+      "nanos": 849593506,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: The status of the request call
+
+ |
+| Example Script | examples/mc/SetAction.py |
+| Notes | 
+
+-   Asynchronous interface, completion of the call does not mean the switch is complete; use the GetAction interface to check if the switch is complete
+-   This interface has no Action restrictions
+
+ |
+
+| Interface Name | `pb:/aimdk.protocol.McActionService/GetAction` |
+| --- | --- |
+| Function Overview | Query the motion control state machine |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McActionService/GetAction |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763643026",
+      "nanos": 8207141,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "info": {
+    "current_action": "McAction_RL_LOCOMOTION_ARM_EXT_JOINT_SERVO",
+    "ext_action": "",
+    "status": "McActionStatus_RUNNING"
+  }
+}
+```
+
+-   current\_action: The currently running Action
+-   ext\_action: Extended Action, generally not used
+-   status: Action status, generally not used
+
+ |
+| Example Script | example/mc/actions.py |
+| Notes | 
+
+-   This interface has no Action restrictions
+
+ |
+
+Generally, the above two interfaces are used together, as shown in the following code example:
+
+```
+def ensure_action(action_name: str, retries=3, retry_interval=1.0, mc_ip: str = "127.0.0.1"):    try:        for i in range(retries):            if get_action(mc_ip) == action_name:                return True            set_action(action_name, mc_ip)            time.sleep(0.1 if i == 0 else retry_interval)    except Exception as e:        print(f"Failed to set action: {e}")        return False    return False
+```
+
+### 7.1.3 Walking Control Instruction Topic Interface
+
+| Interface Name | `/motion/control/locomotion_velocity` |
+| --- | --- |
+| Function Overview | Walking control instruction |
+| Interface Type | ROS2 Topic |
+| Input Parameters | 
+```json
+{
+  "data": {
+    "mode": 0,
+    "forward_velocity": 0.1,
+    "lateral_velocity": 0.0,
+    "angular_velocity": 0.0
+  }
+}
+```
+
+-   mode: Speed control mode
+    
+    -   0 for remote control scenarios
+    -   1 for navigation mode, with faster speed response; 0.05 m/s activates stepping, and stepping stops if no speed command is received within 500ms after stepping
+-   forward\_velocity: Forward velocity, ranging from -0.3 to 1.2 m/s in RL\_LOCOMOTION\_DEFAULT mode, and from -0.4 to 0.6 m/s in other modes
+    
+-   lateral\_velocity: Lateral velocity, ranging from -0.25 to 0.25 m/s in RL\_LOCOMOTION\_DEFAULT mode, and from -0.3 to 0.3 m/s in other modes
+    
+-   angular\_velocity: Angular velocity, ranging from -1.0 to 1.0 rad/s in RL\_LOCOMOTION\_DEFAULT mode, and from -0.8 to 0.8 m/s in other modes
+    
+
+ |
+| Example Script | examples/mc/walk.py |
+| Notes | 
+
+-   Due to joint heat dissipation limitations, continuous walking at speeds of 1.0 m/s or higher can cause motor overheating. Please avoid prolonged high-speed walking as much as possible. Closely monitor related warnings during high-speed walking, and stop the operation immediately if any motor abnormalities such as overheating occur.
+    
+-   The ROS2 type of this message is ros2\_plugin\_proto/msg/RosMsgWrapper. It requires sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash before use.
+    
+-   This interface has call restrictions and can only be used in the following Actions. The commands work best in RL\_LOCOMOTION\_DEFAULT mode, while other modes have a smaller speed range.
+    
+    -   RL\_LOCOMOTION\_DEFAULT
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE
+    -   RL\_LOCOMOTION\_ARM\_EXT\_COLLISION\_ESCAPE
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+### 7.1.4 Waist Control Instruction and Status Topic Interface
+
+| Interface Name | `/motion/control/move_waist` |
+| --- | --- |
+| Function Overview | Waist control instruction, can control all degrees of freedom simultaneously |
+| Interface Type | ROS2 Topic |
+| Input Parameters | 
+```json
+{
+  "data": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.1,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": 0.0
+  }
+}
+```
+
+-   x: Invalid field
+    
+-   y: Invalid field
+    
+-   z: Squat, range -0.25 to 0.00 m
+    
+-   roll: Invalid field
+    
+-   pitch: Bend forward, range 0 to 0.5236 rad, note the coupling relationship with z squat
+    
+    -   As z increases, the maximum bend (pitch maximum value) linearly increases from 0 to 0.5236, then remains at the maximum value of 0.5236, and finally linearly decreases to 0.436, corresponding to three segments of z ranges \[0, -0.08\], \[-0.08, -0.17\], \[-0.17, -0.25\]
+    -   The minimum pitch value is 0, only able to lean forward, not backward
+-   yaw: Turn, range -0.5236 to 0.5236 rad
+    
+
+ |
+| Example Script | examples/mc/move\_waist.py |
+| Notes | 
+
+-   The ROS2 message type for this is ros2\_plugin\_proto/msg/RosMsgWrapper, which requires sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash before use
+    
+-   The A2 robot does not have an independent waist degree of freedom in its physical design; this waist degree of freedom is a virtual one, simulated by reinforcement learning algorithms through leg joint motors
+    
+-   This interface has usage restrictions and can only be called in the following Actions
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/move_waist_lift` |
+| --- | --- |
+| Function Overview | Waist squat control instruction |
+| Interface Type | ROS2 Topic |
+| Input Parameters | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_lift_value": 0.0
+}
+```
+
+-   waist\_lift\_value: Waist squat, range -0.25 to 0.00 m
+
+ |
+| Example Script | examples/mc/move\_waist\_lift.py |
+| Notes | 
+
+-   The ROS2 message type for this is ros2\_plugin\_proto/msg/RosMsgWrapper, which requires sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash before use
+    
+-   The A2 robot does not have an independent waist degree of freedom in its physical design; this waist degree of freedom is a virtual one, simulated by reinforcement learning algorithms through leg joint motors
+    
+-   This interface has usage restrictions and can only be called in the following Actions
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/move_waist_twist` |
+| --- | --- |
+| Function Overview | Waist twist (turn) control instruction |
+| Interface Type | ROS2 Topic |
+| Input Parameters | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_twist_value": 0.0
+}
+```
+
+-   waist\_twist\_value: Twist angle, range -0.5236 to 0.5236 rad
+
+ |
+| Example Script | examples/mc/move\_waist\_twist.py |
+| Notes | 
+
+-   The ROS2 message type for this is ros2\_plugin\_proto/msg/RosMsgWrapper, which requires sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash before use
+    
+-   The A2 robot does not have an independent waist degree of freedom in its physical design; this waist degree of freedom is a virtual one, simulated by reinforcement learning algorithms through leg joint motors
+    
+-   This interface has usage restrictions and can only be called in the following Actions
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/move_waist_pitch` |
+| --- | --- |
+| Function Overview | Waist bend forward instruction |
+| Interface Type | ROS2 Topic |
+| Input Parameters | 
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763681490,
+      "nanos": 943287000,
+      "ms_since_epoch": 1763681490943
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "waist_pitch_value": 0.0
+}
+```
+
+-   waist\_pitch\_value: Pitch angle, range 0 to 0.5236 rad, has a certain coupling relationship with squatting. For details, please refer to the /motion/control/move\_waist interface documentation.
+
+ |
+| Example Script | examples/mc/move\_waist\_pitch.py |
+| Notes | 
+
+-   The ROS2 type of this message is ros2\_plugin\_proto/msg/RosMsgWrapper. It needs to be used after sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash.
+    
+-   The A2 robot does not have an independent waist degree of freedom in its physical design. This waist degree of freedom is a virtual one, simulated by the leg joint motors using a reinforcement learning algorithm.
+    
+-   This interface has call restrictions and can only be called in the following Actions:
+    
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/waist_state` |
+| --- | --- |
+| Function Overview | Waist state topic |
+| Interface Type | ROS2 Topic |
+| Output Parameters | 
+```json
+{
+  "x": 0.0,
+  "y": 0.0,
+  "z": 0.0,
+  "roll": 0.0,
+  "pitch": 0.0,
+  "yaw": 0.0
+}
+```
+
+-   The meaning of each field can be found in the documentation for the /motion/control/move\_waist interface.
+
+ |
+| Example Script | examples/mc/waist\_state.py |
+| Notes | 
+
+-   This interface has no Action restrictions.
+-   The ROS2 type of this message is ros2\_plugin\_proto/msg/RosMsgWrapper. It needs to be used after sourcing prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash.
+-   The data field in RosMsgWrapper is serialized pb data of type McWaistValue. You need to install the protocol package using pip install prebuilt/a2\_aimdk-1.3.0-py3-none-any.whl.
+
+ |
+
+### 7.1.5 Neck Control Instructions and Status Topic Interface
+
+| Interface Name | `/motion/control/neck_joint_command` |
+| --- | --- |
+| Function Overview | Neck control instructions |
+| Interface Type | ROS2 Topic |
+| Input Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: Joint name, fixed to \["idx27\_head\_joint1", "idx28\_head\_joint2"\]
+-   position: Joint angle, the first value represents the yaw degree of freedom, ranging from -0.785 to 0.785 rad, the second value represents the pitch degree of freedom, ranging from -0.401 to 0.401 rad
+-   velocity: Invalid field, leave blank
+-   effort: Invalid field, leave blank
+
+ |
+| Example Script | examples/mc/neck.py |
+| Notes | 
+
+-   Note that in JOINT\_SERVO mode, this interface is taken over by the motion\_player module by default. Please call examples/motion\_player/disable\_motion\_player.sh to disable it before sending instructions.
+    
+-   This interface has usage restrictions and can only be called in the following Actions:
+    
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/neck_joint_state` |
+| --- | --- |
+| Function Overview | Neck status topic |
+| Interface Type | ROS2 Topic |
+| Output Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   position: Joint angle, the first value represents the yaw degree of freedom, ranging from -0.785 to 0.785 rad, the second value represents the pitch degree of freedom, ranging from -0.401 to 0.401 rad
+
+ |
+| Example Script | examples/mc/joint\_state.py |
+| Notes | 
+
+-   This interface has no Action restrictions
+
+ |
+
+### 7.1.6 Neck Control Instructions and Status RPC Interfaces
+
+The above neck control topic interfaces are suitable for scenarios requiring continuous and precise control of the neck angle, such as remote operation, and can only be called in JOINT\_SERVO mode. For certain scenarios where simple control to a specific angle is sufficient, the following RPC interfaces can be used.
+
+| Interface Name | `pb:/aimdk.protocol.McMotionService/SetNeckCommand` |
+| --- | --- |
+| Function Overview | Set neck command |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/SetNeckCommand |
+| Input Parameters | 
+```json
+{
+  "data": {
+    "shake": {
+      "name": "idx27_head_joint1",
+      "position": 0.5,
+      "velocity": 0.0,
+      "effort": 0.0
+    },
+    "nod": {
+      "name": "idx28_head_joint2",
+      "position": 0.0,
+      "velocity": 0.0,
+      "effort": 0.0
+    }
+  }
+}
+```
+
+-   Only the position fields in shake and nod are meaningful; other fields should remain unchanged. The range for shake is -0.785 to 0.785 rad, and for nod, it is -0.401 to 0.401 rad.
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762845079",
+      "nanos": 921954699,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/mc/SetNeckCommand.py |
+| Notes | 
+
+-   This interface has no Action restrictions.
+-   Note that in JOINT\_SERVO mode, this interface is by default taken over by the motion\_player module. Please disable it using examples/motion\_player/disable\_motion\_player.sh before sending commands.
+
+ |
+
+| Interface Name | `pb:/aimdk.protocol.McDataService/GetNeckState` |
+| --- | --- |
+| Function Overview | Get neck state |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/GetNeckState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1762846182",
+      "nanos": 679221245,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "data": {
+    "shake": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    },
+    "nod": {
+      "name": "",
+      "sequence": 0,
+      "position": 0,
+      "velocity": 0,
+      "effort": 0
+    }
+  }
+}
+```
+
+-   Only the position fields in shake and nod are meaningful; other fields should remain unchanged. The range for shake is -0.785 to 0.785 rad, and for nod, it is -0.401 to 0.401 rad.
+
+ |
+| Example Script | examples/mc/GetNeckState.py |
+| Notes | This interface has no Action restrictions. |
+
+### 7.1.7 Finger Control Command and Status Topic Interface
+
+| Interface Name | `/motion/control/hand_joint_command` |
+| --- | --- |
+| Function Overview | Finger control command |
+| Interface Type | ROS2 Topic |
+| Input Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   frame\_id: The hand type for A2. A2 supports two types: AgiHand and O10Hand; AgiHand is the default if not specified. The current hand type can be identified through the header.frame\_id field in the hand\_joint\_state topic.
+-   name：The joint name is optional; you can leave it blank and leave it as the default, or you can get it from the name field in the hand\_joint\_state topic.
+-   position：Joint angles, in the order corresponding to the joints in the name field, range from 0 to 2000. The abstract value has no unit; 0 represents fully open, and 2000 represents fully closed.
+-   velocity: Invalid field, leave blank
+-   effort: Joint torque, the order corresponds to the joints in the name field. When the hand is AgiHand, the range is 0 to 5700, where 0 represents no torque in the corresponding actuator motor, and 5700 represents the maximum torque of 5.7N. When the hand is O10Hand, this field is left blank.
+
+ |
+| Example Script | examples/mc/hand.py |
+| Notes | 
+
+-   The finger control logic is such that the movement stops when either the position or torque condition is met. For example, if a position of 1000 and a torque of 5700 are sent for a specific finger, and there is no external object obstructing the finger, the movement will stop when the position reaches 1000, and the torque will remain at a lower value. If an external object obstructs the finger (e.g., grasping an object), the torque will increase to around 5700, corresponding to an output of 5.7N from the actuator.
+    
+-   Note that in JOINT\_SERVO mode, this interface is by default taken over by the motion\_player module. Please disable it using examples/motion\_player/disable\_motion\_player.sh before sending commands.
+    
+-   This interface has usage restrictions and can only be called in the following Actions:
+    
+    -   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+    -   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/hand_joint_state` |
+| --- | --- |
+| Function Overview | Finger status topic |
+| Interface Type | ROS2 Topic |
+| Output Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: Names of the joints for each finger
+-   frame\_id：A2 Hand Type
+-   position: Angles of the joints for each finger, range 0 to 2000
+-   velocity: Invalid field
+-   effort：The torque of each finger ranges from 0 to 5700.。  
+    AgiHand outputs 12-dimensional parameters corresponding to each joint, while O10Hand outputs are constructed from multi-dimensional arrays.  
+    This includes data from an array of pressure sensors on both hands. The data is arranged as follows:  
+    \- Left hand pressure: 16-dimensional thumb + 16-dimensional index + 16-dimensional middle + 16-dimensional ring + 16-dimensional pinky + 25-dimensional palm + 25-dimensional back of hand  
+    \- Right-hand pressure: The structure and sequence are the same as the left-hand pressure, appended after the left-hand pressure data.
+
+ |
+| Example Script | examples/mc/joint\_state.py |
+| Notes | 
+
+-   Due to zero position influence, the position range may slightly drift, which is normal.
+-   Torque may be slightly affected by the internal linkage, pivot, and spring mechanisms, and may show a small negative value (within -1000), which is normal.
+-   Negative values may also appear when the fingers are subjected to external forces, which is normal.
+-   This interface has no Action restrictions.
+
+ |
+
+### 7.1.8 Finger Control Commands, Status RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.McMotionService/SetHandCommand` |
+| --- | --- |
+| Function Overview | Set finger commands |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/SetHandCommand |
+| Input Parameters | 
+```json
+{
+  "data": {
+    "left": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 0,
+            "thumb_pos_1": 0,
+            "index_pos": 0,
+            "middle_pos": 1000,
+            "ring_pos": 1000,
+            "pinky_pos": 1000
+          },
+          "toq": {
+            "thumb_toq_0": 100,
+            "thumb_toq_1": 100,
+            "index_toq": 100,
+            "middle_toq": 100,
+            "ring_toq": 100,
+            "pinky_toq": 100
+          }
+        }
+      }
+    },
+    "right": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 0,
+            "thumb_pos_1": 1000,
+            "index_pos": 1000,
+            "middle_pos": 1000,
+            "ring_pos": 1000,
+            "pinky_pos": 1000
+          },
+          "toq": {
+            "thumb_toq_0": 100,
+            "thumb_toq_1": 100,
+            "index_toq": 100,
+            "middle_toq": 100,
+            "ring_toq": 100,
+            "pinky_toq": 100
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+-   Position range: 0 to 2000, torque range: 0 to 5700
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763696261",
+      "nanos": 18212539,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "state": "CommonState_SUCCESS"
+}
+```
+
+-   state: Call request status
+
+ |
+| Example Script | examples/mc/SetHandCommand.py |
+| Notes | 
+
+-   This interface has no Action restrictions
+-   Note that in JOINT\_SERVO mode, this interface is taken over by the motion\_player module by default. Please disable it using examples/motion\_player/disable\_motion\_player.sh before sending commands
+
+ |
+
+| Interface Name | `pb:/aimdk.protocol.McMotionService/GetHandState` |
+| --- | --- |
+| Function Overview | Get finger state |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McDataService/GetHandState |
+| Input Parameters | 
+```json
+{}
+```
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "data": {
+    "left": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 500,
+            "thumb_pos_1": 1001,
+            "index_pos": 998,
+            "middle_pos": 998,
+            "ring_pos": 999,
+            "pinky_pos": 998
+          },
+          "toq": {
+            "thumb_toq_0": 0,
+            "thumb_toq_1": 0,
+            "index_toq": 0,
+            "middle_toq": 0,
+            "ring_toq": 0,
+            "pinky_toq": 0
+          }
+        }
+      }
+    },
+    "right": {
+      "agi_hand": {
+        "finger": {
+          "pos": {
+            "thumb_pos_0": 500,
+            "thumb_pos_1": 1000,
+            "index_pos": 998,
+            "middle_pos": 998,
+            "ring_pos": 999,
+            "pinky_pos": 998
+          },
+          "toq": {
+            "thumb_toq_0": 0,
+            "thumb_toq_1": 0,
+            "index_toq": 0,
+            "middle_toq": 0,
+            "ring_toq": 0,
+            "pinky_toq": 0
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+-   The values represent the position and torque of the fingers, with a position range of 0 to 2000 and a torque range of 0 to 5700
+
+ |
+| Example Script | examples/mc/GetHandState.py |
+| Notes | 
+
+-   The position may slightly drift due to zero position influence, which is normal
+-   The torque may be slightly less than 0 (within -1000) due to the internal linkage, shafts, and spring mechanisms in the fingers, which is normal
+-   Negative values may also appear when the fingers are affected by external forces, which is normal
+-   This interface has no Action restrictions
+
+ |
+
+### 7.1.9 Arm Control Command and Status Topic Interfaces
+
+| Interface Name | `/motion/control/arm_joint_command` |
+| --- | --- |
+| Function Overview | Arm joint control command |
+| Interface Type | ROS2 Topic |
+| Input Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: Joint names, fixed as \["idx13\_left\_arm\_joint1", "idx14\_left\_arm\_joint2", "idx15\_left\_arm\_joint3", "idx16\_left\_arm\_joint4", "idx17\_left\_arm\_joint5", "idx18\_left\_arm\_joint6", "idx19\_left\_arm\_joint7", "idx20\_right\_arm\_joint1", "idx21\_right\_arm\_joint2", "idx22\_right\_arm\_joint3", "idx23\_right\_arm\_joint4", "idx24\_right\_arm\_joint5", "idx25\_right\_arm\_joint6", "idx26\_right\_arm\_joint7"\]
+-   position: Joint angles, must fill in the angle values for 14 joints
+-   velocity: Invalid field, set to 0.0
+-   effort: Invalid field, set to 0.0
+
+ |
+| Example Script | examples/mc/arm.py |
+| Notes | 
+
+-   Note that in JOINT\_SERVO mode, this interface is taken over by the motion\_player module by default. Please call examples/motion\_player/disable\_motion\_player.sh to disable it before sending commands.
+-   This interface is recommended to be called at a frequency of 100 Hz. When calling, ensure that the interval between adjacent commands does not exceed 0.03, ensuring that **the speed does not exceed 3 rad/s and the maximum acceleration does not exceed 6.28** rad/s^2. The commands should be as smooth as possible; otherwise, there may be jitter. It is recommended to use at least a basic low-pass filtering method: y(k) = (1 - a) \* y(k - 1) + a \* x(k).
+-   Angle limits are as follows (in radians)
+
+-   idx13\_left\_arm\_joint1: -2.91 ~ 2.91
+-   idx14\_left\_arm\_joint2: -0.46 ~ 1.60
+-   idx15\_left\_arm\_joint3: -2.91 ~ 2.91
+-   idx16\_left\_arm\_joint4: -2.00 ~ -0.03
+-   idx17\_left\_arm\_joint5: -2.94 ~ 2.94
+-   idx18\_left\_arm\_joint6: -0.45 ~ 0.45
+-   idx19\_left\_arm\_joint7: -0.35 ~ 0.35
+-   idx20\_right\_arm\_joint1: -2.91 ~ 2.91
+-   idx21\_right\_arm\_joint2: -1.60 ~ 0.46
+-   idx22\_right\_arm\_joint3: -2.91 ~ 2.94
+-   idx23\_right\_arm\_joint4: 0.03 ~ 2.00
+-   idx24\_right\_arm\_joint5: -2.94 ~ 2.94
+-   idx25\_right\_arm\_joint6: -0.45 ~ 0.45
+-   idx26\_right\_arm\_joint7: 0.35 ~ 0.35
+
+-   This interface has usage restrictions and can only be called in the following Actions
+
+-   PASSIVE\_UPPER\_BODY\_JOINT\_SERVO
+-   RL\_LOCOMOTION\_ARM\_EXT\_JOINT\_SERVO
+-   RL\_WHOLE\_BODY\_EXT\_JOINT\_SERVO
+
+ |
+
+| Interface Name | `/motion/control/arm_joint_state` |
+| --- | --- |
+| Function Overview | Arm joint state topic |
+| Interface Type | ROS2 Topic |
+| Output Parameters | [sensor\_msgs::msg::JointState](https://docs.ros.org/en/humble/p/sensor_msgs/msg/JointState.html)
+-   name: 14 joint names
+-   position: 14 joint angles
+-   velocity: 14 joint velocities
+-   effort: 14 joint torques
+
+The 6th and 7th joints of both arms are equivalent series joint data, with only the position field, and no velocity or effort fields |
+| Example Script | examples/mc/joint\_state.py |
+| Notes | This interface has no Action restrictions |
+
+Note: The 6th and 7th joints of the dual-arm are connected via a parallel mechanism to control the wrist. Due to the geometric constraints of the parallel mechanism, the reachable workspace, when the translational degrees of freedom of the push rod are mapped to the pitch/roll serial degrees of freedom, does not form a rectangular area but rather a rhombus-like region, as illustrated by the blue area in the figure below:
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FDtD8nkop.png&w=2004&h=1452&f=webp)
+
+For optimal tracking performance, the yellow region in the diagram is recommended. The corresponding joint limits for joints 6 and 7 are \[-0.3, 0.3\] and \[-0.2, 0.2\], respectively.
+
+Below are the overall joint limit ranges for all joints of the dual-arm system after applying the aforementioned limits for the yellow region:
+
+lower\_bound: \[-3.0, -0.524, -2.967, -2.094, -2.967, -0.3, -0.2, -3.0, -1.5358897, -2.967, 0.1, -2.967, -0.3, -0.2\]
+
+upper\_bound: \[3.0, 1.5358897, 2.967, -0.1, 2.967, 0.3, 0.2, 3.0, 0.524, 2.967, 2.094, 2.967, 0.3, 0.2\]
+
+### 7.1.10 Arm Control Command RPC Interface
+
+| Interface Name | `pb:/aimdk.protocol.McMotionService/PlanningMove` |
+| --- | --- |
+| Function Overview | Upper limb planning control interface |
+| Interface Type | HTTP JSON RPC |
+| URL | http://192.168.100.100:56322/rpc/aimdk.protocol.McMotionService/PlanningMove |
+| Input Parameters | Two types of input parameters can be passed, either the end-effector SE3 pose or joint angles
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763696866,
+      "nanos": 231707000,
+      "ms_since_epoch": 1763696866231
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "group": "McPlanningGroup_LEFT_ARM",
+  "mode": "McPlanningMode_DEFAULT",
+  "target": {
+    "type": "SE3",
+    "left": {
+      "position": {
+        "x": 0.35,
+        "y": 0.35,
+        "z": 0.25
+      },
+      "orientation": {
+        "x": 0.570822,
+        "y": -0.0606913,
+        "z": -0.0106989,
+        "w": 0.818758
+      }
+    },
+    "right": {
+      "position": {
+        "x": 0.35,
+        "y": -0.35,
+        "z": 0.25
+      },
+      "orientation": {
+        "x": -0.570817,
+        "y": -0.0606912,
+        "z": 0.0106992,
+        "w": 0.818761
+      }
+    }
+  },
+  "reference": {
+    "joint_position": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}
+```
+
+```json
+{
+  "header": {
+    "timestamp": {
+      "seconds": 1763697224,
+      "nanos": 63165000,
+      "ms_since_epoch": 1763697224063
+    },
+    "control_source": "ControlSource_MANUAL"
+  },
+  "mode": "McPlanningMode_DEFAULT",
+  "group": "McPlanningGroup_LEFT_ARM",
+  "target": {
+    "type": "JOINT",
+    "joints": [
+      0.142856,
+      1.06998,
+      -0.152017,
+      -1.42857,
+      2.3139,
+      -0.100991,
+      -0.269986
+    ]
+  }
+}
+```
+
+-   group indicates the arm to be moved, McPlanningGroup\_LEFT\_ARM for the left arm, and McPlanningGroup\_RIGHT\_ARM for the right arm
+    
+-   target indicates the target point for the arm to move to,
+    
+    -   position represents the target position
+    -   orientation represents the target quaternion
+    -   joints represent the joint angles to be passed in, sequentially from J1 to J7
+-   reference's joint\_position represents the reference joint angles, generally set to 0. If not all are 0 and the length is consistent with the number of robot arm joints, i.e., 7 reference values, the robot will try to reach the target point as close as possible to these joint angles
+    
+
+ |
+| Output Parameters | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "called successfully.",
+    "timestamp": {
+      "seconds": "1763697146",
+      "nanos": 154213397,
+      "ms_since_epoch": "0"
+    },
+    "trace_id": "",
+    "domin": ""
+  },
+  "task_id": "755481177558037",
+  "state": "CommonState_PENDING"
+}
+```
+
+-   Since this interface is asynchronous, it cannot directly return whether the task call is completed. You only need to save the task\_id and then call the GetTaskState interface to query if the call is completed
+
+ |
+| Example Scripts | examples/mc/PlanningMoveSE3.py examples/mc/PlanningMoveJoint.py |
+| Notes | 
+
+-   This interface has Action restrictions and can only be called in the following Actions:
+    
+    -   PASSIVE\_UPPER\_BODY\_PLANNING\_MOVE
+    -   PASSIVE\_UPPER\_BODY\_ONLINE\_PLANNING
+    -   RL\_LOCOMOTION\_ARM\_EXT\_PLANNING\_MOVE
+    -   RL\_WHOLE\_BODY\_EXT\_ONLINE\_PLANNING
+-   In ONLINE\_PLANNING mode, the current executing target can be interrupted to execute the next target directly. In this mode, the task execution status cannot be queried because the execution judgment is handed over to a higher level.
+    
+-   In ONLINE\_PLANNING mode, the difference between the command and the current position should not be too large. For example, moving the hand from in front of the body to behind the body may result in a failed plan, leaving the hand in an odd position.
+    
+-   The SE3 target point is represented in the base coordinate system of the robot, indicating the position and orientation of the robot's palm. There is a certain offset relative to the end link in the URDF to make the end link poses of the left and right arms consistent, facilitating calculations.
+    
+    -   The left arm target point is offset by \[-0.1, 0.0, 0.0\] relative to left\_arm\_link07, and the quaternion orientation is offset by \[0.0, 0.0, 0.70710678, 0.70710678\]
+    -   The right arm target point is offset by \[0.1, 0.0, 0.0\] relative to right\_arm\_link07, and the quaternion orientation is offset by \[-0.70710678, 0.70710678, 0.0, 1.0\]
+-   To calculate the palm pose, you can first subscribe to the ros2 tf topic and then calculate the palm position. An example calculation is as follows:
+    
+    ```python
+    import numpy as np
+    from scipy.spatial.transform import Rotation as R
+    ```
+    
+
+ |
+

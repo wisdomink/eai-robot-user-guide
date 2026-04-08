@@ -1,0 +1,327 @@
+---
+title: 任务执行引擎模块
+description: >-
+  本页面放置了任务执行引擎模块（TaskEngine）包含的话题与服务的相关文档协议，以支持用户进行任务的启动和控制等。
+  注意本模块仅对任务进行启动和控制，不包含任务的创建、修改、删除等管理相关操作，管理操作请到 AimMaster 上进行查看。 该模块接口能力主要为
+  AimMaster 上的任务启停等提供一个程序化接口进行轻度二开。 另外请注意尽量不要混用 AimMaster 控制和 TaskEngine
+  接口控制，部分接口调用冲突可能…
+product: a2w
+slug:
+  - a2w
+  - protocol-task-engine
+route: /zh/a2w/protocol-task-engine
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/task_engine/readme'
+order: 170
+---
+# 任务执行引擎模块
+
+本页面放置了任务执行引擎模块（TaskEngine）包含的话题与服务的相关文档协议，以支持用户进行任务的启动和控制等。
+
+注意本模块仅对任务进行启动和控制，不包含任务的创建、修改、删除等管理相关操作，管理操作请到 AimMaster 上进行查看。 该模块接口能力主要为 AimMaster 上的任务启停等提供一个程序化接口进行轻度二开。
+
+另外请注意尽量不要混用 AimMaster 控制和 TaskEngine 接口控制，部分接口调用冲突可能导致未定义行为。
+
+本模块在旗舰款上位于 orin 开发板上，http 后端监听的端口均为 57881。
+
+注：调用执行引擎时必须先保证机器人状态处于**自动模式**，可在 AimMaster 上进行调整。
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.TaskEngineService/GetTask` | 获取单个任务的执行信息 | [aimdk::protocol::GetTaskRequest](#aimdk-protocol-gettaskrequest) | [aimdk::protocol::GetTaskResponse](#aimdk-protocol-gettaskresponse) |  | http |
+| `pb:/aimdk.protocol.TaskEngineService/GetAllTasks` | 获取全部任务的执行信息 | [aimdk::protocol::GetAllTasksRequest](#aimdk-protocol-getalltasksrequest) | [aimdk::protocol::GetAllTasksResponse](#aimdk-protocol-getalltasksresponse) |  | http |
+| `pb:/aimdk.protocol.TaskEngineService/GetAllFSMs` | 获取全部任务FSM信息 | [aimdk::protocol::GetAllFSMsRequest](#aimdk-protocol-getallfsmsrequest) | [aimdk::protocol::GetAllFSMsResponse](#aimdk-protocol-getallfsmsresponse) |  | http |
+| `pb:/aimdk.protocol.TaskEngineService/SetTask` | 设置任务信息 | [aimdk::protocol::SetTaskRequest](#aimdk-protocol-settaskrequest) | [aimdk::protocol::SetTaskResponse](#aimdk-protocol-settaskresponse) | 用于创建或修改任务 | http |
+| `pb:/aimdk.protocol.TaskEngineService/SetCurrentTask` | 输入任务ID并设置任务 | [aimdk::protocol::SetCurrentTaskRequest](#aimdk-protocol-setcurrenttaskrequest) | [aimdk::protocol::SetCurrentTaskResponse](#aimdk-protocol-setcurrenttaskresponse) | 有任务正在执行时不可调用 | http |
+| `pb:/aimdk.protocol.TaskEngineService/DeleteTask` | 删除任务 | [aimdk::protocol::DeleteTaskRequest](#aimdk-protocol-deletetaskrequest) | [aimdk::protocol::DeleteTaskResponse](#aimdk-protocol-deletetaskresponse) |  | http |
+| `pb:/aimdk.protocol.TaskEngineService/DeleteTaskMap` | 删除任务地图 | [aimdk::protocol::DeleteTaskMapRequest](#aimdk-protocol-deletetaskmaprequest) | [aimdk::protocol::DeleteTaskMapResponse](#aimdk-protocol-deletetaskmapresponse) |  | http |
+| `pb:/aimdk.protocol.TaskEngineService/LaunchTask` | 开始任务执行 | [aimdk::protocol::LaunchTaskRequest](#aimdk-protocol-launchtaskrequest) | [aimdk::protocol::LaunchTaskResponse](#aimdk-protocol-launchtaskresponse) | 1\. 在开始任务执行之前需要先调用 `SetCurrentTask` 接口设置当前任务  
+2\. 需传入相同的 task\_id，传入不同 task\_id 属未定义行为 | http |
+| `pb:/aimdk.protocol.TaskEngineService/CtrlTaskState` | 控制任务暂停、继续、终止等 | [aimdk::protocol::CtrlTaskStateRequest](#aimdk-protocol-ctrltaskstaterequest) | [aimdk::protocol::CtrlTaskStateResponse](#aimdk-protocol-ctrltaskstateresponse) |  | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::Task`
+
+任务元信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| task\_id | int64 | 任务id，用于全局标识唯一一个任务。在任务创建/修改接口中，task\_id > 0 视为修改任务 task\_id < 0 视为创建新任务。客户端获得全部 task\_id 的方式是调用 GetAllTasks 接口 |
+| name | string | 任务名 |
+| fsm\_name | string | 任务FSM名 |
+| is\_valid | bool | 任务有效性 |
+| state | [aimdk::protocol::Task::StateType](#aimdk-protocol-task-statetype) | 任务状态 |
+| duration | int64 | 任务执行时间，选填 |
+| setting | string | 系统任务配置后传输给task engine的yaml原文，选填 |
+| task\_data | bytes | Task内部的随路数据 |
+
+### `aimdk::protocol::Task::StateType`
+
+状态类型
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| StateType\_UNDEFINED | 0 |  |
+| StateType\_IDLE | 1 | 静默状态 |
+| StateType\_RUNNING | 2 | 运行中 |
+| StateType\_PAUSED | 3 | 暂停 |
+| StateType\_STOPPED | 4 | 终止 |
+| StateType\_PAUSING | 5 | 暂停中 |
+| StateType\_STOPPING | 6 | 终止中 |
+| StateType\_RESUMING | 7 | 恢复中 |
+| StateType\_FAILPAUSE | 8 | 暂停失败 |
+| StateType\_FAILSTOP | 9 | 终止失败 |
+| StateType\_FAILRESUME | 10 | 恢复失败 |
+| StateType\_EXCEPTION | 11 | 运行异常 |
+| StateType\_LAZY\_PAUSING | 12 | 等待节拍结束的暂停 |
+
+### `aimdk::protocol::TaskEngineHeartBeat`
+
+task enigine 状态上报信息
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| data | [aimdk::protocol::Task](#aimdk-protocol-task) | 任务信息 |
+
+### `aimdk::protocol::GetTaskRequest`
+
+任务信息请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| task\_id | int64 | 任务id |
+
+### `aimdk::protocol::GetTaskResponse`
+
+任务信息响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| data | [aimdk::protocol::Task](#aimdk-protocol-task) | task任务信息 |
+
+### `aimdk::protocol::GetAllTasksRequest`
+
+所有任务信息请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+
+### `aimdk::protocol::GetAllTasksResponse`
+
+所有任务信息响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| data | [aimdk::protocol::Task](#aimdk-protocol-task)\[\] | 任务信息列表 |
+
+### `aimdk::protocol::GetAllFSMsRequest`
+
+所有任务FSM信息请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+
+### `aimdk::protocol::GetAllFSMsResponse`
+
+所有任务FSM信息响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| data | string\[\] | 任务FSM信息列表 |
+
+### `aimdk::protocol::SetTaskRequest`
+
+任务信息设置请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| data | string | 客户端生成的任务配置yaml原文 |
+
+如果是创建新任务，data字段中task\_id=-1；如果是修改老任务，task\_id为对应的老任务id
+
+### `aimdk::protocol::SetTaskResponse`
+
+任务信息设置响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| task\_id | int64 | 成功新建、修改后的任务id |
+| is\_success | bool | 是否设置成功 |
+
+### `aimdk::protocol::SetCurrentTaskRequest`
+
+设置当前任务请求（不一定是运行任务，且有任务运行时不可设置）
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| task\_id | int64 | 设置为当前任务的任务id |
+
+### `aimdk::protocol::SetCurrentTaskResponse`
+
+设置当前任务响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| task\_id | int64 | 设置任务 id |
+| is\_success | bool | 是否设置成功 |
+
+### `aimdk::protocol::DeleteTaskRequest`
+
+任务删除请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| task\_id | int64 | 任务id |
+
+### `aimdk::protocol::DeleteTaskResponse`
+
+任务删除请求响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| task\_id | int64 | 任务id |
+| is\_success | bool | 是否成功 |
+
+### `aimdk::protocol::DeleteTaskMapRequest`
+
+地图删除请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| map\_id | string | 地图id |
+
+### `aimdk::protocol::DeleteTaskMapResponse`
+
+地图删除请求响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| map\_id | string | 地图id |
+| is\_success | bool | 是否成功删除 |
+
+### `aimdk::protocol::LaunchTaskRequest`
+
+任务启动请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| task\_id | int64 | 任务id |
+
+### `aimdk::protocol::LaunchTaskResponse`
+
+任务启动请求结果
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| task\_id | int64 | 任务id |
+| res | [aimdk::protocol::LaunchTaskResponse::ReturnType](#aimdk-protocol-launchtaskresponse-returntype) | 启动请求结果 |
+
+### `aimdk::protocol::LaunchTaskResponse::ReturnType`
+
+启动请求结果类型
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| ReturnType\_UNDEFINED | 0 |  |
+| ReturnType\_SUCCEED | 1 | 请求成功 |
+| ReturnType\_FAIL\_TASK\_CONFLICT | 2 | 已有任务运行，任务冲突 |
+| ReturnType\_FAIL\_TASK\_VALIDATE | 3 | 任务校验失败 |
+| ReturnType\_FAIL\_UNKNOWN | 4 | 未知原因 |
+
+### `aimdk::protocol::CtrlTaskStateRequest`
+
+任务状态切换请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) |  |
+| task\_id | int64 | 任务id, 如果不赋值则暂停当前任务 |
+| type | [aimdk::protocol::CtrlTaskStateRequest::Type](#aimdk-protocol-ctrltaskstaterequest-type) | 控制类型 |
+
+### `aimdk::protocol::CtrlTaskStateRequest::Type`
+
+任务状态切换类型
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| Type\_UNDEFINED | 0 |  |
+| Type\_PAUSE | 1 | 暂停 |
+| Type\_RESUME | 2 | 继续 |
+| Type\_STOP | 3 | 终止 |
+
+### `aimdk::protocol::CtrlTaskStateResponse`
+
+任务状态切换响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) |  |
+| task\_id | int64 | 任务id |
+| is\_success | bool | 控制结果 |
+
+## 使用示例
+
+提供 Http Curl 示例， 如在机器人 ORIN 开发板以外执行需要将 192.168.100.110 替换为机器人 orin 开发板的 IP 地址, `task_id`替换为想要执行的任务id:
+
+### 获取单个任务
+
+Terminal window
+
+```
+curl --location --request POST 'http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetTask' \--header 'Content-Type: application/json' \--data-raw '{       "task_id": "1"    }'# GetTaskResponse{"data": [{    "task_id": "1",    "name": "task1",    "is_valid": true,    "state": "StateType_IDLE",    "duration": "0",    "setting": "task_type: interaction_1 xxx YAML content"}]}
+```
+
+### 获取全量任务
+
+Terminal window
+
+```
+curl --location --request POST 'http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetAllTasks' \--header 'Content-Type: application/json' \--data-raw '{}'# GetAllTasksResponse{"data": [{    "task_id": "1",    "name": "task1",    "is_valid": true,    "state": "StateType_IDLE",    "duration": "0",    "setting": "task_type: interaction_1 xxx YAML content"},{    "task_id": "2",    "name": "task2",    ...}...]}
+```
+
+### 用任务ID设置任务
+
+Terminal window
+
+```
+curl --location --request POST 'http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/SetCurrentTask' \--header 'Content-Type: application/json' \--data-raw '{       "task_id": "15"    }'
+# SetCurrentTaskResponse{    "header":{        "code":"0",        "msg":"",        "domain":""    },    "task_id":"15",    "is_success":true}
+```
+
+### 启动任务
+
+Terminal window
+
+```
+curl --location --request POST 'http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/LaunchTask' \--header 'Content-Type: application/json' \--data-raw '{       "task_id": "15"    }'
+# LaunchTaskResponse{    "header":{        "code":"0",        "msg":"",        "domain":""    },    "task_id":"15",    "res":"ReturnType_SUCCEED"}
+```
+
+### 暂停/恢复/终止任务
+
+Terminal window
+
+```
+curl --location --request POST 'http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/CtrlTaskState' \--header 'Content-Type: application/json' \--data-raw '{       "task_id": "15",        "type" : "Type_PAUSE"    }'
+# CtrlTaskStateResponse{    "header":{        "code":"0",        "msg":"",        "domain":""    },    "task_id":"15",    "is_success":true}
+```
+

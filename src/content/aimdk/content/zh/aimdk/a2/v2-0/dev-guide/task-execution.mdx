@@ -1,0 +1,258 @@
+---
+title: 7.9 任务执行部分
+description: >-
+  AimMaster 上提供了导览任务功能，用户可以在 AimMaster 上创建导览任务，并使用程序化的接口进行调用等操作。
+  需要注意，任务创建、编辑、删除等操作仍需通过 AimMaster 软件进行，程序化接口仅提供基本任务启动、暂停、取消等功能。 | 接口名 |
+  `pb:/aimdk.protocol.TaskEngineService/GetTask` | | --- | --- | | 功能概述 |
+  获取单个任务的执行信息 | …
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - task-execution
+route: /zh/a2/v2-0/dev-guide/task-execution
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-09-task'
+order: 28
+---
+# 7.9 任务执行部分
+
+### 7.9.1 整体介绍
+
+AimMaster 上提供了导览任务功能，用户可以在 AimMaster 上创建导览任务，并使用程序化的接口进行调用等操作。
+
+需要注意，任务创建、编辑、删除等操作仍需通过 AimMaster 软件进行，程序化接口仅提供基本任务启动、暂停、取消等功能。
+
+### 7.9.2 单个任务信息 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TaskEngineService/GetTask` |
+| --- | --- |
+| 功能概述 | 获取单个任务的执行信息 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetTask |
+| 入参 | 
+```json
+{
+  "task_id": "1"
+}
+```
+
+-   task\_id：任务 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": [
+    {
+      "task_id": "1",
+      "name": "task1",
+      "is_valid": true,
+      "state": "StateType_IDLE",
+      "duration": "0",
+      "setting": "task_type: interaction_1 xxx YAML content"
+    }
+  ]
+}
+```
+
+-   task\_id：任务 id
+    
+-   name：任务名称
+    
+-   is\_valid：任务有效性
+    
+-   state：任务状态
+    
+    -   StateType\_UNDEFINED
+    -   StateType\_IDLE
+    -   StateType\_RUNNING
+    -   StateType\_PAUSED
+    -   StateType\_STOPPED
+    -   StateType\_PAUSING
+    -   StateType\_STOPPING
+    -   StateType\_RESUMING
+    -   StateType\_FAILPAUSE
+    -   StateType\_FAILSTOP
+    -   StateType\_FAILRESUME
+    -   StateType\_EXCEPTION
+    -   StateType\_LAZY\_PAUSING
+-   duration：保留字段
+    
+-   setting：保留字段
+    
+
+ |
+| 示例脚本 | examples/task\_engine/get\_task.sh |
+| 备注 |  |
+
+### 7.9.3 全量任务信息 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TaskEngineService/GetAllTasks` |
+| --- | --- |
+| 功能概述 | 获取全部任务的执行信息 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/GetAllTasks |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "data": [
+    {
+      "task_id": "1",
+      "name": "task1",
+      "is_valid": true,
+      "state": "StateType_IDLE",
+      "duration": "0",
+      "setting": "task_type: interaction_1 xxx YAML content"
+    }
+  ]
+}
+```
+
+字段与单个任务信息接口相同，但是包含全量任务的信息和执行状态 |
+| 示例脚本 | examples/task\_engine/get\_all\_tasks.sh |
+| 备注 |  |
+
+### 7.9.4 任务执行 RPC 接口
+
+任务执行接口需要联合使用两个接口，先调用 SetCurrentTask 设置当前任务然后调用 LaunchTask 启动任务。
+
+在调用 LaunchTask 启动任务前，需要将SM（进程状态管理）模块切换到Auto功能组，具体通过执行以下同步接口实现：
+
+Terminal window
+
+```
+curl -i -H 'content-type:application/json' -X POST 'http://192.168.100.110:51056/rpc/aimdk.protocol.SystemService/MigrateSystemStateSync' -d '{"state": "Auto"}'
+```
+
+若未切换，可能会出现返回结果`res: ReturnType_FAIL_UNKNOWN`的情况。
+
+| 接口名 | `pb:/aimdk.protocol.TaskEngineService/SetCurrentTask` |
+| --- | --- |
+| 功能概述 | 设置当前任务 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/SetCurrentTask |
+| 入参 | 
+```json
+{
+  "task_id": "15"
+}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "task_id": "15",
+  "is_success": true
+}
+```
+
+-   task\_id：任务 id
+-   is\_success：是否设置成功
+
+ |
+| 示例脚本 | examples/task\_engine/set\_current\_task.sh |
+| 备注 | 有任务正在执行时不可调用 |
+
+| 接口名 | `pb:/aimdk.protocol.TaskEngineService/LaunchTask` |
+| --- | --- |
+| 功能概述 | 开始任务执行 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/LaunchTask |
+| 入参 | 
+```json
+{
+  "task_id": "15"
+}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "task_id": "15",
+  "res": "ReturnType_SUCCEED"
+}
+```
+
+-   task\_id：任务 id
+    
+-   res：启动结果
+    
+    -   ReturnType\_UNDEFINED
+    -   ReturnType\_SUCCEED
+    -   ReturnType\_FAIL\_TASK\_CONFLICT
+    -   ReturnType\_FAIL\_TASK\_VALIDATE
+    -   ReturnType\_FAIL\_UNKNOWN
+
+ |
+| 示例脚本 | examples/task\_engine/launch\_task.sh |
+| 备注 | 
+
+-   在开始任务执行之前需要先调用 `SetCurrentTask` 接口设置当前任务
+-   需传入相同的 task\_id，传入不同 task\_id 属未定义行为
+-   可通过 GetTask 接口获取当前任务的执行信息
+
+ |
+
+### 7.9.5 任务控制 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TaskEngineService/CtrlTaskState` |
+| --- | --- |
+| 功能概述 | 控制任务暂停、继续、终止等 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:57881/rpc/aimdk.protocol.TaskEngineService/CtrlTaskState |
+| 入参 | 
+```json
+{
+  "task_id": "15",
+  "type": "Type_PAUSE"
+}
+```
+
+-   task\_id：任务 id
+    
+-   type：控制类型
+    
+    -   Type\_UNDEFINED
+    -   Type\_PAUSE
+    -   Type\_RESUME
+    -   Type\_STOP
+
+ |
+| 出参 | 
+
+```json
+{
+  "task_id": "15",
+  "res": "ReturnType_SUCCEED"
+}
+```
+
+-   task\_id：任务 id
+    
+-   res：控制结果
+    
+    -   ReturnType\_UNDEFINED
+    -   ReturnType\_SUCCEED
+    -   ReturnType\_FAIL\_TASK\_CONFLICT
+    -   ReturnType\_FAIL\_TASK\_VALIDATE
+    -   ReturnType\_FAIL\_UNKNOWN
+
+ |
+| 示例脚本 | examples/task\_engine/ctrl\_task\_state.sh |
+| 备注 |  |
+

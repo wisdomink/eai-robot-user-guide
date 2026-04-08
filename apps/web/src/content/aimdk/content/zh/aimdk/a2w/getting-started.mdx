@@ -1,0 +1,58 @@
+---
+title: 环境配置
+description: >-
+  用户开发环境AimDE：用户获取SDK后，在本地进行开发→构建→仿真运行的完整开发循环，环境提供了VSCode插件、交叉编译工具链、ROS2构建等全套开发和构建能力。
+  Ubuntu 22.04 x86\_64 获取SDK压缩包 等待SDK下载页面上线 解压后目录结构 ```
+  sdk-package-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344 ├── devcontainer.json #
+  定义开发容器…
+product: a2w
+slug:
+  - a2w
+  - getting-started
+route: /zh/a2w/getting-started
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/environment/start'
+order: 20
+---
+# 环境配置
+
+## 概述
+
+用户开发环境AimDE：用户获取SDK后，在本地进行开发→构建→仿真运行的完整开发循环，环境提供了VSCode插件、交叉编译工具链、ROS2构建等全套开发和构建能力。
+
+## 环境依赖
+
+Ubuntu 22.04 x86\_64
+
+## 快速开始
+
+获取SDK压缩包 等待SDK下载页面上线
+
+解压后目录结构
+
+```
+  sdk-package-a2w-v0.9.3-rc17-3-gc4fdfaabf-2510301344    ├── devcontainer.json # 定义开发容器的配置    └── setup_aimde.sh # 开发环境的安装脚本
+```
+
+执行开发环境的安装脚本一键安装 bash setup\_aimde.sh
+
+1.  建议在运行安装脚本前，先在主机上完成 Docker 的安装和配置。如果这是首次配置 Docker，系统会要求您重启电脑以应用[用户组权限设置](./faq.md)。重启后，请再次运行安装脚本即可完成安装
+2.  自动打开vscode后，vscode 右下角的通知会出现弹框, 点击 Reopen in Container
+3.  在 vscode 中打开新的 Terminal, 输入 setup-init 并根据提示操作即可
+4.  看到 🎉🎉🎉 Setup successful 代表 setup 成功, 可以开始开发并构建项目
+
+## 项目开发
+
+**最佳实践**
+
+1.  在/workspaces/aimde/目录下新建项目仓库demo\_project
+2.  参考aima\_task\_sdk\_example的项目结构
+3.  初始化Git仓库并进行版本管理demo\_project
+
+## 重新构建或更新aimde
+
+当 aimde 发布新版本或者原环境由于某些操作被破坏时，可以通过如下操作重新构建或更新 aimde
+
+1.  修改 .devcontainer/devcontainer.json 文件修改对应的镜像版本或者相关配置
+2.  在项目对应的 vscode 中使用 ctrl + shift + p 快捷键呼出 vscode 命令行工具
+3.  输入 Remote-Containers: Rebuild Container 并回车, 等待重新生成 DevContainer
+

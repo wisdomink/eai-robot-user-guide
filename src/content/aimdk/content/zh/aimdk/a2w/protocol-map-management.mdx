@@ -1,0 +1,277 @@
+---
+title: 地图管理模块
+description: >-
+  地图管理模块（Map Management, MM）负责机器人地图的管理，包括地图的获取、存储、更新等功能。 本模块位于 orin 开发板上，http
+  后端监听的端口为 50807。 | 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 | | :-- | :-: | ---
+  | --- | --- | --- | | `pb:/aimdk.protocol.MappingService/Get2DWho…
+product: a2w
+slug:
+  - a2w
+  - protocol-map-management
+route: /zh/a2w/protocol-map-management
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2w/protocol/mm/readme'
+order: 120
+---
+# 地图管理模块
+
+地图管理模块（Map Management, MM）负责机器人地图的管理，包括地图的获取、存储、更新等功能。
+
+本模块位于 orin 开发板上，http 后端监听的端口为 50807。
+
+## RPC 接口
+
+| 接口名 | 接口描述 | 请求消息类型 | 答复消息类型 | 备注 | 通信后端 |
+| :-- | :-: | --- | --- | --- | --- |
+| `pb:/aimdk.protocol.MappingService/Get2DWholeMap` | 获取2D地图数据 | [aimdk::protocol::Get2DWholeMapReq](#aimdk-protocol-get2dwholemapreq) | [aimdk::protocol::Get2DWholeMapRsp](#aimdk-protocol-get2dwholemaprsp) | 获取2D地图接口，根据地图id获取地图数据，可获取到地图名，地图分辨率，地图大小，地图数据（png 格式二进制）等信息 | http |
+| `pb:/aimdk.protocol.MappingService/GetStoredMapNames` | 获取已存储的地图列表 | [aimdk::protocol::GetStoredMapNamesReq](#aimdk-protocol-getstoredmapnamesreq) | [aimdk::protocol::GetStoredMapNamesRsp](#aimdk-protocol-getstoredmapnamesrsp) | 获取已存储的地图列表，返回已存储的地图id以及对应的名字列表 | http |
+| `pb:/aimdk.protocol.MappingService/GetCurrentWorkingMap` | 当前工作地图id | [aimdk::protocol::GetCurrentWorkingMapReq](#aimdk-protocol-getcurrentworkingmapreq) | [aimdk::protocol::GetCurrentWorkingMapRsp](#aimdk-protocol-getcurrentworkingmaprsp) | 获取当前工作地图id，所有地图都以id作为标识，不可重复，地图名称可重复 | http |
+| `pb:/aimdk.protocol.LocalizationService/GetTopoMsgs` | 获取相关地图的所有拓扑数据 | [aimdk::protocol::GetTopoMsgsReq](#aimdk-protocol-gettopomsgsreq) | [aimdk::protocol::GetTopoMsgsRsp](#aimdk-protocol-gettopomsgsrsp) | 获取相关地图的所有拓扑数据，返回拓扑数据列表，拓扑数据中只有导航点信息有效，区域信息和路径信息暂时为空 | http |
+
+## Protobuf 消息类型
+
+### `aimdk::protocol::MappingCommand`
+
+地图管理命令枚举
+
+| Name | Number | Description |
+| --- | --- | --- |
+| MappingCommand\_UNDEFINED | 0 | 未定义命令 |
+| MappingCommand\_GET\_2D\_WHOLE\_MAP | 1 | 获取2D完整地图 |
+| MappingCommand\_GET\_STORED\_MAP\_NAME | 2 | 获取已存储地图名称 |
+| MappingCommand\_GET\_CURRENT\_WORKING\_MAP | 3 | 获取当前工作地图 |
+
+### `aimdk::protocol::TopoCommand`
+
+拓扑管理命令枚举
+
+| Name | Number | Description |
+| --- | --- | --- |
+| TopoCommand\_UNDEFINED | 0 | 未定义命令 |
+| TopoCommand\_GET\_TOPO\_MSG | 1 | 获取拓扑消息 |
+
+### `aimdk::protocol::NaviPointType`
+
+导航点类型枚举
+
+| Name | Number | Description |
+| --- | --- | --- |
+| NaviPointType\_UNDEFINED | 0 | 未定义类型 |
+| NaviPointType\_NAVI\_POINT | 1 | 普通导航点 |
+| NaviPointType\_CHARGE\_POINT | 2 | 充电桩导航点 |
+
+### `aimdk::protocol::PubCurrentPose`
+
+推送给客户端实时位姿
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| timestamp | [aimdk::protocol::Timestamp](../common/README.md#aimdk-protocol-timestamp) | 发送时刻的时间戳 |
+| pose | [aimdk::protocol::SE3Pose](../common/README.md#aimdk-protocol-se3pose) | 当前时刻位姿数据 |
+| position | [aimdk::protocol::PixelPose](../common/README.md#aimdk-protocol-pixelpose) | 当前时刻像素坐标数据 |
+| map\_id | uint64 | 当前定位关联的地图id |
+
+### `aimdk::protocol::Get2DWholeMapReq`
+
+获取 2D 地图数据请求
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::MappingCommand](#aimdk-protocol-mappingcommand) | 请求命令，值为`MappingCommand_GET_2D_WHOLE_MAP` |
+| map\_id | string | 地图ID |
+
+### `aimdk::protocol::Get2DWholeMapRsp`
+
+获取 2D 地图数据响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::Get2DWholeMapData](#aimdk-protocol-get2dwholemapdata) | 地图数据 |
+
+### `aimdk::protocol::Get2DWholeMapData`
+
+2D 地图数据
+
+| Field | Type | Description |
+| --- | --- | --- |
+| map\_id | string | 地图ID |
+| map\_name | string | 地图名称 |
+| map\_width | int32 | 地图宽度 |
+| map\_height | int32 | 地图高度 |
+| map\_resolution | float | 地图分辨率 |
+| origin\_x | float | 地图原点X坐标 |
+| origin\_y | float | 地图原点Y坐标 |
+| map\_data | bytes | 地图数据 |
+| rotate\_angle | float | 地图旋转角度 |
+
+### `aimdk::protocol::GetStoredMapNamesReq`
+
+获取已存储的地图列表请求
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::MappingCommand](#aimdk-protocol-mappingcommand) | 请求命令，值为`MappingCommand_GET_STORED_MAP_NAME` |
+
+### `aimdk::protocol::GetStoredMapNamesRsp`
+
+获取已存储的地图列表响应
+
+| Field | Type | Description |
+| --- | --- | --- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::GetStoredMapNamesData](#aimdk-protocol-getstoredmapnamesdata) | 地图列表 |
+
+### `aimdk::protocol::GetStoredMapNamesData`
+
+获取已存储的地图列表数据
+
+| Field | Type | Description |
+| --- | --- | --- |
+| map\_lists | [aimdk::protocol::MapIdNameCombine](#aimdk-protocol-mapidnamecombine)\[\] | 地图列表 |
+
+### `aimdk::protocol::MapIdNameCombine`
+
+地图ID和名称组合
+
+| Field | Type | Description |
+| --- | --- | --- |
+| map\_id | uint64 | 地图ID |
+| map\_name | string | 地图名称 |
+
+### `aimdk::protocol::GetCurrentWorkingMapReq`
+
+获取当前工作地图请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::MappingCommand](#aimdk-protocol-mappingcommand) | 请求命令， 值为`MappingCommand_GET_CURRENT_WORKING_MAP` |
+
+### `aimdk::protocol::GetCurrentWorkingMapRsp`
+
+获取当前工作地图响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::GetCurrentWorkingMapData](#aimdk-protocol-getcurrentworkingmapdata) | 响应数据 |
+
+### `aimdk::protocol::GetCurrentWorkingMapData`
+
+获取当前工作地图数据
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| map\_id | uint64 | 当前地图id |
+
+### `aimdk::protocol::GetTopoMsgsReq`
+
+获取拓扑消息请求
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::RequestHeader](../common/README.md#aimdk-protocol-requestheader) | 请求头 |
+| command | [aimdk::protocol::TopoCommand](#aimdk-protocol-topocommand) | 请求命令，值为`TopoCommand_GET_TOPO_MSG` |
+| map\_id | uint64 | 地图id |
+
+### `aimdk::protocol::GetTopoMsgsRsp`
+
+获取拓扑消息响应
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| header | [aimdk::protocol::ResponseHeader](../common/README.md#aimdk-protocol-responseheader) | 响应头 |
+| data | [aimdk::protocol::GetTopoMsgsData](#aimdk-protocol-gettopomsgsdata) | 响应数据 |
+
+### `aimdk::protocol::GetTopoMsgsData`
+
+获取拓扑消息数据
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| points | [aimdk::protocol::PixelNaviPointDataType](#aimdk-protocol-pixelnavipointdatatype)\[\] | 像素导航点拓扑信息 |
+| paths | [aimdk::protocol::PixelPathDataType](#aimdk-protocol-pixelpathdatatype)\[\] | 像素path拓扑信息 |
+| regions | [aimdk::protocol::RegionReqDataType](#aimdk-protocol-regionreqdatatype)\[\] | 区域region信息 |
+
+### `aimdk::protocol::RegionType`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| RegionType\_UNDEFINED | 0 | 未定义类型 |
+| RegionType\_WORKSPACE | 1 | 工作区 |
+| RegionType\_WALL | 2 | 虚拟墙 |
+
+### `aimdk::protocol::RegionDrawingType`
+
+| Name | Number | Description |
+| :-- | :-- | :-- |
+| RegionDrawingType\_UNDEFINED | 0 | 未定义类型 |
+| RegionDrawingType\_CLOSURE | 1 | 闭包 |
+| RegionDrawingType\_LINES | 2 | 线段 |
+
+### `aimdk::protocol::RegionReqDataType`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 区域名称 |
+| type | [aimdk::protocol::RegionType](#aimdk-protocol-regiontype) | 区域类型 |
+| drawing\_type | [aimdk::protocol::RegionDrawingType](#aimdk-protocol-regiondrawingtype) | 区域绘制类型 |
+| region\_id | int32 | 区域id |
+| vertices | [aimdk::protocol::Pixel](../common/README.md#aimdk-protocol-pixel)\[\] | 区域顶点 |
+
+### `aimdk::protocol::PixelPathDataType`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| name | string | 路径名称 |
+| path\_id | int32 | 路径点id |
+| poses | [aimdk::protocol::PixelPose](../common/README.md#aimdk-protocol-pixelpose)\[\] | 路径点集合 |
+| is\_recording | bool | 标记是否是录制 |
+
+### `aimdk::protocol::PixelNaviPointDataType`
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| point\_id | int32 | 导航点id |
+| name | string | 导航点名称 |
+| point\_type | [aimdk::protocol::NaviPointType](#aimdk-protocol-navipointtype) | 导航点类型 |
+| pixel\_pose | [aimdk::protocol::PixelPose](../common/README.md#aimdk-protocol-pixelpose) | 导航点像素坐标 |
+
+## 使用示例
+
+提供 Http Curl 示例， 需要将 127.0.0.1 替换为机器人 orin 开发板的 IP 地址, `map_id`替换为想要请求的地图id:
+
+### 获取2D地图数据
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:50807/rpc/aimdk.protocol.MappingService/Get2DWholeMap' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"command":"MappingCommand_GET_2D_WHOLE_MAP","map_id":"1732275337238"}'
+```
+
+### 获取已存储的地图列表
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:50807/rpc/aimdk.protocol.MappingService/GetStoredMapNames' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"command":"MappingCommand_GET_STORED_MAP_NAME"}'
+```
+
+### 获取当前工作地图id
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:50807/rpc/aimdk.protocol.MappingService/GetCurrentWorkingMap' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"command":"MappingCommand_GET_CURRENT_WORKING_MAP"}'
+```
+
+### 获取当前地图的拓扑数据
+
+Terminal window
+
+```
+curl --location --request POST 'http://127.0.0.1:50807/rpc/aimdk.protocol.LocalizationService/GetTopoMsgs' \--header 'Content-Type: application/json' \--data-raw '{"header":{},"command":"TopoCommand_GET_TOPO_MSG","map_id":"1732275337238"}'
+```
+

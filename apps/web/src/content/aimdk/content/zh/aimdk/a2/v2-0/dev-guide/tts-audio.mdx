@@ -1,0 +1,494 @@
+---
+title: 7.5 TTS/音频播放部分
+description: >-
+  A2 机器人配有扬声器，在有网络的情况下可以进行 TTS
+  播报，无网络时可以进行基本的音频文件播放和音量调节，同时可以支持队列播放、播放状态查询以及打断等控制逻辑。 | 接口名 |
+  `pb:/aimdk.protocol.TTSService/PlayTTS` | | --- | --- | | 功能概述 | TTS 播报接口，依赖联网
+  | | 接口类型 | HTTP JSON RPC | | URL | http://192.168.…
+product: a2
+version: v2-0
+section: dev-guide
+slug:
+  - a2
+  - v2-0
+  - dev-guide
+  - tts-audio
+route: /zh/a2/v2-0/dev-guide/tts-audio
+sourceUrl: 'https://open.agibot.com/docs/aimdk/a2/v2_0/dev_guide/07-05-audio_play'
+order: 24
+---
+# 7.5 TTS/音频播放部分
+
+### 7.5.1 整体介绍
+
+A2 机器人配有扬声器，在有网络的情况下可以进行 TTS 播报，无网络时可以进行基本的音频文件播放和音量调节，同时可以支持队列播放、播放状态查询以及打断等控制逻辑。
+
+### 7.5.2 TTS 播报 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TTSService/PlayTTS` |
+| --- | --- |
+| 功能概述 | TTS 播报接口，依赖联网 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.TTSService/PlayTTS |
+| 入参 | 
+```json
+{
+  "text": "你好",
+  "priority_level": "INTERACTION_L6",
+  "domain": "example",
+  "trace_id": "hafhjkqwjwefk",
+  "is_interrupted": true
+}
+```
+
+-   text: 播报文本内容
+-   priority\_level: 优先级，保持 INTERACTION\_L6 即可
+-   domain: 调用方来源标识，可以传入自定义的客户端字符串，方便问题排查等
+-   trace\_id: 播报 id，如果需要获取播报状态，则需要传入该字段，并将其值作为查询播报状态的参数
+-   is\_interrupted: 是否打断同等优先级播报，请默认传 true，有队列播报的需求可以使用 false
+
+ |
+| 出参 | 
+
+```json
+{
+  "text": "你好",
+  "priority_level": "INTERACTION_L6",
+  "priority_weight": 0,
+  "domain": "example",
+  "trace_id": "hafhjkqwjwefk_18bZZLTk5VfJGSy8Cylsu4",
+  "is_sucess": true,
+  "error_message": "",
+  "estimated_duration": 0
+}
+```
+
+-   text: 播报文本内容
+-   priority\_level: 优先级等级，无需关注
+-   priority\_weight: 优先级权重，无需关注
+-   domain: 调用方来源标识，返回请求中传入的自定义字符串，方便问题排查
+-   trace\_id: 播报 id，返回请求中传入的自定义字符串 + 一段随机字符串，用于播报状态查询等
+-   is\_success: 优先级校验是否成功，一般均为 true，不代表会播放，例如传入错误或不存在的文件名仍会返回 true，只有当前有更高优先级的内容播报时才会返回 true，例如当前有故障报警播报时
+-   error\_message: 错误信息
+-   estimated\_duration: 无效字段，无需关注，无法估算播放时长
+
+ |
+| 示例脚本 | examples/agent/tts\_broadcast.sh |
+| 备注 | 
+
+-   只支持 短文本请求，最高只 1024 字节，约 200 个中文/英文
+-   端口号 59201 仍可以使用，会自动转发到 59301
+
+ |
+
+### 7.5.3 音频文件播放 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TTSService/PlayMediaFile` |
+| --- | --- |
+| 功能概述 | 音频文件播放 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.TTSService/PlayMediaFile |
+| 入参 | 
+```json
+{
+  "file_name": "wake.pcm",
+  "priority_level": "INTERACTION_L6",
+  "domain": "example",
+  "trace_id": "hafhjkqwjwefk",
+  "is_interrupted": true
+}
+```
+
+-   file\_name: 文件名（支持传入相对路径或绝对路径，若使用相对路径，默认从 ORIN `/agibot/data/var/hal_audio/file`读取，例如可传入 `wake.pcm`；若使用绝对路径，例如可传入 `/agibot/data/home/agi/Desktop/wake.pcm`，按指定路径读取；文件要求为 24kHz 16 位 单声道的 pcm 文件）
+-   priority\_level: 优先级，保持 INTERACTION\_L6 即可
+-   domain: 调用方来源标识，可以传入自定义的客户端字符串，方便问题排查等
+-   trace\_id: 播报 id，如果需要获取播报状态，则需要传入该字段，并将其值作为查询播报状态的参数
+-   is\_interrupted: 是否打断同等优先级播报，请默认传 true，有队列播报的需求可以使用 false
+
+ |
+| 出参 | 
+
+```json
+{
+  "text": "wake.pcm",
+  "priority_level": "INTERACTION_L6",
+  "priority_weight": 0,
+  "domain": "example",
+  "trace_id": "hafhjkqwjwefk",
+  "is_sucess": true,
+  "error_message": "",
+  "estimated_duration": 0
+}
+```
+
+-   text: 文件名
+-   priority\_level: 优先级等级，无需关注
+-   priority\_weight: 优先级权重，无需关注
+-   domain: 调用方来源标识，返回请求中传入的自定义字符串，方便问题排查
+-   trace\_id: 播报 id，返回请求中传入的自定义字符串，用于请求播报状态或打断
+-   is\_success: 优先级校验是否成功，一般均为 true，不代表会播放，例如传入错误或不存在的文件名仍会返回 true，只有当前有更高优先级的内容播报时才会返回 true，例如当前有故障报警播报时
+-   error\_message: 错误信息
+-   estimated\_duration: 无效字段，无需关注，无法估算播放时长
+
+ |
+| 示例脚本 | examples/agent/play\_media\_file.sh |
+| 备注 | 
+
+-   同时支持标准 44 字节头部 Linear PCM 的 wav 文件，其余头部格式以及压缩格式等均不支持，推荐使用 24kHz 16 位单声道的 pcm 文件
+-   如果传入错误或不存在的文件名，会静默失败，不会进行播放，同时 is\_success 返回 true
+-   端口号 59201 仍可以使用，会自动转发到 59301
+
+ |
+
+### 7.5.4 TTS/音频文件播放状态查询 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.TTSService/GetAudioStatus` |
+| --- | --- |
+| 功能概述 | TTS/音频文件播放状态查询 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.TTSService/GetAudioStatus |
+| 入参 | 
+```json
+{
+  "trace_id": "hafhjkqwjwefk"
+}
+```
+
+-   trace\_id: 播报 id，填写调用 PlayTTS 或 PlayMediaFile 接口时使用的 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "tts_status": {
+    "text": "",
+    "priority": 0,
+    "trace_id": "",
+    "tts_status": "TTSStatusType_Playing",
+    "domain": "",
+    "error_message": ""
+  }
+}
+```
+
+-   tts\_status: 播报状态，枚举值
+    
+    -   TTSStatusType\_Unknown: 未知状态
+    -   TTSStatusType\_Begin: 开始播报，短暂，一般查询不到这个状态
+    -   TTSStatusType\_Playing: 播报中
+    -   TTSStatusType\_End: 播报结束，短暂，一般查询不到这个状态
+    -   TTSStatusType\_Stop: 暂停播报/取消播报/中断播报
+    -   TTSStatusType\_Error: 播报失败
+    -   TTSStatusType\_InQue: 在播报队列中，尚未开始播报
+    -   TTSStatusType\_NOTInQue: 播报队列无此文本，也不在播报，播报结束后会进入此状态
+-   其余字段均为无效字段，无需关注
+    
+
+ |
+| 示例脚本 | examples/agent/tts\_status\_rpc.sh |
+| 备注 | 
+
+-   成功的播报通过该 RPC 接口查询一般会返回 InQue、Playing 和 NOTInQue 状态
+-   端口号 59201 仍可以使用，会自动转发到 59301
+
+ |
+
+### 7.5.5 TTS/音频文件播放状态 Topic 接口
+
+| 接口名 | /interaction/tts\_status |
+| --- | --- |
+| 功能概述 | TTS/音频文件播放状态 |
+| 接口类型 | ROS2 Topic |
+| 出参 | 
+```yaml
+{
+  "text": "你好",
+  "priority": 600,
+  "trace_id": "hafhjkqwjwefk_5WC7uy69bqCuO101aalJ1T",
+  "tts_status": "TTSStatusType_End",
+  "domain": "example",
+  "header": {
+    "seq": 110
+  }
+}
+```
+
+-   text: 文件名
+    
+-   trace\_id：播报 id
+    
+-   domain：调用方来源
+    
+-   tts\_status: 播报状态，枚举值
+    
+    -   TTSStatusType\_Unknown: 未知状态
+    -   TTSStatusType\_Begin: 开始播报，短暂，一般查询不到这个状态
+    -   TTSStatusType\_Playing: 播报中
+    -   TTSStatusType\_End: 播报结束，短暂，一般查询不到这个状态
+    -   TTSStatusType\_Stop: 暂停播报/取消播报/中断播报
+    -   TTSStatusType\_Error: 播报失败
+    -   TTSStatusType\_InQue: 在播报队列中，尚未开始播报
+    -   TTSStatusType\_NOTInQue: 播报队列无此文本，也不在播报，播报结束后会进入此状态
+-   其余字段均为无效字段，无需关注
+    
+
+ |
+| 示例脚本 | examples/agent/tts\_status\_topic.py |
+| 备注 | 
+
+-   该消息的 ROS2 类型为 ros2\_plugin\_proto/msg/RosMsgWrapper，需要 source prebuilt/ros2\_plugin\_proto\_aarch64/share/ros2\_plugin\_proto/local\_setup.bash 后使用。
+-   该接口需要将交互运行模式设置为 normal 或 voice\_face 模式才会发布，only\_voice 模式下无消息
+
+ |
+
+### 7.5.6 TTS/音频文件播放打断 RPC 接口
+
+我们提供了单个文件播放打断接口和整个播报队列清空接口。
+
+| 接口名 | `pb:/aimdk.protocol.TTSService/StopTTSTraceId` |
+| --- | --- |
+| 功能概述 | 打断单个 文件/TTS 播放 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.TTSService/StopTTSTraceId |
+| 入参 | 
+```json
+{
+  "trace_id": "hafhjkqwjwefk"
+}
+```
+
+-   trace\_id: 播报 id，填写调用 PlayTTS 或 PlayMediaFile 接口时使用的 id
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_UNKNOWN"
+}
+```
+
+-   state: 调用请求状态，无需关注具体值，HTTP 请求返回 200 即代表成功
+
+ |
+| 示例脚本 | examples/agent/stop\_tts.sh |
+| 备注 | 
+
+-   端口号 59201 仍可以使用，会自动转发到 59301
+
+ |
+
+| 接口名 | `pb:/aimdk.protocol.TTSService/StopTTS` |
+| --- | --- |
+| 功能概述 | 终止所有 TTS/音频文件 播放，包括当前播放任务和所有队列中的任务 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:59301/rpc/aimdk.protocol.TTSService/StopTTS |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "state":"CommonState_UNKNOWN"
+}
+```
+
+-   state: 调用请求状态，无需关注具体值，HTTP 请求返回 200 即代表成功
+
+ |
+| 示例脚本 | examples/agent/stop\_all\_tts.sh |
+| 备注 | 
+
+-   端口号 59201 仍可以使用，会自动转发到 59301
+
+ |
+
+### 7.5.7 音量获取、设置 RPC 接口
+
+| 接口名 | `pb:/aimdk.protocol.HalAudioService/GetAudioVolume` |
+| --- | --- |
+| 功能概述 | 获取当前音量大小 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:56666/rpc/aimdk.protocol.HalAudioService/GetAudioVolume |
+| 入参 | 
+```json
+{}
+```
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "GetAudioVolume successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "audio_volume": 30,
+  "is_mute": false,
+  "type": "SPEAKRE_BUILT_IN"
+}
+```
+
+-   audio\_volume: 音量大小，0-100 的数值
+    
+-   is\_mute: 是否静音
+    
+-   type: 扬声器类型
+    
+    -   SPEAKRE\_BUILT\_IN 内置扬声器
+    -   SPEAKER\_BLUETOOTH 蓝牙扬声器
+
+ |
+| 示例脚本 | examples/hal\_audio/GetAudioVolume.sh |
+| 备注 |  |
+
+| 接口名 | `pb:/aimdk.protocol.HalAudioService/SetAudioVolume` |
+| --- | --- |
+| 功能概述 | 调节音量 |
+| 接口类型 | HTTP JSON RPC |
+| URL | http://192.168.100.110:56666/rpc/aimdk.protocol.HalAudioService/SetAudioVolume |
+| 入参 | 
+```json
+{
+  "audio_volume": 70,
+  "is_mute": false,
+  "type": "SPEAKER_BUILT_IN"
+}
+```
+
+-   audio\_volume: 音量大小，0-100 的数值，**注意不要调节音量超过 70，音量超出此范围扬声器经功放放大后会超额定工作，造成扬声器损坏**
+-   is\_mute: 是否静音
+-   type: 扬声器类型
+
+ |
+| 出参 | 
+
+```json
+{
+  "header": {
+    "code": "0",
+    "msg": "SetAudioVolume successfully",
+    "trace_id": "",
+    "domin": ""
+  },
+  "pkg_name": "",
+  "is_success": false
+}
+```
+
+-   pkg\_name: 无效字段，无需关注
+-   is\_success: 无效字段，无需关注
+
+ |
+| 示例脚本 | examples/hal\_audio/SetAudioVolume.sh |
+| 备注 | 
+
+-   如需静音，请将 audio\_volume 字段设为 0，is\_mute 设为 true。
+
+ |
+
+### 7.5.8 扬声器权限释放方法
+
+如果不想使用上述 agent 提供的音频播放能力（底层会调用 hal\_audio 提供的原子能力），而希望自行使用扬声器使用底层库如 pyaudio/alsasound 等自行进行音频播放，需要关闭 hal\_audio 模块，方法如下：
+
+1.  备份 ORIN 上的 /agibot/software/v0/entry/bin/cfg/run\_agibot.yaml
+    
+    Terminal window
+    
+    ```
+    cp /agibot/software/v0/entry/bin/cfg/run_agibot.yaml /agibot/software/v0/entry/bin/cfg/run_agibot.yaml.original
+    ```
+    
+2.  修改其中 default\_apps 部分，移除 hal\_audio 模块，然后重启机器人。
+    
+
+![](https://open.agibot.com/docs/_image?href=%2Fdocs%2F_astro%2FBQUG1X9G.png&w=598&h=594&f=webp)
+
+重启后可使用下面的设备进行播放，程序调用请自行实现，音频声道、逻辑设备等配置可查看 ORIN 上 /etc/asound.conf 文件。
+
+Terminal window
+
+```
+aplay -D multiplay_def -c 1 -r 24000 -f S16_LE /agibot/data/var/interaction/audio/wake.pcm
+```
+
+> 注意：机器人扬声器音量设置不得超过 70%，音量超出此范围扬声器经功放放大后会超额定工作，造成扬声器损坏
+
+音量调节指令如下：
+
+1.  P1 机器
+
+-   设置播放音量
+
+Terminal window
+
+```
+amixer cset name='x Headphone Volume' 15（0~31）
+```
+
+-   获取播放音量
+
+Terminal window
+
+```
+amixer cget name='x Headphone Volume'
+```
+
+-   设置静音
+
+Terminal window
+
+```
+amixer sset 'x Headphone Left' offamixer sset 'x Headphone Right' off
+```
+
+-   解除静音
+
+Terminal window
+
+```
+amixer sset 'x Headphone Left' onamixer sset 'x Headphone Right' on
+```
+
+2.  T3 机器
+
+-   设置播放音量
+
+Terminal window
+
+```
+amixer -c DefPDevice sset Speaker 80%（0~100%）
+```
+
+-   获取播放音量
+
+Terminal window
+
+```
+amixer -c DefPDevice sget Speaker
+```
+
+-   设置静音
+
+Terminal window
+
+```
+amixer -c DefPDevice set Speaker off
+```
+
+-   解除静音
+
+Terminal window
+
+```
+amixer -c DefPDevice set Speaker on
+```
+
