@@ -11,12 +11,14 @@ export type HomepagePromptPayload = Omit<HomepagePrompt, 'id'> & { id?: string }
 export interface HomepagePromptsConfig {
   greeting: string
   placeholder: string
+  info_text: string
   prompts: HomepagePrompt[]
 }
 
 export interface HomepageSettings {
   greeting: string
   placeholder: string
+  info_text: string
 }
 
 export interface FetchHomepagePromptsOptions {
@@ -57,6 +59,7 @@ export async function fetchHomepagePrompts(
   return {
     greeting: data.greeting ?? '',
     placeholder: data.placeholder ?? '',
+    info_text: data.info_text ?? '',
     prompts: (data.prompts || []) as HomepagePrompt[],
   }
 }

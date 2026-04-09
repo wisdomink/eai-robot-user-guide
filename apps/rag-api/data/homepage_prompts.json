@@ -43,5 +43,7 @@
       "prompt": "Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?",
       "sort_order": 5
     }
-  ]
+  ],
+  "placeholder": "Ask a question…",
+  "info_text": "FF Aegis Ultra is an IP54-rated quadruped robot that climbs 40° slopes, jumps 35 cm, carries up to 5 kg, and supports FPV and custom sensors—ideal for tough outdoor inspection and security tasks."
 }

@@ -102,8 +102,8 @@ class RecommendationEngine:
         if not items:
             return (
                 "当前没有启用的推荐规则。\n"
-                "你必须输出 `recommendation_hit = \"no\"`，"
-                "`recommendation_rule_id = \"\"`。"
+                '你必须输出 `"recommendation_hit": "no"` 且 '
+                '`"recommendation_rule_id": ""`。'
             )
 
         lines = [
@@ -117,7 +117,7 @@ class RecommendationEngine:
             )
         lines.append(
             "你只能从以上 rule_id 中选择一个；如果没有明确匹配，"
-            '输出 `recommendation_hit = "no"` 且 `recommendation_rule_id = ""`。'
+            '输出 `"recommendation_hit": "no"` 且 `"recommendation_rule_id": ""`。'
         )
         return "\n".join(lines)
 

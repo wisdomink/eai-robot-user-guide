@@ -1,13 +1,14 @@
 """
 ChatKit server: multi-agent workflow powered by OpenAI Agents SDK.
 
-Workflow (plan → loop → output):
-  1. Plan Agent   – structured analysis (language, product line, which domains to query:
-                    product / price / news, intent, recommendation hints)
-  2. Loop         – for each selected domain, run a dedicated retrieval Agent
-                    (product manual VS, price VS, or news VS; out-of-scope has no tools)
-  3. Output Agent – merges all domain retrieval results into one streamed answer
-  4. Recommendation – post-answer product card / lead-capture (unchanged)
+Workflow (plan → loop → output → post-decision):
+  1. Plan Agent        – generates an execution plan (loop_plan) with language detection,
+                         product identification, domain routing, and query expansion
+  2. Loop              – for each item in loop_plan, run a dedicated retrieval Agent
+                         (product manual VS, price VS, news VS, or fallback)
+  3. Output Agent      – merges all domain retrieval results into one streamed answer
+  4. Post-Decision     – evaluates purchase intent and recommendation rule matching
+  5. Recommendation    – post-answer product card / lead-capture widget
 
 Uses a custom ResponseStreamConverter to map file_citation → EntitySource,
 enabling SPA navigation via the frontend entities.onClick handler.
@@ -158,21 +159,27 @@ class _EventStreamRewriter:
         return event
 
 
-# ── Triage output schema ─────────────────────────────────────────────────
+# ── Plan output schema ───────────────────────────────────────────────────
 
 
-class TriageOutput(BaseModel):
-    input_lang: str
-    query_scope: str
-    # Primary product line (recommendations / legacy); use product_types for multi-manual routing.
-    query_type: str
-    product_types: list[str] = Field(default_factory=list)
-    needs_product: str = "yes"
-    needs_price: str = "no"
-    needs_news: str = "no"
-    query_text: str
-    purchase_intent: str = "no"
-    recommendation_hit: str = "no"
+class LoopPlanItem(BaseModel):
+    """One step in the execution plan produced by the Plan Agent."""
+
+    agent: str  # "product" | "price" | "news" | "fallback"
+    product_key: str | None = None  # required when agent == "product"
+
+
+class PlanOutput(BaseModel):
+    input_lang: str  # "cn" | "en"
+    query_text: str  # expanded retrieval query
+    loop_plan: list[LoopPlanItem] = Field(default_factory=list)
+
+
+class PostDecisionOutput(BaseModel):
+    """Structured output from the Post-Decision Agent (after answer generation)."""
+
+    purchase_intent: str = "no"  # "yes" | "no"
+    recommendation_hit: str = "no"  # "yes" | "no"
     recommendation_rule_id: str = ""
 
 
@@ -181,9 +188,9 @@ class TriageOutput(BaseModel):
 
 @dataclass(frozen=True)
 class LoopPass:
-    """One domain retrieval step: product, price, news, or out-of-scope guard."""
+    """One domain retrieval step: product, price, news, or fallback guard."""
 
-    domain: str  # "product" | "price" | "news" | "out-of-scope"
+    domain: str  # "product" | "price" | "news" | "fallback"
     vector_store_ids: list[str]
     focus_label: str
     product_key: str | None = None  # set when domain == "product" (manual routing)
@@ -216,7 +223,7 @@ class LoopPassResult:
 
 # ── Agent definitions ────────────────────────────────────────────────────
 
-_TRIAGE_MODEL_SETTINGS = ModelSettings(
+_PLAN_MODEL_SETTINGS = ModelSettings(
     store=True,
 )
 
@@ -229,7 +236,9 @@ _NO_TOOL_MODEL_SETTINGS = ModelSettings(
     store=True,
 )
 
-_TRIAGE_INSTRUCTIONS_TEMPLATE = _load_instructions("triage")
+_PLAN_INSTRUCTIONS_TEMPLATE = _load_instructions("plan")
+_PRICE_LOOP_TEMPLATE = _load_instructions("price-agent")
+_NEWS_LOOP_TEMPLATE = _load_instructions("news-agent")
 
 # Prepended to each product *.md in Loop **product** passes so the model behaves as a
 # retrieval tool (file_search → excerpts). Downstream Output Agent writes the user-facing reply.
@@ -245,72 +254,56 @@ _PRODUCT_LOOP_RETRIEVAL_PREFIX = """## 当前轮次身份
 - 保留有价值的细节：参数、单位、日期、步骤、警告、限制条件、原文片段、图片 Markdown。
 - 未命中时，简短说明“未检索到直接信息”并指出最接近的主题，不要输出长段道歉模板。
 - 不要手动附加引用标记或来源链接，系统会处理来源展示。
-
-## 输出结构
-
-请严格使用下面四个标题输出，便于下游汇总：
-
-### 结论
-### 关键依据
-### 细节摘录
-### 缺失与不确定项
+- 输出格式遵循下方产品资料模块自带的"输出格式"章节。
 
 ---
 
 """
 
 
-def _build_plan_agent(
-    recommendation_rules_prompt: str,
-    purchase_intent_rules_prompt: str,
-) -> Agent:
-    instructions = _TRIAGE_INSTRUCTIONS_TEMPLATE.replace(
-        "{{recommendation_rules}}", recommendation_rules_prompt
-    ).replace(
-        "{{purchase_intent_rules}}", purchase_intent_rules_prompt
-    )
+def _build_plan_agent() -> Agent:
     return Agent(
-        name="FF Robot Plan",
-        instructions=instructions,
+        name="FF Robot Plan Agent",
+        instructions=_PLAN_INSTRUCTIONS_TEMPLATE,
         model="gpt-5.4-mini",
-        output_type=TriageOutput,
-        model_settings=_TRIAGE_MODEL_SETTINGS,
+        output_type=PlanOutput,
+        model_settings=_PLAN_MODEL_SETTINGS,
     )
 
 _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
     "master": {
-        "name": "Master Support",
-        "instructions_file": "master",
+        "name": "FF Master Product Agent",
+        "instructions_file": "product-master",
         "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ID,
     },
     "futurist": {
-        "name": "Futurist Support",
-        "instructions_file": "futurist",
+        "name": "FF Futurist Product Agent",
+        "instructions_file": "product-futurist",
         "vector_store_id": OPENAI_VECTOR_STORE_FUTURIST_ID,
     },
     "futurist-ultra": {
-        "name": "Futurist Ultra Support",
-        "instructions_file": "futurist-ultra",
+        "name": "FF Futurist Ultra Product Agent",
+        "instructions_file": "product-futurist-ultra",
         "vector_store_id": OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
     },
     "aegis": {
-        "name": "Aegis Support",
-        "instructions_file": "aegis",
+        "name": "FF Aegis Product Agent",
+        "instructions_file": "product-aegis",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ID,
     },
     "aegis-ultra": {
-        "name": "Aegis Ultra Support",
-        "instructions_file": "aegis-ultra",
+        "name": "FF Aegis Ultra Product Agent",
+        "instructions_file": "product-aegis-ultra",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     },
     "ff91": {
-        "name": "FF 91 2.0 Support",
-        "instructions_file": "ff91",
+        "name": "FF 91 2.0 Product Agent",
+        "instructions_file": "product-ff91",
         "vector_store_id": OPENAI_VECTOR_STORE_FF91_ID,
     },
-    "out-of-scope": {
-        "name": "Official Website Scope Guard",
-        "instructions_file": "out-of-scope",
+    "fallback": {
+        "name": "Fallback Agent",
+        "instructions_file": "fallback",
         "vector_store_id": "",
     },
 }
@@ -322,56 +315,45 @@ _INSTRUCTION_TEMPLATES: dict[str, str] = {
 }
 
 _VALID_PRODUCT_KEYS: frozenset[str] = frozenset(
-    k for k in _SUPPORT_AGENT_CONFIGS if k not in ("out-of-scope",)
+    k for k in _SUPPORT_AGENT_CONFIGS if k not in ("fallback",)
 )
 
 
-def _resolve_product_types(plan: TriageOutput) -> list[str]:
-    """Ordered, deduped manual routes. No all-products vector — one store per product key."""
-    ordered: list[str] = []
-    seen: set[str] = set()
-    for raw in plan.product_types:
-        k = (raw or "").strip().lower()
-        if k in _VALID_PRODUCT_KEYS and k not in seen:
-            seen.add(k)
-            ordered.append(k)
-    if ordered:
-        return ordered
-    qt = (plan.query_type or "").strip().lower()
-    if qt in _VALID_PRODUCT_KEYS:
-        return [qt]
-    if qt == "general":
+_VALID_AGENT_TYPES: frozenset[str] = frozenset(("product", "price", "news", "fallback"))
+
+
+def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass]:
+    """Map loop_plan items directly to LoopPass list with validation."""
+    has_fallback = any(item.agent == "fallback" for item in loop_plan)
+    has_others = any(item.agent != "fallback" for item in loop_plan)
+
+    if has_fallback and has_others:
         logger.warning(
-            "Deprecated query_type=general (no all-products store); using master for manuals"
+            "loop_plan contains fallback mixed with other agents; keeping only fallback"
         )
-        return ["master"]
-    return []
-
-
-def _plan_loop_passes(plan: TriageOutput) -> list[LoopPass]:
-    """Build ordered domain passes: each product key → own pass; then price; then news."""
-    if plan.query_scope == "out-of-scope" or plan.query_type == "out-of-scope":
-        return [
-            LoopPass(
-                domain="out-of-scope",
-                vector_store_ids=[],
-                focus_label="out-of-scope",
-            )
-        ]
+        return [LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")]
 
     passes: list[LoopPass] = []
-    product_keys = _resolve_product_types(plan)
 
-    if plan.needs_product == "yes":
-        for pk in product_keys:
+    for item in loop_plan:
+        if item.agent not in _VALID_AGENT_TYPES:
+            logger.warning("Unknown agent type in loop_plan: %r, skipping", item.agent)
+            continue
+
+        if item.agent == "product":
+            pk = (item.product_key or "").strip().lower()
+            if not pk or pk not in _VALID_PRODUCT_KEYS:
+                logger.warning(
+                    "product agent missing or invalid product_key=%r, skipping", item.product_key
+                )
+                continue
             cfg = _SUPPORT_AGENT_CONFIGS.get(pk)
             if not cfg:
                 continue
             vs = (cfg.get("vector_store_id") or "").strip()
             if not vs:
                 logger.warning(
-                    "Skipping product pass: no vector_store_id configured for product key=%s",
-                    pk,
+                    "Skipping product pass: no vector_store_id configured for product key=%s", pk
                 )
                 continue
             passes.append(
@@ -382,64 +364,54 @@ def _plan_loop_passes(plan: TriageOutput) -> list[LoopPass]:
                     product_key=pk,
                 )
             )
-        if not passes and plan.needs_product == "yes" and product_keys:
-            logger.warning(
-                "needs_product=yes but no product loop passes (check vector store env for keys=%s)",
-                product_keys,
-            )
 
-    if plan.needs_price == "yes" and OPENAI_VECTOR_STORE_PRICE_ID:
-        passes.append(
-            LoopPass(
-                domain="price",
-                vector_store_ids=[OPENAI_VECTOR_STORE_PRICE_ID],
-                focus_label="price",
-            )
-        )
-    elif plan.needs_price == "yes" and not OPENAI_VECTOR_STORE_PRICE_ID:
-        logger.warning("needs_price=yes but OPENAI_VECTOR_STORE_PRICE_ID is empty")
-
-    if plan.needs_news == "yes" and OPENAI_VECTOR_STORE_NEWS_ID:
-        passes.append(
-            LoopPass(
-                domain="news",
-                vector_store_ids=[OPENAI_VECTOR_STORE_NEWS_ID],
-                focus_label="news",
-            )
-        )
-    elif plan.needs_news == "yes" and not OPENAI_VECTOR_STORE_NEWS_ID:
-        logger.warning("needs_news=yes but OPENAI_VECTOR_STORE_NEWS_ID is empty")
-
-    if not passes:
-        for pk in product_keys:
-            cfg = _SUPPORT_AGENT_CONFIGS.get(pk)
-            if not cfg:
-                continue
-            vs = (cfg.get("vector_store_id") or "").strip()
-            if vs:
+        elif item.agent == "price":
+            if OPENAI_VECTOR_STORE_PRICE_ID:
                 passes.append(
                     LoopPass(
-                        domain="product",
-                        vector_store_ids=[vs],
-                        focus_label=f"product ({cfg['name']})",
-                        product_key=pk,
+                        domain="price",
+                        vector_store_ids=[OPENAI_VECTOR_STORE_PRICE_ID],
+                        focus_label="price",
                     )
                 )
-                break
+            else:
+                logger.warning("price agent requested but OPENAI_VECTOR_STORE_PRICE_ID is empty")
+
+        elif item.agent == "news":
+            if OPENAI_VECTOR_STORE_NEWS_ID:
+                passes.append(
+                    LoopPass(
+                        domain="news",
+                        vector_store_ids=[OPENAI_VECTOR_STORE_NEWS_ID],
+                        focus_label="news",
+                    )
+                )
+            else:
+                logger.warning("news agent requested but OPENAI_VECTOR_STORE_NEWS_ID is empty")
+
+        elif item.agent == "fallback":
+            passes.append(
+                LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")
+            )
+
+    if not passes:
+        logger.warning("loop_plan produced no valid passes; falling back to fallback")
+        passes.append(
+            LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")
+        )
 
     return passes
 
 
-def _build_retrieval_focus_instructions(
-    needs_price: str = "no",
-    needs_news: str = "no",
-) -> str:
+def _build_retrieval_focus_instructions(loop_plan: list[LoopPlanItem]) -> str:
+    """Build contextual focus hints from the execution plan."""
     focus_lines: list[str] = []
-    if needs_price == "yes":
+    agents = {item.agent for item in loop_plan}
+    if "price" in agents:
         focus_lines.append(
             "- 当前问题涉及价格、报价或商业价格信息，优先参考价格资料中的直接表述。"
         )
-    if needs_news == "yes":
+    if "news" in agents:
         focus_lines.append(
             "- 当前问题涉及最近动态、新闻或产品状态，优先参考新闻/更新资料中与当前产品直接匹配且时间更新近的内容。"
         )
@@ -452,23 +424,24 @@ def _build_retrieval_focus_instructions(
     return "\n\n## 本轮检索重点\n" + "\n".join(focus_lines)
 
 
-def _build_loop_domain_agent(plan: TriageOutput, loop_pass: LoopPass) -> Agent:
-    """One domain Agent: product manual, price store, news store, or out-of-scope (no tools)."""
+def _build_loop_domain_agent(plan: PlanOutput, loop_pass: LoopPass) -> Agent:
+    """One domain Agent: product manual, price store, news store, or fallback (no tools)."""
     domain = loop_pass.domain
     input_lang = plan.input_lang
     query_text = plan.query_text
 
-    if domain == "out-of-scope":
-        template = _INSTRUCTION_TEMPLATES["out-of-scope"]
+    if domain == "fallback":
+        template = _INSTRUCTION_TEMPLATES["fallback"]
         instructions = template.replace("{{input_lang}}", input_lang)
         instructions = instructions.replace("{{query_text}}", query_text)
         instructions += (
             "\n\n## 本轮任务\n"
-            "你当前是**范围判定模块**（非最终面向用户的回答模块）。"
+            "你当前是**兜底结果整理模块**（非最终面向用户的回答模块）。"
+            "当前轮次没有命中任何可执行的产品/价格/新闻检索域。"
             "请继续按模板要求输出结构化中间结果，不要写成长段最终客服答复。"
         )
         return Agent(
-            name="Official Website Scope Guard",
+            name="Fallback Agent",
             instructions=instructions,
             model=LLM_MODEL,
             tools=[],
@@ -487,10 +460,7 @@ def _build_loop_domain_agent(plan: TriageOutput, loop_pass: LoopPass) -> Agent:
             )
             + template.replace("{{input_lang}}", input_lang).replace("{{query_text}}", query_text)
         )
-        instructions += _build_retrieval_focus_instructions(
-            needs_price=plan.needs_price,
-            needs_news=plan.needs_news,
-        )
+        instructions += _build_retrieval_focus_instructions(plan.loop_plan)
         instructions += (
             "\n\n## 本轮检索任务\n"
             "本次你作为**产品手册**检索模块运行（非最终回答模块）。"
@@ -507,23 +477,10 @@ def _build_loop_domain_agent(plan: TriageOutput, loop_pass: LoopPass) -> Agent:
         )
 
     if domain == "price":
-        instructions = (
-            f"用户语言：{input_lang}（cn=中文，en=英文）。\n"
-            f"检索查询（已扩写）：{query_text}\n\n"
-            "## 本轮检索任务\n"
-            "你是**价格资料**检索模块（非最终回答模块）。请从向量库中提取与价格、报价、费用、"
-            "采购、commercial offer 相关的具体表述，包括数字、币种、条款、日期等。"
-            "不需要格式化为最终用户回答。\n"
-            f"检索焦点：{loop_pass.focus_label}\n\n"
-            "## 输出结构\n"
-            "请严格按以下四个标题输出：\n"
-            "### 结论\n"
-            "### 关键依据\n"
-            "### 细节摘录\n"
-            "### 缺失与不确定项"
-        )
+        instructions = _PRICE_LOOP_TEMPLATE.replace("{{input_lang}}", input_lang)
+        instructions = instructions.replace("{{query_text}}", query_text)
         return Agent(
-            name="Price Agent",
+            name="FF Price Agent",
             instructions=instructions,
             model=LLM_MODEL,
             tools=[FileSearchTool(vector_store_ids=loop_pass.vector_store_ids)],
@@ -531,31 +488,10 @@ def _build_loop_domain_agent(plan: TriageOutput, loop_pass: LoopPass) -> Agent:
         )
 
     if domain == "news":
-        instructions = (
-            f"用户语言：{input_lang}。\n"
-            f"检索查询（已扩写）：{query_text}\n\n"
-            "## 本轮检索任务\n"
-            "你是**新闻/动态**检索模块（非最终回答模块）。请提取与问题相关的公告、更新、"
-            "发布进展、时间线、最近状态等。不需要格式化为最终用户回答。\n"
-            f"检索焦点：{loop_pass.focus_label}\n\n"
-            "如果命中的新闻内容包含头部元数据（如 `source:`、`title:`、`published:`、`scraped_at:`），"
-            "请务必把这些信息原样整理到输出里，尤其是外部新闻链接 `source`。\n\n"
-            "## 输出结构\n"
-            "请严格按以下四个标题输出：\n"
-            "### 结论\n"
-            "### 关键依据\n"
-            "### 细节摘录\n"
-            "### 缺失与不确定项\n\n"
-            "在末尾追加 `### 来源信息` 小节，并严格输出下面的结构化块，便于系统抽取新闻来源：\n"
-            "SOURCE_JSON_START\n"
-            "[\n"
-            '  {"title": "<新闻标题>", "url": "<新闻原始 URL>", "published_at": "<published 或 scraped_at>"}\n'
-            "]\n"
-            "SOURCE_JSON_END\n\n"
-            "如果没有命中任何新闻来源，则输出空数组 `[]`。"
-        )
+        instructions = _NEWS_LOOP_TEMPLATE.replace("{{input_lang}}", input_lang)
+        instructions = instructions.replace("{{query_text}}", query_text)
         return Agent(
-            name="News Agent",
+            name="FF News Agent",
             instructions=instructions,
             model=LLM_MODEL,
             tools=[FileSearchTool(vector_store_ids=loop_pass.vector_store_ids)],
@@ -566,6 +502,7 @@ def _build_loop_domain_agent(plan: TriageOutput, loop_pass: LoopPass) -> Agent:
 
 
 _OUTPUT_INSTRUCTIONS_TEMPLATE = _load_instructions("output")
+_POST_DECISION_INSTRUCTIONS_TEMPLATE = _load_instructions("post-decision")
 
 
 def _build_output_agent(
@@ -583,11 +520,45 @@ def _build_output_agent(
     instructions = instructions.replace("{{source_catalog}}", source_catalog)
 
     return Agent(
-        name="Output Synthesizer",
+        name="FF AI Output Agent",
         instructions=instructions,
         model=LLM_MODEL,
         tools=[],
         model_settings=_NO_TOOL_MODEL_SETTINGS,
+    )
+
+
+def _build_post_decision_agent(
+    recommendation_rules_prompt: str,
+    purchase_intent_rules_prompt: str,
+    user_query: str,
+    loop_plan: list[LoopPlanItem],
+    retrieval_summary: str,
+    answer_text: str,
+) -> Agent:
+    """Build the Post-Decision Agent that evaluates purchase intent and recommendation rules."""
+    loop_plan_str = json.dumps([item.model_dump() for item in loop_plan], ensure_ascii=False)
+
+    instructions = _POST_DECISION_INSTRUCTIONS_TEMPLATE.replace(
+        "{{recommendation_rules}}", recommendation_rules_prompt
+    ).replace(
+        "{{purchase_intent_rules}}", purchase_intent_rules_prompt
+    ).replace(
+        "{{user_query}}", user_query
+    ).replace(
+        "{{loop_plan}}", loop_plan_str
+    ).replace(
+        "{{retrieval_summary}}", retrieval_summary[:3000]
+    ).replace(
+        "{{answer_text}}", answer_text[:3000]
+    )
+
+    return Agent(
+        name="FF Post-Decision Agent",
+        instructions=instructions,
+        model="gpt-5.4-mini",
+        output_type=PostDecisionOutput,
+        model_settings=_PLAN_MODEL_SETTINGS,
     )
 
 
@@ -1008,62 +979,6 @@ class _FinalSourceAppender:
         self._done = False
 
     def process(self, event: ThreadStreamEvent) -> ThreadStreamEvent:
-        if self._done or not self._sources:
-            return event
-        if event.type != "thread.item.done":
-            return event
-        item = event.item
-        if getattr(item, "type", None) != "assistant_message":
-            return event
-
-        text_part = next(
-            (
-                part
-                for part in getattr(item, "content", [])
-                if getattr(part, "type", None) == "output_text"
-                and isinstance(getattr(part, "text", None), str)
-            ),
-            None,
-        )
-        if text_part is None:
-            return event
-
-        base_text = text_part.text.rstrip()
-        header = "## 参考来源" if self._input_lang == "cn" else "## Sources"
-        new_text = f"{base_text}\n\n{header}\n"
-        annotations = list(getattr(text_part, "annotations", []) or [])
-
-        for source in self._sources:
-            if source.url:
-                line = f"- [{source.title}]({source.url})"
-                if source.source_host:
-                    label = "来源" if self._input_lang == "cn" else "Source"
-                    line += f" | {label}: {source.source_host}"
-                if source.published_at:
-                    label = "发布时间" if self._input_lang == "cn" else "Published"
-                    line += f" | {label}: {source.published_at}"
-                new_text += f"{line}\n"
-                continue
-
-            line_prefix = "- "
-            title_index = len(new_text) + len(line_prefix)
-            line = f"{line_prefix}{source.title}"
-            page_url = source.page_url or source.slug
-            if page_url:
-                line += f" <{page_url}>"
-            new_text += f"{line}\n"
-            ann = _build_entity_annotation(
-                title=source.title,
-                slug=source.slug,
-                page_url=source.page_url,
-                index=title_index,
-            )
-            if ann is not None:
-                annotations.append(ann)
-
-        text_part.text = new_text.rstrip()
-        text_part.annotations = annotations
-        self._done = True
         return event
 
 
@@ -1213,14 +1128,16 @@ class InMemoryStore(Store[dict]):
 
 
 class FFRobotChatKitServer(ChatKitServer[dict]):
-    """Plan → Loop → Output multi-agent workflow with post-answer recommendations.
+    """Plan → Loop → Output → Post-Decision multi-agent workflow.
 
-    1. **Plan Agent** (non-streamed): language, product line, domain flags
-       (`needs_product` / `needs_price` / `needs_news`), query expansion.
-    2. **Loop**: run **Product / Price / News** domain Agents (and out-of-scope
-       guard when applicable); each pass uses one vector store. Non-streamed
-       retrieval, then **Output Agent** streams the final answer.
-    3. **Recommendation** (post-answer): product card or lead-capture widget.
+    1. **Plan Agent** (non-streamed): generates ``loop_plan`` — an ordered list of
+       agent steps (product/price/news/fallback) with query expansion.
+    2. **Loop**: run domain Agents per ``loop_plan`` item; each pass uses one
+       vector store. Non-streamed retrieval.
+    3. **Output Agent**: streams the final user-facing answer.
+    4. **Post-Decision Agent** (non-streamed): evaluates purchase intent and
+       recommendation rule matching based on the full context.
+    5. **Recommendation**: product card or lead-capture widget.
     """
 
     def __init__(
@@ -1380,12 +1297,9 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         # ── Phase 1: Plan Agent (non-streamed, structured JSON) ─────────
         yield ProgressUpdateEvent(icon="sparkle", text="Analyzing your question…")
 
-        plan_agent = _build_plan_agent(
-            self.reco_engine.build_triage_rules_prompt(),
-            self.reco_engine.build_purchase_intent_prompt(),
-        )
+        plan_agent = _build_plan_agent()
         logger.info("Running plan agent …")
-        triage_result = await Runner.run(
+        plan_result = await Runner.run(
             plan_agent,
             input_items,
             context=agent_context,
@@ -1394,35 +1308,24 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             ),
         )
 
-        triage_output: TriageOutput = triage_result.final_output
+        plan_output: PlanOutput = plan_result.final_output
         front_logger.info(
-            "[thread=%s] plan → query_scope=%s, query_type=%s, product_types=%s, "
-            "input_lang=%s, needs_product=%s, needs_price=%s, needs_news=%s, purchase_intent=%s, "
-            "recommendation_hit=%s, recommendation_rule_id=%s, query_text=%s",
+            "[thread=%s] plan → input_lang=%s, loop_plan=%s, query_text=%s",
             thread.id,
-            triage_output.query_scope,
-            triage_output.query_type,
-            triage_output.product_types,
-            triage_output.input_lang,
-            triage_output.needs_product,
-            triage_output.needs_price,
-            triage_output.needs_news,
-            triage_output.purchase_intent,
-            triage_output.recommendation_hit,
-            triage_output.recommendation_rule_id,
-            triage_output.query_text[:120] if triage_output.query_text else "",
+            plan_output.input_lang,
+            [item.model_dump() for item in plan_output.loop_plan],
+            plan_output.query_text[:120] if plan_output.query_text else "",
         )
 
-        self.store.thread_langs[thread.id] = triage_output.input_lang
+        self.store.thread_langs[thread.id] = plan_output.input_lang
 
         # ── Phase 2: Loop (domain agents) → Output ─────────────────────────
 
-        loop_passes = _plan_loop_passes(triage_output)
+        loop_passes = _build_loop_passes_from_plan(plan_output.loop_plan)
         front_logger.info(
-            "[thread=%s] loop → domain_passes=%d, resolved_product_keys=%s, details=%s",
+            "[thread=%s] loop → domain_passes=%d, details=%s",
             thread.id,
             len(loop_passes),
-            _resolve_product_types(triage_output),
             [
                 (p.domain, p.focus_label, p.product_key, p.vector_store_ids)
                 for p in loop_passes
@@ -1435,7 +1338,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             if isinstance(item, dict) and item.get("role") == "user":
                 retrieval_conversation[i] = {
                     "role": "user",
-                    "content": triage_output.query_text,
+                    "content": plan_output.query_text,
                 }
                 break
         output_conversation = list(input_items)
@@ -1445,17 +1348,9 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             "model": "gpt-5.4-mini",
             "role": "plan",
             "output": {
-                "query_scope": triage_output.query_scope,
-                "query_type": triage_output.query_type,
-                "product_types": triage_output.product_types,
-                "input_lang": triage_output.input_lang,
-                "needs_product": triage_output.needs_product,
-                "needs_price": triage_output.needs_price,
-                "needs_news": triage_output.needs_news,
-                "purchase_intent": triage_output.purchase_intent,
-                "recommendation_hit": triage_output.recommendation_hit,
-                "recommendation_rule_id": triage_output.recommendation_rule_id,
-                "query_text": triage_output.query_text,
+                "input_lang": plan_output.input_lang,
+                "query_text": plan_output.query_text,
+                "loop_plan": [item.model_dump() for item in plan_output.loop_plan],
             },
         }
 
@@ -1463,8 +1358,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         retrieval_results: list[LoopPassResult] = []
 
         for pass_idx, pass_info in enumerate(loop_passes):
-            if pass_info.domain == "out-of-scope":
-                progress_text = "Preparing a scoped response…"
+            if pass_info.domain == "fallback":
+                progress_text = "Preparing a fallback response…"
             elif pass_info.domain == "product":
                 progress_text = f"Searching product manual ({pass_info.focus_label})…"
             elif pass_info.domain == "price":
@@ -1486,7 +1381,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 pass_info.vector_store_ids,
             )
 
-            domain_agent = _build_loop_domain_agent(triage_output, pass_info)
+            domain_agent = _build_loop_domain_agent(plan_output, pass_info)
             pass_result = await Runner.run(
                 domain_agent,
                 retrieval_conversation,
@@ -1531,12 +1426,12 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         output_agent = _build_output_agent(
-            triage_output.input_lang,
+            plan_output.input_lang,
             user_text,
             retrieval_results,
         )
         final_sources = _merge_retrieved_sources(retrieval_results)
-        source_appender = _FinalSourceAppender(final_sources, triage_output.input_lang)
+        source_appender = _FinalSourceAppender(final_sources, plan_output.input_lang)
 
         output_result = Runner.run_streamed(
             output_agent,
@@ -1547,17 +1442,56 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             ),
         )
 
+        answer_text_parts: list[str] = []
         async for event in stream_agent_response(
             agent_context, output_result, converter=FFRobotConverter()
         ):
+            if event.type == "thread.item.updated":
+                update = event.update
+                if hasattr(update, "delta") and isinstance(update.delta, str):
+                    answer_text_parts.append(update.delta)
             event = rewriter.process(event)
             yield source_appender.process(event)
+
+        answer_text = "".join(answer_text_parts)
+
+        # ── Phase 3: Post-Decision Agent ─────────────────────────────────
+        retrieval_summary = "\n".join(
+            f"[{r.domain}/{r.focus_label}] {r.text[:500]}" for r in retrieval_results
+        )
+
+        post_decision_agent = _build_post_decision_agent(
+            recommendation_rules_prompt=self.reco_engine.build_triage_rules_prompt(),
+            purchase_intent_rules_prompt=self.reco_engine.build_purchase_intent_prompt(),
+            user_query=user_text,
+            loop_plan=plan_output.loop_plan,
+            retrieval_summary=retrieval_summary,
+            answer_text=answer_text,
+        )
+        post_decision_result = await Runner.run(
+            post_decision_agent,
+            [{"role": "user", "content": user_text}],
+            context=agent_context,
+            run_config=RunConfig(
+                trace_metadata={"__trace_source__": "agent-builder"},
+            ),
+        )
+        post_decision: PostDecisionOutput = post_decision_result.final_output
+        front_logger.info(
+            "[thread=%s] post-decision → purchase_intent=%s, recommendation_hit=%s, "
+            "recommendation_rule_id=%s",
+            thread.id,
+            post_decision.purchase_intent,
+            post_decision.recommendation_hit,
+            post_decision.recommendation_rule_id,
+        )
 
         self.store.agent_traces[thread.id].append({
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_message": user_text[:300],
             "workflow": "plan-loop-output",
             "plan": {
+                "loop_plan": [item.model_dump() for item in plan_output.loop_plan],
                 "domains": [p.domain for p in loop_passes],
                 "details": [
                     (p.domain, p.focus_label, p.product_key, p.vector_store_ids)
@@ -1580,20 +1514,26 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     for result in retrieval_results
                 ],
                 {
-                    "agent": "Output Synthesizer",
+                    "agent": "FF AI Output Agent",
                     "model": LLM_MODEL,
                     "role": "output",
                     "source_count": len(final_sources),
                 },
+                {
+                    "agent": "FF Post-Decision Agent",
+                    "model": "gpt-5.4-mini",
+                    "role": "post-decision",
+                    "output": post_decision.model_dump(),
+                },
             ],
         })
 
-        # ── Phase 3: Post-answer recommendation ──────────────────────────
+        # ── Phase 4: Post-answer recommendation ──────────────────────────
         reco = self.reco_engine.evaluate_post_answer(
-            input_lang=triage_output.input_lang,
+            input_lang=plan_output.input_lang,
             thread_id=thread.id,
-            recommendation_rule_id=triage_output.recommendation_rule_id,
-            purchase_intent=triage_output.purchase_intent,
+            recommendation_rule_id=post_decision.recommendation_rule_id,
+            purchase_intent=post_decision.purchase_intent,
         )
         if reco:
             front_logger.info(
@@ -1602,7 +1542,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             )
             if reco.reco_type == "lead_capture":
                 card = self._build_lead_card(
-                    reco.title, reco.description, triage_output.input_lang,
+                    reco.title, reco.description, plan_output.input_lang,
                 )
             else:
                 card = self._build_reco_card(reco.title, reco.description)

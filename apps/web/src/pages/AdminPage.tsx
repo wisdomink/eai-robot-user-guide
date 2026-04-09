@@ -630,7 +630,7 @@ function HomepagePromptsTab() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const [settings, setSettings] = useState<HomepageSettings>({ greeting: '', placeholder: '' })
+  const [settings, setSettings] = useState<HomepageSettings>({ greeting: '', placeholder: '', info_text: '' })
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
@@ -642,7 +642,7 @@ function HomepagePromptsTab() {
     try {
       const cfg = await fetchHomepagePrompts(true)
       setRows(cfg.prompts)
-      setSettings({ greeting: cfg.greeting, placeholder: cfg.placeholder })
+      setSettings({ greeting: cfg.greeting, placeholder: cfg.placeholder, info_text: cfg.info_text })
       setSettingsLoading(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载首页推荐数据失败')
@@ -783,6 +783,15 @@ function HomepagePromptsTab() {
                 onChange={(e) => setSettings(prev => ({ ...prev, placeholder: e.target.value }))}
                 placeholder="Ask a question…"
                 required
+              />
+            </label>
+            <label className="lead-form-full">
+              推荐信息
+              <textarea
+                value={settings.info_text}
+                onChange={(e) => setSettings(prev => ({ ...prev, info_text: e.target.value }))}
+                placeholder="显示在推荐问题下方的纯文本提示信息（可留空）"
+                rows={3}
               />
             </label>
             <button type="submit" disabled={settingsSaving}>

@@ -55,6 +55,7 @@ _DEFAULT_PROMPTS = [
 
 _DEFAULT_GREETING = "Hi! I can help you with any of our products. Pick one to get started."
 _DEFAULT_PLACEHOLDER = "Ask a question…"
+_DEFAULT_INFO_TEXT = ""
 
 
 class HomepagePromptsStorage:
@@ -164,6 +165,7 @@ class HomepagePromptsStorage:
         return {
             "greeting": _DEFAULT_GREETING,
             "placeholder": _DEFAULT_PLACEHOLDER,
+            "info_text": _DEFAULT_INFO_TEXT,
             "prompts": list(_DEFAULT_PROMPTS),
         }
 
@@ -177,19 +179,20 @@ class HomepagePromptsStorage:
         prompts = []
         greeting = _DEFAULT_GREETING
         placeholder = _DEFAULT_PLACEHOLDER
+        info_text = _DEFAULT_INFO_TEXT
         for item in items:
             sk = item.get("sk", "")
             row = {k: v for k, v in item.items() if k not in {"pk", "sk"}}
             if sk == "_SETTINGS":
                 greeting = row.get("greeting", _DEFAULT_GREETING)
                 placeholder = row.get("placeholder", _DEFAULT_PLACEHOLDER)
+                info_text = row.get("info_text", _DEFAULT_INFO_TEXT)
             elif sk == "_GREETING":
-                # legacy key — read greeting if _SETTINGS not yet written
                 if greeting == _DEFAULT_GREETING:
                     greeting = row.get("greeting", _DEFAULT_GREETING)
             else:
                 prompts.append(row)
-        return {"greeting": greeting, "placeholder": placeholder, "prompts": prompts}
+        return {"greeting": greeting, "placeholder": placeholder, "info_text": info_text, "prompts": prompts}
 
     def _query_partition(self, partition_key: str) -> list[dict]:
         assert self._dynamodb_table is not None
@@ -222,6 +225,7 @@ class HomepagePromptsStorage:
                     "sk": "_SETTINGS",
                     "greeting": _DEFAULT_GREETING,
                     "placeholder": _DEFAULT_PLACEHOLDER,
+                    "info_text": _DEFAULT_INFO_TEXT,
                 }
             )
             for p in _DEFAULT_PROMPTS:
@@ -245,6 +249,7 @@ class HomepagePromptsStorage:
         return {
             "greeting": data.get("greeting", _DEFAULT_GREETING),
             "placeholder": data.get("placeholder", _DEFAULT_PLACEHOLDER),
+            "info_text": data.get("info_text", _DEFAULT_INFO_TEXT),
         }
 
     def get_homepage_config(self, *, include_disabled: bool = False) -> dict:
@@ -255,23 +260,36 @@ class HomepagePromptsStorage:
             "prompts": self.list_prompts(include_disabled=include_disabled),
         }
 
-    def save_settings(self, greeting: str | None = None, placeholder: str | None = None) -> dict:
-        """Update page-level settings (greeting and/or placeholder)."""
+    def save_settings(
+        self,
+        greeting: str | None = None,
+        placeholder: str | None = None,
+        info_text: str | None = None,
+    ) -> dict:
+        """Update page-level settings (greeting, placeholder, and/or info_text)."""
         if self._backend == "dynamodb":
-            return self._save_settings_dynamodb(greeting, placeholder)
+            return self._save_settings_dynamodb(greeting, placeholder, info_text)
 
         data = self._load_data()
         if greeting is not None:
             data["greeting"] = greeting.strip()
         if placeholder is not None:
             data["placeholder"] = placeholder.strip()
+        if info_text is not None:
+            data["info_text"] = info_text.strip()
         self._write_data(data)
         return {
             "greeting": data.get("greeting", _DEFAULT_GREETING),
             "placeholder": data.get("placeholder", _DEFAULT_PLACEHOLDER),
+            "info_text": data.get("info_text", _DEFAULT_INFO_TEXT),
         }
 
-    def _save_settings_dynamodb(self, greeting: str | None, placeholder: str | None) -> dict:
+    def _save_settings_dynamodb(
+        self,
+        greeting: str | None,
+        placeholder: str | None,
+        info_text: str | None,
+    ) -> dict:
         self._ensure_dynamodb_seeded()
         assert self._dynamodb_table is not None
 
@@ -280,6 +298,8 @@ class HomepagePromptsStorage:
             current["greeting"] = greeting.strip()
         if placeholder is not None:
             current["placeholder"] = placeholder.strip()
+        if info_text is not None:
+            current["info_text"] = info_text.strip()
 
         self._dynamodb_table.put_item(
             Item={"pk": self._PARTITION_KEY, "sk": "_SETTINGS", **current}

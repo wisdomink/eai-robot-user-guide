@@ -11,6 +11,7 @@ export interface HomepagePrompt {
 export interface HomepagePromptsConfig {
   greeting: string
   placeholder: string
+  info_text: string
   prompts: HomepagePrompt[]
 }
 
@@ -38,6 +39,7 @@ export async function fetchHomepagePrompts(
   return {
     greeting: data.greeting ?? '',
     placeholder: data.placeholder ?? '',
+    info_text: data.info_text ?? '',
     prompts: (data.prompts || []) as HomepagePrompt[],
   }
 }

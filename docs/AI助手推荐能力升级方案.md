@@ -208,7 +208,7 @@
 
 本次改动主要涉及以下模块：
 
-- `apps/rag-api/app/services/instructions/triage.md`
+- `apps/rag-api/app/services/instructions/plan.md`
 - `apps/rag-api/app/services/chatkit_handler.py`
 - `apps/rag-api/app/services/recommendation_engine.py`
 - `apps/rag-api/app/main.py`

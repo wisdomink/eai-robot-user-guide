@@ -125,6 +125,7 @@ class HomepagePromptRequest(BaseModel):
 class HomepageSettingsRequest(BaseModel):
     greeting: str | None = Field(None, description="Welcome title shown above prompt buttons")
     placeholder: str | None = Field(None, description="Placeholder text for the input box")
+    info_text: str | None = Field(None, description="Informational text shown below prompt buttons")
 
 
 class LeadCaptureTriageConfigPayload(BaseModel):
@@ -352,6 +353,7 @@ async def save_homepage_settings(payload: HomepageSettingsRequest):
     settings = homepage_prompts_storage.save_settings(
         greeting=payload.greeting,
         placeholder=payload.placeholder,
+        info_text=payload.info_text,
     )
     front_logger.info(
         "POST /api/save-homepage-settings  greeting=%r  placeholder=%r",

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, type CSSProperties, type FormEvent } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo, type CSSProperties, type FormEvent } from 'react'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
 import { fetchHomepagePrompts, type HomepagePromptsConfig } from './homepagePromptsClient'
@@ -128,6 +128,49 @@ function useControllableOpen(
   return [isOpen, setOpen] as const
 }
 
+const SOURCE_HEADING_RE = /^(参考来源|Sources)$/i
+
+function hideSourceSections(root: HTMLElement) {
+  const headings = root.querySelectorAll('h2')
+  for (const h2 of headings) {
+    if (h2.dataset.srcHidden) continue
+    const text = (h2.textContent || '').trim()
+    if (!SOURCE_HEADING_RE.test(text)) continue
+    h2.dataset.srcHidden = '1'
+    h2.style.display = 'none'
+    let sibling = h2.nextElementSibling
+    while (sibling) {
+      ;(sibling as HTMLElement).style.display = 'none'
+      sibling = sibling.nextElementSibling
+    }
+  }
+}
+
+function useSourceSectionHider(containerRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let pending = 0
+    function scan() {
+      pending = 0
+      hideSourceSections(container!)
+    }
+    function scheduleScan() {
+      if (!pending) pending = requestAnimationFrame(scan)
+    }
+
+    scan()
+
+    const observer = new MutationObserver(scheduleScan)
+    observer.observe(container, { childList: true, subtree: true, characterData: true })
+    return () => {
+      observer.disconnect()
+      if (pending) cancelAnimationFrame(pending)
+    }
+  }, [containerRef])
+}
+
 export default function ChatPanel({
   open,
   defaultOpen = false,
@@ -149,6 +192,9 @@ export default function ChatPanel({
   zIndex,
   rootClassName,
 }: ChatPanelProps) {
+  const chatkitBodyRef = useRef<HTMLDivElement>(null)
+  useSourceSectionHider(chatkitBodyRef)
+
   const resolvedApiConfig = useMemo(() => apiConfig ?? buildApiConfig(), [apiConfig])
   const rootStyle = useMemo(() => {
     if (zIndex === undefined) return undefined
@@ -191,6 +237,7 @@ export default function ChatPanel({
   const greeting = remoteConfig?.greeting || greetingProp
   const placeholder = remoteConfig?.placeholder || placeholderProp
   const prompts = remoteConfig?.prompts?.length ? remoteConfig.prompts : promptsProp
+  const infoText = remoteConfig?.info_text || ''
 
   const openChat = useCallback(() => {
     setIsChatOpen(true)
@@ -323,7 +370,7 @@ export default function ChatPanel({
         id={panelId}
         aria-hidden={!isChatOpen}
       >
-        <div className="chatkit-body">
+        <div className="chatkit-body" ref={chatkitBodyRef}>
           <ChatKit control={control} />
           {overlayMode && (
             <div className="ck-greeting-overlay">
@@ -346,6 +393,9 @@ export default function ChatPanel({
                         ))
                       )}
                     </div>
+                    {infoText && (
+                      <p className="ck-greeting-info-text">{infoText}</p>
+                    )}
                   </div>
                   <div className="ck-greeting-bottom">
                     <form className="ck-greeting-input-bar" onSubmit={handleInputSend}>

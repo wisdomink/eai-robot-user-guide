@@ -176,6 +176,18 @@
   background: var(--accent-bg);
 }
 
+.ffrobot-chat-root .ck-greeting-info-text {
+  font-family: var(--font-roboto);
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  text-align: center;
+  line-height: 1.5;
+  margin: 4px 0 0;
+  max-width: 280px;
+  white-space: pre-line;
+}
+
 .ffrobot-chat-root .ck-greeting-input-bar {
   display: flex;
   align-items: flex-end;

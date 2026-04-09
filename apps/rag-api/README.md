@@ -21,7 +21,7 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
                               │
                     ┌─────────▼──────────┐
                     │    Plan Agent       │  非流式，JSON 输出
-                    │  语言/范围/产品识别  │  → product_types
+                    │  语言/产品/领域识别  │  → product_types
                     │  查询扩写/领域标记    │  → needs_product/price/news
                     └─────────┬──────────┘
                               │ 服务端编排
@@ -57,16 +57,18 @@ apps/rag-api/
 │   └── services/
 │       ├── chatkit_handler.py       # 多 Agent 工作流 + ChatKit 桥接
 │       └── instructions/            # Agent Prompt 模板
-│           ├── triage.md            # Triage Agent — 路由预处理
-│           ├── master.md            # Master 系列检索子模块提示词
-│           ├── futurist.md          # Futurist 检索子模块提示词
-│           ├── futurist-ultra.md    # Futurist Ultra 检索子模块提示词
-│           ├── aegis.md             # Aegis 系列检索子模块提示词
-│           ├── aegis-ultra.md       # Aegis Ultra 检索子模块提示词
-│           ├── ff91.md              # FF 91 2.0 检索子模块提示词
+│           ├── plan.md              # Plan Agent — 路由预处理
+│           ├── product-master.md    # FF Master Product Agent 提示词
+│           ├── product-futurist.md  # FF Futurist Product Agent 提示词
+│           ├── product-futurist-ultra.md # FF Futurist Ultra Product Agent 提示词
+│           ├── product-aegis.md     # FF Aegis Product Agent 提示词
+│           ├── product-aegis-ultra.md # FF Aegis Ultra Product Agent 提示词
+│           ├── product-ff91.md      # FF 91 2.0 Product Agent 提示词
+│           ├── price-agent.md       # FF Price Agent 提示词
+│           ├── news-agent.md        # FF News Agent 提示词
 │           ├── output.md            # 最终汇总输出提示词
 │           ├── general.md           # 历史遗留文件，当前主流程未使用
-│           └── out-of-scope.md      # 超范围说明中间结果提示词
+│           └── fallback.md          # Fallback Agent 中间结果提示词
 ├── create_vector_store.py           # 同步手册文档到 Vector Store（ROBOT_ALL）
 ├── .env                             # 环境变量（勿提交）
 ├── .env.example                     # 环境变量模板
@@ -187,21 +189,21 @@ uvicorn app.main:app --reload --port 8000
 | 字段 | 说明 |
 |------|------|
 | `input_lang` | 用户语言：`cn`（中文）/ `en`（英文） |
-| `query_type` | 产品主路由：`master` / `futurist` / `futurist-ultra` / `aegis` / `aegis-ultra` / `ff91` / `out-of-scope` |
+| `query_type` | 产品主路由：`master` / `futurist` / `futurist-ultra` / `aegis` / `aegis-ultra` / `ff91` / `""` |
 | `query_text` | 翻译为英文并扩写后的搜索查询，用于优化 RAG 检索 |
 | `product_types` | 需要检索的产品手册 key 列表；后端会按元素逐轮执行 product loop |
-| `needs_product` / `needs_price` / `needs_news` | 控制后端是否执行产品、价格、新闻 loop |
+| `needs_product` / `needs_price` / `needs_news` | 控制后端是否执行产品、价格、新闻 loop；若都为 `no`，后端进入兜底模块 |
 
 ### Loop Agents（检索子模块）
 
-后端根据 Plan 结果执行 1-N 轮 loop。产品类 loop 使用对应 `instructions/*.md` 模板；价格和新闻 loop 使用服务端内置 prompt；超范围走无工具守卫模块。
+后端根据 Plan 结果执行 1-N 轮 loop。产品、价格、新闻 loop 均使用 `instructions/*.md` 模板；仅当没有命中任何领域时，进入无工具兜底模块。
 
 | Loop 类型 | Vector Store | 说明 |
 |----------|-------------|------|
 | Product | 各产品独立库 | 产出结构化检索结果，供 Output Agent 汇总 |
 | Price | 价格库 | 提取价格、报价、币种、条款等信息 |
 | News | 新闻库 | 提取动态、公告、时间线、最近状态 |
-| Scope Guard | 无 | 生成超范围说明中间结果，不做检索 |
+| Fallback Guard | 无 | 生成兜底说明中间结果，不做检索 |
 
 ### Output Agent（最终回答）
 

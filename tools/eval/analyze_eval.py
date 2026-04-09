@@ -312,7 +312,7 @@ EXPERT_CONFIGS = [
 你熟悉的项目技术栈和架构：
 - 框架：OpenAI Agents SDK（Python），使用 Agent + Runner.run() 调用
 - 流程：Plan Agent（语言检测/范围/产品路由/查询扩写）→ Loop retrieval agents（product / price / news）→ Output Agent（最终回答）
-- Plan 指令：apps/rag-api/app/services/instructions/triage.md
+- Plan 指令：apps/rag-api/app/services/instructions/plan.md
 - Output 指令：apps/rag-api/app/services/instructions/output.md
 - Product retrieval 指令：apps/rag-api/app/services/instructions/{master,futurist,futurist-ultra,aegis,aegis-ultra,ff91}.md
 - Vector Store：OpenAI 远程 Vector Store，按产品/价格/新闻分库，另有一个 all-products 库用于语义搜索
@@ -322,7 +322,7 @@ EXPERT_CONFIGS = [
 
 分析要求：
 
-1. **Prompt 修改建议**：针对失败用例中暴露的问题，给出对 triage.md 或各产品 instructions 的具体修改建议
+1. **Prompt 修改建议**：针对失败用例中暴露的问题，给出对 plan.md 或各产品 instructions 的具体修改建议
    - 写出需要修改的文件路径
    - 给出修改前后的对比（原文 → 建议改为）
    - 说明修改的理由和预期效果
