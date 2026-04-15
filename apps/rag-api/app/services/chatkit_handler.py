@@ -1180,12 +1180,21 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 ),
                 Spacer(size="sm"),
                 Label(
-                    value="姓名 / Name" if is_cn else "Name",
-                    fieldName="contact_name",
+                    value="名 / First Name" if is_cn else "First Name",
+                    fieldName="firstName",
                 ),
                 Input(
-                    name="contact_name",
-                    placeholder="请输入姓名" if is_cn else "Your name",
+                    name="firstName",
+                    placeholder="请输入名" if is_cn else "Your first name",
+                ),
+                Spacer(size="sm"),
+                Label(
+                    value="姓 / Last Name" if is_cn else "Last Name",
+                    fieldName="lastName",
+                ),
+                Input(
+                    name="lastName",
+                    placeholder="请输入姓" if is_cn else "Your last name",
                 ),
                 Spacer(size="sm"),
                 Label(
@@ -1221,10 +1230,11 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
     def _save_lead(self, thread_id: str, payload: dict) -> None:
         self._lead_storage.save_lead(thread_id, payload)
         front_logger.info(
-            "[thread=%s] lead captured: product=%s name=%s email=%s",
+            "[thread=%s] lead captured: product=%s firstName=%s lastName=%s email=%s",
             thread_id,
             payload.get("product", ""),
-            payload.get("contact_name", ""),
+            payload.get("firstName", ""),
+            payload.get("lastName", ""),
             payload.get("email", ""),
         )
 

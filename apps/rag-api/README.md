@@ -153,6 +153,9 @@ uvicorn app.main:app --reload --port 8000
 | 变量 | 必填 | 默认值 | 说明 |
 |------|:----:|--------|------|
 | `PUBLIC_BASE_URL` | | — | 应用公网地址，用于 ChatKit iframe 中图片 URL 重写 |
+| `LEADS_FORWARD_URL` | | — | 留资保存成功后，额外同步 POST 到外部 webhook |
+| `LEADS_FORWARD_TIMEOUT` | | `10` | 外部 webhook 请求超时（秒） |
+| `LEADS_FORWARD_SOURCE` | | `AI Chat` | 外部 webhook payload 中的 `source` 字段 |
 
 端口通过 shell 环境变量控制（不在 `.env` 中）：
 
@@ -179,6 +182,33 @@ uvicorn app.main:app --reload --port 8000
 | `/api/logs/all` | GET | 合并所有日志按时间排序输出（`?tail=200`，每个日志取最后 N 行） |
 | `/api/logs/{log_name}` | GET | 获取指定日志的最后 N 行（`?tail=200`，允许：`front.log`、`back.log`、`system.log`） |
 | `/health` | GET | 健康检查 |
+
+### 留资接口请求体
+
+`POST /api/post-lead` 当前接收以下 JSON 字段：
+
+```json
+{
+  "product": "aegis-ultra",
+  "firstName": "Evan",
+  "lastName": "Liu",
+  "email": "evanliu@ff.com",
+  "phone": "6266668888",
+  "thread_id": "thread_xxx"
+}
+```
+
+如果配置了 `LEADS_FORWARD_URL`，服务端在本地文件或 DynamoDB 保存成功后，还会向外部 webhook 同步发送：
+
+```json
+{
+  "firstName": "Evan",
+  "lastName": "Liu",
+  "phone": "6266668888",
+  "email": "evanliu@ff.com",
+  "source": "AI Chat"
+}
+```
 
 ## 多 Agent 工作流
 

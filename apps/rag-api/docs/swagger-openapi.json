@@ -376,10 +376,16 @@
             "description": "Product ID",
             "default": ""
           },
-          "contact_name": {
+          "firstName": {
             "type": "string",
-            "title": "Contact Name",
-            "description": "User contact name",
+            "title": "Firstname",
+            "description": "User first name",
+            "default": ""
+          },
+          "lastName": {
+            "type": "string",
+            "title": "Lastname",
+            "description": "User last name",
             "default": ""
           },
           "email": {

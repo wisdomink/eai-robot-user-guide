@@ -99,7 +99,8 @@ chatkit_server = create_chatkit_server(
 
 class LeadCreateRequest(BaseModel):
     product: str = Field("", description="Product ID")
-    contact_name: str = Field("", description="User contact name")
+    firstName: str = Field("", description="User first name")
+    lastName: str = Field("", description="User last name")
     email: str = Field("", description="User email")
     phone: str = Field("", description="User phone number")
     thread_id: str = Field("", description="Optional chat thread ID")
@@ -461,9 +462,10 @@ async def create_lead(payload: LeadCreateRequest):
         payload=payload.model_dump(exclude={"thread_id"}),
     )
     front_logger.info(
-        "POST /api/post-lead  product=%s name=%s email=%s",
+        "POST /api/post-lead  product=%s firstName=%s lastName=%s email=%s",
         lead.get("product", ""),
-        lead.get("contact_name", ""),
+        lead.get("firstName", ""),
+        lead.get("lastName", ""),
         lead.get("email", ""),
     )
     return {"ok": True, "lead": lead}

@@ -1,6 +1,7 @@
 export interface LeadPayload {
   product: string
-  contact_name: string
+  firstName: string
+  lastName: string
   email: string
   phone: string
   thread_id?: string

@@ -62,6 +62,9 @@ ALERT_DIGEST_INTERVAL: int = int(os.getenv("ALERT_DIGEST_INTERVAL", "3600"))  # 
 LEADS_DIR: Path = Path(os.getenv("LEADS_DIR", str(RAG_SERVER_ROOT / "data")))
 LEADS_BACKEND: str = os.getenv("LEADS_BACKEND", "file").strip().lower()
 LEADS_DDB_TABLE: str = os.getenv("LEADS_DDB_TABLE", "").strip()
+LEADS_FORWARD_URL: str = os.getenv("LEADS_FORWARD_URL", "").strip()
+LEADS_FORWARD_TIMEOUT: float = float(os.getenv("LEADS_FORWARD_TIMEOUT", "10"))
+LEADS_FORWARD_SOURCE: str = os.getenv("LEADS_FORWARD_SOURCE", "AI Chat").strip() or "AI Chat"
 
 # ── Homepage prompts config persistence ────────────────────────────────────
 HOMEPAGE_PROMPTS_BACKEND: str = os.getenv("HOMEPAGE_PROMPTS_BACKEND", "file").strip().lower()

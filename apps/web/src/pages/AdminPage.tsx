@@ -53,7 +53,8 @@ const EMPTY_RECO_FORM: RecommendationPayload = {
 
 const EMPTY_LEAD_FORM: LeadPayload = {
   product: 'master',
-  contact_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
   thread_id: '',
@@ -447,7 +448,7 @@ function LeadsTab() {
     setSuccess(null)
     try {
       await submitLead(form)
-      setSuccess('提交成功，已保存到服务端本地文件。')
+      setSuccess('提交成功，已保存到服务端。')
       setForm(EMPTY_LEAD_FORM)
       await loadLeads()
     } catch (err) {
@@ -516,7 +517,7 @@ function LeadsTab() {
 
       <section className="reco-card">
         <h2>测试留资提交</h2>
-        <p>提交后会调用服务端留资接口，并写入本地存储。</p>
+        <p>提交后会调用服务端留资接口，并按当前配置保存与同步数据。</p>
         <form className="lead-form" onSubmit={handleSubmit}>
           <label>
             产品
@@ -530,11 +531,19 @@ function LeadsTab() {
             </select>
           </label>
           <label>
-            姓名
+            名
             <input
-              value={form.contact_name}
-              onChange={(e) => updateField('contact_name', e.target.value)}
-              placeholder="请输入姓名"
+              value={form.firstName}
+              onChange={(e) => updateField('firstName', e.target.value)}
+              placeholder="请输入名"
+            />
+          </label>
+          <label>
+            姓
+            <input
+              value={form.lastName}
+              onChange={(e) => updateField('lastName', e.target.value)}
+              placeholder="请输入姓"
             />
           </label>
           <label>
@@ -583,7 +592,8 @@ function LeadsTab() {
               <tr>
                 <th>时间</th>
                 <th>产品</th>
-                <th>姓名</th>
+                <th>名</th>
+                <th>姓</th>
                 <th>邮箱</th>
                 <th>电话</th>
                 <th>线程 ID</th>
@@ -594,14 +604,15 @@ function LeadsTab() {
                 <tr key={`${row.timestamp}-${idx}`}>
                   <td>{row.timestamp}</td>
                   <td>{row.product}</td>
-                  <td>{row.contact_name}</td>
+                  <td>{row.firstName}</td>
+                  <td>{row.lastName}</td>
                   <td>{row.email}</td>
                   <td>{row.phone}</td>
                   <td>{row.thread_id}</td>
                 </tr>
               ))}
               {rows.length === 0 && !loading && (
-                <tr><td colSpan={6}>暂无数据</td></tr>
+                <tr><td colSpan={7}>暂无数据</td></tr>
               )}
             </tbody>
           </table>

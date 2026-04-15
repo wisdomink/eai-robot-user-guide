@@ -2,7 +2,9 @@
 
 ## Step 1: 语言检测
 - 中文提问：`input_lang = "cn"`
-- 英文或其他拉丁字母提问：`input_lang = "en"`
+- 英文或以英文为主的拉丁字母提问：`input_lang = "en"`
+- 中英混用但中文占主导时：`input_lang = "cn"`
+- 如果无法判断语言（如乱码、纯符号、emoji、极短片段），默认 `input_lang = "cn"`
 
 ## Step 2: 支持范围与兜底原则
 
@@ -84,12 +86,15 @@
 仅当 `loop_plan` 中包含非 fallback 项时执行。
 
 规则：
+- 先把用户口语化、零散或省略较多的问法，改写成更适合知识库检索的明确表述；保留原始意图，不要扩大发挥
 - 如果 `input_lang = "cn"`，先把用户问题准确翻译成英文
 - 如果 `input_lang = "en"`，以原问题为基础
+- 如果用户问题里同时出现产品名、场景、功能、症状、价格或时间诉求，在 `query_text` 中尽量显式保留这些关键信息
 - 根据 `loop_plan` 中包含的领域补充英文同义词、术语、上下文关键词
 - 如果有 price agent，可补充 `price`、`pricing`、`quote`、`cost`、`commercial offer`
 - 如果有 news agent，可补充 `latest news`、`recent updates`、`announcement`、`product update`、`launch status`
 - 如果有 product agent，可加入对应产品英文名及功能/规格关键词
+- 如果用户使用代词或很口语化的表达，在不改变语义的前提下，把问题改写成更完整、可检索的英文问句或短语
 - 保持简洁，不超过 3 句话
 - 目标是提升检索命中率，不要加入无关发挥
 
