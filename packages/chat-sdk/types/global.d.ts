@@ -28,6 +28,7 @@ interface FFRobotChatInitOptions {
   apiBaseUrl?: string
   domainKey?: string
   promptsApiUrl?: string | null
+  hostUrl?: string
   mountTarget?: HTMLElement | string
   containerId?: string
   defaultOpen?: boolean

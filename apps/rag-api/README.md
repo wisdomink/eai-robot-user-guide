@@ -178,10 +178,110 @@ uvicorn app.main:app --reload --port 8000
 | `/api/get-recommendations` | GET | 获取全部推荐图鉴条目 |
 | `/api/save-recommendation` | POST | 按 `id` 保存或更新一条推荐图鉴条目 |
 | `/api/delete-recommendation/{recommendation_id}` | DELETE | 删除一条推荐图鉴条目 |
+| `/api/get-homepage-prompts` | GET | 获取首页推荐配置；SDK 传 `?url=https://...` 返回命中页面，管理后台传 `?all=true` 返回全部页面配置 |
+| `/api/save-homepage-page` | POST | 整页保存一个首页推荐页面配置（路径、标题、placeholder、info_text、prompts 一次提交） |
+| `/api/delete-homepage-page/{page_id}` | DELETE | 删除一个首页推荐页面配置（`pattern=*` 的 fallback 页面不可删除） |
 | `/api/logs` | GET | 列出所有可用日志类型及访问链接 |
 | `/api/logs/all` | GET | 合并所有日志按时间排序输出（`?tail=200`，每个日志取最后 N 行） |
 | `/api/logs/{log_name}` | GET | 获取指定日志的最后 N 行（`?tail=200`，允许：`front.log`、`back.log`、`system.log`） |
 | `/health` | GET | 健康检查 |
+
+## 首页推荐配置持久化
+
+首页推荐配置支持两种持久化后端：
+
+- `HOMEPAGE_PROMPTS_BACKEND=file`
+  将配置写入 `HOMEPAGE_PROMPTS_DATA_PATH` 指向的 JSON 文件，默认是 `apps/rag-api/data/homepage_prompts.json`。
+- `HOMEPAGE_PROMPTS_BACKEND=dynamodb`
+  将每个页面配置保存到 `HOMEPAGE_PROMPTS_DDB_TABLE` 指定的 DynamoDB 表中，适合生产环境。
+
+推荐在 AWS 生产环境使用 `dynamodb`，这样镜像重建后配置仍然存在。若必须使用 `file`，则需要为 `/app/data` 或对应路径挂载持久化卷（例如 EFS）。
+
+推荐的环境策略：
+
+- 本地 / 开发：`HOMEPAGE_PROMPTS_BACKEND=file`
+- AWS / 生产：`HOMEPAGE_PROMPTS_BACKEND=dynamodb`
+
+仓库中的 `apps/rag-api/data/homepage_prompts.json` 作为默认模板文件保留。生产环境中如需把默认模板同步到线上 DB，可在本地执行同步脚本，由脚本调用线上已部署服务的现有首页推荐 API 逐页更新。
+
+当前 JSON schema 为：
+
+```json
+{
+  "pages": [
+    {
+      "id": "www_home",
+      "pattern": "https://www.ff.com/",
+      "label": "官网首页",
+      "greeting": "想了解 FF 的产品吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "id": "www_home_1",
+          "enabled": true,
+          "label": "FF 目前有哪些产品线？",
+          "prompt": "FF 目前有哪些产品线？",
+          "sort_order": 0
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "pattern": "*",
+      "label": "默认",
+      "greeting": "有什么可以帮您？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": []
+    }
+  ]
+}
+```
+
+匹配优先级为：精确 URL > 前缀通配（`https://host/path/*`）> `*` fallback。后端会自动忽略 query string 和 hash，仅使用 `origin + pathname` 做匹配。
+
+管理后台录入 `pattern` 时支持更宽松的写法：
+
+- 只写路径，如 `/fx`、`/preorder/*`，会自动补成 `https://www.ff.com/...`
+- 只写域名和路径，如 `robotics.ff.com/fx-aegis`，会自动补成 `https://robotics.ff.com/fx-aegis`
+
+### 默认配置 API 同步脚本
+
+新增脚本：
+
+`apps/rag-api/sync_homepage_prompts.py`
+
+用途：
+
+- 从 `homepage_prompts.json` 读取默认页面配置
+- 调用已部署服务的现有 API：
+  - `GET /api/get-homepage-prompts?all=true`
+  - `POST /api/save-homepage-page`
+  - `DELETE /api/delete-homepage-page/{id}`
+- 由线上服务把配置写入当前运行 backend（生产通常是 DynamoDB）
+
+支持三种模式：
+
+- `seed-if-empty`：线上 backend 为空时才初始化
+- `merge-additive`：只补充缺失 page，不覆盖线上已有 page
+- `force-replace`：以 JSON 为准全量覆盖线上配置，并删除多余 page
+
+示例：
+
+```bash
+cd apps/rag-api
+python sync_homepage_prompts.py \
+  --api-base https://robotics-instruction-manual.ff.com \
+  --mode merge-additive
+```
+
+AWS 部署时只负责把生产环境切到 DynamoDB：
+
+- `HOMEPAGE_PROMPTS_BACKEND=dynamodb`
+- `HOMEPAGE_PROMPTS_DDB_TABLE=<app>-homepage-prompts`
+
+默认模板的远程同步由本地脚本手动执行，不由部署脚本自动触发。
 
 ### 留资接口请求体
 
@@ -206,7 +306,8 @@ uvicorn app.main:app --reload --port 8000
   "lastName": "Liu",
   "phone": "6266668888",
   "email": "evanliu@ff.com",
-  "source": "AI Chat"
+  "source": "AI Chat",
+  "product": "ff91"
 }
 ```
 

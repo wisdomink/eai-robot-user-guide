@@ -14,13 +14,12 @@ import {
 } from '@/api/leadCaptureConfig'
 import { fetchLeads, submitLead, type LeadPayload, type LeadRecord } from '@/api/leads'
 import {
-  deleteHomepagePrompt,
-  fetchHomepagePrompts,
-  saveHomepagePrompt,
-  saveHomepageSettings,
+  deleteHomepagePage,
+  fetchAllHomepagePages,
   type HomepagePrompt,
-  type HomepagePromptPayload,
-  type HomepageSettings,
+  type HomepagePage,
+  type HomepagePagePayload,
+  saveHomepagePage,
 } from '@/api/homepagePrompts'
 
 type Tab = 'recommendations' | 'leads' | 'homepage-prompts'
@@ -624,142 +623,210 @@ function LeadsTab() {
 
 /* ───── Homepage Prompts Tab ───── */
 
-const EMPTY_PROMPT_FORM: HomepagePromptPayload = {
-  enabled: true,
-  label: '',
-  prompt: '',
-  sort_order: 0,
+function createDraftPrompt(index: number): HomepagePrompt {
+  return {
+    id: `draft_prompt_${Date.now()}_${index}`,
+    enabled: true,
+    label: '',
+    prompt: '',
+    sort_order: index,
+  }
+}
+
+function createDraftPage(): HomepagePage {
+  return {
+    id: `draft_page_${Date.now()}`,
+    pattern: '',
+    label: '新页面',
+    greeting: '',
+    placeholder: '',
+    info_text: '',
+    prompts: [],
+  }
 }
 
 function HomepagePromptsTab() {
-  const [form, setForm] = useState<HomepagePromptPayload>(EMPTY_PROMPT_FORM)
-  const [rows, setRows] = useState<HomepagePrompt[]>([])
-  const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [pages, setPages] = useState<HomepagePage[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const [settings, setSettings] = useState<HomepageSettings>({ greeting: '', placeholder: '', info_text: '' })
-  const [settingsLoading, setSettingsLoading] = useState(true)
-  const [settingsSaving, setSettingsSaving] = useState(false)
-  const [settingsError, setSettingsError] = useState<string | null>(null)
-  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null)
-
-  const loadPrompts = useCallback(async () => {
+  const loadPages = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const cfg = await fetchHomepagePrompts(true)
-      setRows(cfg.prompts)
-      setSettings({ greeting: cfg.greeting, placeholder: cfg.placeholder, info_text: cfg.info_text })
-      setSettingsLoading(false)
+      const data = await fetchAllHomepagePages()
+      setPages(data)
+      setActiveId(current => current && data.some(page => page.id === current) ? current : data[0]?.id ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载首页推荐数据失败')
-      setSettingsLoading(false)
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadPrompts()
-  }, [loadPrompts])
+    loadPages()
+  }, [loadPages])
 
-  const sortedRows = useMemo(
-    () => [...rows].sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id)),
-    [rows],
+  const activePage = useMemo(
+    () => pages.find(page => page.id === activeId) ?? null,
+    [activeId, pages],
   )
 
-  const updateField = <K extends keyof HomepagePromptPayload>(
+  const updateActivePage = useCallback((updater: (page: HomepagePage) => HomepagePage) => {
+    setPages(prev => prev.map(page => page.id === activeId ? updater(page) : page))
+  }, [activeId])
+
+  const handleCreatePage = () => {
+    const nextPage = createDraftPage()
+    setPages(prev => [...prev, nextPage])
+    setActiveId(nextPage.id)
+    setError(null)
+    setSuccess('已新增一个待保存的页面标签，请填写路径与配置后保存。')
+  }
+
+  const handlePromptChange = <K extends keyof HomepagePrompt>(
+    promptIndex: number,
     key: K,
-    value: HomepagePromptPayload[K],
+    value: HomepagePrompt[K],
   ) => {
-    setForm(prev => ({ ...prev, [key]: value }))
+    updateActivePage(page => ({
+      ...page,
+      prompts: page.prompts.map((prompt, index) =>
+        index === promptIndex ? { ...prompt, [key]: value } : prompt
+      ),
+    }))
   }
 
-  const resetForm = () => {
-    setForm(EMPTY_PROMPT_FORM)
-    setEditingId(null)
+  const handleAddPrompt = () => {
+    updateActivePage(page => ({
+      ...page,
+      prompts: [...page.prompts, createDraftPrompt(page.prompts.length)],
+    }))
   }
 
-  const handleSaveSettings = async (e: FormEvent) => {
+  const handleDeletePrompt = (promptIndex: number) => {
+    updateActivePage(page => ({
+      ...page,
+      prompts: page.prompts
+        .filter((_, index) => index !== promptIndex)
+        .map((prompt, index) => ({ ...prompt, sort_order: index })),
+    }))
+  }
+
+  const movePrompt = (promptIndex: number, direction: -1 | 1) => {
+    updateActivePage(page => {
+      const nextIndex = promptIndex + direction
+      if (nextIndex < 0 || nextIndex >= page.prompts.length) return page
+      const prompts = [...page.prompts]
+      const [target] = prompts.splice(promptIndex, 1)
+      prompts.splice(nextIndex, 0, target)
+      return {
+        ...page,
+        prompts: prompts.map((prompt, index) => ({ ...prompt, sort_order: index })),
+      }
+    })
+  }
+
+  const handlePageFieldChange = <K extends keyof HomepagePage>(
+    key: K,
+    value: HomepagePage[K],
+  ) => {
+    updateActivePage(page => ({ ...page, [key]: value }))
+  }
+
+  const toSavePayload = (page: HomepagePage): HomepagePagePayload => {
+    const isDraftPage = page.id.startsWith('draft_page_')
+    return {
+      ...(isDraftPage ? {} : { id: page.id }),
+      pattern: page.pattern,
+      label: page.label,
+      greeting: page.greeting,
+      placeholder: page.placeholder,
+      info_text: page.info_text,
+      prompts: page.prompts.map((prompt, index) => ({
+        ...(prompt.id.startsWith('draft_prompt_') ? {} : { id: prompt.id }),
+        enabled: prompt.enabled,
+        label: prompt.label,
+        prompt: prompt.prompt,
+        sort_order: index,
+      })),
+    }
+  }
+
+  const handleSavePage = async (e: FormEvent) => {
     e.preventDefault()
-    setSettingsError(null)
-    setSettingsSuccess(null)
-    if (isBlank(settings.greeting)) {
-      setSettingsError('欢迎标题不能为空。')
-      return
-    }
-    if (isBlank(settings.placeholder)) {
-      setSettingsError('输入框提示词不能为空。')
-      return
-    }
-    setSettingsSaving(true)
-    try {
-      const saved = await saveHomepageSettings(settings)
-      setSettings(saved)
-      setSettingsSuccess('页面设置已保存。')
-    } catch (err) {
-      setSettingsError(err instanceof Error ? err.message : '保存失败')
-    } finally {
-      setSettingsSaving(false)
-    }
-  }
+    if (!activePage) return
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
     setError(null)
     setSuccess(null)
-    if (isBlank(form.label)) {
-      setError('按钮文本不能为空。')
+    if (isBlank(activePage.pattern)) {
+      setError('页面路径不能为空。')
       return
     }
-    if (isBlank(form.prompt)) {
-      setError('Prompt 内容不能为空。')
+    if (isBlank(activePage.label)) {
+      setError('页面标签不能为空。')
+      return
+    }
+    if (isBlank(activePage.greeting)) {
+      setError('欢迎标题不能为空。')
+      return
+    }
+    if (isBlank(activePage.placeholder)) {
+      setError('输入框提示词不能为空。')
       return
     }
 
-    setSubmitting(true)
+    const invalidPrompt = activePage.prompts.find(prompt => isBlank(prompt.label) || isBlank(prompt.prompt))
+    if (invalidPrompt) {
+      setError('推荐列表中的按钮文本和 Prompt 内容都不能为空。')
+      return
+    }
+
+    setSaving(true)
     try {
-      const payload = editingId ? { ...form, id: editingId } : form
-      const { created } = await saveHomepagePrompt(payload)
-      setSuccess(created ? '新增成功。' : '更新成功。')
-      resetForm()
-      await loadPrompts()
+      const { page, created } = await saveHomepagePage(toSavePayload(activePage))
+      setPages(prev => prev.map(item => item.id === activePage.id ? page : item))
+      setActiveId(page.id)
+      setSuccess(created ? '页面配置已新增并保存。' : '页面配置已保存。')
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存失败')
     } finally {
-      setSubmitting(false)
+      setSaving(false)
     }
   }
 
-  const handleEdit = (row: HomepagePrompt) => {
-    setForm({
-      enabled: row.enabled,
-      label: row.label,
-      prompt: row.prompt,
-      sort_order: row.sort_order,
-    })
-    setEditingId(row.id)
-    setError(null)
-    setSuccess(null)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  const handleDeletePage = async () => {
+    if (!activePage) return
+    if (activePage.pattern === '*') {
+      setError('默认 fallback 页面不可删除。')
+      return
+    }
 
-  const handleDelete = async (row: HomepagePrompt) => {
-    const label = row.label || row.id
-    if (!window.confirm(`确认删除「${label}」吗？`)) return
+    const label = activePage.label || activePage.pattern || activePage.id
+    if (!window.confirm(`确认删除页面标签「${label}」吗？`)) return
 
-    setDeletingId(row.id)
+    if (activePage.id.startsWith('draft_page_')) {
+      const nextPages = pages.filter(page => page.id !== activePage.id)
+      setPages(nextPages)
+      setActiveId(nextPages[0]?.id ?? null)
+      setSuccess(`已删除未保存页面「${label}」`)
+      return
+    }
+
+    setDeletingId(activePage.id)
     setError(null)
     setSuccess(null)
     try {
-      await deleteHomepagePrompt(row.id)
-      setSuccess(`已删除「${label}」`)
-      if (editingId === row.id) resetForm()
-      await loadPrompts()
+      await deleteHomepagePage(activePage.id)
+      const nextPages = pages.filter(page => page.id !== activePage.id)
+      setPages(nextPages)
+      setActiveId(nextPages[0]?.id ?? null)
+      setSuccess(`已删除页面「${label}」`)
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败')
     } finally {
@@ -770,179 +837,222 @@ function HomepagePromptsTab() {
   return (
     <>
       <section className="reco-card">
-        <h1>页面设置</h1>
-        <p>配置首页聊天面板中显示的欢迎标题和输入框提示词。</p>
-        {settingsLoading ? (
-          <p className="text-sm text-gray-500">加载中…</p>
-        ) : (
-          <form className="lead-form" onSubmit={handleSaveSettings}>
-            <label className="lead-form-full">
-              欢迎标题
-              <input
-                type="text"
-                value={settings.greeting}
-                onChange={(e) => setSettings(prev => ({ ...prev, greeting: e.target.value }))}
-                placeholder="Hi! I can help you with any of our products."
-                required
-              />
-            </label>
-            <label className="lead-form-full">
-              输入框提示词
-              <input
-                type="text"
-                value={settings.placeholder}
-                onChange={(e) => setSettings(prev => ({ ...prev, placeholder: e.target.value }))}
-                placeholder="Ask a question…"
-                required
-              />
-            </label>
-            <label className="lead-form-full">
-              推荐信息
-              <textarea
-                value={settings.info_text}
-                onChange={(e) => setSettings(prev => ({ ...prev, info_text: e.target.value }))}
-                placeholder="显示在推荐问题下方的纯文本提示信息（可留空）"
-                rows={3}
-              />
-            </label>
-            <button type="submit" disabled={settingsSaving}>
-              {settingsSaving ? '保存中…' : '保存页面设置'}
-            </button>
-          </form>
-        )}
-        {settingsSuccess && <p className="lead-msg success">{settingsSuccess}</p>}
-        {settingsError && <p className="lead-msg error">{settingsError}</p>}
-      </section>
-
-      <section className="reco-card">
         <div className="recommendation-page-head">
           <div>
-            <h1>{editingId ? `编辑：${form.label || editingId}` : '新增首页推荐问题'}</h1>
-            <p>配置首页聊天面板中显示的推荐问题按钮，用户点击后进入对话。</p>
+            <h1>页面路径标签</h1>
+            <p>按页面 URL 匹配首页推荐配置。支持直接填写映射表中的路径写法：若只填 `/fx` 这类路径，会默认补成 `www.ff.com`。</p>
           </div>
           <div className="recommendation-page-links">
-            <button type="button" className="admin-link-btn" onClick={resetForm}>
-              清空表单
+            <button type="button" className="admin-link-btn" onClick={handleCreatePage}>
+              + 新增页面标签
+            </button>
+            <button type="button" className="admin-link-btn" onClick={loadPages} disabled={loading}>
+              {loading ? '刷新中…' : '刷新'}
             </button>
           </div>
         </div>
 
-        <form className="recommendation-form" onSubmit={handleSubmit}>
-          <label>
-            按钮文本
-            <input
-              type="text"
-              value={form.label}
-              onChange={(e) => updateField('label', e.target.value)}
-              placeholder="例如：FF Master"
-              required
-            />
-          </label>
-
-          <label>
-            排序权重
-            <input
-              type="number"
-              value={form.sort_order}
-              onChange={(e) => updateField('sort_order', Number(e.target.value))}
-              placeholder="0"
-            />
-          </label>
-
-          <label className="recommendation-toggle">
-            <span>启用状态</span>
-            <input
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(e) => updateField('enabled', e.target.checked)}
-            />
-          </label>
-
-          <label className="recommendation-form-full">
-            Prompt 内容
-            <textarea
-              value={form.prompt}
-              onChange={(e) => updateField('prompt', e.target.value)}
-              placeholder="Tell me about FF Master. What are its key features, specs, and how do I get started?"
-              rows={4}
-              required
-            />
-          </label>
-
-          <div className="recommendation-form-actions">
-            <button type="submit" disabled={submitting}>
-              {submitting ? '保存中…' : editingId ? '保存修改' : '新增推荐'}
-            </button>
-            {editingId && (
+        {loading ? (
+          <p className="text-sm text-gray-500">加载中…</p>
+        ) : (
+          <div className="homepage-page-tabs">
+            {pages.map(page => (
               <button
+                key={page.id}
                 type="button"
-                className="recommendation-secondary-btn"
-                onClick={resetForm}
+                className={`homepage-page-tab ${page.id === activeId ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveId(page.id)
+                  setError(null)
+                  setSuccess(null)
+                }}
               >
-                取消编辑
+                <span>{page.label || page.pattern || '未命名页面'}</span>
+                <small>{page.pattern || '待填写路径'}</small>
               </button>
-            )}
+            ))}
+            {pages.length === 0 && <p className="homepage-page-empty">暂无页面标签，请先新增。</p>}
           </div>
-        </form>
+        )}
+      </section>
+
+      <section className="reco-card">
+        {!activePage ? (
+          <p className="homepage-page-empty">请选择一个页面标签后开始编辑。</p>
+        ) : (
+          <form className="homepage-page-shell" onSubmit={handleSavePage}>
+            <div className="recommendation-page-head">
+              <div>
+                <h1>{activePage.label || '未命名页面'}</h1>
+                <p>当前页面匹配规则：{activePage.pattern || '待填写'}</p>
+              </div>
+              <div className="recommendation-page-links">
+                <button
+                  type="button"
+                  className="recommendation-danger-btn"
+                  onClick={handleDeletePage}
+                  disabled={deletingId === activePage.id || activePage.pattern === '*'}
+                >
+                  {deletingId === activePage.id ? '删除中…' : '删除此页面'}
+                </button>
+              </div>
+            </div>
+
+            <div className="recommendation-form">
+              <label className="recommendation-form-full">
+                页面路径
+                <input
+                  type="text"
+                  value={activePage.pattern}
+                  onChange={(e) => handlePageFieldChange('pattern', e.target.value)}
+                  placeholder="例如：/fx、robotics.ff.com/fx-aegis、https://www.ff.com/preorder/* 或 *"
+                  required
+                />
+              </label>
+
+              <label>
+                页面标签
+                <input
+                  type="text"
+                  value={activePage.label}
+                  onChange={(e) => handlePageFieldChange('label', e.target.value)}
+                  placeholder="例如：官网首页"
+                  required
+                />
+              </label>
+
+              <label>
+                欢迎标题
+                <input
+                  type="text"
+                  value={activePage.greeting}
+                  onChange={(e) => handlePageFieldChange('greeting', e.target.value)}
+                  placeholder="想了解 FF 的产品吗？"
+                  required
+                />
+              </label>
+
+              <label className="recommendation-form-full">
+                输入框提示词
+                <input
+                  type="text"
+                  value={activePage.placeholder}
+                  onChange={(e) => handlePageFieldChange('placeholder', e.target.value)}
+                  placeholder="Ask anything about FF..."
+                  required
+                />
+              </label>
+
+              <label className="recommendation-form-full">
+                推荐信息
+                <textarea
+                  value={activePage.info_text}
+                  onChange={(e) => handlePageFieldChange('info_text', e.target.value)}
+                  placeholder="显示在推荐问题下方的纯文本提示信息（可留空）"
+                  rows={3}
+                />
+              </label>
+            </div>
+
+            <div className="homepage-inline-prompts">
+              <div className="recommendation-page-head">
+                <div>
+                  <h2>推荐列表</h2>
+                  <p>推荐问题会跟随当前页面配置一起保存，不再单独提交。</p>
+                </div>
+                <div className="recommendation-page-links">
+                  <button type="button" className="admin-link-btn" onClick={handleAddPrompt}>
+                    + 新增推荐
+                  </button>
+                </div>
+              </div>
+
+              <div className="homepage-inline-prompt-list">
+                {activePage.prompts.map((prompt, index) => (
+                  <div key={prompt.id} className="homepage-inline-prompt-card">
+                    <div className="homepage-inline-prompt-head">
+                      <strong>推荐 {index + 1}</strong>
+                      <div className="homepage-inline-prompt-actions">
+                        <button type="button" onClick={() => movePrompt(index, -1)} disabled={index === 0}>
+                          上移
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => movePrompt(index, 1)}
+                          disabled={index === activePage.prompts.length - 1}
+                        >
+                          下移
+                        </button>
+                        <button
+                          type="button"
+                          className="recommendation-danger-btn"
+                          onClick={() => handleDeletePrompt(index)}
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="recommendation-form">
+                      <label>
+                        按钮文本
+                        <input
+                          type="text"
+                          value={prompt.label}
+                          onChange={(e) => handlePromptChange(index, 'label', e.target.value)}
+                          placeholder="例如：FF 目前有哪些产品线？"
+                        />
+                      </label>
+
+                      <label>
+                        排序权重
+                        <input
+                          type="number"
+                          value={prompt.sort_order}
+                          onChange={(e) => handlePromptChange(index, 'sort_order', Number(e.target.value))}
+                        />
+                      </label>
+
+                      <label className="recommendation-toggle">
+                        <span>启用状态</span>
+                        <input
+                          type="checkbox"
+                          checked={prompt.enabled}
+                          onChange={(e) => handlePromptChange(index, 'enabled', e.target.checked)}
+                        />
+                      </label>
+
+                      <label className="recommendation-form-full">
+                        Prompt 内容
+                        <textarea
+                          value={prompt.prompt}
+                          onChange={(e) => handlePromptChange(index, 'prompt', e.target.value)}
+                          placeholder="请输入用户点击后发送给 ChatKit 的完整提示词"
+                          rows={4}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+
+                {activePage.prompts.length === 0 && (
+                  <div className="homepage-inline-empty">
+                    当前页面还没有推荐问题，点击“新增推荐”即可添加。
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="recommendation-form-actions">
+              <button type="submit" disabled={saving}>
+                {saving ? '保存中…' : '保存当前页面'}
+              </button>
+            </div>
+          </form>
+        )}
 
         {success && <p className="lead-msg success">{success}</p>}
         {error && <p className="lead-msg error">{error}</p>}
-      </section>
-
-      <section className="reco-card">
-        <div className="lead-table-header">
-          <div>
-            <h2>首页推荐列表</h2>
-            <p>共 {rows.length} 条，按排序权重升序显示。</p>
-          </div>
-          <button type="button" onClick={loadPrompts} disabled={loading}>
-            {loading ? '刷新中…' : '刷新'}
-          </button>
-        </div>
-
-        <div className="lead-table-wrap">
-          <table className="lead-table">
-            <thead>
-              <tr>
-                <th>启用</th>
-                <th>排序</th>
-                <th>按钮文本</th>
-                <th>Prompt 内容</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.map(row => (
-                <tr key={row.id} className={editingId === row.id ? 'reco-row-active' : ''}>
-                  <td>
-                    <span className={row.enabled ? 'reco-badge-on' : 'reco-badge-off'}>
-                      {row.enabled ? '启用' : '停用'}
-                    </span>
-                  </td>
-                  <td>{row.sort_order}</td>
-                  <td>{row.label || '-'}</td>
-                  <td className="recommendation-cell-multiline">{row.prompt || '-'}</td>
-                  <td>
-                    <div className="recommendation-row-actions">
-                      <button type="button" onClick={() => handleEdit(row)}>编辑</button>
-                      <button
-                        type="button"
-                        className="recommendation-danger-btn"
-                        onClick={() => handleDelete(row)}
-                        disabled={deletingId === row.id}
-                      >
-                        {deletingId === row.id ? '删除中…' : '删除'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {sortedRows.length === 0 && !loading && (
-                <tr><td colSpan={5}>暂无首页推荐数据</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </section>
     </>
   )

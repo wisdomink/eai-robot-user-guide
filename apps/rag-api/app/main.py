@@ -115,7 +115,7 @@ class RecommendationCatalogItemRequest(BaseModel):
     recommendation_content_en: str = Field("", description="English recommendation content")
 
 
-class HomepagePromptRequest(BaseModel):
+class HomepagePagePromptRequest(BaseModel):
     id: str = Field("", description="Prompt ID (auto-generated if omitted)")
     enabled: bool = Field(True, description="Whether this prompt is visible on the homepage")
     label: str = Field("", description="Button label shown on the homepage")
@@ -123,10 +123,14 @@ class HomepagePromptRequest(BaseModel):
     sort_order: int = Field(0, description="Sort weight (lower = higher in list)")
 
 
-class HomepageSettingsRequest(BaseModel):
-    greeting: str | None = Field(None, description="Welcome title shown above prompt buttons")
-    placeholder: str | None = Field(None, description="Placeholder text for the input box")
-    info_text: str | None = Field(None, description="Informational text shown below prompt buttons")
+class HomepagePageRequest(BaseModel):
+    id: str = Field("", description="Page ID (auto-generated if omitted)")
+    pattern: str = Field("", description="URL match pattern, e.g. https://www.ff.com/fx or *")
+    label: str = Field("", description="Admin label for this page config")
+    greeting: str = Field("", description="Welcome title shown above prompt buttons")
+    placeholder: str = Field("", description="Placeholder text for the input box")
+    info_text: str = Field("", description="Informational text shown below prompt buttons")
+    prompts: list[HomepagePagePromptRequest] = Field(default_factory=list)
 
 
 class LeadCaptureTriageConfigPayload(BaseModel):
@@ -338,63 +342,81 @@ async def search_endpoint(
 @app.get("/api/get-homepage-prompts")
 async def get_homepage_prompts(
     all: bool = Query(False, description="Include disabled prompts (for admin)"),
+    url: str | None = Query(None, description="Full host page URL used to resolve homepage config"),
 ):
-    """Return homepage prompt buttons (enabled-only by default, all for admin)."""
-    config = homepage_prompts_storage.get_homepage_config(include_disabled=all)
+    """Return one resolved homepage config, or all page configs for admin."""
+    if all and not url:
+        pages = homepage_prompts_storage.list_pages(include_disabled=True)
+        front_logger.info("GET /api/get-homepage-prompts  all=%s  pages=%d", all, len(pages))
+        return {"pages": pages}
+
+    config = homepage_prompts_storage.get_homepage_config(url=url, include_disabled=all)
     front_logger.info(
-        "GET /api/get-homepage-prompts  all=%s  count=%d",
-        all, len(config["prompts"]),
+        "GET /api/get-homepage-prompts  all=%s  url=%r  pattern=%r  count=%d",
+        all,
+        url or "",
+        config.get("pattern", ""),
+        len(config["prompts"]),
     )
     return config
 
 
-@app.post("/api/save-homepage-settings")
-async def save_homepage_settings(payload: HomepageSettingsRequest):
-    """Update page-level settings: greeting title and input placeholder."""
-    settings = homepage_prompts_storage.save_settings(
-        greeting=payload.greeting,
-        placeholder=payload.placeholder,
-        info_text=payload.info_text,
-    )
-    front_logger.info(
-        "POST /api/save-homepage-settings  greeting=%r  placeholder=%r",
-        settings.get("greeting", "")[:60],
-        settings.get("placeholder", "")[:60],
-    )
-    return {"ok": True, "settings": settings}
-
-
-@app.post("/api/save-homepage-prompt")
-async def save_homepage_prompt(payload: HomepagePromptRequest):
-    """Create or update a homepage prompt entry."""
+@app.post("/api/save-homepage-page")
+async def save_homepage_page(payload: HomepagePageRequest):
+    """Create or update one full homepage page config."""
     try:
-        prompt, created = homepage_prompts_storage.save_or_update_prompt(payload.model_dump())
+        page, created = homepage_prompts_storage.upsert_page(payload.model_dump())
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     front_logger.info(
-        "POST /api/save-homepage-prompt  id=%s created=%s label=%s",
-        prompt["id"], created, prompt.get("label", ""),
+        "POST /api/save-homepage-page  id=%s created=%s pattern=%s prompts=%d",
+        page.get("id", ""),
+        created,
+        page.get("pattern", ""),
+        len(page.get("prompts", [])),
     )
-    return {"ok": True, "created": created, "prompt": prompt}
+    return {"ok": True, "created": created, "page": page}
 
 
-@app.delete("/api/delete-homepage-prompt/{prompt_id}")
-async def delete_homepage_prompt(prompt_id: str):
-    """Delete one homepage prompt entry by id."""
+@app.delete("/api/delete-homepage-page/{page_id}")
+async def delete_homepage_page(page_id: str):
+    """Delete one page config by id."""
+    existing_page = next(
+        (page for page in homepage_prompts_storage.list_pages(include_disabled=True) if page.get("id") == page_id),
+        None,
+    )
+    if existing_page and existing_page.get("pattern") == "*":
+        raise HTTPException(status_code=400, detail="Fallback page cannot be deleted")
+
     try:
-        deleted = homepage_prompts_storage.delete_prompt(prompt_id)
+        deleted = homepage_prompts_storage.delete_page(page_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     if deleted is None:
-        raise HTTPException(status_code=404, detail=f"Prompt {prompt_id} not found")
+        raise HTTPException(status_code=404, detail=f"Page {page_id} not found")
 
     front_logger.info(
-        "DELETE /api/delete-homepage-prompt/%s  label=%s",
-        prompt_id, deleted.get("label", ""),
+        "DELETE /api/delete-homepage-page/%s  pattern=%s",
+        page_id, deleted.get("pattern", ""),
     )
-    return {"ok": True, "prompt": deleted}
+    return {"ok": True, "page": deleted}
+
+
+@app.post("/api/save-homepage-settings")
+async def save_homepage_settings():
+    raise HTTPException(status_code=410, detail="Use /api/save-homepage-page instead")
+
+
+@app.post("/api/save-homepage-prompt")
+async def save_homepage_prompt():
+    raise HTTPException(status_code=410, detail="Use /api/save-homepage-page instead")
+
+
+@app.delete("/api/delete-homepage-prompt/{prompt_id}")
+async def delete_homepage_prompt(prompt_id: str):
+    raise HTTPException(status_code=410, detail=f"Use /api/delete-homepage-page instead of prompt {prompt_id}")
 
 
 # ── Chat History API ──────────────────────────────────────────────────────

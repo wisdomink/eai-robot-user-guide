@@ -51,15 +51,13 @@ function persistThreadId(threadId: string | null, storageKey: string) {
   window.sessionStorage.removeItem(storageKey)
 }
 
-const FALLBACK_GREETING = 'Hi! I can help you with any of our products. Pick one to get started.'
-const FALLBACK_PLACEHOLDER = 'Ask a question…'
+const FALLBACK_GREETING = "Do you want to know about FF's products?"
+const FALLBACK_PLACEHOLDER = 'Ask anything about FF...'
+const HOMEPAGE_DISCLAIMER = 'FF Assist uses AI, mistakes may occur.'
 const FALLBACK_PROMPTS = [
-  { label: 'FF Master', prompt: 'Tell me about FF Master. What are its key features, specs, and how do I get started?' },
-  { label: 'FF Futurist', prompt: 'Tell me about FF Futurist. What are its key features, specs, and how do I get started?' },
-  { label: 'FF Futurist Ultra', prompt: 'Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?' },
-  { label: 'FF Aegis', prompt: 'Tell me about FF Aegis. What are its key features, specs, and how do I get started?' },
-  { label: 'FF Aegis Ultra', prompt: 'Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?' },
-  { label: 'FF 91 2.0', prompt: 'Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?' },
+  { label: '如何购买 FF 机器人？', prompt: '如何购买 FF 机器人？' },
+  { label: 'FF 机器人什么时候交付？', prompt: 'FF 机器人什么时候交付？' },
+  { label: 'FF 目前有哪些产品线？', prompt: 'FF 目前有哪些产品线？' },
 ]
 
 type OverlayMode = 'buttons' | null
@@ -100,6 +98,7 @@ export interface ChatPanelProps {
   greeting?: string
   prompts?: ChatPromptOption[]
   promptsApiUrl?: string | null
+  hostUrl?: string
   fabLabel?: string
   fabAriaLabel?: string
   showFab?: boolean
@@ -179,11 +178,12 @@ export default function ChatPanel({
   apiConfig,
   panelId = 'chatPanel',
   className,
-  title = 'FF AI',
+  title = 'FF Assist',
   placeholder: placeholderProp = FALLBACK_PLACEHOLDER,
   greeting: greetingProp = FALLBACK_GREETING,
   prompts: promptsProp = FALLBACK_PROMPTS,
   promptsApiUrl,
+  hostUrl,
   fabLabel = 'ChatAI',
   fabAriaLabel = 'Open Chat AI',
   showFab = true,
@@ -209,6 +209,8 @@ export default function ChatPanel({
     readStoredThreadId(storageKey) ? null : 'buttons'
   ))
   const [inputValue, setInputValue] = useState('')
+  const [newChatConfirmOpen, setNewChatConfirmOpen] = useState(false)
+  const isRespondingRef = useRef(false)
 
   const [remoteConfig, setRemoteConfig] = useState<HomepagePromptsConfig | null>(null)
   const [promptsLoading, setPromptsLoading] = useState(false)
@@ -219,9 +221,18 @@ export default function ChatPanel({
       setPromptsLoading(false)
       return
     }
+    if (!isChatOpen || overlayMode !== 'buttons') {
+      setPromptsLoading(false)
+      return
+    }
+
     let cancelled = false
+    setRemoteConfig(null)
     setPromptsLoading(true)
-    fetchHomepagePrompts({ url: promptsApiUrl || undefined })
+    fetchHomepagePrompts({
+      url: promptsApiUrl || undefined,
+      hostUrl: hostUrl || window.location.href,
+    })
       .then((cfg) => {
         if (!cancelled) setRemoteConfig(cfg)
       })
@@ -232,7 +243,7 @@ export default function ChatPanel({
         if (!cancelled) setPromptsLoading(false)
       })
     return () => { cancelled = true }
-  }, [promptsApiUrl])
+  }, [hostUrl, isChatOpen, overlayMode, promptsApiUrl])
 
   const greeting = remoteConfig?.greeting || greetingProp
   const placeholder = remoteConfig?.placeholder || placeholderProp
@@ -247,16 +258,12 @@ export default function ChatPanel({
     setIsChatOpen(false)
   }, [setIsChatOpen])
 
-  const { sendUserMessage, control } = useChatKit({
+  const { sendUserMessage, setThreadId, control } = useChatKit({
     locale: 'en',
     api: resolvedApiConfig,
     initialThread: activeThreadId,
     header: {
-      title: { text: title },
-      rightAction: {
-        icon: 'collapse-small',
-        onClick: closeChat,
-      },
+      enabled: false,
     },
     history: {
       enabled: false,
@@ -269,10 +276,15 @@ export default function ChatPanel({
     },
     onResponseStart: () => {
       setOverlayMode(null)
+      isRespondingRef.current = true
+    },
+    onResponseEnd: () => {
+      isRespondingRef.current = false
     },
     onThreadChange: ({ threadId }: { threadId: string | null }) => {
       setActiveThreadId(threadId)
       persistThreadId(threadId, storageKey)
+      isRespondingRef.current = false
       if (threadId === null) {
         setOverlayMode('buttons')
         setInputValue('')
@@ -324,9 +336,31 @@ export default function ChatPanel({
         accent: { primary: '#6965E0', level: 2 },
       },
       density: 'compact',
-      radius: 'round',
+      radius: 'soft',
     },
   })
+
+  const handleNewChat = useCallback(() => {
+    if (!activeThreadId) {
+      setThreadId(null)
+      return
+    }
+    setNewChatConfirmOpen(true)
+  }, [activeThreadId, setThreadId])
+
+  const handleConfirmNewChat = useCallback(() => {
+    setNewChatConfirmOpen(false)
+    const wasResponding = isRespondingRef.current
+    isRespondingRef.current = false
+    if (isDev && wasResponding) {
+      console.info('[ChatPanel] Starting new chat while old response was in-flight; aborting via setThreadId(null).')
+    }
+    setThreadId(null)
+  }, [setThreadId])
+
+  const handleCancelNewChat = useCallback(() => {
+    setNewChatConfirmOpen(false)
+  }, [])
 
   const handlePromptClick = useCallback((prompt: string) => {
     setOverlayMode(null)
@@ -370,6 +404,40 @@ export default function ChatPanel({
         id={panelId}
         aria-hidden={!isChatOpen}
       >
+        <div className="chat-panel-header">
+          <button
+            type="button"
+            className="chat-panel-header-btn"
+            onClick={handleNewChat}
+            aria-label="New chat"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v4l4-4h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <path d="M12 8v6M9 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          <span className="chat-panel-header-title">{title}</span>
+          <button
+            type="button"
+            className="chat-panel-header-btn"
+            onClick={closeChat}
+            aria-label="Minimize"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M5 12h14"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
         <div className="chatkit-body" ref={chatkitBodyRef}>
           <ChatKit control={control} />
           {overlayMode && (
@@ -378,6 +446,11 @@ export default function ChatPanel({
                 <>
                   <div className="ck-greeting-center">
                     <p className="ck-greeting-text">{greeting}</p>
+                    {infoText && (
+                      <p className="ck-greeting-info-text">{infoText}</p>
+                    )}
+                  </div>
+                  <div className="ck-greeting-bottom">
                     <div className="ck-greeting-prompts">
                       {promptsLoading ? (
                         <span className="ck-greeting-loading">Loading…</span>
@@ -393,11 +466,7 @@ export default function ChatPanel({
                         ))
                       )}
                     </div>
-                    {infoText && (
-                      <p className="ck-greeting-info-text">{infoText}</p>
-                    )}
-                  </div>
-                  <div className="ck-greeting-bottom">
+                    <p className="ck-greeting-disclaimer">{HOMEPAGE_DISCLAIMER}</p>
                     <form className="ck-greeting-input-bar" onSubmit={handleInputSend}>
                       <input
                         type="text"
@@ -417,13 +486,51 @@ export default function ChatPanel({
                         </svg>
                       </button>
                     </form>
-                    <p className="ck-greeting-version">v{buildVersion}</p>
                   </div>
                 </>
               )}
             </div>
           )}
         </div>
+        {newChatConfirmOpen && (
+          <div
+            className="chat-panel-confirm-backdrop"
+            role="presentation"
+            onClick={handleCancelNewChat}
+          >
+            <div
+              className="chat-panel-confirm-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="chat-panel-confirm-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 id="chat-panel-confirm-title" className="chat-panel-confirm-title">
+                Start a new chat?
+              </h3>
+              <p className="chat-panel-confirm-body">
+                This will clear out your current chat history and start a fresh conversation.
+              </p>
+              <div className="chat-panel-confirm-actions">
+                <button
+                  type="button"
+                  className="chat-panel-confirm-btn chat-panel-confirm-btn-secondary"
+                  onClick={handleCancelNewChat}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="chat-panel-confirm-btn chat-panel-confirm-btn-primary"
+                  onClick={handleConfirmNewChat}
+                  autoFocus
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

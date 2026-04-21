@@ -14,9 +14,9 @@ set -euo pipefail
 # ══════════════════════════════════════════════════════════
 #  配置（在此填入你的 AWS 凭证）
 # ══════════════════════════════════════════════════════════
-export AWS_ACCESS_KEY_ID="xxx"
-export AWS_SECRET_ACCESS_KEY="xxx"
-export AWS_DEFAULT_REGION="xxx"
+export AWS_ACCESS_KEY_ID="xxxx"
+export AWS_SECRET_ACCESS_KEY="dddd"
+export AWS_DEFAULT_REGION="sxdd"
 
 APP_NAME="eai-robot"
 IMAGE_NAME="eai-robot-app"
@@ -24,6 +24,7 @@ AWS_REGION="$AWS_DEFAULT_REGION"
 ECR_REPO_NAME="eai-robot-app"
 LEADS_DDB_TABLE="${APP_NAME}-leads"
 RECOMMENDATIONS_DDB_TABLE="${APP_NAME}-recommendations"
+HOMEPAGE_PROMPTS_DDB_TABLE="${APP_NAME}-homepage-prompts"
 TASK_ROLE_NAME="${APP_NAME}-task-role"
 CONTAINER_PORT=80
 CPU=512        # 0.5 vCPU
@@ -111,6 +112,7 @@ build_task_env_json() {
     AWS_REGION="$AWS_REGION" \
     LEADS_DDB_TABLE="$LEADS_DDB_TABLE" \
     RECOMMENDATIONS_DDB_TABLE="$RECOMMENDATIONS_DDB_TABLE" \
+    HOMEPAGE_PROMPTS_DDB_TABLE="$HOMEPAGE_PROMPTS_DDB_TABLE" \
     python3 - <<'PY'
 import json
 import os
@@ -122,6 +124,8 @@ extra = {
     "LEADS_DDB_TABLE": os.environ["LEADS_DDB_TABLE"],
     "RECOMMENDATIONS_BACKEND": "dynamodb",
     "RECOMMENDATIONS_DDB_TABLE": os.environ["RECOMMENDATIONS_DDB_TABLE"],
+    "HOMEPAGE_PROMPTS_BACKEND": "dynamodb",
+    "HOMEPAGE_PROMPTS_DDB_TABLE": os.environ["HOMEPAGE_PROMPTS_DDB_TABLE"],
 }
 
 index_by_name = {
@@ -171,6 +175,19 @@ ensure_dynamodb_tables() {
         aws dynamodb wait table-exists --table-name "$RECOMMENDATIONS_DDB_TABLE" --region "$AWS_REGION"
     }
 
+    aws dynamodb describe-table \
+        --table-name "$HOMEPAGE_PROMPTS_DDB_TABLE" \
+        --region "$AWS_REGION" >/dev/null 2>&1 || {
+        echo "  📦 创建表: $HOMEPAGE_PROMPTS_DDB_TABLE"
+        aws dynamodb create-table \
+            --table-name "$HOMEPAGE_PROMPTS_DDB_TABLE" \
+            --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S \
+            --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+            --billing-mode PAY_PER_REQUEST \
+            --region "$AWS_REGION" >/dev/null
+        aws dynamodb wait table-exists --table-name "$HOMEPAGE_PROMPTS_DDB_TABLE" --region "$AWS_REGION"
+    }
+
     echo "  ✅ DynamoDB 表已就绪"
 }
 
@@ -205,7 +222,8 @@ ensure_task_role() {
       ],
       "Resource": [
         "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$LEADS_DDB_TABLE",
-        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$RECOMMENDATIONS_DDB_TABLE"
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$RECOMMENDATIONS_DDB_TABLE",
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$HOMEPAGE_PROMPTS_DDB_TABLE"
       ]
     }
   ]

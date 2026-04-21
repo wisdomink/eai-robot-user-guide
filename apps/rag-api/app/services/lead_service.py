@@ -93,6 +93,7 @@ class LeadStorage:
             "phone": lead.get("phone", ""),
             "email": lead.get("email", ""),
             "source": self._forward_source,
+            "product": lead.get("product", ""),
         }
 
     @staticmethod
@@ -108,6 +109,11 @@ class LeadStorage:
             return
 
         payload = self._forward_payload(lead)
+        logger.info(
+            "Lead forward request: lead_id=%s body=%s",
+            lead.get("lead_id", ""),
+            json.dumps(payload, ensure_ascii=False),
+        )
         try:
             response = httpx.post(
                 self._forward_url,

@@ -774,6 +774,116 @@ mark.hl.current {
   cursor: default;
 }
 
+.homepage-page-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.homepage-page-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 180px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.homepage-page-tab span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.homepage-page-tab small {
+  font-size: 12px;
+  color: var(--text-4);
+}
+
+.homepage-page-tab:hover,
+.homepage-page-tab.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.homepage-page-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.homepage-page-empty,
+.homepage-inline-empty {
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-3);
+  font-size: 13px;
+  background: var(--color-gray-50);
+}
+
+.homepage-inline-prompts {
+  display: grid;
+  gap: 14px;
+}
+
+.homepage-inline-prompt-list {
+  display: grid;
+  gap: 14px;
+}
+
+.homepage-inline-prompt-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--color-gray-50);
+}
+
+.homepage-inline-prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.homepage-inline-prompt-head strong {
+  font-family: var(--font-rubik);
+  color: var(--color-navy);
+}
+
+.homepage-inline-prompt-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.homepage-inline-prompt-actions button {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.homepage-inline-prompt-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
 /* ── Table section ──────────────────────────────────────────── */
 .recommendation-row-actions {
   display: flex;
@@ -826,6 +936,7 @@ mark.hl.current {
   .reco-body { padding: 12px; }
   .reco-card { padding: 14px; }
   .recommendation-page-head { flex-direction: column; }
+  .homepage-inline-prompt-head { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 600px) {

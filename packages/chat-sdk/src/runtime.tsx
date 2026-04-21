@@ -154,6 +154,7 @@ class ChatSdkController implements ChatSdkInstance {
           greeting={this.config.greeting}
           prompts={this.config.prompts}
           promptsApiUrl={promptsApiUrl}
+          hostUrl={this.config.hostUrl}
           fabLabel={this.config.fabLabel}
           fabAriaLabel={this.config.fabAriaLabel}
           showFab={this.config.showFab}

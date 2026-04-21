@@ -1,49 +1,624 @@
 {
-  "greeting": "Hi! I can help you with any of our products. Pick one to get started.",
-  "prompts": [
+  "pages": [
     {
-      "enabled": true,
-      "label": "FF Master",
-      "prompt": "Tell me about FF Master. What are its key features, specs, and how do I get started?",
-      "sort_order": 0,
-      "id": "ff_master"
+      "id": "www_home",
+      "pattern": "https://www.ff.com/",
+      "label": "官网首页",
+      "greeting": "想了解 FF 的产品吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "FF 目前有哪些产品线？",
+          "prompt": "FF 目前有哪些产品线？",
+          "sort_order": 0,
+          "id": "www_home_1"
+        },
+        {
+          "enabled": true,
+          "label": "FX Super One 什么时候交付？",
+          "prompt": "FX Super One 什么时候交付？",
+          "sort_order": 1,
+          "id": "www_home_2"
+        },
+        {
+          "enabled": true,
+          "label": "如何预订 FF 的产品？",
+          "prompt": "如何预订 FF 的产品？",
+          "sort_order": 2,
+          "id": "www_home_3"
+        }
+      ]
     },
     {
-      "id": "ff_futurist",
-      "enabled": true,
-      "label": "FF Futurist",
-      "prompt": "Tell me about FF Futurist. What are its key features, specs, and how do I get started?",
-      "sort_order": 1
+      "id": "www_ff91_futurist",
+      "pattern": "https://www.ff.com/product/ff-91-Futurist",
+      "label": "FF 91 2.0 Futurist",
+      "greeting": "想了解 FF 91 2.0？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "FF 91 2.0 的续航和充电时间？",
+          "prompt": "FF 91 2.0 的续航和充电时间？",
+          "sort_order": 0,
+          "id": "www_ff91_futurist_1"
+        },
+        {
+          "enabled": true,
+          "label": "支持哪些智能驾驶功能？",
+          "prompt": "支持哪些智能驾驶功能？",
+          "sort_order": 1,
+          "id": "www_ff91_futurist_2"
+        },
+        {
+          "enabled": true,
+          "label": "1050 马力的动力系统是怎样的？",
+          "prompt": "1050 马力的动力系统是怎样的？",
+          "sort_order": 2,
+          "id": "www_ff91_futurist_3"
+        }
+      ]
     },
     {
-      "id": "ff_futurist_ultra",
-      "enabled": true,
-      "label": "FF Futurist Ultra",
-      "prompt": "Tell me about FF Futurist Ultra. What are its key features, specs, and how do I get started?",
-      "sort_order": 2
+      "id": "www_ff91_alliance",
+      "pattern": "https://www.ff.com/product/ff-91-Alliance",
+      "label": "FF 91 2.0 Futurist Alliance",
+      "greeting": "想了解 Alliance 限量版？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Alliance 版和普通 Futurist 有什么区别？",
+          "prompt": "Alliance 版和普通 Futurist 有什么区别？",
+          "sort_order": 0,
+          "id": "www_ff91_alliance_1"
+        },
+        {
+          "enabled": true,
+          "label": "限量 300 台还有名额吗？",
+          "prompt": "限量 300 台还有名额吗？",
+          "sort_order": 1,
+          "id": "www_ff91_alliance_2"
+        },
+        {
+          "enabled": true,
+          "label": "定制化服务包括哪些？",
+          "prompt": "定制化服务包括哪些？",
+          "sort_order": 2,
+          "id": "www_ff91_alliance_3"
+        }
+      ]
     },
     {
-      "id": "ff_aegis",
-      "enabled": true,
-      "label": "FF Aegis",
-      "prompt": "Tell me about FF Aegis. What are its key features, specs, and how do I get started?",
-      "sort_order": 3
+      "id": "www_fx_home",
+      "pattern": "https://www.ff.com/fx",
+      "label": "FX 品牌首页",
+      "greeting": "想了解 Faraday X？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "FX 和 FF 品牌有什么区别？",
+          "prompt": "FX 和 FF 品牌有什么区别？",
+          "sort_order": 0,
+          "id": "www_fx_home_1"
+        },
+        {
+          "enabled": true,
+          "label": "FX Super One 有哪些车型配置？",
+          "prompt": "FX Super One 有哪些车型配置？",
+          "sort_order": 1,
+          "id": "www_fx_home_2"
+        },
+        {
+          "enabled": true,
+          "label": "支持 NACS 充电标准吗？",
+          "prompt": "支持 NACS 充电标准吗？",
+          "sort_order": 2,
+          "id": "www_fx_home_3"
+        }
+      ]
     },
     {
-      "id": "ff_aegis_ultra",
-      "enabled": true,
-      "label": "FF Aegis Ultra",
-      "prompt": "Tell me about FF Aegis Ultra. What are its key features, specs, and how do I get started?",
-      "sort_order": 4
+      "id": "www_fx_super_one",
+      "pattern": "https://www.ff.com/fx/super-one",
+      "label": "FX Super One",
+      "greeting": "想了解 FX Super One？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Super One 的座椅布局有几种？",
+          "prompt": "Super One 的座椅布局有几种？",
+          "sort_order": 0,
+          "id": "www_fx_super_one_1"
+        },
+        {
+          "enabled": true,
+          "label": "纯电和增程版有什么区别？",
+          "prompt": "纯电和增程版有什么区别？",
+          "sort_order": 1,
+          "id": "www_fx_super_one_2"
+        },
+        {
+          "enabled": true,
+          "label": "Super One 的安全配置有哪些？",
+          "prompt": "Super One 的安全配置有哪些？",
+          "sort_order": 2,
+          "id": "www_fx_super_one_3"
+        }
+      ]
     },
     {
-      "id": "ff_91_2_0",
-      "enabled": true,
-      "label": "FF 91 2.0",
-      "prompt": "Tell me about the FF 91 2.0. What are its key features, specs, and how do I get started?",
-      "sort_order": 5
+      "id": "www_charging",
+      "pattern": "https://www.ff.com/charging",
+      "label": "充电",
+      "greeting": "想了解 FF 充电方案？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "家用充电桩安装怎么预约？",
+          "prompt": "家用充电桩安装怎么预约？",
+          "sort_order": 0,
+          "id": "www_charging_1"
+        },
+        {
+          "enabled": true,
+          "label": "快充功率最高多少？",
+          "prompt": "快充功率最高多少？",
+          "sort_order": 1,
+          "id": "www_charging_2"
+        },
+        {
+          "enabled": true,
+          "label": "便携充电器支持哪些电压？",
+          "prompt": "便携充电器支持哪些电压？",
+          "sort_order": 2,
+          "id": "www_charging_3"
+        }
+      ]
+    },
+    {
+      "id": "www_aihyper",
+      "pattern": "https://www.ff.com/aihyper-architecture",
+      "label": "aiHyper 6x4 架构",
+      "greeting": "想了解 FF 的技术平台？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "6x4 架构包含哪些系统？",
+          "prompt": "6x4 架构包含哪些系统？",
+          "sort_order": 0,
+          "id": "www_aihyper_1"
+        },
+        {
+          "enabled": true,
+          "label": "aiDriving 的传感器配置？",
+          "prompt": "aiDriving 的传感器配置？",
+          "sort_order": 1,
+          "id": "www_aihyper_2"
+        },
+        {
+          "enabled": true,
+          "label": "和其他车企平台有什么不同？",
+          "prompt": "和其他车企平台有什么不同？",
+          "sort_order": 2,
+          "id": "www_aihyper_3"
+        }
+      ]
+    },
+    {
+      "id": "www_preorder_prefix",
+      "pattern": "https://www.ff.com/preorder/*",
+      "label": "预订页面",
+      "greeting": "想了解预订流程？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "预订金可以退吗？",
+          "prompt": "预订金可以退吗？",
+          "sort_order": 0,
+          "id": "www_preorder_1"
+        },
+        {
+          "enabled": true,
+          "label": "预计什么时候交付？",
+          "prompt": "预计什么时候交付？",
+          "sort_order": 1,
+          "id": "www_preorder_2"
+        },
+        {
+          "enabled": true,
+          "label": "预订后可以选配置吗？",
+          "prompt": "预订后可以选配置吗？",
+          "sort_order": 2,
+          "id": "www_preorder_3"
+        }
+      ]
+    },
+    {
+      "id": "robotics_home",
+      "pattern": "https://robotics.ff.com/",
+      "label": "EAI 机器人首页",
+      "greeting": "想了解 FF EAI 机器人？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "三款机器人分别适合什么场景？",
+          "prompt": "三款机器人分别适合什么场景？",
+          "sort_order": 0,
+          "id": "robotics_home_1"
+        },
+        {
+          "enabled": true,
+          "label": "机器人的价格分别是多少？",
+          "prompt": "机器人的价格分别是多少？",
+          "sort_order": 1,
+          "id": "robotics_home_2"
+        },
+        {
+          "enabled": true,
+          "label": "如何预订机器人？",
+          "prompt": "如何预订机器人？",
+          "sort_order": 2,
+          "id": "robotics_home_3"
+        }
+      ]
+    },
+    {
+      "id": "robotics_aegis",
+      "pattern": "https://robotics.ff.com/fx-aegis",
+      "label": "FX Aegis",
+      "greeting": "想了解 FX Aegis？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Aegis 的续航和运动能力？",
+          "prompt": "Aegis 的续航和运动能力？",
+          "sort_order": 0,
+          "id": "robotics_aegis_1"
+        },
+        {
+          "enabled": true,
+          "label": "有哪些可扩展模块？",
+          "prompt": "有哪些可扩展模块？",
+          "sort_order": 1,
+          "id": "robotics_aegis_2"
+        },
+        {
+          "enabled": true,
+          "label": "防水防尘等级是多少？",
+          "prompt": "防水防尘等级是多少？",
+          "sort_order": 2,
+          "id": "robotics_aegis_3"
+        }
+      ]
+    },
+    {
+      "id": "robotics_ff_futurist",
+      "pattern": "https://robotics.ff.com/ff-futurist",
+      "label": "FF Futurist Robot",
+      "greeting": "想了解 FF Futurist 机器人？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Futurist 有多少个自由度？",
+          "prompt": "Futurist 有多少个自由度？",
+          "sort_order": 0,
+          "id": "robotics_ff_futurist_1"
+        },
+        {
+          "enabled": true,
+          "label": "支持 VR 远程操控吗？",
+          "prompt": "支持 VR 远程操控吗？",
+          "sort_order": 1,
+          "id": "robotics_ff_futurist_2"
+        },
+        {
+          "enabled": true,
+          "label": "电池续航多长时间？",
+          "prompt": "电池续航多长时间？",
+          "sort_order": 2,
+          "id": "robotics_ff_futurist_3"
+        }
+      ]
+    },
+    {
+      "id": "robotics_ff_master",
+      "pattern": "https://robotics.ff.com/ff-master",
+      "label": "FF Master Robot",
+      "greeting": "想了解 FF Master 机器人？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Master 和 Futurist 有什么区别？",
+          "prompt": "Master 和 Futurist 有什么区别？",
+          "sort_order": 0,
+          "id": "robotics_ff_master_1"
+        },
+        {
+          "enabled": true,
+          "label": "Master 能学习新技能吗？",
+          "prompt": "Master 能学习新技能吗？",
+          "sort_order": 1,
+          "id": "robotics_ff_master_2"
+        },
+        {
+          "enabled": true,
+          "label": "支持自主充电吗？",
+          "prompt": "支持自主充电吗？",
+          "sort_order": 2,
+          "id": "robotics_ff_master_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_home",
+      "pattern": "https://robotics-instruction-manual.ff.com/",
+      "label": "手册站首页",
+      "greeting": "需要产品使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "怎么查看我的机器人型号？",
+          "prompt": "怎么查看我的机器人型号？",
+          "sort_order": 0,
+          "id": "manual_home_1"
+        },
+        {
+          "enabled": true,
+          "label": "机器人开不了机怎么办？",
+          "prompt": "机器人开不了机怎么办？",
+          "sort_order": 1,
+          "id": "manual_home_2"
+        },
+        {
+          "enabled": true,
+          "label": "如何联系售后支持？",
+          "prompt": "如何联系售后支持？",
+          "sort_order": 2,
+          "id": "manual_home_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_futurist",
+      "pattern": "https://robotics-instruction-manual.ff.com/futurist",
+      "label": "FF Futurist 手册",
+      "greeting": "需要 FF Futurist 使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "首次开机怎么设置？",
+          "prompt": "首次开机怎么设置？",
+          "sort_order": 0,
+          "id": "manual_futurist_1"
+        },
+        {
+          "enabled": true,
+          "label": "充电需要多长时间？",
+          "prompt": "充电需要多长时间？",
+          "sort_order": 1,
+          "id": "manual_futurist_2"
+        },
+        {
+          "enabled": true,
+          "label": "如何使用 VR 远程操控？",
+          "prompt": "如何使用 VR 远程操控？",
+          "sort_order": 2,
+          "id": "manual_futurist_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_futurist_ultra",
+      "pattern": "https://robotics-instruction-manual.ff.com/futurist-ultra",
+      "label": "FF Futurist Ultra 手册",
+      "greeting": "需要 Futurist Ultra 使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "Ultra 版和标准版操作有什么不同？",
+          "prompt": "Ultra 版和标准版操作有什么不同？",
+          "sort_order": 0,
+          "id": "manual_futurist_ultra_1"
+        },
+        {
+          "enabled": true,
+          "label": "传感器视野范围是多少？",
+          "prompt": "传感器视野范围是多少？",
+          "sort_order": 1,
+          "id": "manual_futurist_ultra_2"
+        },
+        {
+          "enabled": true,
+          "label": "电池指示灯各颜色代表什么？",
+          "prompt": "电池指示灯各颜色代表什么？",
+          "sort_order": 2,
+          "id": "manual_futurist_ultra_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_master",
+      "pattern": "https://robotics-instruction-manual.ff.com/master",
+      "label": "FF Master 手册",
+      "greeting": "需要 FF Master 使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "首次开机怎么设置？",
+          "prompt": "首次开机怎么设置？",
+          "sort_order": 0,
+          "id": "manual_master_1"
+        },
+        {
+          "enabled": true,
+          "label": "怎么用遥控器控制？",
+          "prompt": "怎么用遥控器控制？",
+          "sort_order": 1,
+          "id": "manual_master_2"
+        },
+        {
+          "enabled": true,
+          "label": "充电时指示灯闪烁是什么意思？",
+          "prompt": "充电时指示灯闪烁是什么意思？",
+          "sort_order": 2,
+          "id": "manual_master_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_master_ultra",
+      "pattern": "https://robotics-instruction-manual.ff.com/master-ultra",
+      "label": "FF Master Ultra 手册",
+      "greeting": "需要 Master Ultra 使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "关节限位范围是多少？",
+          "prompt": "关节限位范围是多少？",
+          "sort_order": 0,
+          "id": "manual_master_ultra_1"
+        },
+        {
+          "enabled": true,
+          "label": "如何使用 FF Robotic APP？",
+          "prompt": "如何使用 FF Robotic APP？",
+          "sort_order": 1,
+          "id": "manual_master_ultra_2"
+        },
+        {
+          "enabled": true,
+          "label": "运动平台怎么操作？",
+          "prompt": "运动平台怎么操作？",
+          "sort_order": 2,
+          "id": "manual_master_ultra_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_aegis",
+      "pattern": "https://robotics-instruction-manual.ff.com/aegis",
+      "label": "FX Aegis 手册",
+      "greeting": "需要 FX Aegis 使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "怎么设置自主巡逻路线？",
+          "prompt": "怎么设置自主巡逻路线？",
+          "sort_order": 0,
+          "id": "manual_aegis_1"
+        },
+        {
+          "enabled": true,
+          "label": "扩展模块怎么安装？",
+          "prompt": "扩展模块怎么安装？",
+          "sort_order": 1,
+          "id": "manual_aegis_2"
+        },
+        {
+          "enabled": true,
+          "label": "下雨天可以在室外使用吗？",
+          "prompt": "下雨天可以在室外使用吗？",
+          "sort_order": 2,
+          "id": "manual_aegis_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_prefix",
+      "pattern": "https://robotics-instruction-manual.ff.com//*",
+      "label": "手册站 Fallback",
+      "greeting": "需要产品使用帮助吗？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "机器人开不了机怎么办？",
+          "prompt": "机器人开不了机怎么办？",
+          "sort_order": 0,
+          "id": "manual_prefix_1"
+        },
+        {
+          "enabled": true,
+          "label": "保修政策是什么？",
+          "prompt": "保修政策是什么？",
+          "sort_order": 1,
+          "id": "manual_prefix_2"
+        },
+        {
+          "enabled": true,
+          "label": "如何联系售后？",
+          "prompt": "如何联系售后？",
+          "sort_order": 2,
+          "id": "manual_prefix_3"
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "pattern": "*",
+      "label": "默认",
+      "greeting": "有什么可以帮您？",
+      "placeholder": "Ask anything about FF...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "label": "可以介绍一下 FF 的产品吗？",
+          "prompt": "可以介绍一下 FF 的产品吗？",
+          "sort_order": 0,
+          "id": "fallback_1"
+        },
+        {
+          "enabled": true,
+          "label": "如何联系销售团队？",
+          "prompt": "如何联系销售团队？",
+          "sort_order": 1,
+          "id": "fallback_2"
+        },
+        {
+          "enabled": true,
+          "label": "售后支持怎么联系？",
+          "prompt": "售后支持怎么联系？",
+          "sort_order": 2,
+          "id": "fallback_3"
+        }
+      ]
     }
-  ],
-  "placeholder": "Ask a question…",
-  "info_text": "FF Aegis Ultra is an IP54-rated quadruped robot that climbs 40° slopes, jumps 35 cm, carries up to 5 kg, and supports FPV and custom sensors—ideal for tough outdoor inspection and security tasks."
+  ]
 }

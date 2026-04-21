@@ -15,6 +15,16 @@ ChatPanel 聊天面板 SDK — 构建为 IIFE 单文件，通过 `<script>` 标�
 </script>
 ```
 
+SDK 在浏览器中会自动读取 `window.location.href`，并在请求首页推荐配置时作为 `url` 参数发送给后端，用于按页面返回不同的欢迎语与预置问题。也可以通过 `hostUrl` 手动覆盖：
+
+```html
+<script>
+  FFRobotChat.init({
+    hostUrl: 'https://www.ff.com/fx/super-one'
+  });
+</script>
+```
+
 ## 构建
 
 ```bash

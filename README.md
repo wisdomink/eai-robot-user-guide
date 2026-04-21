@@ -9,6 +9,7 @@ FF Robot 全系列产品用户手册，基于 React + Markdown 驱动的静态�
 | 功能 | 说明 |
 |------|------|
 | AI 智能问答 | 多 Agent 对话式问答，自动识别产品、检索手册内容并生成带引用跳转的回答 |
+| 页面级首页推荐 | 按页面 URL 返回不同的欢迎标题、输入框提示词与预置问题，支持管理后台可视化配置 |
 | AI 语义搜索 | 基于 OpenAI Vector Store Search API 的跨页面语义搜索，支持中英文混合查询 |
 | 多产品导航 | 按产品线组织的侧边栏导航，支持产品间快速切换 |
 | SPA 内部链接 | Markdown 中写路由路径，自动 SPA 导航 |
@@ -131,6 +132,10 @@ npm run preview   # 预览构建结果
 ## AI 智能问答
 
 项目内置多 Agent 的 AI 对话功能，用户可在页面右侧打开 ChatPanel 提问。系统会自动识别产品、检索手册内容，生成带引用链接的结构化回答。
+
+首页推荐支持按宿主页面 URL 配置。SDK 会自动把 `window.location.href` 传给后端 `/api/get-homepage-prompts`，由后端按“精确 URL > 前缀通配 > fallback”命中对应配置；管理后台中的“首页推荐”页签可直接维护页面路径标签、欢迎语、placeholder 与推荐列表。
+
+生产环境建议把首页推荐配置持久化到 DynamoDB，而不是依赖容器内本地文件。仓库中的 `apps/rag-api/data/homepage_prompts.json` 保留为默认模板；如需把默认模板同步到线上数据，可在本地执行同步脚本，通过线上已部署服务的现有首页推荐 API 逐页写入 DB。
 
 ### 架构
 
