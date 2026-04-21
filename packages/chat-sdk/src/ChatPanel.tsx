@@ -184,8 +184,8 @@ export default function ChatPanel({
   prompts: promptsProp = FALLBACK_PROMPTS,
   promptsApiUrl,
   hostUrl,
-  fabLabel = 'ChatAI',
-  fabAriaLabel = 'Open Chat AI',
+  fabLabel = 'FF Assist',
+  fabAriaLabel = 'Open FF Assist',
   showFab = true,
   buildVersion = resolveBuildVersion(),
   storageKey = CHATKIT_THREAD_STORAGE_KEY,
@@ -388,11 +388,14 @@ export default function ChatPanel({
           aria-expanded={isChatOpen}
         >
           <span className="chat-fab-icon" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v4l4-4h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-              <circle cx="8" cy="11" r="1.1" fill="currentColor" />
-              <circle cx="12" cy="11" r="1.1" fill="currentColor" />
-              <circle cx="16" cy="11" r="1.1" fill="currentColor" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 11H12.01M16 11H16.01M8 11H8.01M22 17C22 17.5304 21.7893 18.0391 21.4142 18.4142C21.0391 18.7893 20.5304 19 20 19H6.828C6.29761 19.0001 5.78899 19.2109 5.414 19.586L3.212 21.788C3.1127 21.8873 2.9862 21.9549 2.84849 21.9823C2.71077 22.0097 2.56803 21.9956 2.43831 21.9419C2.30858 21.8881 2.1977 21.7971 2.11969 21.6804C2.04167 21.5637 2.00002 21.4264 2 21.286V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H20C20.5304 3 21.0391 3.21071 21.4142 3.58579C21.7893 3.96086 22 4.46957 22 5V17Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
           <span className="chat-fab-label">{fabLabel}</span>
