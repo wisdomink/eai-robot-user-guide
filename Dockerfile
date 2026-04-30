@@ -43,14 +43,18 @@ COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
 # Backend code + sidebar.json (CONTENT_DIR=/app/src/content in container)
 COPY apps/rag-api/app /app/rag-api/app
 COPY apps/web/src/content/sidebar.json /app/src/content/sidebar.json
+COPY ["docs/FF Assist 预置问题问答集(CN).md", "/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md"]
+COPY ["docs/FF Assist Preset Q&A Collection (EN).md", "/app/rag-api/fast-answer/ff_assist_preset_faq_en.md"]
 
 # Match sidebar path for FastAPI (see app/core/config.py CONTENT_DIR)
 ENV CONTENT_DIR=/app/src/content
+ENV PRESET_FAQ_PATHS=/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md,/app/rag-api/fast-answer/ff_assist_preset_faq_en.md
+ENV ANSWER_MEMORY_DATA_PATH=/app/rag-api/data/answer_memory.jsonl
 
-# Log directory (mount as a Docker volume to persist across restarts)
-RUN mkdir -p /app/rag-api/logs
+# Data/log directories (mount as Docker volumes to persist across restarts)
+RUN mkdir -p /app/rag-api/logs /app/rag-api/data /app/rag-api/fast-answer
 ENV LOG_DIR=/app/rag-api/logs
-VOLUME ["/app/rag-api/logs"]
+VOLUME ["/app/rag-api/logs", "/app/rag-api/data"]
 
 # supervisord config
 COPY supervisord.conf /etc/supervisord.conf

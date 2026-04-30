@@ -20,6 +20,9 @@ LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 # httpx: OpenAI SDK default is connect=5s — too low on slow or filtered networks (ConnectTimeout).
 OPENAI_HTTP_CONNECT_TIMEOUT: float = float(os.getenv("OPENAI_HTTP_CONNECT_TIMEOUT", "30"))
 OPENAI_HTTP_READ_TIMEOUT: float = float(os.getenv("OPENAI_HTTP_READ_TIMEOUT", "600"))
+LOOP_PASS_MAX_CONCURRENCY: int = int(os.getenv("LOOP_PASS_MAX_CONCURRENCY", "4"))
+LOOP_PASS_TIMEOUT_SECONDS: float = float(os.getenv("LOOP_PASS_TIMEOUT_SECONDS", "240"))
+LOOP_PROGRESS_HEARTBEAT_SECONDS: float = float(os.getenv("LOOP_PROGRESS_HEARTBEAT_SECONDS", "20"))
 
 # ── Vector Stores (per-product) ──────────────────────────────────────────
 OPENAI_VECTOR_STORE_MASTER_ID: str = os.getenv("OPENAI_VECTOR_STORE_MASTER_ID", "")
@@ -80,6 +83,31 @@ AWS_REGION_NAME: str = (
     os.getenv("AWS_DEFAULT_REGION", "").strip()
     or os.getenv("AWS_REGION", "").strip()
 )
+
+# ── Fast answers: preset FAQ + repeated-question memory ───────────────────
+FAST_ANSWER_ENABLED: bool = os.getenv("FAST_ANSWER_ENABLED", "true").lower() in ("1", "true", "yes")
+PRESET_FAQ_PATH: Path = Path(
+    os.getenv(
+        "PRESET_FAQ_PATH",
+        str(PROJECT_ROOT / "docs" / "FF Assist 预置问题问答集(CN).md"),
+    )
+)
+_preset_faq_paths_env = os.getenv("PRESET_FAQ_PATHS", "").strip()
+PRESET_FAQ_PATHS: list[Path] = (
+    [Path(p.strip()) for p in _preset_faq_paths_env.split(",") if p.strip()]
+    if _preset_faq_paths_env
+    else [
+        PRESET_FAQ_PATH,
+        PROJECT_ROOT / "docs" / "FF Assist Preset Q&A Collection (EN).md",
+    ]
+)
+ANSWER_MEMORY_ENABLED: bool = os.getenv("ANSWER_MEMORY_ENABLED", "true").lower() in ("1", "true", "yes")
+ANSWER_MEMORY_DATA_PATH: Path = Path(
+    os.getenv("ANSWER_MEMORY_DATA_PATH", str(LEADS_DIR / "answer_memory.jsonl"))
+)
+ANSWER_MEMORY_MAX_RECORDS: int = int(os.getenv("ANSWER_MEMORY_MAX_RECORDS", "2000"))
+PRESET_FAQ_FUZZY_THRESHOLD: float = float(os.getenv("PRESET_FAQ_FUZZY_THRESHOLD", "0.82"))
+ANSWER_MEMORY_FUZZY_THRESHOLD: float = float(os.getenv("ANSWER_MEMORY_FUZZY_THRESHOLD", "0.90"))
 
 # ── Public URL (for rewriting image paths in ChatKit iframe) ─────────────
 PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")

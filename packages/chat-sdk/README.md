@@ -9,11 +9,11 @@ ChatPanel 聊天面板 SDK — 构建为 IIFE 单文件，通过 `<script>` 标�
 ```html
 <script src="ffrobot-chat-sdk.js"></script>
 <script>
-  FFRobotChat.init({
-    defaultOpen: true,
-  });
+  FFRobotChat.init();
 </script>
 ```
+
+默认聊天面板为收起状态；若需在加载后自动展开，可传入 `defaultOpen: true`。
 
 SDK 在浏览器中会自动读取 `window.location.href`，并在请求首页推荐配置时作为 `url` 参数发送给后端，用于按页面返回不同的欢迎语与预置问题。也可以通过 `hostUrl` 手动覆盖：
 

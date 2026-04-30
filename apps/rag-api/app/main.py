@@ -154,7 +154,16 @@ async def chatkit_endpoint(request: Request):
     front_logger.debug(">>> POST /api/chatkit  raw_body=%s", body.decode("utf-8", errors="replace")[:_MAX_BODY_LOG])
 
     try:
-        result = await chatkit_server.process(body, context={})
+        result = await chatkit_server.process(
+            body,
+            context={
+                "page_url": (
+                    request.headers.get("x-ff-page-url")
+                    or request.headers.get("referer")
+                    or ""
+                ),
+            },
+        )
     except Exception as exc:
         elapsed_ms = (time.perf_counter() - start) * 1000
         front_logger.error(

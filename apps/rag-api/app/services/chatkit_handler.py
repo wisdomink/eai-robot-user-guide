@@ -16,6 +16,7 @@ enabling SPA navigation via the frontend entities.onClick handler.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -42,10 +43,13 @@ from chatkit.server import ChatKitServer, stream_widget
 from chatkit.store import NotFoundError, Store
 from chatkit.types import (
     Annotation,
+    AssistantMessageContent,
+    AssistantMessageItem,
     Attachment,
     EntitySource,
     Page,
     ProgressUpdateEvent,
+    ThreadItemDoneEvent,
     ThreadItem,
     ThreadMetadata,
     ThreadStreamEvent,
@@ -56,6 +60,14 @@ from chatkit.widgets import Card, Caption, Input, Label, Select, Spacer, Text, T
 
 from app.core.config import (
     LEADS_DIR,
+    ANSWER_MEMORY_DATA_PATH,
+    ANSWER_MEMORY_ENABLED,
+    ANSWER_MEMORY_FUZZY_THRESHOLD,
+    ANSWER_MEMORY_MAX_RECORDS,
+    FAST_ANSWER_ENABLED,
+    LOOP_PASS_MAX_CONCURRENCY,
+    LOOP_PASS_TIMEOUT_SECONDS,
+    LOOP_PROGRESS_HEARTBEAT_SECONDS,
     LLM_MODEL,
     OPENAI_VECTOR_STORE_AEGIS_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
@@ -65,6 +77,8 @@ from app.core.config import (
     OPENAI_VECTOR_STORE_MASTER_ID,
     OPENAI_VECTOR_STORE_NEWS_ID,
     OPENAI_VECTOR_STORE_PRICE_ID,
+    PRESET_FAQ_FUZZY_THRESHOLD,
+    PRESET_FAQ_PATHS,
     PUBLIC_BASE_URL,
     SIDEBAR_PATH,
 )
@@ -72,6 +86,7 @@ from app.core.logging_config import FRONT_LOGGER_NAME
 from app.services.lead_service import LeadStorage
 from app.services.recommendation_catalog_service import RecommendationCatalogStorage
 from app.services.recommendation_engine import RecommendationEngine
+from app.services.fast_answer_service import FastAnswerMatch, FastAnswerService, detect_input_lang
 
 logger = logging.getLogger(__name__)
 front_logger = logging.getLogger(FRONT_LOGGER_NAME)
@@ -1151,6 +1166,15 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         self._recommendation_storage = recommendation_storage or RecommendationCatalogStorage.from_config()
         self.reco_engine = RecommendationEngine(self._recommendation_storage)
         self._lead_storage = lead_storage or LeadStorage.from_config()
+        self.fast_answers = FastAnswerService(
+            preset_faq_paths=PRESET_FAQ_PATHS,
+            memory_path=ANSWER_MEMORY_DATA_PATH,
+            enabled=FAST_ANSWER_ENABLED,
+            memory_enabled=ANSWER_MEMORY_ENABLED,
+            memory_max_records=ANSWER_MEMORY_MAX_RECORDS,
+            preset_fuzzy_threshold=PRESET_FAQ_FUZZY_THRESHOLD,
+            memory_fuzzy_threshold=ANSWER_MEMORY_FUZZY_THRESHOLD,
+        )
 
     # ── Widget builders ───────────────────────────────────────────────────
 
@@ -1238,6 +1262,116 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             payload.get("email", ""),
         )
 
+    async def _stream_fast_answer(
+        self,
+        thread: ThreadMetadata,
+        context: dict,
+        match: FastAnswerMatch,
+    ) -> AsyncIterator[ThreadStreamEvent]:
+        item = AssistantMessageItem(
+            id=self.store.generate_item_id("message", thread, context),
+            thread_id=thread.id,
+            created_at=datetime.now(),
+            content=[AssistantMessageContent(text=match.answer)],
+        )
+        yield ThreadItemDoneEvent(item=item)
+
+    async def _stream_fast_answer_recommendation(
+        self,
+        *,
+        thread: ThreadMetadata,
+        user_text: str,
+        answer_text: str,
+        input_lang: str,
+        fast_match: FastAnswerMatch,
+        agent_context: AgentContext,
+        context: dict,
+    ) -> AsyncIterator[ThreadStreamEvent]:
+        """Run existing post-answer recommendation logic after a fast answer."""
+        try:
+            post_decision_agent = _build_post_decision_agent(
+                recommendation_rules_prompt=self.reco_engine.build_triage_rules_prompt(),
+                purchase_intent_rules_prompt=self.reco_engine.build_purchase_intent_prompt(),
+                user_query=user_text,
+                loop_plan=[],
+                retrieval_summary=(
+                    f"Fast answer source={fast_match.answer_source}; "
+                    f"matched_question={fast_match.matched_question}"
+                ),
+                answer_text=answer_text,
+            )
+            post_decision_result = await Runner.run(
+                post_decision_agent,
+                [{"role": "user", "content": user_text}],
+                context=agent_context,
+                run_config=RunConfig(
+                    trace_metadata={"__trace_source__": "agent-builder"},
+                ),
+            )
+            post_decision: PostDecisionOutput = post_decision_result.final_output
+        except Exception:
+            logger.exception("Fast answer post-decision failed")
+            post_decision = PostDecisionOutput()
+
+        front_logger.info(
+            "[thread=%s] fast post-decision → purchase_intent=%s, recommendation_hit=%s, "
+            "recommendation_rule_id=%s",
+            thread.id,
+            post_decision.purchase_intent,
+            post_decision.recommendation_hit,
+            post_decision.recommendation_rule_id,
+        )
+
+        self.store.agent_traces[thread.id].append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_message": user_text[:300],
+            "workflow": "fast-answer",
+            "page_url": str(context.get("page_url") or ""),
+            "fast_answer": {
+                "answer_source": fast_match.answer_source,
+                "score": fast_match.score,
+                "faq_id": fast_match.faq_id,
+                "matched_question": fast_match.matched_question,
+                "section_title": fast_match.section_title,
+            },
+            "nodes": [
+                {
+                    "agent": "Fast Answer Layer",
+                    "model": "local",
+                    "role": "fast_answer",
+                    "answer_source": fast_match.answer_source,
+                    "score": fast_match.score,
+                },
+                {
+                    "agent": "FF Post-Decision Agent",
+                    "model": "gpt-5.4-mini",
+                    "role": "post-decision",
+                    "output": post_decision.model_dump(),
+                },
+            ],
+        })
+
+        reco = self.reco_engine.evaluate_post_answer(
+            input_lang=input_lang,
+            thread_id=thread.id,
+            recommendation_rule_id=post_decision.recommendation_rule_id,
+            purchase_intent=post_decision.purchase_intent,
+        )
+        if not reco:
+            return
+
+        front_logger.info(
+            "[thread=%s] fast recommendation id=%s type=%s",
+            thread.id, reco.id, reco.reco_type,
+        )
+        if reco.reco_type == "lead_capture":
+            card = self._build_lead_card(reco.title, reco.description, input_lang)
+        else:
+            card = self._build_reco_card(reco.title, reco.description)
+
+        async for ev in stream_widget(thread, card):
+            yield ev
+
     # ── Action handler (form submissions) ─────────────────────────────────
 
     async def action(
@@ -1292,17 +1426,37 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             ).strip()
 
         front_logger.info(
-            "[thread=%s] user_message=%r  history_count=%d",
-            thread.id, user_text[:200], len(history_items),
+            "[thread=%s] user_message=%r  history_count=%d page_url=%r",
+            thread.id, user_text[:200], len(history_items), str(context.get("page_url") or "")[:200],
         )
-
-        input_items = await simple_to_agent_input(history_items)
 
         agent_context = AgentContext(
             thread=thread,
             store=self.store,
             request_context=context,
         )
+
+        page_url = str(context.get("page_url") or "")
+        fast_match = self.fast_answers.lookup(user_text, page_url=page_url)
+        if fast_match:
+            input_lang = detect_input_lang(user_text)
+            self.store.thread_langs[thread.id] = input_lang
+            yield ProgressUpdateEvent(icon="sparkle", text="Found a prepared answer.")
+            async for event in self._stream_fast_answer(thread, context, fast_match):
+                yield event
+            async for event in self._stream_fast_answer_recommendation(
+                thread=thread,
+                user_text=user_text,
+                answer_text=fast_match.answer,
+                input_lang=input_lang,
+                fast_match=fast_match,
+                agent_context=agent_context,
+                context=context,
+            ):
+                yield event
+            return
+
+        input_items = await simple_to_agent_input(history_items)
 
         # ── Phase 1: Plan Agent (non-streamed, structured JSON) ─────────
         yield ProgressUpdateEvent(icon="sparkle", text="Analyzing your question…")
@@ -1365,8 +1519,91 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         }
 
         rewriter = _EventStreamRewriter()
-        retrieval_results: list[LoopPassResult] = []
+        retrieval_results_by_idx: list[LoopPassResult | None] = [None] * len(loop_passes)
+        loop_semaphore = asyncio.Semaphore(max(1, LOOP_PASS_MAX_CONCURRENCY))
 
+        async def run_loop_pass(
+            pass_idx: int,
+            pass_info: LoopPass,
+        ) -> tuple[int, LoopPassResult, Exception | None]:
+            async with loop_semaphore:
+                front_logger.info(
+                    "[thread=%s] loop %d/%d → domain=%s focus=%s vector_store_ids=%s",
+                    thread.id,
+                    pass_idx + 1,
+                    len(loop_passes),
+                    pass_info.domain,
+                    pass_info.focus_label,
+                    pass_info.vector_store_ids,
+                )
+                try:
+                    domain_agent = _build_loop_domain_agent(plan_output, pass_info)
+                    pass_result = await asyncio.wait_for(
+                        Runner.run(
+                            domain_agent,
+                            retrieval_conversation,
+                            context=agent_context,
+                            run_config=RunConfig(
+                                trace_metadata={"__trace_source__": "agent-builder"},
+                            ),
+                        ),
+                        timeout=LOOP_PASS_TIMEOUT_SECONDS,
+                    )
+
+                    pass_text = pass_result.final_output
+                    if not isinstance(pass_text, str):
+                        pass_text = str(pass_text)
+
+                    pass_sources = _extract_retrieved_sources(pass_result)
+                    if pass_info.domain == "news":
+                        pass_sources = _merge_source_lists(
+                            pass_sources,
+                            _extract_news_sources_from_text(pass_text),
+                        )
+                    result = LoopPassResult(
+                        domain=pass_info.domain,
+                        focus_label=pass_info.focus_label,
+                        product_key=pass_info.product_key,
+                        text=pass_text,
+                        sources=pass_sources,
+                    )
+                    front_logger.info(
+                        "[thread=%s] loop pass %d done → result_length=%d source_count=%d",
+                        thread.id,
+                        pass_idx + 1,
+                        len(pass_text),
+                        len(pass_sources),
+                    )
+                    return pass_idx, result, None
+                except Exception as exc:
+                    front_logger.warning(
+                        "[thread=%s] loop pass %d degraded → domain=%s focus=%s error=%s: %s",
+                        thread.id,
+                        pass_idx + 1,
+                        pass_info.domain,
+                        pass_info.focus_label,
+                        type(exc).__name__,
+                        exc,
+                        exc_info=True,
+                    )
+                    fallback_text = (
+                        f"当前资料域 `{pass_info.focus_label}` 检索暂时失败，"
+                        "系统已跳过该资料域并继续使用其他可用资料回答。"
+                        f"错误类型：{type(exc).__name__}。"
+                    )
+                    return (
+                        pass_idx,
+                        LoopPassResult(
+                            domain=pass_info.domain,
+                            focus_label=pass_info.focus_label,
+                            product_key=pass_info.product_key,
+                            text=fallback_text,
+                            sources=(),
+                        ),
+                        exc,
+                    )
+
+        tasks: list[asyncio.Task[tuple[int, LoopPassResult, Exception | None]]] = []
         for pass_idx, pass_info in enumerate(loop_passes):
             if pass_info.domain == "fallback":
                 progress_text = "Preparing a fallback response…"
@@ -1381,51 +1618,52 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 icon="search",
                 text=f"({pass_idx + 1}/{len(loop_passes)}) {progress_text}",
             )
-            front_logger.info(
-                "[thread=%s] loop %d/%d → domain=%s focus=%s vector_store_ids=%s",
+            tasks.append(asyncio.create_task(run_loop_pass(pass_idx, pass_info)))
+
+        pending: set[asyncio.Task[tuple[int, LoopPassResult, Exception | None]]] = set(tasks)
+        degraded_count = 0
+        try:
+            while pending:
+                done, pending = await asyncio.wait(
+                    pending,
+                    timeout=LOOP_PROGRESS_HEARTBEAT_SECONDS,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                if not done:
+                    yield ProgressUpdateEvent(
+                        icon="search",
+                        text=f"Still searching {len(pending)} source(s)…",
+                    )
+                    continue
+
+                for task in done:
+                    pass_idx, result, exc = task.result()
+                    retrieval_results_by_idx[pass_idx] = result
+                    if exc is not None:
+                        degraded_count += 1
+                        yield ProgressUpdateEvent(
+                            icon="info",
+                            text=(
+                                f"Skipped one unavailable source ({result.focus_label}); "
+                                "continuing with available results…"
+                            ),
+                        )
+                    else:
+                        yield ProgressUpdateEvent(
+                            icon="search",
+                            text=f"Finished source {pass_idx + 1}/{len(loop_passes)}.",
+                        )
+        finally:
+            for task in pending:
+                task.cancel()
+
+        retrieval_results = [result for result in retrieval_results_by_idx if result is not None]
+        if degraded_count:
+            front_logger.warning(
+                "[thread=%s] loop completed with degraded passes=%d/%d",
                 thread.id,
-                pass_idx + 1,
+                degraded_count,
                 len(loop_passes),
-                pass_info.domain,
-                pass_info.focus_label,
-                pass_info.vector_store_ids,
-            )
-
-            domain_agent = _build_loop_domain_agent(plan_output, pass_info)
-            pass_result = await Runner.run(
-                domain_agent,
-                retrieval_conversation,
-                context=agent_context,
-                run_config=RunConfig(
-                    trace_metadata={"__trace_source__": "agent-builder"},
-                ),
-            )
-
-            pass_text = pass_result.final_output
-            if not isinstance(pass_text, str):
-                pass_text = str(pass_text)
-
-            pass_sources = _extract_retrieved_sources(pass_result)
-            if pass_info.domain == "news":
-                pass_sources = _merge_source_lists(
-                    pass_sources,
-                    _extract_news_sources_from_text(pass_text),
-                )
-            retrieval_results.append(
-                LoopPassResult(
-                    domain=pass_info.domain,
-                    focus_label=pass_info.focus_label,
-                    product_key=pass_info.product_key,
-                    text=pass_text,
-                    sources=pass_sources,
-                )
-            )
-            front_logger.info(
-                "[thread=%s] loop pass %d done → result_length=%d source_count=%d",
-                thread.id,
-                pass_idx + 1,
-                len(pass_text),
-                len(pass_sources),
             )
 
         yield ProgressUpdateEvent(icon="sparkle", text="Synthesizing answer…")
@@ -1464,6 +1702,25 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             yield source_appender.process(event)
 
         answer_text = "".join(answer_text_parts)
+        self.fast_answers.remember(
+            raw_question=user_text,
+            page_url=page_url,
+            answer=answer_text,
+            answer_source="rag",
+            thread_id=thread.id,
+            metadata={
+                "source_count": len(final_sources),
+                "sources": [
+                    {
+                        "title": source.title,
+                        "kind": source.kind,
+                        "slug": source.slug,
+                        "url": source.url or source.page_url,
+                    }
+                    for source in final_sources[:8]
+                ],
+            },
+        )
 
         # ── Phase 3: Post-Decision Agent ─────────────────────────────────
         retrieval_summary = "\n".join(

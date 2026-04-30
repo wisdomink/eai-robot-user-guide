@@ -44,6 +44,26 @@
       .notice code {
         word-break: break-all;
       }
+
+      main > p.lang-en {
+        margin-top: 12px;
+        color: #3d4550;
+        font-size: 15px;
+      }
+
+      .notice .lang-en {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #e2e8f0;
+        color: #3d4550;
+        font-size: 14px;
+      }
+
+      .notice strong.notice-subheading-en {
+        font-size: 14px;
+        font-weight: 600;
+        color: #3d4550;
+      }
     </style>
     <script src="https://robotics-instruction-manual.ff.com/dist-embed/ffrobot-chat-sdk.js"></script>
   </head>
@@ -55,19 +75,39 @@
         当前示例引用线上 SDK，并使用 SDK 内置的生产默认配置：
         <code>https://robotics-instruction-manual.ff.com/dist-embed/ffrobot-chat-sdk.js</code>。
       </p>
+      <p class="lang-en">
+        This page simulates a fresh third-party site that loads the published embed script to
+        attach the chat panel. The example pulls the hosted SDK and relies on its built-in
+        production defaults:
+        <code>https://robotics-instruction-manual.ff.com/dist-embed/ffrobot-chat-sdk.js</code>.
+      </p>
       <div class="notice">
         <strong>使用说明</strong>
+        <strong class="notice-subheading-en">Usage (English)</strong>
         <p>
           请不要直接用 <code>file://</code> 打开本页。请先在html文件所在目录启动静态服务：
+          <code>python3 -m http.server 8080</code>
+        </p>
+        <p class="lang-en">
+          Do not open this file via <code>file://</code>. From the directory that contains this
+          HTML file, start a static server, for example:
           <code>python3 -m http.server 8080</code>
         </p>
         <p>
           服务启动后，请通过以下链接访问本页：
           <code>http://127.0.0.1:8080/chat-sdk-demo.html</code>
         </p>
+        <p class="lang-en">
+          Then open this demo at:
+          <code>http://127.0.0.1:8080/chat-sdk-demo.html</code>
+        </p>
         <p>
           如果控制台出现 <code>Origin not allowed</code>，说明当前页面域名不在发布版
           SDK 对应的允许列表中，不能用这个 origin 直接接入。
+        </p>
+        <p class="lang-en">
+          If the browser console shows <code>Origin not allowed</code>, the current page origin is
+          not on the allowlist for the published SDK build, so you cannot embed from that origin.
         </p>
       </div>
     </main>
@@ -75,7 +115,6 @@
     <script>
       async function bootstrap() {
         await window.FFRobotChat.init({
-          defaultOpen: true,
           fabLabel: 'FF Assist',
           title: 'FF AI',
           zIndex: 3000,

@@ -70,6 +70,7 @@ export interface ChatPromptOption {
 export interface ChatPanelApiConfig {
   url: string
   domainKey: string
+  fetch?: typeof fetch
 }
 
 export interface ChatEntityNavigatePayload {
@@ -195,7 +196,19 @@ export default function ChatPanel({
   const chatkitBodyRef = useRef<HTMLDivElement>(null)
   useSourceSectionHider(chatkitBodyRef)
 
-  const resolvedApiConfig = useMemo(() => apiConfig ?? buildApiConfig(), [apiConfig])
+  const resolvedApiConfig = useMemo(() => {
+    const base = apiConfig ?? buildApiConfig()
+    const baseFetch = base.fetch ?? globalThis.fetch.bind(globalThis)
+    const contextualFetch: typeof fetch = (input, init) => {
+      const headers = new Headers(init?.headers)
+      const currentUrl = hostUrl || (typeof window !== 'undefined' ? window.location.href : '')
+      if (currentUrl) {
+        headers.set('x-ff-page-url', currentUrl)
+      }
+      return baseFetch(input, init ? { ...init, headers } : { headers })
+    }
+    return { ...base, fetch: contextualFetch }
+  }, [apiConfig, hostUrl])
   const rootStyle = useMemo(() => {
     if (zIndex === undefined) return undefined
     return {
