@@ -31,13 +31,14 @@ dist-embed
 *.pyc
 *.tsbuildinfo
 
-# Docs / non-runtime (keep preset FAQ for image COPY in Dockerfile)
+# Docs / non-runtime; input/ reserved for preset FAQ (see Dockerfile COPY)
 docs/**
+input/**
 tools
 examples
 *.md
 !apps/rag-api/app/services/instructions/*.md
 !apps/rag-api/app/services/instructions.md
 !apps/rag-api/price/*.md
-!docs/FF Assist 预置问题问答集(CN).md
-!docs/FF Assist Preset Q&A Collection (EN).md
+!input/FF Assist_QA_CN.md
+!input/FF_Assist_QA_EN.md

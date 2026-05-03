@@ -136,7 +136,10 @@ class HomepagePromptsStorage:
             return raw
         if raw.endswith("/*"):
             prefix = cls._normalize_url_value(raw[:-2])
-            return f"{prefix}/*" if prefix else _DEFAULT_PAGE_PATTERN
+            if not prefix:
+                return _DEFAULT_PAGE_PATTERN
+            # _normalize_url_value may end with "/" for origin-only URLs; avoid "//*" in the result.
+            return f"{prefix.rstrip('/')}/*"
         normalized = cls._normalize_url_value(raw)
         return normalized or _DEFAULT_PAGE_PATTERN
 

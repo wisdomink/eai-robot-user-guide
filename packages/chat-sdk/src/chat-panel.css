@@ -3,9 +3,11 @@
   --accent-bg: rgba(105, 101, 224, 0.08);
   --bg: #ffffff;
   --border: #E8E8E8;
+  --surface: #f7f7f7;
   --text: #171A20;
   --font-rubik: 'Rubik', sans-serif;
   --font-roboto: 'Roboto', sans-serif;
+  --font-noto-sans: 'Noto Sans', 'Noto Sans SC', sans-serif;
   --header-height: 56px;
   color: var(--text);
   font-family: var(--font-roboto);
@@ -50,13 +52,15 @@
   background: var(--bg);
 }
 
-.ffrobot-chat-root .chat-panel-header-title {
+.ffrobot-chat-root .chat-panel-header .chat-panel-header-title {
   text-align: center;
-  font-family: var(--font-rubik);
+  font-family: var(--font-roboto);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 100%;
+  letter-spacing: 0;
   color: var(--text);
-  letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -290,12 +294,15 @@
 }
 
 .ffrobot-chat-root .ck-greeting-text {
-  font-family: var(--font-roboto);
-  font-size: 15px;
-  font-weight: 400;
+  font-family: var(--font-noto-sans);
+  font-size: 18px;
+  font-weight: 300;
+  font-style: normal;
   color: var(--text);
   text-align: center;
-  line-height: 1.5;
+  line-height: 100%;
+  letter-spacing: 0;
+  vertical-align: middle;
   margin: 0;
   max-width: 280px;
 }

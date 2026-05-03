@@ -53,11 +53,13 @@ function persistThreadId(threadId: string | null, storageKey: string) {
 
 const FALLBACK_GREETING = "Do you want to know about FF's products?"
 const FALLBACK_PLACEHOLDER = 'Ask anything about FF...'
+const CHAT_PANEL_HEADER_TITLE = 'FF Assist'
+const CHAT_FAB_LABEL = 'FF Assist'
 const HOMEPAGE_DISCLAIMER = 'FF Assist uses AI, mistakes may occur.'
 const FALLBACK_PROMPTS = [
-  { label: '如何购买 FF 机器人？', prompt: '如何购买 FF 机器人？' },
-  { label: 'FF 机器人什么时候交付？', prompt: 'FF 机器人什么时候交付？' },
-  { label: 'FF 目前有哪些产品线？', prompt: 'FF 目前有哪些产品线？' },
+  { label: 'How can I buy an FF robot?', prompt: 'How can I buy an FF robot?' },
+  { label: 'When will FF robots be delivered?', prompt: 'When will FF robots be delivered?' },
+  { label: 'What product lines does FF currently offer?', prompt: 'What product lines does FF currently offer?' },
 ]
 
 type OverlayMode = 'buttons' | null
@@ -94,13 +96,11 @@ export interface ChatPanelProps {
   apiConfig?: ChatPanelApiConfig
   panelId?: string
   className?: string
-  title?: string
   placeholder?: string
   greeting?: string
   prompts?: ChatPromptOption[]
   promptsApiUrl?: string | null
   hostUrl?: string
-  fabLabel?: string
   fabAriaLabel?: string
   showFab?: boolean
   buildVersion?: string
@@ -128,7 +128,7 @@ function useControllableOpen(
   return [isOpen, setOpen] as const
 }
 
-const SOURCE_HEADING_RE = /^(参考来源|Sources)$/i
+const SOURCE_HEADING_RE = /^Sources$/i
 
 function hideSourceSections(root: HTMLElement) {
   const headings = root.querySelectorAll('h2')
@@ -179,13 +179,11 @@ export default function ChatPanel({
   apiConfig,
   panelId = 'chatPanel',
   className,
-  title = 'FF Assist',
   placeholder: placeholderProp = FALLBACK_PLACEHOLDER,
   greeting: greetingProp = FALLBACK_GREETING,
   prompts: promptsProp = FALLBACK_PROMPTS,
   promptsApiUrl,
   hostUrl,
-  fabLabel = 'FF Assist',
   fabAriaLabel = 'Open FF Assist',
   showFab = true,
   buildVersion = resolveBuildVersion(),
@@ -411,7 +409,7 @@ export default function ChatPanel({
               />
             </svg>
           </span>
-          <span className="chat-fab-label">{fabLabel}</span>
+          <span className="chat-fab-label">{CHAT_FAB_LABEL}</span>
         </button>
       )}
 
@@ -437,7 +435,7 @@ export default function ChatPanel({
               <path d="M12 8v6M9 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </button>
-          <span className="chat-panel-header-title">{title}</span>
+          <span className="chat-panel-header-title">{CHAT_PANEL_HEADER_TITLE}</span>
           <button
             type="button"
             className="chat-panel-header-btn"

@@ -33,11 +33,9 @@ interface FFRobotChatInitOptions {
   mountTarget?: HTMLElement | string
   containerId?: string
   defaultOpen?: boolean
-  title?: string
   placeholder?: string
   greeting?: string
   prompts?: FFRobotChatPromptOption[]
-  fabLabel?: string
   fabAriaLabel?: string
   showFab?: boolean
   buildVersion?: string

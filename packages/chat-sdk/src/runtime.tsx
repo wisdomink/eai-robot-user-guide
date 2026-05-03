@@ -6,6 +6,15 @@ import type { ChatSdkInitOptions, ChatSdkInstance } from './types'
 
 const DEFAULT_CONTAINER_ID = 'ffrobot-chat-sdk-root'
 const DEFAULT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
+const FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400&family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap'
+
+function ensureFontsLoaded() {
+  if (document.querySelector(`link[href="${FONTS_HREF}"]`)) return
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = FONTS_HREF
+  document.head.appendChild(link)
+}
 
 function resolveMountTarget(mountTarget?: HTMLElement | string) {
   if (typeof document === 'undefined') {
@@ -95,6 +104,8 @@ class ChatSdkController implements ChatSdkInstance {
     this.config = { ...options }
     this.openState = Boolean(options.defaultOpen)
 
+    ensureFontsLoaded()
+
     const mountTarget = resolveMountTarget(options.mountTarget)
     this.container = document.createElement('div')
     this.container.id = options.containerId || DEFAULT_CONTAINER_ID
@@ -149,13 +160,11 @@ class ChatSdkController implements ChatSdkInstance {
           onOpenChange={this.handleOpenChange}
           onEntityNavigate={handleEntityNavigate}
           apiConfig={apiConfig}
-          title={this.config.title}
           placeholder={this.config.placeholder}
           greeting={this.config.greeting}
           prompts={this.config.prompts}
           promptsApiUrl={promptsApiUrl}
           hostUrl={this.config.hostUrl}
-          fabLabel={this.config.fabLabel}
           fabAriaLabel={this.config.fabAriaLabel}
           showFab={this.config.showFab}
           buildVersion={this.config.buildVersion}

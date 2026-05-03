@@ -43,8 +43,8 @@ COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
 # Backend code + sidebar.json (CONTENT_DIR=/app/src/content in container)
 COPY apps/rag-api/app /app/rag-api/app
 COPY apps/web/src/content/sidebar.json /app/src/content/sidebar.json
-COPY ["docs/FF Assist 预置问题问答集(CN).md", "/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md"]
-COPY ["docs/FF Assist Preset Q&A Collection (EN).md", "/app/rag-api/fast-answer/ff_assist_preset_faq_en.md"]
+COPY ["input/FF Assist_QA_CN.md", "/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md"]
+COPY ["input/FF_Assist_QA_EN.md", "/app/rag-api/fast-answer/ff_assist_preset_faq_en.md"]
 
 # Match sidebar path for FastAPI (see app/core/config.py CONTENT_DIR)
 ENV CONTENT_DIR=/app/src/content

@@ -6,7 +6,8 @@ const CHATKIT_SCRIPT_ID = 'ffrobot-chatkit-script'
 const CHATKIT_SCRIPT_URL = 'https://cdn.platform.openai.com/deployments/chatkit/chatkit.js'
 const CHAT_STYLE_ID = 'ffrobot-chat-sdk-style'
 const GOOGLE_FONTS_ID = 'ffrobot-chat-sdk-fonts'
-const GOOGLE_FONTS_URL = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap'
+const GOOGLE_FONTS_URL =
+  'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300&family=Noto+Sans+SC:wght@300&family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap'
 
 let activeInstance: ChatSdkInstance | null = null
 let chatKitScriptPromise: Promise<void> | null = null

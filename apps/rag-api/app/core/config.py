@@ -89,7 +89,7 @@ FAST_ANSWER_ENABLED: bool = os.getenv("FAST_ANSWER_ENABLED", "true").lower() in 
 PRESET_FAQ_PATH: Path = Path(
     os.getenv(
         "PRESET_FAQ_PATH",
-        str(PROJECT_ROOT / "docs" / "FF Assist 预置问题问答集(CN).md"),
+        str(PROJECT_ROOT / "input" / "FF Assist_QA_CN.md"),
     )
 )
 _preset_faq_paths_env = os.getenv("PRESET_FAQ_PATHS", "").strip()
@@ -98,7 +98,7 @@ PRESET_FAQ_PATHS: list[Path] = (
     if _preset_faq_paths_env
     else [
         PRESET_FAQ_PATH,
-        PROJECT_ROOT / "docs" / "FF Assist Preset Q&A Collection (EN).md",
+        PROJECT_ROOT / "input" / "FF_Assist_QA_EN.md",
     ]
 )
 ANSWER_MEMORY_ENABLED: bool = os.getenv("ANSWER_MEMORY_ENABLED", "true").lower() in ("1", "true", "yes")

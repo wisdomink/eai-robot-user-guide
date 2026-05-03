@@ -315,9 +315,9 @@ def parse_preset_faq_markdown(path: Path, *, language: str | None = None) -> lis
 
 def _infer_language_from_path(path: Path) -> str | None:
     name = path.name.lower()
-    if "(cn)" in name or "中文" in name or "预置" in name:
+    if "(cn)" in name or "_cn." in name or "中文" in name or "预置" in name:
         return "cn"
-    if "(en)" in name or "english" in name or "preset" in name:
+    if "(en)" in name or "_en." in name or "english" in name or "preset" in name:
         return "en"
     return None
 
