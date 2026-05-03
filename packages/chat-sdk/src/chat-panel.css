@@ -53,13 +53,16 @@
 }
 
 .ffrobot-chat-root .chat-panel-header .chat-panel-header-title {
-  text-align: center;
   font-family: var(--font-roboto);
   font-size: 15px;
   font-weight: 400;
   font-style: normal;
   line-height: 100%;
   letter-spacing: 0;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -197,33 +200,57 @@
 }
 
 .ffrobot-chat-root .chat-fab {
+  box-sizing: border-box;
   position: fixed;
   right: 24px;
   bottom: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 16px 0 14px;
+  justify-content: center;
+  font-weight: 400;
+  padding: 12px 19px;
   min-height: 48px;
   height: 48px;
-  border: none;
+  border: 1px solid #3a3d42;
   border-radius: 8px;
-  background: #1A1D21;
+  background: transparent;
   color: #f5f5f5;
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.18),
-    0 12px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 9px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   z-index: var(--ffrobot-chat-fab-z-index, 170);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  isolation: isolate;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+}
+
+/* 毛玻璃只画在底层，避免 label 与顶栏 title 一样走清晰文字层 */
+.ffrobot-chat-root .chat-fab-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: rgba(26, 29, 33, 0.9);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  pointer-events: none;
+  transition: background 0.18s ease;
+}
+
+.ffrobot-chat-root .chat-fab-content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .ffrobot-chat-root .chat-fab:hover {
   transform: translateY(-2px);
-  background: #2a2d30;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.22),
-    0 16px 36px rgba(0, 0, 0, 0.14);
+  border-color: #4a4d52;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+}
+
+.ffrobot-chat-root .chat-fab:hover .chat-fab-backdrop {
+  background: rgba(42, 45, 48, 0.92);
 }
 
 .ffrobot-chat-root .chat-fab.hidden {
@@ -239,10 +266,15 @@
 }
 
 .ffrobot-chat-root .chat-fab-label {
-  font-family: var(--font-rubik);
+  font-family: var(--font-roboto);
   font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 100%;
+  letter-spacing: 0;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   color: inherit;
 }
 

@@ -1,18 +1,21 @@
 import { StrictMode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import ChatPanel, { type ChatEntityNavigatePayload, type ChatPanelApiConfig } from './ChatPanel'
+import { GOOGLE_FONTS_ID, GOOGLE_FONTS_URL } from './chatFonts'
 import { getDefaultChatkitApiUrl, getDefaultHomepagePromptsUrl } from './chatEndpoints'
 import type { ChatSdkInitOptions, ChatSdkInstance } from './types'
 
 const DEFAULT_CONTAINER_ID = 'ffrobot-chat-sdk-root'
 const DEFAULT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
-const FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400&family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap'
 
+/** When ChatSdkController is used without sdk.init(), still inject the same font link once. */
 function ensureFontsLoaded() {
-  if (document.querySelector(`link[href="${FONTS_HREF}"]`)) return
+  if (document.getElementById(GOOGLE_FONTS_ID)) return
+  if (document.querySelector(`link[href="${GOOGLE_FONTS_URL}"]`)) return
   const link = document.createElement('link')
+  link.id = GOOGLE_FONTS_ID
   link.rel = 'stylesheet'
-  link.href = FONTS_HREF
+  link.href = GOOGLE_FONTS_URL
   document.head.appendChild(link)
 }
 

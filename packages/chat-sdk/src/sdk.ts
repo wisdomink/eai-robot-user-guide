@@ -1,13 +1,11 @@
 import chatPanelCssText from './chat-panel.css?inline'
+import { GOOGLE_FONTS_ID, GOOGLE_FONTS_URL } from './chatFonts'
 import { createChatSdkController } from './runtime'
 import type { ChatSdkInitOptions, ChatSdkInstance, ChatSdkPublicApi } from './types'
 
 const CHATKIT_SCRIPT_ID = 'ffrobot-chatkit-script'
 const CHATKIT_SCRIPT_URL = 'https://cdn.platform.openai.com/deployments/chatkit/chatkit.js'
 const CHAT_STYLE_ID = 'ffrobot-chat-sdk-style'
-const GOOGLE_FONTS_ID = 'ffrobot-chat-sdk-fonts'
-const GOOGLE_FONTS_URL =
-  'https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300&family=Noto+Sans+SC:wght@300&family=Roboto:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap'
 
 let activeInstance: ChatSdkInstance | null = null
 let chatKitScriptPromise: Promise<void> | null = null
@@ -59,6 +57,19 @@ function ensureFonts() {
   document.head.appendChild(link)
 }
 
+/** Avoid FAB/header FOUT: first paint used system sans, then Roboto swaps in and looks heavier. */
+async function waitForRobotoTextFonts(): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts?.load) {
+    return
+  }
+  const timeoutMs = 3000
+  const deadline = new Promise<void>((resolve) => {
+    window.setTimeout(resolve, timeoutMs)
+  })
+  const load = document.fonts.load('400 15px Roboto').catch(() => undefined)
+  await Promise.race([load, deadline])
+}
+
 function ensureChatKitScript() {
   if (chatKitScriptPromise) {
     return chatKitScriptPromise
@@ -102,7 +113,10 @@ async function init(options: ChatSdkInitOptions = {}) {
   if (options.loadFonts !== false) {
     ensureFonts()
   }
-  await ensureChatKitScript()
+  await Promise.all([
+    ensureChatKitScript(),
+    options.loadFonts === false ? Promise.resolve() : waitForRobotoTextFonts(),
+  ])
 
   if (activeInstance) {
     activeInstance.update(options)

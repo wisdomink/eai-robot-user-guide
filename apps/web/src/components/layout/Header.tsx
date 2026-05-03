@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import logoDark from '@/assets/icons/logo-dark.svg'
 
 interface HeaderProps {
@@ -30,26 +29,14 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Link
-          to="/admin"
-          className="chat-btn"
-          title="管理后台"
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path d="M13.5 8.5a5.5 5.5 0 0 1-11 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <path d="M8 1v3M3.5 2.5l1.5 2.5M12.5 2.5l-1.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <circle cx="8" cy="8.5" r="1.2" fill="currentColor" />
-          </svg>
-          管理后台
-        </Link>
-        <Link to="/" className="p-[clamp(2px,0.3vw,6px)]">
+      <div className="flex items-center">
+        <a href="https://www.ff.com/" className="p-[clamp(2px,0.3vw,6px)]">
           <img
             src={logoDark}
             alt="EAI Robot"
             className="h-[var(--icon-md)] w-[var(--icon-md)]"
           />
-        </Link>
+        </a>
       </div>
     </header>
   )
