@@ -7,4 +7,5 @@ interface ImportMetaEnv {
   readonly VITE_GET_HOMEPAGE_PROMPTS_URL?: string
 }
 
+declare const __SDK_VERSION__: string | undefined
 declare const __BUILD_TIME__: string | undefined

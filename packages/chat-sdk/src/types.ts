@@ -1,4 +1,5 @@
 import type { ChatEntityNavigatePayload, ChatPromptOption } from './ChatPanel'
+import type { ChatSdkVersionInfo } from './version'
 
 export interface ChatSdkInitOptions {
   apiUrl?: string
@@ -38,4 +39,5 @@ export interface ChatSdkPublicApi {
   destroy: () => void
   update: (options: Partial<ChatSdkInitOptions>) => void
   getInstance: () => ChatSdkInstance | null
+  getVersion: () => ChatSdkVersionInfo
 }

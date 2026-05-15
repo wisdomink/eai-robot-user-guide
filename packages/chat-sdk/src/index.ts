@@ -24,6 +24,11 @@ export {
 
 export { createChatSdkController } from './runtime'
 
+export {
+  getChatSdkVersionInfo,
+  type ChatSdkVersionInfo,
+} from './version'
+
 export type {
   ChatSdkInitOptions,
   ChatSdkInstance,

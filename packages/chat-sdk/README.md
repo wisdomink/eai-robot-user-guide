@@ -49,6 +49,17 @@ SDK 在浏览器中会自动读取 `window.location.href`，并在请求首页�
 | `FFRobotChat.destroy()` | 销毁实例并移除 DOM |
 | `FFRobotChat.update(options)` | 更新配置 |
 | `FFRobotChat.getInstance()` | 获取当前实例 |
+| `FFRobotChat.getVersion()` | 获取 SDK 版本、构建版本与构建时间 |
+
+## 查看版本
+
+控制台可直接调用：
+
+```js
+FFRobotChat.getVersion()
+```
+
+也可以在聊天面板打开后，连续点击标题 `FF Assist` 5 次查看版本信息。
 
 ## TypeScript 支持
 

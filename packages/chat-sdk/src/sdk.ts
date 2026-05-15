@@ -1,6 +1,7 @@
 import chatPanelCssText from './chat-panel.css?inline'
 import { GOOGLE_FONTS_ID, GOOGLE_FONTS_URL } from './chatFonts'
 import { createChatSdkController } from './runtime'
+import { getChatSdkVersionInfo } from './version'
 import type { ChatSdkInitOptions, ChatSdkInstance, ChatSdkPublicApi } from './types'
 
 const CHATKIT_SCRIPT_ID = 'ffrobot-chatkit-script'
@@ -156,6 +157,7 @@ const FFRobotChat: ChatSdkPublicApi = {
   destroy,
   update,
   getInstance,
+  getVersion: getChatSdkVersionInfo,
 }
 
 declare global {
@@ -170,3 +172,4 @@ if (typeof window !== 'undefined') {
 
 export default FFRobotChat
 export type { ChatSdkInitOptions, ChatSdkInstance, ChatSdkPublicApi } from './types'
+export type { ChatSdkVersionInfo } from './version'

@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import ChatPanel, { type ChatEntityNavigatePayload, type ChatPanelApiConfig } from './ChatPanel'
 import { GOOGLE_FONTS_ID, GOOGLE_FONTS_URL } from './chatFonts'
 import { getDefaultChatkitApiUrl, getDefaultHomepagePromptsUrl } from './chatEndpoints'
+import { getChatSdkVersionInfo } from './version'
 import type { ChatSdkInitOptions, ChatSdkInstance } from './types'
 
 const DEFAULT_CONTAINER_ID = 'ffrobot-chat-sdk-root'
@@ -158,6 +159,8 @@ class ChatSdkController implements ChatSdkInstance {
   }
 
   private render() {
+    this.syncContainerDiagnostics()
+
     const apiConfig = resolveApiConfig(this.config)
     const promptsApiUrl = resolvePromptsApiUrl(this.config)
     const handleEntityNavigate = this.config.onEntityNavigate || defaultEntityNavigate
@@ -183,6 +186,17 @@ class ChatSdkController implements ChatSdkInstance {
         />
       </StrictMode>,
     )
+  }
+
+  private syncContainerDiagnostics() {
+    const versionInfo = getChatSdkVersionInfo()
+    this.container.dataset.sdkVersion = versionInfo.sdkVersion
+    this.container.dataset.buildVersion = this.config.buildVersion || versionInfo.buildVersion
+    if (versionInfo.buildTime) {
+      this.container.dataset.buildTime = versionInfo.buildTime
+    } else {
+      delete this.container.dataset.buildTime
+    }
   }
 }
 

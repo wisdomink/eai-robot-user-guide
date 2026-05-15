@@ -1,13 +1,25 @@
-import { useState, useCallback, useEffect, useRef, useMemo, type CSSProperties, type FormEvent } from 'react'
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+  type CSSProperties,
+  type FormEvent,
+  type RefObject,
+} from 'react'
 import { ChatKit, useChatKit } from '@openai/chatkit-react'
 import clsx from 'clsx'
 import { fetchHomepagePrompts, type HomepagePromptsConfig } from './homepagePromptsClient'
 import { getDefaultChatkitApiUrl } from './chatEndpoints'
+import { getChatSdkVersionInfo } from './version'
 
 const isDev = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.DEV)
 
 const CHATKIT_THREAD_STORAGE_KEY = 'ffrobot:chatkit:thread-id'
 const CHATKIT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
+const VERSION_CLICK_THRESHOLD = 5
+const VERSION_CLICK_WINDOW_MS = 2000
 
 function resolveChatKitApiUrl() {
   const raw = import.meta.env.VITE_CHATKIT_API_URL
@@ -23,18 +35,6 @@ function buildApiConfig(): ChatPanelApiConfig {
     url: resolveChatKitApiUrl(),
     domainKey: CHATKIT_DOMAIN_KEY,
   }
-}
-
-function resolveBuildVersion() {
-  if (typeof __BUILD_TIME__ !== 'string' || !__BUILD_TIME__) {
-    return 'dev'
-  }
-  const d = new Date(__BUILD_TIME__)
-  if (Number.isNaN(d.getTime())) {
-    return 'dev'
-  }
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
 }
 
 function readStoredThreadId(storageKey: string) {
@@ -147,7 +147,7 @@ function hideSourceSections(root: HTMLElement) {
   }
 }
 
-function useSourceSectionHider(containerRef: React.RefObject<HTMLDivElement | null>) {
+function useSourceSectionHider(containerRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -172,6 +172,27 @@ function useSourceSectionHider(containerRef: React.RefObject<HTMLDivElement | nu
   }, [containerRef])
 }
 
+function useScrollBleedBlocker<T extends HTMLElement>(containerRef: RefObject<T | null>, active: boolean) {
+  useEffect(() => {
+    if (!active) return
+    const container = containerRef.current
+    if (!container) return
+
+    const blockScroll = (event: Event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    container.addEventListener('wheel', blockScroll, { passive: false })
+    container.addEventListener('touchmove', blockScroll, { passive: false })
+
+    return () => {
+      container.removeEventListener('wheel', blockScroll)
+      container.removeEventListener('touchmove', blockScroll)
+    }
+  }, [active, containerRef])
+}
+
 export default function ChatPanel({
   open,
   defaultOpen = false,
@@ -187,13 +208,15 @@ export default function ChatPanel({
   hostUrl,
   fabAriaLabel = 'Open FF Assist',
   showFab = true,
-  buildVersion = resolveBuildVersion(),
+  buildVersion = getChatSdkVersionInfo().buildVersion,
   storageKey = CHATKIT_THREAD_STORAGE_KEY,
   zIndex,
   rootClassName,
   loadChatKitRuntime,
 }: ChatPanelProps) {
   const chatkitBodyRef = useRef<HTMLDivElement>(null)
+  const versionClickCountRef = useRef(0)
+  const versionClickResetTimerRef = useRef<number | null>(null)
   useSourceSectionHider(chatkitBodyRef)
 
   const resolvedApiConfig = useMemo(() => {
@@ -223,6 +246,7 @@ export default function ChatPanel({
   ))
   const [inputValue, setInputValue] = useState('')
   const [newChatConfirmOpen, setNewChatConfirmOpen] = useState(false)
+  const [versionDialogOpen, setVersionDialogOpen] = useState(false)
   const isRespondingRef = useRef(false)
   const isMountedRef = useRef(true)
   const chatKitRuntimePromiseRef = useRef<Promise<void> | null>(null)
@@ -233,10 +257,22 @@ export default function ChatPanel({
 
   const [remoteConfig, setRemoteConfig] = useState<HomepagePromptsConfig | null>(null)
   const [promptsLoading, setPromptsLoading] = useState(false)
+  useScrollBleedBlocker(
+    chatkitBodyRef,
+    isChatOpen && (chatKitRuntimeStatus !== 'ready' || overlayMode === 'buttons'),
+  )
 
   useEffect(() => {
     return () => {
       isMountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (versionClickResetTimerRef.current !== null) {
+        window.clearTimeout(versionClickResetTimerRef.current)
+      }
     }
   }, [])
 
@@ -304,6 +340,10 @@ export default function ChatPanel({
   const placeholder = remoteConfig?.placeholder || placeholderProp
   const prompts = remoteConfig?.prompts?.length ? remoteConfig.prompts : promptsProp
   const infoText = remoteConfig?.info_text || ''
+  const versionInfo = useMemo(() => ({
+    ...getChatSdkVersionInfo(),
+    buildVersion,
+  }), [buildVersion])
 
   const openChat = useCallback(() => {
     setIsChatOpen(true)
@@ -423,6 +463,35 @@ export default function ChatPanel({
     setNewChatConfirmOpen(false)
   }, [])
 
+  const resetVersionClickCounter = useCallback(() => {
+    versionClickCountRef.current = 0
+    if (versionClickResetTimerRef.current !== null) {
+      window.clearTimeout(versionClickResetTimerRef.current)
+      versionClickResetTimerRef.current = null
+    }
+  }, [])
+
+  const handleHeaderTitleClick = useCallback(() => {
+    versionClickCountRef.current += 1
+    if (versionClickCountRef.current >= VERSION_CLICK_THRESHOLD) {
+      resetVersionClickCounter()
+      setVersionDialogOpen(true)
+      return
+    }
+
+    if (versionClickResetTimerRef.current !== null) {
+      window.clearTimeout(versionClickResetTimerRef.current)
+    }
+    versionClickResetTimerRef.current = window.setTimeout(() => {
+      versionClickCountRef.current = 0
+      versionClickResetTimerRef.current = null
+    }, VERSION_CLICK_WINDOW_MS)
+  }, [resetVersionClickCounter])
+
+  const closeVersionDialog = useCallback(() => {
+    setVersionDialogOpen(false)
+  }, [])
+
   const handlePromptClick = useCallback((prompt: string) => {
     setOverlayMode(null)
     sendUserMessage({ text: prompt })
@@ -438,7 +507,13 @@ export default function ChatPanel({
   }, [inputValue, sendUserMessage])
 
   return (
-    <div className={clsx('ffrobot-chat-root', rootClassName)} style={rootStyle}>
+    <div
+      className={clsx('ffrobot-chat-root', rootClassName)}
+      style={rootStyle}
+      data-sdk-version={versionInfo.sdkVersion}
+      data-build-version={versionInfo.buildVersion}
+      data-build-time={versionInfo.buildTime || undefined}
+    >
       {showFab && !isChatOpen && (
         <button
           type="button"
@@ -489,7 +564,12 @@ export default function ChatPanel({
                 <path d="M12 8v6M9 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
-            <span className="chat-panel-header-title">{CHAT_PANEL_HEADER_TITLE}</span>
+            <span
+              className="chat-panel-header-title"
+              onClick={handleHeaderTitleClick}
+            >
+              {CHAT_PANEL_HEADER_TITLE}
+            </span>
             <button
               type="button"
               className="chat-panel-header-btn"
@@ -618,6 +698,47 @@ export default function ChatPanel({
                     OK
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+          {versionDialogOpen && (
+            <div
+              className="chat-panel-version-backdrop"
+              role="presentation"
+              onClick={closeVersionDialog}
+            >
+              <div
+                className="chat-panel-version-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="chat-panel-version-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 id="chat-panel-version-title" className="chat-panel-version-title">
+                  FF Assist
+                </h3>
+                <dl className="chat-panel-version-list">
+                  <div className="chat-panel-version-row">
+                    <dt>SDK version</dt>
+                    <dd>{versionInfo.sdkVersion}</dd>
+                  </div>
+                  <div className="chat-panel-version-row">
+                    <dt>Build version</dt>
+                    <dd>{versionInfo.buildVersion}</dd>
+                  </div>
+                  <div className="chat-panel-version-row">
+                    <dt>Build time</dt>
+                    <dd>{versionInfo.buildTime || 'Unavailable'}</dd>
+                  </div>
+                </dl>
+                <button
+                  type="button"
+                  className="chat-panel-version-close"
+                  onClick={closeVersionDialog}
+                  autoFocus
+                >
+                  OK
+                </button>
               </div>
             </div>
           )}

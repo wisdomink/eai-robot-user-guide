@@ -23,6 +23,12 @@ interface FFRobotChatEntityNavigatePayload {
   }
 }
 
+interface FFRobotChatVersionInfo {
+  sdkVersion: string
+  buildVersion: string
+  buildTime: string | null
+}
+
 interface FFRobotChatInitOptions {
   apiUrl?: string
   apiBaseUrl?: string
@@ -61,6 +67,7 @@ interface FFRobotChatPublicApi {
   destroy: () => void
   update: (options: Partial<FFRobotChatInitOptions>) => void
   getInstance: () => FFRobotChatInstance | null
+  getVersion: () => FFRobotChatVersionInfo
 }
 
 interface Window {
