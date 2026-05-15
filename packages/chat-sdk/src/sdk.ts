@@ -113,17 +113,18 @@ async function init(options: ChatSdkInitOptions = {}) {
   if (options.loadFonts !== false) {
     ensureFonts()
   }
-  await Promise.all([
-    ensureChatKitScript(),
-    options.loadFonts === false ? Promise.resolve() : waitForRobotoTextFonts(),
-  ])
+  if (options.loadFonts !== false) {
+    await waitForRobotoTextFonts()
+  }
 
   if (activeInstance) {
     activeInstance.update(options)
     return activeInstance
   }
 
-  activeInstance = createChatSdkController(options)
+  activeInstance = createChatSdkController(options, {
+    loadChatKitRuntime: ensureChatKitScript,
+  })
   return activeInstance
 }
 

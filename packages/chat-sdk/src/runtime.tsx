@@ -8,6 +8,10 @@ import type { ChatSdkInitOptions, ChatSdkInstance } from './types'
 const DEFAULT_CONTAINER_ID = 'ffrobot-chat-sdk-root'
 const DEFAULT_DOMAIN_KEY = import.meta.env.VITE_CHATKIT_DOMAIN_KEY || 'local-dev'
 
+interface ChatSdkRuntimeOptions {
+  loadChatKitRuntime?: () => Promise<void>
+}
+
 /** When ChatSdkController is used without sdk.init(), still inject the same font link once. */
 function ensureFontsLoaded() {
   if (document.getElementById(GOOGLE_FONTS_ID)) return
@@ -101,10 +105,12 @@ class ChatSdkController implements ChatSdkInstance {
   private config: ChatSdkInitOptions
   private readonly root: Root
   private readonly container: HTMLElement
+  private readonly runtimeOptions: ChatSdkRuntimeOptions
   private openState: boolean
 
-  constructor(options: ChatSdkInitOptions = {}) {
+  constructor(options: ChatSdkInitOptions = {}, runtimeOptions: ChatSdkRuntimeOptions = {}) {
     this.config = { ...options }
+    this.runtimeOptions = runtimeOptions
     this.openState = Boolean(options.defaultOpen)
 
     ensureFontsLoaded()
@@ -173,12 +179,16 @@ class ChatSdkController implements ChatSdkInstance {
           buildVersion={this.config.buildVersion}
           storageKey={this.config.storageKey}
           zIndex={this.config.zIndex}
+          loadChatKitRuntime={this.runtimeOptions.loadChatKitRuntime}
         />
       </StrictMode>,
     )
   }
 }
 
-export function createChatSdkController(options: ChatSdkInitOptions = {}) {
-  return new ChatSdkController(options)
+export function createChatSdkController(
+  options: ChatSdkInitOptions = {},
+  runtimeOptions: ChatSdkRuntimeOptions = {},
+) {
+  return new ChatSdkController(options, runtimeOptions)
 }

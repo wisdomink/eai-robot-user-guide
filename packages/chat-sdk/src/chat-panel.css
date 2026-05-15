@@ -9,16 +9,31 @@
   --font-roboto: 'Roboto', sans-serif;
   --font-noto-sans: 'Noto Sans', 'Noto Sans SC', sans-serif;
   --header-height: 56px;
+  --ffrobot-chat-viewport-height: 100vh;
+  --ffrobot-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
   color: var(--text);
   font-family: var(--font-roboto);
+}
+
+@supports (height: 100dvh) {
+  .ffrobot-chat-root {
+    --ffrobot-chat-viewport-height: 100dvh;
+  }
 }
 
 .ffrobot-chat-root .chat-panel {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: calc(24px + var(--ffrobot-safe-area-bottom));
   width: 380px;
   height: min(80vh, 900px);
+  max-height: calc(var(--ffrobot-chat-viewport-height) - 48px - var(--ffrobot-safe-area-bottom));
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -27,16 +42,19 @@
   box-shadow: 0 18px 48px rgba(23, 26, 32, 0.18);
   z-index: var(--ffrobot-chat-panel-z-index, 160);
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(48px);
   transform-origin: bottom right;
-  transition: opacity 0.42s ease, transform 0.42s cubic-bezier(.22, 1, .36, 1);
+  transition: opacity 0.42s ease, transform 0.42s cubic-bezier(.22, 1, .36, 1), visibility 0s linear 0.42s;
 }
 
 .ffrobot-chat-root .chat-panel.open {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
+  transition: opacity 0.42s ease, transform 0.42s cubic-bezier(.22, 1, .36, 1), visibility 0s linear 0s;
 }
 
 .ffrobot-chat-root .chat-panel-header {
@@ -112,6 +130,58 @@
   overflow: hidden;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
+}
+
+.ffrobot-chat-root .chatkit-body > openai-chatkit {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ffrobot-chat-root .chat-panel-runtime-state {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.ffrobot-chat-root .chat-panel-runtime-title {
+  margin: 0;
+  font-family: var(--font-roboto);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #4a4f57;
+}
+
+.ffrobot-chat-root .chat-panel-runtime-action {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font-roboto);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ffrobot-chat-root .chat-panel-runtime-debug {
+  max-width: 280px;
+  margin: 0;
+  font-family: var(--font-roboto);
+  font-size: 12px;
+  line-height: 1.4;
+  color: #8a8f98;
+  word-break: break-word;
 }
 
 .ffrobot-chat-root .chat-panel-confirm-backdrop {
@@ -203,7 +273,7 @@
   box-sizing: border-box;
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: calc(24px + var(--ffrobot-safe-area-bottom));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -219,6 +289,9 @@
   cursor: pointer;
   z-index: var(--ffrobot-chat-fab-z-index, 170);
   isolation: isolate;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
 }
 
@@ -282,12 +355,14 @@
   .ffrobot-chat-root .chat-panel,
   .ffrobot-chat-root .chat-fab {
     right: 16px;
-    bottom: 16px;
+    bottom: calc(16px + var(--ffrobot-safe-area-bottom));
   }
 
   .ffrobot-chat-root .chat-panel {
     width: min(380px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
     height: min(80vh, calc(100vh - var(--header-height) - 32px));
+    max-height: calc(var(--ffrobot-chat-viewport-height) - var(--header-height) - 32px - var(--ffrobot-safe-area-bottom));
   }
 }
 
@@ -461,4 +536,3 @@
   color: #999;
   padding: 12px 0;
 }
-

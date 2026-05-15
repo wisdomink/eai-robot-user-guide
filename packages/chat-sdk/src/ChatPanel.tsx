@@ -18,7 +18,7 @@ function resolveChatKitApiUrl() {
   return new URL(raw, window.location.origin).toString()
 }
 
-function buildApiConfig() {
+function buildApiConfig(): ChatPanelApiConfig {
   return {
     url: resolveChatKitApiUrl(),
     domainKey: CHATKIT_DOMAIN_KEY,
@@ -107,6 +107,7 @@ export interface ChatPanelProps {
   storageKey?: string
   zIndex?: number
   rootClassName?: string
+  loadChatKitRuntime?: () => Promise<void>
 }
 
 function useControllableOpen(
@@ -190,6 +191,7 @@ export default function ChatPanel({
   storageKey = CHATKIT_THREAD_STORAGE_KEY,
   zIndex,
   rootClassName,
+  loadChatKitRuntime,
 }: ChatPanelProps) {
   const chatkitBodyRef = useRef<HTMLDivElement>(null)
   useSourceSectionHider(chatkitBodyRef)
@@ -222,9 +224,51 @@ export default function ChatPanel({
   const [inputValue, setInputValue] = useState('')
   const [newChatConfirmOpen, setNewChatConfirmOpen] = useState(false)
   const isRespondingRef = useRef(false)
+  const isMountedRef = useRef(true)
+  const chatKitRuntimePromiseRef = useRef<Promise<void> | null>(null)
+  const [chatKitRuntimeStatus, setChatKitRuntimeStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    () => (loadChatKitRuntime ? 'idle' : 'ready'),
+  )
+  const [chatKitRuntimeError, setChatKitRuntimeError] = useState<unknown>(null)
 
   const [remoteConfig, setRemoteConfig] = useState<HomepagePromptsConfig | null>(null)
   const [promptsLoading, setPromptsLoading] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    chatKitRuntimePromiseRef.current = null
+    setChatKitRuntimeError(null)
+    setChatKitRuntimeStatus(loadChatKitRuntime ? 'idle' : 'ready')
+  }, [loadChatKitRuntime])
+
+  useEffect(() => {
+    if (!isChatOpen || !loadChatKitRuntime || chatKitRuntimeStatus !== 'idle') {
+      return
+    }
+
+    setChatKitRuntimeStatus('loading')
+    setChatKitRuntimeError(null)
+
+    const promise = chatKitRuntimePromiseRef.current ?? loadChatKitRuntime()
+    chatKitRuntimePromiseRef.current = promise
+
+    promise
+      .then(() => {
+        if (!isMountedRef.current) return
+        setChatKitRuntimeStatus('ready')
+      })
+      .catch((error) => {
+        chatKitRuntimePromiseRef.current = null
+        if (!isMountedRef.current) return
+        setChatKitRuntimeError(error)
+        setChatKitRuntimeStatus('error')
+      })
+  }, [chatKitRuntimeStatus, isChatOpen, loadChatKitRuntime])
 
   useEffect(() => {
     if (promptsApiUrl === null) {
@@ -268,6 +312,12 @@ export default function ChatPanel({
   const closeChat = useCallback(() => {
     setIsChatOpen(false)
   }, [setIsChatOpen])
+
+  const retryChatKitRuntime = useCallback(() => {
+    chatKitRuntimePromiseRef.current = null
+    setChatKitRuntimeError(null)
+    setChatKitRuntimeStatus('idle')
+  }, [])
 
   const { sendUserMessage, setThreadId, control } = useChatKit({
     locale: 'en',
@@ -389,14 +439,14 @@ export default function ChatPanel({
 
   return (
     <div className={clsx('ffrobot-chat-root', rootClassName)} style={rootStyle}>
-      {showFab && (
+      {showFab && !isChatOpen && (
         <button
           type="button"
-          className={clsx('chat-fab', isChatOpen && 'hidden')}
+          className="chat-fab"
           onClick={openChat}
           aria-label={fabAriaLabel}
           aria-controls={panelId}
-          aria-expanded={isChatOpen}
+          aria-expanded={false}
         >
           <span className="chat-fab-backdrop" aria-hidden="true" />
           <span className="chat-fab-content">
@@ -416,139 +466,163 @@ export default function ChatPanel({
         </button>
       )}
 
-      <div
-        className={clsx('chat-panel', isChatOpen && 'open', className)}
-        id={panelId}
-        aria-hidden={!isChatOpen}
-      >
-        <div className="chat-panel-header">
-          <button
-            type="button"
-            className="chat-panel-header-btn"
-            onClick={handleNewChat}
-            aria-label="New chat"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v4l4-4h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <path d="M12 8v6M9 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </button>
-          <span className="chat-panel-header-title">{CHAT_PANEL_HEADER_TITLE}</span>
-          <button
-            type="button"
-            className="chat-panel-header-btn"
-            onClick={closeChat}
-            aria-label="Minimize"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M5 12h14"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="chatkit-body" ref={chatkitBodyRef}>
-          <ChatKit control={control} />
-          {overlayMode && (
-            <div className="ck-greeting-overlay">
-              {overlayMode === 'buttons' && (
-                <>
-                  <div className="ck-greeting-center">
-                    <p className="ck-greeting-text">{greeting}</p>
-                    {infoText && (
-                      <p className="ck-greeting-info-text">{infoText}</p>
+      {isChatOpen && (
+        <div
+          className={clsx('chat-panel', 'open', className)}
+          id={panelId}
+          aria-hidden={false}
+        >
+          <div className="chat-panel-header">
+            <button
+              type="button"
+              className="chat-panel-header-btn"
+              onClick={handleNewChat}
+              aria-label="New chat"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v4l4-4h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+                <path d="M12 8v6M9 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+            <span className="chat-panel-header-title">{CHAT_PANEL_HEADER_TITLE}</span>
+            <button
+              type="button"
+              className="chat-panel-header-btn"
+              onClick={closeChat}
+              aria-label="Minimize"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="chatkit-body" ref={chatkitBodyRef}>
+            {chatKitRuntimeStatus === 'ready' ? (
+              <ChatKit control={control} />
+            ) : (
+              <div className="chat-panel-runtime-state" role="status" aria-live="polite">
+                {chatKitRuntimeStatus === 'error' ? (
+                  <>
+                    <p className="chat-panel-runtime-title">FF Assist could not load.</p>
+                    <button
+                      type="button"
+                      className="chat-panel-runtime-action"
+                      onClick={retryChatKitRuntime}
+                    >
+                      Retry
+                    </button>
+                    {isDev && chatKitRuntimeError instanceof Error && (
+                      <p className="chat-panel-runtime-debug">{chatKitRuntimeError.message}</p>
                     )}
-                  </div>
-                  <div className="ck-greeting-bottom">
-                    <div className="ck-greeting-prompts">
-                      {promptsLoading ? (
-                        <span className="ck-greeting-loading">Loading…</span>
-                      ) : (
-                        prompts.map((p) => (
-                          <button
-                            key={p.label}
-                            className="ck-greeting-prompt-btn"
-                            onClick={() => handlePromptClick(p.prompt)}
-                          >
-                            {p.label}
-                          </button>
-                        ))
+                  </>
+                ) : (
+                  <p className="chat-panel-runtime-title">Loading FF Assist...</p>
+                )}
+              </div>
+            )}
+            {chatKitRuntimeStatus === 'ready' && overlayMode && (
+              <div className="ck-greeting-overlay">
+                {overlayMode === 'buttons' && (
+                  <>
+                    <div className="ck-greeting-center">
+                      <p className="ck-greeting-text">{greeting}</p>
+                      {infoText && (
+                        <p className="ck-greeting-info-text">{infoText}</p>
                       )}
                     </div>
-                    <p className="ck-greeting-disclaimer">{HOMEPAGE_DISCLAIMER}</p>
-                    <form className="ck-greeting-input-bar" onSubmit={handleInputSend}>
-                      <input
-                        type="text"
-                        className="ck-greeting-input"
-                        placeholder={placeholder}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                      />
-                      <button
-                        type="submit"
-                        className="ck-greeting-send-btn"
-                        disabled={!inputValue.trim()}
-                        aria-label="Send"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 3a1 1 0 0 1 .707.293l6 6a1 1 0 0 1-1.414 1.414L13 6.414V20a1 1 0 1 1-2 0V6.414l-4.293 4.293a1 1 0 0 1-1.414-1.414l6-6A1 1 0 0 1 12 3z" />
-                        </svg>
-                      </button>
-                    </form>
-                  </div>
-                </>
-              )}
+                    <div className="ck-greeting-bottom">
+                      <div className="ck-greeting-prompts">
+                        {promptsLoading ? (
+                          <span className="ck-greeting-loading">Loading…</span>
+                        ) : (
+                          prompts.map((p) => (
+                            <button
+                              key={p.label}
+                              className="ck-greeting-prompt-btn"
+                              onClick={() => handlePromptClick(p.prompt)}
+                            >
+                              {p.label}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <p className="ck-greeting-disclaimer">{HOMEPAGE_DISCLAIMER}</p>
+                      <form className="ck-greeting-input-bar" onSubmit={handleInputSend}>
+                        <input
+                          type="text"
+                          className="ck-greeting-input"
+                          placeholder={placeholder}
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                        />
+                        <button
+                          type="submit"
+                          className="ck-greeting-send-btn"
+                          disabled={!inputValue.trim()}
+                          aria-label="Send"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3a1 1 0 0 1 .707.293l6 6a1 1 0 0 1-1.414 1.414L13 6.414V20a1 1 0 1 1-2 0V6.414l-4.293 4.293a1 1 0 0 1-1.414-1.414l6-6A1 1 0 0 1 12 3z" />
+                          </svg>
+                        </button>
+                      </form>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          {newChatConfirmOpen && (
+            <div
+              className="chat-panel-confirm-backdrop"
+              role="presentation"
+              onClick={handleCancelNewChat}
+            >
+              <div
+                className="chat-panel-confirm-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="chat-panel-confirm-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 id="chat-panel-confirm-title" className="chat-panel-confirm-title">
+                  Start a new chat?
+                </h3>
+                <p className="chat-panel-confirm-body">
+                  This will clear out your current chat history and start a fresh conversation.
+                </p>
+                <div className="chat-panel-confirm-actions">
+                  <button
+                    type="button"
+                    className="chat-panel-confirm-btn chat-panel-confirm-btn-secondary"
+                    onClick={handleCancelNewChat}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="chat-panel-confirm-btn chat-panel-confirm-btn-primary"
+                    onClick={handleConfirmNewChat}
+                    autoFocus
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
-        {newChatConfirmOpen && (
-          <div
-            className="chat-panel-confirm-backdrop"
-            role="presentation"
-            onClick={handleCancelNewChat}
-          >
-            <div
-              className="chat-panel-confirm-dialog"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="chat-panel-confirm-title"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 id="chat-panel-confirm-title" className="chat-panel-confirm-title">
-                Start a new chat?
-              </h3>
-              <p className="chat-panel-confirm-body">
-                This will clear out your current chat history and start a fresh conversation.
-              </p>
-              <div className="chat-panel-confirm-actions">
-                <button
-                  type="button"
-                  className="chat-panel-confirm-btn chat-panel-confirm-btn-secondary"
-                  onClick={handleCancelNewChat}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="chat-panel-confirm-btn chat-panel-confirm-btn-primary"
-                  onClick={handleConfirmNewChat}
-                  autoFocus
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
