@@ -19,6 +19,7 @@
   pointer-events: none;
   color: var(--text);
   font-family: var(--font-roboto);
+  z-index: var(--ffrobot-chat-panel-z-index, 160);
 }
 
 @supports (height: 100dvh) {
