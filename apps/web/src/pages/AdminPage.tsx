@@ -16,9 +16,12 @@ import { fetchLeads, submitLead, type LeadPayload, type LeadRecord } from '@/api
 import {
   deleteHomepagePage,
   fetchAllHomepagePages,
+  saveHomepageGlobalPrompts,
   type HomepagePrompt,
+  type HomepagePromptPayload,
   type HomepagePage,
   type HomepagePagePayload,
+  type HomepagePromptType,
   saveHomepagePage,
 } from '@/api/homepagePrompts'
 
@@ -623,10 +626,11 @@ function LeadsTab() {
 
 /* ───── Homepage Prompts Tab ───── */
 
-function createDraftPrompt(index: number): HomepagePrompt {
+function createDraftPrompt(index: number, type: HomepagePromptType = 'message'): HomepagePrompt {
   return {
     id: `draft_prompt_${Date.now()}_${index}`,
     enabled: true,
+    type,
     label: '',
     prompt: '',
     sort_order: index,
@@ -647,9 +651,11 @@ function createDraftPage(): HomepagePage {
 
 function HomepagePromptsTab() {
   const [pages, setPages] = useState<HomepagePage[]>([])
+  const [globalPrompts, setGlobalPrompts] = useState<HomepagePrompt[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingGlobal, setSavingGlobal] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -659,8 +665,9 @@ function HomepagePromptsTab() {
     setError(null)
     try {
       const data = await fetchAllHomepagePages()
-      setPages(data)
-      setActiveId(current => current && data.some(page => page.id === current) ? current : data[0]?.id ?? null)
+      setPages(data.pages)
+      setGlobalPrompts(data.global_prompts)
+      setActiveId(current => current && data.pages.some(page => page.id === current) ? current : data.pages[0]?.id ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载首页推荐数据失败')
     } finally {
@@ -751,10 +758,67 @@ function HomepagePromptsTab() {
       prompts: page.prompts.map((prompt, index) => ({
         ...(prompt.id.startsWith('draft_prompt_') ? {} : { id: prompt.id }),
         enabled: prompt.enabled,
+        type: prompt.type ?? 'message',
         label: prompt.label,
         prompt: prompt.prompt,
         sort_order: index,
       })),
+    }
+  }
+
+  const handleGlobalPromptChange = <K extends keyof HomepagePrompt>(
+    index: number,
+    key: K,
+    value: HomepagePrompt[K],
+  ) => {
+    setGlobalPrompts(prev => prev.map((p, i) => i === index ? { ...p, [key]: value } : p))
+  }
+
+  const handleAddGlobalPrompt = () => {
+    setGlobalPrompts(prev => [...prev, createDraftPrompt(prev.length)])
+  }
+
+  const handleDeleteGlobalPrompt = (index: number) => {
+    setGlobalPrompts(prev => prev.filter((_, i) => i !== index).map((p, i) => ({ ...p, sort_order: i })))
+  }
+
+  const moveGlobalPrompt = (index: number, direction: -1 | 1) => {
+    setGlobalPrompts(prev => {
+      const nextIndex = index + direction
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev
+      const arr = [...prev]
+      const [target] = arr.splice(index, 1)
+      arr.splice(nextIndex, 0, target)
+      return arr.map((p, i) => ({ ...p, sort_order: i }))
+    })
+  }
+
+  const handleSaveGlobalPrompts = async (e: FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+    const invalidPrompt = globalPrompts.find(p => !p.label.trim() || (p.type !== 'lead_capture' && !p.prompt.trim()))
+    if (invalidPrompt) {
+      setError('通用按钮的文本和 Prompt 内容（非留资类型）不能为空。')
+      return
+    }
+    setSavingGlobal(true)
+    try {
+      const payload: HomepagePromptPayload[] = globalPrompts.map((p, i) => ({
+        ...(p.id.startsWith('draft_prompt_') ? {} : { id: p.id }),
+        enabled: p.enabled,
+        type: p.type ?? 'message',
+        label: p.label,
+        prompt: p.prompt,
+        sort_order: i,
+      }))
+      const saved = await saveHomepageGlobalPrompts(payload)
+      setGlobalPrompts(saved)
+      setSuccess('通用按钮已保存。')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存通用按钮失败')
+    } finally {
+      setSavingGlobal(false)
     }
   }
 
@@ -781,9 +845,11 @@ function HomepagePromptsTab() {
       return
     }
 
-    const invalidPrompt = activePage.prompts.find(prompt => isBlank(prompt.label) || isBlank(prompt.prompt))
+    const invalidPrompt = activePage.prompts.find(prompt =>
+      isBlank(prompt.label) || (prompt.type !== 'lead_capture' && isBlank(prompt.prompt))
+    )
     if (invalidPrompt) {
-      setError('推荐列表中的按钮文本和 Prompt 内容都不能为空。')
+      setError('推荐列表中的按钮文本不能为空，且非留资类型的 Prompt 内容不能为空。')
       return
     }
 
@@ -836,6 +902,97 @@ function HomepagePromptsTab() {
 
   return (
     <>
+      {/* ── 通用按钮区（全站优先） ── */}
+      <section className="reco-card">
+        <form onSubmit={handleSaveGlobalPrompts}>
+          <div className="recommendation-page-head">
+            <div>
+              <h1>通用按钮（全站优先）</h1>
+              <p>所有页面首页都会优先显示这里配置的按钮，位于各页面推荐按钮之前。可配置 0 条。</p>
+            </div>
+            <div className="recommendation-page-links">
+              <button type="button" className="admin-link-btn" onClick={handleAddGlobalPrompt}>
+                + 新增通用按钮
+              </button>
+            </div>
+          </div>
+
+          <div className="homepage-inline-prompt-list">
+            {globalPrompts.map((prompt, index) => (
+              <div key={prompt.id} className="homepage-inline-prompt-card">
+                <div className="homepage-inline-prompt-head">
+                  <strong>通用按钮 {index + 1}</strong>
+                  <div className="homepage-inline-prompt-actions">
+                    <button type="button" onClick={() => moveGlobalPrompt(index, -1)} disabled={index === 0}>上移</button>
+                    <button type="button" onClick={() => moveGlobalPrompt(index, 1)} disabled={index === globalPrompts.length - 1}>下移</button>
+                    <button type="button" className="recommendation-danger-btn" onClick={() => handleDeleteGlobalPrompt(index)}>删除</button>
+                  </div>
+                </div>
+
+                <div className="recommendation-form">
+                  <label>
+                    按钮文本
+                    <input
+                      type="text"
+                      value={prompt.label}
+                      onChange={(e) => handleGlobalPromptChange(index, 'label', e.target.value)}
+                      placeholder="例如：联系我们"
+                    />
+                  </label>
+
+                  <label>
+                    按钮类型
+                    <select
+                      value={prompt.type ?? 'message'}
+                      onChange={(e) => handleGlobalPromptChange(index, 'type', e.target.value as HomepagePromptType)}
+                    >
+                      <option value="message">普通问答（message）</option>
+                      <option value="lead_capture">直接留资（lead_capture）</option>
+                    </select>
+                  </label>
+
+                  <label className="recommendation-toggle">
+                    <span>启用状态</span>
+                    <input
+                      type="checkbox"
+                      checked={prompt.enabled}
+                      onChange={(e) => handleGlobalPromptChange(index, 'enabled', e.target.checked)}
+                    />
+                  </label>
+
+                  {(prompt.type ?? 'message') !== 'lead_capture' && (
+                    <label className="recommendation-form-full">
+                      Prompt 内容
+                      <textarea
+                        value={prompt.prompt}
+                        onChange={(e) => handleGlobalPromptChange(index, 'prompt', e.target.value)}
+                        placeholder="用户点击后发送给 ChatKit 的完整提示词"
+                        rows={3}
+                      />
+                    </label>
+                  )}
+                  {(prompt.type ?? 'message') === 'lead_capture' && (
+                    <p className="homepage-inline-empty" style={{ gridColumn: '1/-1', margin: 0 }}>
+                      留资类型：点击后将直接在对话中展示留资表单，无需填写 Prompt。
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {globalPrompts.length === 0 && (
+              <div className="homepage-inline-empty">暂无通用按钮，点击"新增通用按钮"即可添加。</div>
+            )}
+          </div>
+
+          <div className="recommendation-form-actions">
+            <button type="submit" disabled={savingGlobal}>
+              {savingGlobal ? '保存中…' : '保存通用按钮'}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* ── 页面路径标签（按 URL 匹配） ── */}
       <section className="reco-card">
         <div className="recommendation-page-head">
           <div>
@@ -1005,12 +1162,14 @@ function HomepagePromptsTab() {
                       </label>
 
                       <label>
-                        排序权重
-                        <input
-                          type="number"
-                          value={prompt.sort_order}
-                          onChange={(e) => handlePromptChange(index, 'sort_order', Number(e.target.value))}
-                        />
+                        按钮类型
+                        <select
+                          value={prompt.type ?? 'message'}
+                          onChange={(e) => handlePromptChange(index, 'type', e.target.value as HomepagePromptType)}
+                        >
+                          <option value="message">普通问答（message）</option>
+                          <option value="lead_capture">直接留资（lead_capture）</option>
+                        </select>
                       </label>
 
                       <label className="recommendation-toggle">
@@ -1022,15 +1181,21 @@ function HomepagePromptsTab() {
                         />
                       </label>
 
-                      <label className="recommendation-form-full">
-                        Prompt 内容
-                        <textarea
-                          value={prompt.prompt}
-                          onChange={(e) => handlePromptChange(index, 'prompt', e.target.value)}
-                          placeholder="请输入用户点击后发送给 ChatKit 的完整提示词"
-                          rows={4}
-                        />
-                      </label>
+                      {(prompt.type ?? 'message') !== 'lead_capture' ? (
+                        <label className="recommendation-form-full">
+                          Prompt 内容
+                          <textarea
+                            value={prompt.prompt}
+                            onChange={(e) => handlePromptChange(index, 'prompt', e.target.value)}
+                            placeholder="请输入用户点击后发送给 ChatKit 的完整提示词"
+                            rows={4}
+                          />
+                        </label>
+                      ) : (
+                        <p className="homepage-inline-empty" style={{ gridColumn: '1/-1', margin: 0 }}>
+                          留资类型：点击后将直接在对话中展示留资表单。
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -545,6 +545,17 @@
   background: var(--accent-bg);
 }
 
+.ffrobot-chat-root .ck-greeting-prompt-btn--lead {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 500;
+}
+
+.ffrobot-chat-root .ck-greeting-prompt-btn--lead:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
 .ffrobot-chat-root .ck-greeting-info-text {
   font-family: var(--font-roboto);
   font-size: 12px;

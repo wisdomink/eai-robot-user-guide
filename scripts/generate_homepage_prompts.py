@@ -65,9 +65,11 @@ def main() -> int:
         print(f"ERROR: File not found: {EN_MD}", file=sys.stderr)
         return 1
 
+    old_data: dict = {}
     old_pages: list[dict] = []
     if OUT_JSON.exists():
-        old_pages = json.loads(OUT_JSON.read_text(encoding="utf-8")).get("pages", [])
+        old_data = json.loads(OUT_JSON.read_text(encoding="utf-8"))
+        old_pages = old_data.get("pages", [])
         print(f"Existing: {OUT_JSON} ({len(old_pages)} pages)")
     else:
         print(f"Existing: (none, will create {OUT_JSON})")
@@ -116,6 +118,7 @@ def main() -> int:
             prompts.append({
                 "id": pid,
                 "enabled": True,
+                "type": "message",
                 "label": q,
                 "prompt": q,
                 "sort_order": j,
@@ -132,7 +135,11 @@ def main() -> int:
         })
 
     storage = H(OUT_JSON, backend="file")
-    data = {"pages": new_pages}
+    # Preserve existing global_prompts; inject default only if absent
+    existing_global = old_data.get("global_prompts")
+    data: dict = {"pages": new_pages}
+    if existing_global is not None:
+        data["global_prompts"] = existing_global
     normalized, _changed = storage._normalize_data_container(data)
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     with open(OUT_JSON, "w", encoding="utf-8") as f:
@@ -141,6 +148,7 @@ def main() -> int:
 
     print(f"Written:  {OUT_JSON}")
     print(f"Result:   {len(normalized['pages'])} pages  (preserved {preserved_count}, new {new_count})")
+    print(f"          global_prompts: {len(normalized.get('global_prompts', []))} items")
     return 0
 
 

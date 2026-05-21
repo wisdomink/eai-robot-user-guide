@@ -91,6 +91,10 @@ from app.services.fast_answer_service import FastAnswerMatch, FastAnswerService,
 logger = logging.getLogger(__name__)
 front_logger = logging.getLogger(FRONT_LOGGER_NAME)
 
+# Magic trigger sent by the SDK when a lead_capture homepage button is clicked.
+# The server shortcuits the normal GPT flow and streams the lead form widget directly.
+LEAD_CAPTURE_TRIGGER = "\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b"
+
 # ── Paths ────────────────────────────────────────────────────────────────
 
 INSTRUCTIONS_DIR = Path(__file__).parent / "instructions"
@@ -1437,6 +1441,18 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         page_url = str(context.get("page_url") or "")
+
+        # ── Lead-capture shortcut: skip GPT, stream the lead form widget directly ──
+        if user_text == LEAD_CAPTURE_TRIGGER:
+            input_lang = self.store.thread_langs.get(thread.id, "en")
+            front_logger.info("[thread=%s] lead_capture trigger → streaming lead widget", thread.id)
+            reco = self.reco_engine._make_lead_capture(input_lang)
+            self.reco_engine.record_shown(thread.id, "lead_capture")
+            card = self._build_lead_card(reco.title, reco.description, input_lang)
+            async for ev in stream_widget(thread, card):
+                yield ev
+            return
+
         fast_match = self.fast_answers.lookup(user_text, page_url=page_url)
         if fast_match:
             input_lang = detect_input_lang(user_text)

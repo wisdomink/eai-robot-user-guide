@@ -1,6 +1,9 @@
+export type HomepagePromptType = 'message' | 'lead_capture'
+
 export interface HomepagePrompt {
   id: string
   enabled: boolean
+  type: HomepagePromptType
   label: string
   prompt: string
   sort_order: number
@@ -29,6 +32,7 @@ export interface HomepagePromptsConfig {
   greeting: string
   placeholder: string
   info_text: string
+  global_prompts: HomepagePrompt[]
   prompts: HomepagePrompt[]
 }
 
@@ -53,6 +57,8 @@ const SAVE_HOMEPAGE_PROMPT_URL =
   import.meta.env.VITE_SAVE_HOMEPAGE_PAGE_URL || '/api/save-homepage-page'
 const DELETE_HOMEPAGE_PROMPT_URL =
   import.meta.env.VITE_DELETE_HOMEPAGE_PAGE_URL || '/api/delete-homepage-page'
+const SAVE_HOMEPAGE_GLOBAL_PROMPTS_URL =
+  import.meta.env.VITE_SAVE_HOMEPAGE_GLOBAL_PROMPTS_URL || '/api/save-homepage-global-prompts'
 
 export async function fetchHomepagePrompts(
   options: boolean | FetchHomepagePromptsOptions = false,
@@ -79,11 +85,12 @@ export async function fetchHomepagePrompts(
     greeting: data.greeting ?? '',
     placeholder: data.placeholder ?? '',
     info_text: data.info_text ?? '',
+    global_prompts: (data.global_prompts || []) as HomepagePrompt[],
     prompts: (data.prompts || []) as HomepagePrompt[],
   }
 }
 
-export async function fetchAllHomepagePages(): Promise<HomepagePage[]> {
+export async function fetchAllHomepagePages(): Promise<{ pages: HomepagePage[]; global_prompts: HomepagePrompt[] }> {
   const requestUrl = new URL(getHomepagePromptsUrl(), window.location.href)
   requestUrl.searchParams.set('all', 'true')
   const res = await fetch(requestUrl.toString())
@@ -92,7 +99,26 @@ export async function fetchAllHomepagePages(): Promise<HomepagePage[]> {
     throw new Error(`Homepage pages API error (${res.status}): ${text}`)
   }
   const data = await res.json()
-  return (data.pages || []) as HomepagePage[]
+  return {
+    pages: (data.pages || []) as HomepagePage[],
+    global_prompts: (data.global_prompts || []) as HomepagePrompt[],
+  }
+}
+
+export async function saveHomepageGlobalPrompts(
+  prompts: HomepagePromptPayload[],
+): Promise<HomepagePrompt[]> {
+  const res = await fetch(SAVE_HOMEPAGE_GLOBAL_PROMPTS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ global_prompts: prompts }),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Save global prompts API error (${res.status}): ${text}`)
+  }
+  const data = await res.json()
+  return data.global_prompts as HomepagePrompt[]
 }
 
 export async function saveHomepagePage(

@@ -83,6 +83,10 @@ export default defineConfig(() => {
           target: 'http://localhost:8000',
           changeOrigin: true,
         },
+        '/api/save-homepage-global-prompts': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
         '/api/save-homepage-prompt': {
           target: 'http://localhost:8000',
           changeOrigin: true,

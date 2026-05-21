@@ -1,8 +1,11 @@
 import { getDefaultHomepagePromptsUrl } from './chatEndpoints'
 
+export type HomepagePromptType = 'message' | 'lead_capture'
+
 export interface HomepagePrompt {
   id: string
   enabled: boolean
+  type: HomepagePromptType
   label: string
   prompt: string
   sort_order: number
@@ -15,6 +18,7 @@ export interface HomepagePromptsConfig {
   greeting: string
   placeholder: string
   info_text: string
+  global_prompts: HomepagePrompt[]
   prompts: HomepagePrompt[]
 }
 
@@ -53,6 +57,7 @@ export async function fetchHomepagePrompts(
     greeting: data.greeting ?? '',
     placeholder: data.placeholder ?? '',
     info_text: data.info_text ?? '',
+    global_prompts: (data.global_prompts || []) as HomepagePrompt[],
     prompts: (data.prompts || []) as HomepagePrompt[],
   }
 }

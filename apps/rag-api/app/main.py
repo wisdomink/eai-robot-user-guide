@@ -118,9 +118,14 @@ class RecommendationCatalogItemRequest(BaseModel):
 class HomepagePagePromptRequest(BaseModel):
     id: str = Field("", description="Prompt ID (auto-generated if omitted)")
     enabled: bool = Field(True, description="Whether this prompt is visible on the homepage")
+    type: str = Field("message", description="Button type: 'message' (send to GPT) or 'lead_capture' (show lead form directly)")
     label: str = Field("", description="Button label shown on the homepage")
-    prompt: str = Field("", description="Full prompt text sent to ChatKit on click")
+    prompt: str = Field("", description="Full prompt text sent to ChatKit on click (unused for lead_capture type)")
     sort_order: int = Field(0, description="Sort weight (lower = higher in list)")
+
+
+class HomepageGlobalPromptsRequest(BaseModel):
+    global_prompts: list[HomepagePagePromptRequest] = Field(default_factory=list)
 
 
 class HomepagePageRequest(BaseModel):
@@ -356,16 +361,18 @@ async def get_homepage_prompts(
     """Return one resolved homepage config, or all page configs for admin."""
     if all and not url:
         pages = homepage_prompts_storage.list_pages(include_disabled=True)
+        global_prompts = homepage_prompts_storage.get_global_prompts(include_disabled=True)
         front_logger.info("GET /api/get-homepage-prompts  all=%s  pages=%d", all, len(pages))
-        return {"pages": pages}
+        return {"pages": pages, "global_prompts": global_prompts}
 
     config = homepage_prompts_storage.get_homepage_config(url=url, include_disabled=all)
     front_logger.info(
-        "GET /api/get-homepage-prompts  all=%s  url=%r  pattern=%r  count=%d",
+        "GET /api/get-homepage-prompts  all=%s  url=%r  pattern=%r  count=%d global=%d",
         all,
         url or "",
         config.get("pattern", ""),
         len(config["prompts"]),
+        len(config.get("global_prompts", [])),
     )
     return config
 
@@ -411,6 +418,23 @@ async def delete_homepage_page(page_id: str):
         page_id, deleted.get("pattern", ""),
     )
     return {"ok": True, "page": deleted}
+
+
+@app.post("/api/save-homepage-global-prompts")
+async def save_homepage_global_prompts(payload: HomepageGlobalPromptsRequest):
+    """Replace the global (site-wide) prompt buttons list."""
+    try:
+        saved = homepage_prompts_storage.save_global_prompts(
+            [p.model_dump() for p in payload.global_prompts]
+        )
+    except (ValueError, Exception) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    front_logger.info(
+        "POST /api/save-homepage-global-prompts  count=%d",
+        len(saved),
+    )
+    return {"ok": True, "global_prompts": saved}
 
 
 @app.post("/api/save-homepage-settings")

@@ -57,16 +57,20 @@ const CHAT_PANEL_HEADER_TITLE = 'FF Assist'
 const CHAT_FAB_LABEL = 'FF Assist'
 const HOMEPAGE_DISCLAIMER = 'FF Assist uses AI, mistakes may occur.'
 const FALLBACK_PROMPTS = [
-  { label: 'How can I buy an FF robot?', prompt: 'How can I buy an FF robot?' },
-  { label: 'When will FF robots be delivered?', prompt: 'When will FF robots be delivered?' },
-  { label: 'What product lines does FF currently offer?', prompt: 'What product lines does FF currently offer?' },
+  { label: 'How can I buy an FF robot?', prompt: 'How can I buy an FF robot?', type: 'message' as const },
+  { label: 'When will FF robots be delivered?', prompt: 'When will FF robots be delivered?', type: 'message' as const },
+  { label: 'What product lines does FF currently offer?', prompt: 'What product lines does FF currently offer?', type: 'message' as const },
 ]
+
+// Must match LEAD_CAPTURE_TRIGGER in chatkit_handler.py
+const LEAD_CAPTURE_TRIGGER = '\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b'
 
 type OverlayMode = 'buttons' | null
 
 export interface ChatPromptOption {
   label: string
   prompt: string
+  type?: 'message' | 'lead_capture'
 }
 
 export interface ChatPanelApiConfig {
@@ -338,7 +342,11 @@ export default function ChatPanel({
 
   const greeting = remoteConfig?.greeting || greetingProp
   const placeholder = remoteConfig?.placeholder || placeholderProp
-  const prompts = remoteConfig?.prompts?.length ? remoteConfig.prompts : promptsProp
+  const globalPrompts = remoteConfig?.global_prompts ?? []
+  const pagePrompts = remoteConfig?.prompts?.length ? remoteConfig.prompts : promptsProp
+  const prompts = globalPrompts.length > 0 || remoteConfig !== null
+    ? [...globalPrompts, ...pagePrompts]
+    : promptsProp
   const infoText = remoteConfig?.info_text || ''
   const versionInfo = useMemo(() => ({
     ...getChatSdkVersionInfo(),
@@ -492,9 +500,13 @@ export default function ChatPanel({
     setVersionDialogOpen(false)
   }, [])
 
-  const handlePromptClick = useCallback((prompt: string) => {
+  const handlePromptClick = useCallback((option: ChatPromptOption) => {
     setOverlayMode(null)
-    sendUserMessage({ text: prompt })
+    if (option.type === 'lead_capture') {
+      sendUserMessage({ text: LEAD_CAPTURE_TRIGGER })
+    } else {
+      sendUserMessage({ text: option.prompt })
+    }
   }, [sendUserMessage])
 
   const handleInputSend = useCallback((e?: FormEvent) => {
@@ -625,11 +637,11 @@ export default function ChatPanel({
                         {promptsLoading ? (
                           <span className="ck-greeting-loading">Loading…</span>
                         ) : (
-                          prompts.map((p) => (
+                          prompts.map((p, i) => (
                             <button
-                              key={p.label}
-                              className="ck-greeting-prompt-btn"
-                              onClick={() => handlePromptClick(p.prompt)}
+                              key={('id' in p && p.id) ? String(p.id) : `${p.label}-${i}`}
+                              className={`ck-greeting-prompt-btn${p.type === 'lead_capture' ? ' ck-greeting-prompt-btn--lead' : ''}`}
+                              onClick={() => handlePromptClick(p)}
                             >
                               {p.label}
                             </button>

@@ -7,10 +7,14 @@ from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
 
+_VALID_PROMPT_TYPES = {"message", "lead_capture"}
+_DEFAULT_PROMPT_TYPE = "message"
+
 _DEFAULT_PROMPTS = [
     {
         "id": "如何购买_ff_机器人",
         "enabled": True,
+        "type": _DEFAULT_PROMPT_TYPE,
         "label": "如何购买 FF 机器人？",
         "prompt": "如何购买 FF 机器人？",
         "sort_order": 0,
@@ -18,6 +22,7 @@ _DEFAULT_PROMPTS = [
     {
         "id": "ff_机器人什么时候交付",
         "enabled": True,
+        "type": _DEFAULT_PROMPT_TYPE,
         "label": "FF 机器人什么时候交付？",
         "prompt": "FF 机器人什么时候交付？",
         "sort_order": 1,
@@ -25,10 +30,22 @@ _DEFAULT_PROMPTS = [
     {
         "id": "ff_目前有哪些产品线",
         "enabled": True,
+        "type": _DEFAULT_PROMPT_TYPE,
         "label": "FF 目前有哪些产品线？",
         "prompt": "FF 目前有哪些产品线？",
         "sort_order": 2,
     },
+]
+
+_DEFAULT_GLOBAL_PROMPTS = [
+    {
+        "id": "global_lead_capture",
+        "enabled": True,
+        "type": "lead_capture",
+        "label": "Contact Us",
+        "prompt": "",
+        "sort_order": 0,
+    }
 ]
 
 _DEFAULT_GREETING = "Do you want to know about FF's products?"
@@ -44,6 +61,7 @@ class HomepagePromptsStorage:
     """Persist homepage prompt configuration in a local JSON file or DynamoDB."""
 
     _PAGE_PARTITION_KEY = "HOMEPAGE_PAGE"
+    _GLOBAL_PROMPTS_PARTITION_KEY = "HOMEPAGE_GLOBAL"
     _LEGACY_PARTITION_KEY = "HOMEPAGE_PROMPT"
 
     def __init__(
@@ -144,8 +162,11 @@ class HomepagePromptsStorage:
         return normalized or _DEFAULT_PAGE_PATTERN
 
     def _normalize_prompt_item(self, payload: dict, existing_ids: set[str] | None = None) -> dict:
+        raw_type = str(payload.get("type", _DEFAULT_PROMPT_TYPE)).strip()
+        prompt_type = raw_type if raw_type in _VALID_PROMPT_TYPES else _DEFAULT_PROMPT_TYPE
         item: dict = {
             "enabled": bool(payload.get("enabled", True)),
+            "type": prompt_type,
             "label": str(payload.get("label", "")).strip(),
             "prompt": str(payload.get("prompt", "")).strip(),
             "sort_order": int(payload.get("sort_order", 0)),
@@ -180,7 +201,10 @@ class HomepagePromptsStorage:
 
     @classmethod
     def _default_data(cls) -> dict:
-        return {"pages": [cls._default_page()]}
+        return {
+            "global_prompts": deepcopy(_DEFAULT_GLOBAL_PROMPTS),
+            "pages": [cls._default_page()],
+        }
 
     def _normalize_page(self, payload: dict, existing_ids: set[str] | None = None) -> dict:
         if not isinstance(payload, dict):
@@ -250,6 +274,19 @@ class HomepagePromptsStorage:
         )
         return {"pages": [legacy_page]}
 
+    def _normalize_global_prompts(self, raw: list) -> list[dict]:
+        prompt_ids: set[str] = set()
+        result = []
+        for index, item in enumerate(raw):
+            if not isinstance(item, dict):
+                continue
+            normalized = self._normalize_prompt_item(item, prompt_ids)
+            prompt_ids.add(normalized["id"])
+            if "sort_order" not in item:
+                normalized["sort_order"] = index
+            result.append(normalized)
+        return result
+
     def _normalize_data_container(self, data: dict) -> tuple[dict, bool]:
         if not isinstance(data, dict):
             raise ValueError("Homepage prompts config must be a JSON object")
@@ -257,11 +294,21 @@ class HomepagePromptsStorage:
         pages = data.get("pages")
         if isinstance(pages, list):
             normalized_pages = self._normalize_pages_payload(pages)
-            normalized_data = {"pages": normalized_pages}
+            raw_global = data.get("global_prompts")
+            if isinstance(raw_global, list):
+                normalized_global = self._normalize_global_prompts(raw_global)
+            else:
+                normalized_global = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
+            normalized_data = {
+                "global_prompts": normalized_global,
+                "pages": normalized_pages,
+            }
             return normalized_data, normalized_data != data
 
         if any(key in data for key in ("greeting", "placeholder", "info_text", "prompts")):
-            return self._migrate_legacy_data(data), True
+            migrated = self._migrate_legacy_data(data)
+            migrated["global_prompts"] = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
+            return migrated, True
 
         return self._default_data(), True
 
@@ -312,8 +359,16 @@ class HomepagePromptsStorage:
                 continue
             pages.append(row)
 
+        global_row = self._dynamodb_table.get_item(
+            Key={"pk": self._GLOBAL_PROMPTS_PARTITION_KEY, "sk": "prompts"}
+        ).get("Item") or {}
+        raw_global = global_row.get("prompts", [])
+        if not isinstance(raw_global, list):
+            raw_global = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
+
         normalized_pages = self._normalize_pages_payload(pages)
-        return {"pages": normalized_pages}
+        normalized_global = self._normalize_global_prompts(raw_global)
+        return {"global_prompts": normalized_global, "pages": normalized_pages}
 
     def _ensure_dynamodb_seeded(self) -> None:
         assert self._dynamodb_table is not None
@@ -327,11 +382,22 @@ class HomepagePromptsStorage:
             with self._dynamodb_table.batch_writer() as batch:
                 for page in migrated_pages:
                     batch.put_item(Item={"pk": self._PAGE_PARTITION_KEY, "sk": page["id"], **page})
+            self._dynamodb_table.put_item(Item={
+                "pk": self._GLOBAL_PROMPTS_PARTITION_KEY,
+                "sk": "prompts",
+                "prompts": deepcopy(_DEFAULT_GLOBAL_PROMPTS),
+            })
             return
 
+        default = self._default_data()
         with self._dynamodb_table.batch_writer() as batch:
-            for page in self._default_data()["pages"]:
+            for page in default["pages"]:
                 batch.put_item(Item={"pk": self._PAGE_PARTITION_KEY, "sk": page["id"], **page})
+        self._dynamodb_table.put_item(Item={
+            "pk": self._GLOBAL_PROMPTS_PARTITION_KEY,
+            "sk": "prompts",
+            "prompts": default["global_prompts"],
+        })
 
     def _migrate_legacy_dynamodb_items(self, items: list[dict]) -> list[dict]:
         prompts = []
@@ -370,12 +436,22 @@ class HomepagePromptsStorage:
     def _sort_prompts(prompts: list[dict]) -> list[dict]:
         return sorted(prompts, key=lambda item: (item.get("sort_order", 0), item.get("id", "")))
 
+    def _format_prompt_for_response(self, prompt: dict) -> dict:
+        return {
+            "id": prompt.get("id", ""),
+            "enabled": bool(prompt.get("enabled", True)),
+            "type": prompt.get("type", _DEFAULT_PROMPT_TYPE),
+            "label": prompt.get("label", ""),
+            "prompt": prompt.get("prompt", ""),
+            "sort_order": int(prompt.get("sort_order", 0)),
+        }
+
     def _format_page_for_response(self, page: dict, *, include_disabled: bool = False) -> dict:
         prompts = page.get("prompts", [])
         if not isinstance(prompts, list):
             prompts = []
         filtered_prompts = [
-            prompt
+            self._format_prompt_for_response(prompt)
             for prompt in prompts
             if isinstance(prompt, dict) and (include_disabled or prompt.get("enabled", True))
         ]
@@ -388,6 +464,34 @@ class HomepagePromptsStorage:
             "info_text": page.get("info_text", _DEFAULT_INFO_TEXT),
             "prompts": self._sort_prompts(filtered_prompts),
         }
+
+    def get_global_prompts(self, *, include_disabled: bool = False) -> list[dict]:
+        data = self._load_data()
+        raw = data.get("global_prompts", [])
+        if not isinstance(raw, list):
+            raw = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
+        return [
+            self._format_prompt_for_response(p)
+            for p in self._sort_prompts(raw)
+            if isinstance(p, dict) and (include_disabled or p.get("enabled", True))
+        ]
+
+    def save_global_prompts(self, prompts_payload: list[dict]) -> list[dict]:
+        """Replace the global_prompts list entirely."""
+        normalized = self._normalize_global_prompts(prompts_payload)
+        if self._backend == "dynamodb":
+            self._ensure_dynamodb_seeded()
+            assert self._dynamodb_table is not None
+            self._dynamodb_table.put_item(Item={
+                "pk": self._GLOBAL_PROMPTS_PARTITION_KEY,
+                "sk": "prompts",
+                "prompts": normalized,
+            })
+        else:
+            data = self._load_data()
+            data["global_prompts"] = normalized
+            self._write_data(data)
+        return [self._format_prompt_for_response(p) for p in self._sort_prompts(normalized)]
 
     def list_pages(self, *, include_disabled: bool = True) -> list[dict]:
         data = self._load_data()
@@ -432,7 +536,9 @@ class HomepagePromptsStorage:
 
     def get_homepage_config(self, *, url: str | None = None, include_disabled: bool = False) -> dict:
         page = self.resolve_page(url)
-        return self._format_page_for_response(page, include_disabled=include_disabled)
+        result = self._format_page_for_response(page, include_disabled=include_disabled)
+        result["global_prompts"] = self.get_global_prompts(include_disabled=include_disabled)
+        return result
 
     def upsert_page(self, payload: dict) -> tuple[dict, bool]:
         if self._backend == "dynamodb":
@@ -458,6 +564,8 @@ class HomepagePromptsStorage:
             pages.append(normalized)
 
         data["pages"] = self._normalize_pages_payload(pages)
+        if "global_prompts" not in data:
+            data["global_prompts"] = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
         self._write_data(data)
         return self._format_page_for_response(normalized, include_disabled=True), created
 
@@ -506,6 +614,8 @@ class HomepagePromptsStorage:
             return None
 
         data["pages"] = self._normalize_pages_payload(remaining_pages)
+        if "global_prompts" not in data:
+            data["global_prompts"] = deepcopy(_DEFAULT_GLOBAL_PROMPTS)
         self._write_data(data)
         return self._format_page_for_response(deleted_item, include_disabled=True)
 
