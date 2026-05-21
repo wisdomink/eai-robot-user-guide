@@ -62,8 +62,8 @@ const FALLBACK_PROMPTS = [
   { label: 'What product lines does FF currently offer?', prompt: 'What product lines does FF currently offer?', type: 'message' as const },
 ]
 
-// Must match LEAD_CAPTURE_TRIGGER in chatkit_handler.py
-const LEAD_CAPTURE_TRIGGER = '\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b'
+// Sentinel value meaning "no pending lead-capture" for the per-request ref
+const _NO_LEAD_CAPTURE = null
 
 type OverlayMode = 'buttons' | null
 
@@ -71,6 +71,7 @@ export interface ChatPromptOption {
   label: string
   prompt: string
   type?: 'message' | 'lead_capture'
+  reply_text?: string
 }
 
 export interface ChatPanelApiConfig {
@@ -221,6 +222,8 @@ export default function ChatPanel({
   const chatkitBodyRef = useRef<HTMLDivElement>(null)
   const versionClickCountRef = useRef(0)
   const versionClickResetTimerRef = useRef<number | null>(null)
+  // Holds the reply_text for the next lead-capture chatkit request; consumed once sent
+  const leadCapturePayloadRef = useRef<{ replyText: string } | typeof _NO_LEAD_CAPTURE>(_NO_LEAD_CAPTURE)
   useSourceSectionHider(chatkitBodyRef)
 
   const resolvedApiConfig = useMemo(() => {
@@ -231,6 +234,16 @@ export default function ChatPanel({
       const currentUrl = hostUrl || (typeof window !== 'undefined' ? window.location.href : '')
       if (currentUrl) {
         headers.set('x-ff-page-url', currentUrl)
+      }
+      // Inject lead-capture headers once for the chatkit respond request
+      const payload = leadCapturePayloadRef.current
+      if (payload !== _NO_LEAD_CAPTURE) {
+        const url = typeof input === 'string' ? input : input instanceof Request ? input.url : ''
+        if (url.includes('/api/chatkit')) {
+          headers.set('x-ff-lead-capture', '1')
+          headers.set('x-ff-lead-reply', payload.replyText)
+          leadCapturePayloadRef.current = _NO_LEAD_CAPTURE
+        }
       }
       return baseFetch(input, init ? { ...init, headers } : { headers })
     }
@@ -503,7 +516,10 @@ export default function ChatPanel({
   const handlePromptClick = useCallback((option: ChatPromptOption) => {
     setOverlayMode(null)
     if (option.type === 'lead_capture') {
-      sendUserMessage({ text: LEAD_CAPTURE_TRIGGER })
+      // Store reply_text so contextualFetch injects it as a header on the next chatkit request
+      leadCapturePayloadRef.current = { replyText: option.reply_text ?? '' }
+      // User bubble shows the button label (e.g. "Contact Us")
+      sendUserMessage({ text: option.label })
     } else {
       sendUserMessage({ text: option.prompt })
     }

@@ -169,6 +169,7 @@ class HomepagePromptsStorage:
             "type": prompt_type,
             "label": str(payload.get("label", "")).strip(),
             "prompt": str(payload.get("prompt", "")).strip(),
+            "reply_text": str(payload.get("reply_text", "")).strip(),
             "sort_order": int(payload.get("sort_order", 0)),
         }
 
@@ -443,6 +444,7 @@ class HomepagePromptsStorage:
             "type": prompt.get("type", _DEFAULT_PROMPT_TYPE),
             "label": prompt.get("label", ""),
             "prompt": prompt.get("prompt", ""),
+            "reply_text": prompt.get("reply_text", ""),
             "sort_order": int(prompt.get("sort_order", 0)),
         }
 

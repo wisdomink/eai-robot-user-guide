@@ -633,6 +633,7 @@ function createDraftPrompt(index: number, type: HomepagePromptType = 'message'):
     type,
     label: '',
     prompt: '',
+    reply_text: '',
     sort_order: index,
   }
 }
@@ -761,6 +762,7 @@ function HomepagePromptsTab() {
         type: prompt.type ?? 'message',
         label: prompt.label,
         prompt: prompt.prompt,
+        reply_text: prompt.reply_text ?? '',
         sort_order: index,
       })),
     }
@@ -810,6 +812,7 @@ function HomepagePromptsTab() {
         type: p.type ?? 'message',
         label: p.label,
         prompt: p.prompt,
+        reply_text: p.reply_text ?? '',
         sort_order: i,
       }))
       const saved = await saveHomepageGlobalPrompts(payload)
@@ -960,7 +963,7 @@ function HomepagePromptsTab() {
                     />
                   </label>
 
-                  {(prompt.type ?? 'message') !== 'lead_capture' && (
+                  {(prompt.type ?? 'message') !== 'lead_capture' ? (
                     <label className="recommendation-form-full">
                       Prompt 内容
                       <textarea
@@ -970,11 +973,16 @@ function HomepagePromptsTab() {
                         rows={3}
                       />
                     </label>
-                  )}
-                  {(prompt.type ?? 'message') === 'lead_capture' && (
-                    <p className="homepage-inline-empty" style={{ gridColumn: '1/-1', margin: 0 }}>
-                      留资类型：点击后将直接在对话中展示留资表单，无需填写 Prompt。
-                    </p>
+                  ) : (
+                    <label className="recommendation-form-full">
+                      AI 引导语（留资表单前显示，空则不显示）
+                      <textarea
+                        value={prompt.reply_text ?? ''}
+                        onChange={(e) => handleGlobalPromptChange(index, 'reply_text', e.target.value)}
+                        placeholder="例如：好的，请填写以下信息，我们会尽快与您联系。留空则直接弹出表单。"
+                        rows={3}
+                      />
+                    </label>
                   )}
                 </div>
               </div>
@@ -1192,9 +1200,15 @@ function HomepagePromptsTab() {
                           />
                         </label>
                       ) : (
-                        <p className="homepage-inline-empty" style={{ gridColumn: '1/-1', margin: 0 }}>
-                          留资类型：点击后将直接在对话中展示留资表单。
-                        </p>
+                        <label className="recommendation-form-full">
+                          AI 引导语（留资表单前显示，空则不显示）
+                          <textarea
+                            value={prompt.reply_text ?? ''}
+                            onChange={(e) => handlePromptChange(index, 'reply_text', e.target.value)}
+                            placeholder="例如：好的，请填写以下信息，我们会尽快与您联系。留空则直接弹出表单。"
+                            rows={3}
+                          />
+                        </label>
                       )}
                     </div>
                   </div>

@@ -91,9 +91,8 @@ from app.services.fast_answer_service import FastAnswerMatch, FastAnswerService,
 logger = logging.getLogger(__name__)
 front_logger = logging.getLogger(FRONT_LOGGER_NAME)
 
-# Magic trigger sent by the SDK when a lead_capture homepage button is clicked.
-# The server shortcuits the normal GPT flow and streams the lead form widget directly.
-LEAD_CAPTURE_TRIGGER = "\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b"
+# Legacy magic trigger – kept for reference only; detection now uses the x-ff-lead-capture header.
+_LEAD_CAPTURE_TRIGGER_LEGACY = "\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b"
 
 # ── Paths ────────────────────────────────────────────────────────────────
 
@@ -1392,10 +1391,41 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             self._save_lead(thread.id, action_payload)
 
             lang = self.store.thread_langs.get(thread.id, "en")
+            is_cn = lang == "cn"
             success_title, success_text = self.reco_engine.lead_success_text(lang)
+
+            # Build a summary of submitted info so it persists in the chat history
+            summary_lines: list = []
+
+            product = str(action_payload.get("product") or "").strip()
+            if product:
+                product_label = self.reco_engine._product_label(product)
+                summary_lines.append(
+                    Text(value=f"{'产品 / Product' if is_cn else 'Product'}: {product_label}")
+                )
+
+            first_name = str(action_payload.get("firstName") or "").strip()
+            last_name = str(action_payload.get("lastName") or "").strip()
+            full_name = f"{first_name} {last_name}".strip()
+            if full_name:
+                summary_lines.append(
+                    Text(value=f"{'姓名 / Name' if is_cn else 'Name'}: {full_name}")
+                )
+
+            email = str(action_payload.get("email") or "").strip()
+            if email:
+                summary_lines.append(Text(value=f"Email: {email}"))
+
+            phone = str(action_payload.get("phone") or "").strip()
+            if phone:
+                summary_lines.append(
+                    Text(value=f"{'电话 / Phone' if is_cn else 'Phone'}: {phone}")
+                )
 
             success_card = Card(children=[
                 Title(value=success_title),
+                *summary_lines,
+                Spacer(size="sm") if summary_lines else Text(value=""),
                 Text(value=success_text),
             ])
             async for ev in stream_widget(thread, success_card):
@@ -1442,10 +1472,23 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         page_url = str(context.get("page_url") or "")
 
-        # ── Lead-capture shortcut: skip GPT, stream the lead form widget directly ──
-        if user_text == LEAD_CAPTURE_TRIGGER:
+        # ── Lead-capture shortcut (triggered by x-ff-lead-capture header from SDK) ──
+        if context.get("lead_capture"):
             input_lang = self.store.thread_langs.get(thread.id, "en")
-            front_logger.info("[thread=%s] lead_capture trigger → streaming lead widget", thread.id)
+            reply_text = str(context.get("lead_reply_text") or "").strip()
+            front_logger.info(
+                "[thread=%s] lead_capture → reply_text=%r → streaming lead widget",
+                thread.id, reply_text[:80] if reply_text else "",
+            )
+            # Stream optional AI reply text first (if configured and non-empty)
+            if reply_text:
+                text_item = AssistantMessageItem(
+                    id=self.store.generate_item_id("message", thread, context),
+                    thread_id=thread.id,
+                    created_at=datetime.now(),
+                    content=[AssistantMessageContent(text=reply_text)],
+                )
+                yield ThreadItemDoneEvent(item=text_item)
             reco = self.reco_engine._make_lead_capture(input_lang)
             self.reco_engine.record_shown(thread.id, "lead_capture")
             card = self._build_lead_card(reco.title, reco.description, input_lang)

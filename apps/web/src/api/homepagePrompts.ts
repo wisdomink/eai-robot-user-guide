@@ -6,6 +6,7 @@ export interface HomepagePrompt {
   type: HomepagePromptType
   label: string
   prompt: string
+  reply_text: string
   sort_order: number
 }
 

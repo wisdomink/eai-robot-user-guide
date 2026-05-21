@@ -1,12 +1,13 @@
 {
   "global_prompts": [
     {
-      "id": "global_lead_capture",
       "enabled": true,
       "type": "lead_capture",
       "label": "Contact Us",
       "prompt": "",
-      "sort_order": 0
+      "reply_text": "Sure! Please fill in the form below and our team will reach out to you shortly.",
+      "sort_order": 0,
+      "id": "global_lead_capture"
     }
   ],
   "pages": [
@@ -20,27 +21,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What product lines does FF currently offer?",
           "prompt": "What product lines does FF currently offer?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_home_1",
-          "type": "message"
+          "id": "www_home_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "When will the FX Super One be delivered?",
           "prompt": "When will the FX Super One be delivered?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_home_2",
-          "type": "message"
+          "id": "www_home_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I pre-order an FF product?",
           "prompt": "How do I pre-order an FF product?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_home_3",
-          "type": "message"
+          "id": "www_home_3"
         }
       ]
     },
@@ -54,27 +58,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the range and charging time of the FF 91 2.0?",
           "prompt": "What is the range and charging time of the FF 91 2.0?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_ff91_futurist_1",
-          "type": "message"
+          "id": "www_ff91_futurist_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What intelligent driving features are supported?",
           "prompt": "What intelligent driving features are supported?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_ff91_futurist_2",
-          "type": "message"
+          "id": "www_ff91_futurist_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How does the 1,050 hp powertrain work?",
           "prompt": "How does the 1,050 hp powertrain work?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_ff91_futurist_3",
-          "type": "message"
+          "id": "www_ff91_futurist_3"
         }
       ]
     },
@@ -88,27 +95,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What's the difference between the Alliance and standard Futurist?",
           "prompt": "What's the difference between the Alliance and standard Futurist?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_ff91_alliance_1",
-          "type": "message"
+          "id": "www_ff91_alliance_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Are there still Alliance allocations available?",
           "prompt": "Are there still Alliance allocations available?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_ff91_alliance_2",
-          "type": "message"
+          "id": "www_ff91_alliance_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What does the customization service include?",
           "prompt": "What does the customization service include?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_ff91_alliance_3",
-          "type": "message"
+          "id": "www_ff91_alliance_3"
         }
       ]
     },
@@ -122,27 +132,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What's the difference between the FF and FX brands?",
           "prompt": "What's the difference between the FF and FX brands?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_fx_home_1",
-          "type": "message"
+          "id": "www_fx_home_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What configurations does the FX Super One offer?",
           "prompt": "What configurations does the FX Super One offer?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_fx_home_2",
-          "type": "message"
+          "id": "www_fx_home_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Does it support NACS charging?",
           "prompt": "Does it support NACS charging?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_fx_home_3",
-          "type": "message"
+          "id": "www_fx_home_3"
         }
       ]
     },
@@ -156,27 +169,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How many seating configurations does the Super One offer?",
           "prompt": "How many seating configurations does the Super One offer?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_fx_super_one_1",
-          "type": "message"
+          "id": "www_fx_super_one_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What's the difference between the pure EV and HEREV versions?",
           "prompt": "What's the difference between the pure EV and HEREV versions?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_fx_super_one_2",
-          "type": "message"
+          "id": "www_fx_super_one_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What safety features does the FX Super One include?",
           "prompt": "What safety features does the FX Super One include?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_fx_super_one_3",
-          "type": "message"
+          "id": "www_fx_super_one_3"
         }
       ]
     },
@@ -190,27 +206,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What use cases suit each of the three robots?",
           "prompt": "What use cases suit each of the three robots?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "robotics_home_1",
-          "type": "message"
+          "id": "robotics_home_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What are the prices for each robot?",
           "prompt": "What are the prices for each robot?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "robotics_home_2",
-          "type": "message"
+          "id": "robotics_home_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I pre-order a robot?",
           "prompt": "How do I pre-order a robot?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "robotics_home_3",
-          "type": "message"
+          "id": "robotics_home_3"
         }
       ]
     },
@@ -224,27 +243,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the Aegis's battery life and mobility performance?",
           "prompt": "What is the Aegis's battery life and mobility performance?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "robotics_aegis_1",
-          "type": "message"
+          "id": "robotics_aegis_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What expansion modules are available?",
           "prompt": "What expansion modules are available?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "robotics_aegis_2",
-          "type": "message"
+          "id": "robotics_aegis_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the IP rating?",
           "prompt": "What is the IP rating?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "robotics_aegis_3",
-          "type": "message"
+          "id": "robotics_aegis_3"
         }
       ]
     },
@@ -258,27 +280,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How many degrees of freedom does the Futurist have?",
           "prompt": "How many degrees of freedom does the Futurist have?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "robotics_ff_futurist_1",
-          "type": "message"
+          "id": "robotics_ff_futurist_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Does it support VR teleoperation?",
           "prompt": "Does it support VR teleoperation?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "robotics_ff_futurist_2",
-          "type": "message"
+          "id": "robotics_ff_futurist_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How long does the battery last?",
           "prompt": "How long does the battery last?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "robotics_ff_futurist_3",
-          "type": "message"
+          "id": "robotics_ff_futurist_3"
         }
       ]
     },
@@ -292,27 +317,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What's the difference between the Master and Futurist?",
           "prompt": "What's the difference between the Master and Futurist?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "robotics_ff_master_1",
-          "type": "message"
+          "id": "robotics_ff_master_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Can the Master learn new skills?",
           "prompt": "Can the Master learn new skills?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "robotics_ff_master_2",
-          "type": "message"
+          "id": "robotics_ff_master_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Does it support autonomous charging?",
           "prompt": "Does it support autonomous charging?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "robotics_ff_master_3",
-          "type": "message"
+          "id": "robotics_ff_master_3"
         }
       ]
     },
@@ -326,27 +354,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I schedule home charger installation?",
           "prompt": "How do I schedule home charger installation?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_charging_1",
-          "type": "message"
+          "id": "www_charging_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the maximum DC fast charging power?",
           "prompt": "What is the maximum DC fast charging power?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_charging_2",
-          "type": "message"
+          "id": "www_charging_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What voltages does the portable charger support?",
           "prompt": "What voltages does the portable charger support?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_charging_3",
-          "type": "message"
+          "id": "www_charging_3"
         }
       ]
     },
@@ -360,27 +391,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What does the 5x4 architecture include?",
           "prompt": "What does the 5x4 architecture include?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_aihyper_1",
-          "type": "message"
+          "id": "www_aihyper_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What sensors does aiDriving use?",
           "prompt": "What sensors does aiDriving use?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_aihyper_2",
-          "type": "message"
+          "id": "www_aihyper_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How is it different from other automakers' platforms?",
           "prompt": "How is it different from other automakers' platforms?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_aihyper_3",
-          "type": "message"
+          "id": "www_aihyper_3"
         }
       ]
     },
@@ -394,27 +428,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "Is the reservation deposit refundable?",
           "prompt": "Is the reservation deposit refundable?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "www_preorder_1",
-          "type": "message"
+          "id": "www_preorder_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "When can I expect delivery?",
           "prompt": "When can I expect delivery?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "www_preorder_2",
-          "type": "message"
+          "id": "www_preorder_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Can I change my configuration after pre-ordering?",
           "prompt": "Can I change my configuration after pre-ordering?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "www_preorder_3",
-          "type": "message"
+          "id": "www_preorder_3"
         }
       ]
     },
@@ -428,27 +465,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I find my robot model?",
           "prompt": "How do I find my robot model?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_home_1",
-          "type": "message"
+          "id": "manual_home_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "My robot won't power on — what should I do?",
           "prompt": "My robot won't power on — what should I do?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_home_2",
-          "type": "message"
+          "id": "manual_home_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I contact after-sales support?",
           "prompt": "How do I contact after-sales support?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_home_3",
-          "type": "message"
+          "id": "manual_home_3"
         }
       ]
     },
@@ -462,27 +502,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I set up the robot for the first time?",
           "prompt": "How do I set up the robot for the first time?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_futurist_1",
-          "type": "message"
+          "id": "manual_futurist_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How long does it take to charge?",
           "prompt": "How long does it take to charge?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_futurist_2",
-          "type": "message"
+          "id": "manual_futurist_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I use VR teleoperation?",
           "prompt": "How do I use VR teleoperation?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_futurist_3",
-          "type": "message"
+          "id": "manual_futurist_3"
         }
       ]
     },
@@ -496,27 +539,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How does the Ultra differ from the standard model operationally?",
           "prompt": "How does the Ultra differ from the standard model operationally?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_futurist_ultra_1",
-          "type": "message"
+          "id": "manual_futurist_ultra_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the sensor field of view?",
           "prompt": "What is the sensor field of view?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_futurist_ultra_2",
-          "type": "message"
+          "id": "manual_futurist_ultra_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What do the battery indicator light colors mean?",
           "prompt": "What do the battery indicator light colors mean?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_futurist_ultra_3",
-          "type": "message"
+          "id": "manual_futurist_ultra_3"
         }
       ]
     },
@@ -530,27 +576,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I set up the robot for the first time?",
           "prompt": "How do I set up the robot for the first time?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_master_1",
-          "type": "message"
+          "id": "manual_master_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I control it with the remote controller?",
           "prompt": "How do I control it with the remote controller?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_master_2",
-          "type": "message"
+          "id": "manual_master_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What does a flashing indicator light during charging mean?",
           "prompt": "What does a flashing indicator light during charging mean?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_master_3",
-          "type": "message"
+          "id": "manual_master_3"
         }
       ]
     },
@@ -564,27 +613,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "What are the joint range-of-motion limits?",
           "prompt": "What are the joint range-of-motion limits?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_master_ultra_1",
-          "type": "message"
+          "id": "manual_master_ultra_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I use the FF Robotic APP?",
           "prompt": "How do I use the FF Robotic APP?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_master_ultra_2",
-          "type": "message"
+          "id": "manual_master_ultra_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I operate the motion platform?",
           "prompt": "How do I operate the motion platform?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_master_ultra_3",
-          "type": "message"
+          "id": "manual_master_ultra_3"
         }
       ]
     },
@@ -598,27 +650,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I set up an autonomous patrol route?",
           "prompt": "How do I set up an autonomous patrol route?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_aegis_1",
-          "type": "message"
+          "id": "manual_aegis_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I install expansion modules?",
           "prompt": "How do I install expansion modules?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_aegis_2",
-          "type": "message"
+          "id": "manual_aegis_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "Can it be used outdoors in the rain?",
           "prompt": "Can it be used outdoors in the rain?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_aegis_3",
-          "type": "message"
+          "id": "manual_aegis_3"
         }
       ]
     },
@@ -632,27 +687,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "My robot won't power on — what should I do?",
           "prompt": "My robot won't power on — what should I do?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "manual_prefix_1",
-          "type": "message"
+          "id": "manual_prefix_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What is the warranty policy?",
           "prompt": "What is the warranty policy?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "manual_prefix_2",
-          "type": "message"
+          "id": "manual_prefix_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "How do I contact after-sales support?",
           "prompt": "How do I contact after-sales support?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "manual_prefix_3",
-          "type": "message"
+          "id": "manual_prefix_3"
         }
       ]
     },
@@ -666,27 +724,30 @@
       "prompts": [
         {
           "enabled": true,
+          "type": "message",
           "label": "Can you give me an overview of FF's products?",
           "prompt": "Can you give me an overview of FF's products?",
+          "reply_text": "",
           "sort_order": 0,
-          "id": "fallback_1",
-          "type": "message"
+          "id": "fallback_1"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What does FF do?",
           "prompt": "What does FF do?",
+          "reply_text": "",
           "sort_order": 1,
-          "id": "fallback_2",
-          "type": "message"
+          "id": "fallback_2"
         },
         {
           "enabled": true,
+          "type": "message",
           "label": "What is FF's most affordable product?",
           "prompt": "What is FF's most affordable product?",
+          "reply_text": "",
           "sort_order": 2,
-          "id": "fallback_3",
-          "type": "message"
+          "id": "fallback_3"
         }
       ]
     }

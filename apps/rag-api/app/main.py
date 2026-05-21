@@ -121,6 +121,7 @@ class HomepagePagePromptRequest(BaseModel):
     type: str = Field("message", description="Button type: 'message' (send to GPT) or 'lead_capture' (show lead form directly)")
     label: str = Field("", description="Button label shown on the homepage")
     prompt: str = Field("", description="Full prompt text sent to ChatKit on click (unused for lead_capture type)")
+    reply_text: str = Field("", description="AI reply text shown before the lead form widget; empty = skip text reply")
     sort_order: int = Field(0, description="Sort weight (lower = higher in list)")
 
 
@@ -167,6 +168,8 @@ async def chatkit_endpoint(request: Request):
                     or request.headers.get("referer")
                     or ""
                 ),
+                "lead_capture": request.headers.get("x-ff-lead-capture") == "1",
+                "lead_reply_text": request.headers.get("x-ff-lead-reply", ""),
             },
         )
     except Exception as exc:
