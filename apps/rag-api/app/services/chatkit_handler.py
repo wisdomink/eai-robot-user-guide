@@ -72,6 +72,7 @@ from app.core.config import (
     OPENAI_VECTOR_STORE_AEGIS_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     OPENAI_VECTOR_STORE_FF91_ID,
+    OPENAI_VECTOR_STORE_NAVI_ID,
     OPENAI_VECTOR_STORE_FUTURIST_ID,
     OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
     OPENAI_VECTOR_STORE_MASTER_ID,
@@ -318,6 +319,11 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "name": "FF 91 2.0 Product Agent",
         "instructions_file": "product-ff91",
         "vector_store_id": OPENAI_VECTOR_STORE_FF91_ID,
+    },
+    "navi": {
+        "name": "FF NAVI Product Agent",
+        "instructions_file": "product-navi",
+        "vector_store_id": OPENAI_VECTOR_STORE_NAVI_ID,
     },
     "fallback": {
         "name": "Fallback Agent",

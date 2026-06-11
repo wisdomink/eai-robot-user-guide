@@ -1,6 +1,6 @@
 import allSidebars from '@/content/sidebar.json'
 
-export type ProductId = 'futurist' | 'futurist-ultra' | 'master' | 'aegis' | 'aegis-ultra' | 'ff91'
+export type ProductId = 'futurist' | 'futurist-ultra' | 'master' | 'aegis' | 'aegis-ultra' | 'ff91' | 'navi'
 
 const masterSidebar = allSidebars['master']
 
@@ -54,6 +54,13 @@ const PRODUCTS: Record<ProductId, ProductDef> = {
     homeRoute: '/ff91',
     homeFile: 'ff91/ff91-home.md',
     sidebar: allSidebars['ff91'],
+  },
+  'navi': {
+    id: 'navi',
+    label: 'FF NAVI',
+    homeRoute: '/navi',
+    homeFile: 'navi/navi-home.md',
+    sidebar: allSidebars['navi'],
   },
 }
 

@@ -49,6 +49,7 @@
 | `aegis` | Aegis、Aegis Pro、Aegis EDU、教育版、尾灯、OTA、APP 使用指南（未提到 Ultra） |
 | `aegis-ultra` | Aegis Ultra、灯效、扩展接口、expansion interface |
 | `ff91` | FF 91、FF91、91 2.0、Futurist Alliance、电动汽车、EV、车辆、driving、ADAS、座椅、airbag、轮胎、infotainment |
+| `navi` | NAVI、NAVI Series、四足机器人狗、机器狗、fingertip remote controller、graphical programming、robot dog、quadruped、遥控器、图形化编程 |
 
 对于需要查阅产品手册的问题，为每个涉及的产品生成一个 `{ "agent": "product", "product_key": "..." }` 项。
 
@@ -115,7 +116,7 @@
 - `query_text` 是给下游检索使用的查询文本；有非 fallback 项时应为便于检索的英文扩写；仅 fallback 时保留用户原始输入
 - `loop_plan` 是对象数组；每个对象必须包含 `agent` 字段；`agent` 为 `"product"` 时必须包含 `product_key` 字段
 - `agent` 只能是 `"product"`、`"price"`、`"news"` 或 `"fallback"`
-- `product_key` 只能是 `"master"`、`"futurist"`、`"futurist-ultra"`、`"aegis"`、`"aegis-ultra"` 或 `"ff91"`
+- `product_key` 只能是 `"master"`、`"futurist"`、`"futurist-ultra"`、`"aegis"`、`"aegis-ultra"`、`"ff91"` 或 `"navi"`
 
 ## 行为规则
 1. 不要回答用户问题，你只做预处理

@@ -678,6 +678,43 @@
       ]
     },
     {
+      "id": "manual_navi",
+      "pattern": "https://robotics-instruction-manual.ff.com/navi",
+      "label": "FF NAVI Manual",
+      "greeting": "Need help with your FF NAVI?",
+      "placeholder": "Ask anything about FF NAVI...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "How do I power on NAVI for the first time?",
+          "prompt": "How do I power on NAVI for the first time?",
+          "reply_text": "",
+          "sort_order": 0,
+          "id": "manual_navi_1"
+        },
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "How do I pair the fingertip remote controller?",
+          "prompt": "How do I pair the fingertip remote controller?",
+          "reply_text": "",
+          "sort_order": 1,
+          "id": "manual_navi_2"
+        },
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "What do the indicator lights mean while charging?",
+          "prompt": "What do the indicator lights mean while charging?",
+          "reply_text": "",
+          "sort_order": 2,
+          "id": "manual_navi_3"
+        }
+      ]
+    },
+    {
       "id": "manual_prefix",
       "pattern": "https://robotics-instruction-manual.ff.com/*",
       "label": "Manual Site Fallback",

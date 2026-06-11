@@ -34,6 +34,7 @@ const RECO_PRODUCT_OPTIONS = [
   { value: 'aegis', label: 'FF Aegis' },
   { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
   { value: 'ff91', label: 'FF 91 2.0' },
+  { value: 'navi', label: 'FF NAVI' },
 ]
 
 const LEAD_PRODUCT_OPTIONS = [
@@ -43,6 +44,7 @@ const LEAD_PRODUCT_OPTIONS = [
   { value: 'aegis', label: 'FF Aegis' },
   { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
   { value: 'ff91', label: 'FF 91 2.0' },
+  { value: 'navi', label: 'FF NAVI' },
 ]
 
 const EMPTY_RECO_FORM: RecommendationPayload = {

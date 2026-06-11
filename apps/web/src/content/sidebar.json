@@ -590,6 +590,146 @@
       }
     ]
   },
+  "navi": {
+    "title": "FF NAVI",
+    "sections": [
+      {
+        "id": "navi-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FF NAVI Series Product Manual",
+            "slug": "/navi",
+            "file": "navi/navi-home.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-product-description",
+        "title": "Product Description",
+        "pages": [
+          {
+            "title": "Product Overview",
+            "slug": "/navi/product-overview",
+            "file": "navi/navi-product-overview.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-safety",
+        "title": "Safety & Compliance",
+        "pages": [
+          {
+            "title": "Safety Notice & FCC Compliance",
+            "slug": "/navi/safety-notice",
+            "file": "navi/navi-safety-notice.md"
+          },
+          {
+            "title": "Pre-Operation Guidelines",
+            "slug": "/navi/pre-operation",
+            "file": "navi/navi-pre-operation.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-operation-guide",
+        "title": "Operation Guide",
+        "pages": [
+          {
+            "title": "Power On/Off Instructions",
+            "slug": "/navi/power-on-off",
+            "file": "navi/navi-power-on-off.md"
+          },
+          {
+            "title": "Unboxing Guide",
+            "slug": "/navi/unboxing",
+            "file": "navi/navi-unboxing.md"
+          },
+          {
+            "title": "Activation",
+            "slug": "/navi/activation",
+            "file": "navi/navi-activation.md"
+          },
+          {
+            "title": "Network Settings",
+            "slug": "/navi/network-settings",
+            "file": "navi/navi-network-settings.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-user-guide",
+        "title": "User Guide",
+        "pages": [
+          {
+            "title": "Charging & Indicator Lights",
+            "slug": "/navi/charging",
+            "file": "navi/navi-charging.md"
+          },
+          {
+            "title": "Fingertip Remote Controller",
+            "slug": "/navi/remote-controller",
+            "file": "navi/navi-remote-controller.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-specifications",
+        "title": "Technical Specifications",
+        "pages": [
+          {
+            "title": "Technical Specifications",
+            "slug": "/navi/technical-specifications",
+            "file": "navi/navi-technical-specifications.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-safety-legal",
+        "title": "Safety & Legal Information",
+        "pages": [
+          {
+            "title": "Safety & Legal Information",
+            "slug": "/navi/safety-legal",
+            "file": "navi/navi-safety-legal.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-maintenance",
+        "title": "Maintenance and Care",
+        "pages": [
+          {
+            "title": "Maintenance and Care",
+            "slug": "/navi/maintenance",
+            "file": "navi/navi-maintenance.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-troubleshooting",
+        "title": "Troubleshooting",
+        "pages": [
+          {
+            "title": "Troubleshooting & Help",
+            "slug": "/navi/troubleshooting",
+            "file": "navi/navi-troubleshooting.md"
+          }
+        ]
+      },
+      {
+        "id": "navi-responsible-ai",
+        "title": "Responsible AI & Robotics",
+        "pages": [
+          {
+            "title": "Responsible AI & Robotics Use Guidelines",
+            "slug": "/navi/responsible-ai",
+            "file": "navi/navi-responsible-ai.md"
+          }
+        ]
+      }
+    ]
+  },
   "ff91": {
     "title": "FF 91 2.0",
     "sections": [
