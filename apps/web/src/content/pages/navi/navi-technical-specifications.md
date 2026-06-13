@@ -9,7 +9,7 @@ Please refer to the official product page or in-App guide for the complete techn
 | Product Name | NAVI |
 | Type | AI-powered Quadruped Robot |
 | Age Requirement | 14 years and above |
-| Connectivity | Wi-Fi, 4G, Bluetooth |
+| Connectivity | Wi-Fi, Bluetooth |
 | Charging | Direct wired charging |
 | Remote Control | App + Fingertip Remote Controller |
 | Operating System | Android / iOS (App) |

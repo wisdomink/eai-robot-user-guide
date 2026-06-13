@@ -6,17 +6,17 @@ Please follow all safety warnings throughout this manual. Do not attempt to repa
 
 ## Legal Disclaimer
 
-Before using the robot dog, please carefully read this manual and operate the robot dog in accordance with its contents.
+Before using the FX Navi, please carefully read this manual and operate the FX Navi in accordance with its contents.
 
-The robot dog is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
+The FX Navi is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
 
 For privacy-related matters, please refer to the NAVI Privacy Policy and the End User License Agreement, and read them carefully.
 
-The robot dog shown in this manual is intended to guide users on how to correctly and fully experience the robot dog. The color and appearance of the robot dog shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
+The FX Navi shown in this manual is intended to guide users on how to correctly and fully experience the FX Navi. The color and appearance of the FX Navi shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
 
-To continuously improve product functionality and your user experience, the robot dog will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
+To continuously improve product functionality and your user experience, the FX Navi will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
 
-Users must comply with local laws and regulations when using the robot dog. The robot dog must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
+Users must comply with local laws and regulations when using the FX Navi. The FX Navi must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
 
 ## Precautions
 

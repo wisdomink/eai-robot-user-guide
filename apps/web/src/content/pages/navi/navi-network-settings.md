@@ -1,32 +1,36 @@
 # Network Settings
 
-## Connecting to the Robot Dog Hotspot via App
+## Connecting to the FX Navi via App
 
-The App will automatically connect to the robot dog hotspot by default. If autoconnection fails, follow these steps:
+The FX Navi App is used to connect to the robot, control basic motions, access course content, choreograph movement sequences, build robotics knowledge, and manage your projects and progress.
 
-1. Confirm that the robot dog is activated and powered on.
-2. If you have multiple robot dogs, go to "Pet" in the top-left corner of the App home screen and select the target robot dog under "Switch Pet."
-3. Tap the "Pair" button on the App home screen; the App will connect to the robot dog hotspot.
+## Downloading the App
 
-### Troubleshooting
+Search for "FX Navi" on the App Store or Google Play, then download and install the FX Navi App.
 
-If pairing fails after tapping "Pair," manually connect to the robot dog hotspot as follows:
+You may also scan the QR code on the packaging or in this guide to go directly to the download page.
 
-1. On the App home screen, go to General > Wi-Fi & Security > Copy Password.
-2. In your phone network settings, select the robot dog Wi-Fi, paste the password, and connect to the robot dog hotspot.
+> **Note:** The App name, download links, and QR codes are subject to change based on the final release version.
 
-## Configuring Wi-Fi for the Robot Dog via App
+## Connecting to the Robot via App
 
-1. Confirm that the App is connected to the robot dog hotspot.
-2. Tap "Network Connection" on the App home screen to enter the network configuration page.
-3. Select the target Wi-Fi, enter the password, and tap "Confirm" to complete the setup.
+1. Confirm that your phone's Bluetooth is enabled and bring your phone close to FX Navi. If the App requests network, Bluetooth, or local device permissions, grant them as prompted by your device's operating system.
+2. For more information, visit support.ff.com to access the online user manual.
+3. Open the FX Navi App.
+4. Tap Connect.
+5. When the Bluetooth device list appears, select your FX Navi.
+6. Wait for the connection to complete.
+7. Once connected, you can access basic controls and course features through the App.
 
-### Troubleshooting
+### Troubleshooting Connection Issues
 
-During setup, scanning the Wi-Fi list may cause your phone to disconnect from the robot dog hotspot, prompting "Network configuration complete, please check connection shortly." Reconnect to the robot dog hotspot and configure Wi-Fi again.
+If the App cannot detect or connect to FX Navi, check the following:
 
-## Using the Robot Dog's 4G Network
-
-If you have not paired a pet in the App, the robot dog's 4G network is used by default. We recommend configuring Wi-Fi for the pet after pairing.
-
-If the connected Wi-Fi signal is weak, you can switch to 4G in the App's home screen under Network Connection.
+1. Confirm FX Navi is powered on.
+2. Confirm Bluetooth is enabled on your phone.
+3. Confirm your phone is within range of FX Navi.
+4. Confirm FX Navi is in a connectable state.
+5. Tap Refresh in the App.
+6. If the message "No FX Navi signal" appears, restart both FX Navi and the App, then try again.
+7. If the issue persists, visit support.ff.com or contact the support team.
+8. For more information, visit support.ff.com to access the online user manual.

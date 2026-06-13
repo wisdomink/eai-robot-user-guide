@@ -19,7 +19,7 @@ PAGES: dict[str, str] = {}
 
 # ── 1. Home ──────────────────────────────────────────────────────────────────
 PAGES["navi-home.md"] = """\
-# NAVI Series Product Manual
+# NAVI Series Product Manual 2
 
 ![NAVI Product Overview](/images/navi/navi-cover.png)
 
@@ -59,20 +59,24 @@ Supports App-based remote control and fingertip gamepad control.
 
 ![NAVI Component Names – Side View](/images/navi/navi-component-side.png)
 
-| # | Component |
-|---|-----------|
-| 1 | Emergency stop |
-| 2 | Charging port |
-| 3 | Power switch |
-| 4 | Battery level indicator lights |
-| 5 | Micro USB |
-| 6 | USB |
-| 7 | Ethernet |
-| 8 | Power outlet |
+
+1. Emergency stop
+2. Charging port
+3. Power switch
+4. Battery level indicator lights
+5. Micro USB
+6. USB
+7. Ethernet
+8. Power outlet
 
 ## Accessories List
 
-Please check the official in-App guide or product packaging for the complete accessories list.
+| No. | Product                           | Model                                     | Comments                                                                                                                                        |
+| --- | --------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Battery Charger                   | GA20-2942000T                             | Input: 100-240V AC, 50/60Hz, 1.8A; Output: 29.4V, 2.0A DC                                                                                       |
+| 2   | Remote controller                 | WL4BACTRLCN/G2                            | Rated input: DC 3.0 by 2*AAA battery                                                                                                            |
+| 3   | Split Ferrite Core （Snap-on type） | Material 43 NiZn, approx. 9.5mm - 10mm ID | It is recommended to use a shielded network cable shorter than 3 m, and the ferrite core should be installed close to the network port of NAVI. |
+
 """
 
 # ── 3. Safety Notice & FCC ────────────────────────────────────────────────────
@@ -256,36 +260,40 @@ Users can bind NAVI by scanning the activation QR code to become an administrato
 PAGES["navi-network-settings.md"] = """\
 # Network Settings
 
-## Connecting to the Robot Dog Hotspot via App
+## Connecting to the FX Navi via App
 
-The App will automatically connect to the robot dog hotspot by default. If autoconnection fails, follow these steps:
+The FX Navi App is used to connect to the robot, control basic motions, access course content, choreograph movement sequences, build robotics knowledge, and manage your projects and progress.
 
-1. Confirm that the robot dog is activated and powered on.
-2. If you have multiple robot dogs, go to "Pet" in the top-left corner of the App home screen and select the target robot dog under "Switch Pet."
-3. Tap the "Pair" button on the App home screen; the App will connect to the robot dog hotspot.
+## Downloading the App
 
-### Troubleshooting
+Search for "FX Navi" on the App Store or Google Play, then download and install the FX Navi App.
 
-If pairing fails after tapping "Pair," manually connect to the robot dog hotspot as follows:
+You may also scan the QR code on the packaging or in this guide to go directly to the download page.
 
-1. On the App home screen, go to General > Wi-Fi & Security > Copy Password.
-2. In your phone network settings, select the robot dog Wi-Fi, paste the password, and connect to the robot dog hotspot.
+> **Note:** The App name, download links, and QR codes are subject to change based on the final release version.
 
-## Configuring Wi-Fi for the Robot Dog via App
+## Connecting to the Robot via App
 
-1. Confirm that the App is connected to the robot dog hotspot.
-2. Tap "Network Connection" on the App home screen to enter the network configuration page.
-3. Select the target Wi-Fi, enter the password, and tap "Confirm" to complete the setup.
+1. Confirm that your phone's Bluetooth is enabled and bring your phone close to FX Navi. If the App requests network, Bluetooth, or local device permissions, grant them as prompted by your device's operating system.
+2. For more information, visit support.ff.com to access the online user manual.
+3. Open the FX Navi App.
+4. Tap Connect.
+5. When the Bluetooth device list appears, select your FX Navi.
+6. Wait for the connection to complete.
+7. Once connected, you can access basic controls and course features through the App.
 
-### Troubleshooting
+### Troubleshooting Connection Issues
 
-During setup, scanning the Wi-Fi list may cause your phone to disconnect from the robot dog hotspot, prompting "Network configuration complete, please check connection shortly." Reconnect to the robot dog hotspot and configure Wi-Fi again.
+If the App cannot detect or connect to FX Navi, check the following:
 
-## Using the Robot Dog's 4G Network
-
-If you have not paired a pet in the App, the robot dog's 4G network is used by default. We recommend configuring Wi-Fi for the pet after pairing.
-
-If the connected Wi-Fi signal is weak, you can switch to 4G in the App's home screen under Network Connection.
+1. Confirm FX Navi is powered on.
+2. Confirm Bluetooth is enabled on your phone.
+3. Confirm your phone is within range of FX Navi.
+4. Confirm FX Navi is in a connectable state.
+5. Tap Refresh in the App.
+6. If the message "No FX Navi signal" appears, restart both FX Navi and the App, then try again.
+7. If the issue persists, visit support.ff.com or contact the support team.
+8. For more information, visit support.ff.com to access the online user manual.
 """
 
 # ── 9. Charging & Indicator Lights ───────────────────────────────────────────
@@ -317,7 +325,7 @@ Please refer to the in-App guide for the full indicator light status table.
 
 ### Charging Mode Indicator Light Status
 
-> **Note:** NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power. Additionally, NAVI is equipped with an automatic charging station / Little World; when the battery is low, NAVI will autonomously go to the charging station / Little World to charge.
+> **Note:** NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power.
 """
 
 # ── 10. Remote Controller ─────────────────────────────────────────────────────
@@ -376,7 +384,7 @@ Please refer to the official product page or in-App guide for the complete techn
 | Product Name | NAVI |
 | Type | AI-powered Quadruped Robot |
 | Age Requirement | 14 years and above |
-| Connectivity | Wi-Fi, 4G, Bluetooth |
+| Connectivity | Wi-Fi, Bluetooth |
 | Charging | Direct wired charging |
 | Remote Control | App + Fingertip Remote Controller |
 | Operating System | Android / iOS (App) |
@@ -392,17 +400,17 @@ Please follow all safety warnings throughout this manual. Do not attempt to repa
 
 ## Legal Disclaimer
 
-Before using the robot dog, please carefully read this manual and operate the robot dog in accordance with its contents.
+Before using the FX Navi, please carefully read this manual and operate the FX Navi in accordance with its contents.
 
-The robot dog is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
+The FX Navi is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
 
 For privacy-related matters, please refer to the NAVI Privacy Policy and the End User License Agreement, and read them carefully.
 
-The robot dog shown in this manual is intended to guide users on how to correctly and fully experience the robot dog. The color and appearance of the robot dog shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
+The FX Navi shown in this manual is intended to guide users on how to correctly and fully experience the FX Navi. The color and appearance of the FX Navi shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
 
-To continuously improve product functionality and your user experience, the robot dog will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
+To continuously improve product functionality and your user experience, the FX Navi will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
 
-Users must comply with local laws and regulations when using the robot dog. The robot dog must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
+Users must comply with local laws and regulations when using the FX Navi. The FX Navi must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
 
 ## Precautions
 
@@ -497,7 +505,7 @@ If you encounter any problems or need assistance during use, you can contact us 
 - **Website:** www.ff.com
 - **Email:** sale@ff.com
 
-If you have any feedback or suggestions about the robot dog, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
+If you have any feedback or suggestions about the FX Navi, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
 
 For detailed after-sales policies, please visit the official website. For more detailed usage instructions, please refer to the in-App guide.
 """

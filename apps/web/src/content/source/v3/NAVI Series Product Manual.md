@@ -1,4 +1,4 @@
-# NAVI Series Product Manual
+# NAVI Series Product Manual 2
 
 ## Scope of This Manual
 ![NAVI Product Overview](/images/navi/navi-cover.png)
@@ -172,28 +172,33 @@ Users can bind NAVI by scanning the activation of QR code to become an administr
 
 ## Network Settings
 
-### Connecting to the Robot Dog Hotspot via App
-The App will automatically connect to the robot dog hotspot by default. If autoconnection fails, follow these steps:
-- Confirm that the robot dog is activated and powered on.
-- If you have multiple robot dogs, go to “Pet” in the top-left corner of the App home screen and select the target robot dog under “Switch Pet.”
-- Tap the “Pair” button on the App home screen; the App will connect to the robot dog hotspot.
+### Connecting to the FX Navi via App
+The FX Navi App is used to connect to the robot, control basic motions, access course content, choreograph movement sequences, build robotics knowledge, and manage your projects and progress.
 
-#### Troubleshooting
-If pairing fails after tapping “Pair,” manually connect to the robot dog hotspot as follows:
-- On the App home screen, go to General > Wi-Fi & Security > Copy Password.
-- In your phone network settings, select the robot dog Wi-Fi, paste the password, and connect to the robot dog hotspot.
+### Downloading the App
+Search for "FX Navi" on the App Store or Google Play, then download and install the FX Navi App.
+You may also scan the QR code on the packaging or in this guide to go directly to the download page.
+*Note: The App name, download links, and QR codes are subject to change based on the final release version.
 
-### Configuring Wi-Fi for the Robot Dog via App
-- Confirm that the App is connected to the robot dog hotspot.
-- Tap “Network Connection” on the App home screen to enter the network configuration page.
-- Select the target Wi-Fi, enter the password, and tap “Confirm” to complete the setup.
+### Connecting to the Robot via App
+- Confirm that your phone's Bluetooth is enabled and bring your phone close to FX Navi. If the App requests network, Bluetooth, or local device permissions, grant them as prompted by your device's operating system.
+- For more information, visit support.ff.com to access the online user manual.
+- Open the FX Navi App.
+- Tap Connect.
+- When the Bluetooth device list appears, select your FX Navi.
+- Wait for the connection to complete.
+- Once connected, you can access basic controls and course features through the App.
 
-#### Troubleshooting
-During setup, scanning the Wi-Fi list may cause your phone to disconnect from the robot dog hotspot, prompting “Network configuration complete, please check connection shortly.” Reconnect to the robot dog hotspot and configure Wi-Fi again.
-
-### Using the Robot Dog’s 4G Network
-If you have not paired a pet in the App, the robot dog’s 4G network is used by default. We recommend configuring Wi-Fi for the pet after pairing.
-If the connected Wi-Fi signal is weak, you can switch to 4G in the App’s home screen under Network Connection.
+#### Troubleshooting Connection Issues
+If the App cannot detect or connect to FX Navi, check the following:
+- Confirm FX Navi is powered on.
+- Confirm Bluetooth is enabled on your phone.
+- Confirm your phone is within range of FX Navi.
+- Confirm FX Navi is in a connectable state.
+- Tap Refresh in the App.
+- If the message "No FX Navi signal" appears, restart both FX Navi and the App, then try again.
+- If the issue persists, visit support.ff.com or contact the support team.
+- For more information, visit support.ff.com to access the online user manual.
 
 ## User Guide
 
@@ -212,7 +217,7 @@ Indicates charging status: charging, fully charged, or discharge.
 #### Operating Mode Indicator Light Status
 
 #### Charging Mode Indicator Light Status
-*Note: NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power. Additionally, NAVI is equipped with an automatic charging station / Little World; when the battery is low, NAVI will autonomously go to the charging station / Little World to charge.
+*Note: NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power.
 
 ## Fingertip Remote Controller Instructions
 The fingertip remote controller is an innovative single-hand line-of-sight remote control product designed to provide an exceptional robot control experience. NAVI is equipped with advanced robotic joints for superior and responsive movement. Using this single-hand controller, you can control NAVI with flexibility and speed, delivering a uniquely enjoyable remote-control experience.
@@ -252,12 +257,12 @@ After the initial pairing, the fingertip remote controller will automatically re
 ### Safety Warnings for Regular Use and Maintenance
 
 ### Legal Disclaimer
-Before using the robot dog, please carefully read this manual and operate the robot dog in accordance with its contents.
-The robot dog is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
+Before using the FX Navi, please carefully read this manual and operate the FX Navi in accordance with its contents.
+The FX Navi is intended for independent use only by individuals aged 14 and above with appropriate cognitive and behavioral capabilities (see the Operator Requirements section of this manual for details).
 For privacy-related matters, please refer to the NAVI Privacy Policy and the End User License Agreement, and read them carefully.
-The robot dog shown in this manual is intended to guide users on how to correctly and fully experience the robot dog. The color and appearance of the robot dog shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
-To continuously improve product functionality and your user experience, the robot dog will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
-Users must comply with local laws and regulations when using the robot dog. The robot dog must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
+The FX Navi shown in this manual is intended to guide users on how to correctly and fully experience the FX Navi. The color and appearance of the FX Navi shown in images/videos may differ from the product you purchased. Please refer to the actual product received.
+To continuously improve product functionality and your user experience, the FX Navi will be regularly upgraded and optimized. The electronic version of this user manual will be updated periodically on the official website and App. You may check for the latest version at any time.
+Users must comply with local laws and regulations when using the FX Navi. The FX Navi must not be used to harm other people or animals, or be modified as a weapon, as this may result in the loss of product warranty and other customer rights.
 
 ### Precautions
 - To reduce the risk of injury, always check NAVI’s operating status before use.
@@ -329,7 +334,7 @@ The effective control range of the fingertip remote controller is 5 m, and up to
 If you encounter any problems or need assistance during use, you can contact us at any time through the following channels:
 Website: www.ff.com
 Email: sale@ff.com
-If you have any feedback or suggestions about the robot dog, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
+If you have any feedback or suggestions about the FX Navi, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
 For detailed after-sales policies, please visit the official website. For more detailed usage instructions, please refer to the in-App guide.
 
 ## Responsible AI & Robotics Use Guidelines

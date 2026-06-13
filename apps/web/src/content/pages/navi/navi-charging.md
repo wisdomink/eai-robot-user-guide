@@ -25,4 +25,4 @@ Please refer to the in-App guide for the full indicator light status table.
 
 ### Charging Mode Indicator Light Status
 
-> **Note:** NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power. Additionally, NAVI is equipped with an automatic charging station / Little World; when the battery is low, NAVI will autonomously go to the charging station / Little World to charge.
+> **Note:** NAVI is equipped with 4 battery indicator lights to show the remaining battery level. The battery is divided into 4 equal sections, allowing you to quickly assess the approximate remaining power.

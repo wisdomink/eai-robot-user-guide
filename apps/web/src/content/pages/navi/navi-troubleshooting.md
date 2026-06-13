@@ -25,6 +25,6 @@ If you encounter any problems or need assistance during use, you can contact us 
 - **Website:** www.ff.com
 - **Email:** sale@ff.com
 
-If you have any feedback or suggestions about the robot dog, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
+If you have any feedback or suggestions about the FX Navi, we warmly welcome you to share them with us. Your understanding and support are the driving force behind our progress.
 
 For detailed after-sales policies, please visit the official website. For more detailed usage instructions, please refer to the in-App guide.
