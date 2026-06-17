@@ -65,3 +65,16 @@ const PRODUCTS: Record<ProductId, ProductDef> = {
 }
 
 export const ALL_PRODUCTS = Object.values(PRODUCTS)
+export const DOWNLOADABLE_PRODUCT_IDS: ProductId[] = [
+  'futurist',
+  'futurist-ultra',
+  'master',
+  'aegis',
+  'aegis-ultra',
+  'navi',
+]
+
+export const DOWNLOADABLE_PRODUCTS = DOWNLOADABLE_PRODUCT_IDS.map(id => ({
+  id,
+  label: PRODUCTS[id].label,
+}))

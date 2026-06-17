@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import logoDark from '@/assets/icons/logo-dark.svg'
+import { DOWNLOADABLE_PRODUCTS } from '@/hooks/useProductContext'
 import {
   deleteRecommendation,
   fetchRecommendations,
@@ -12,6 +13,12 @@ import {
   fetchLeadCaptureTriageConfig,
   saveLeadCaptureTriageConfig,
 } from '@/api/leadCaptureConfig'
+import {
+  fetchManualDownloadConfig,
+  getDefaultManualDownloadItems,
+  saveManualDownloadConfig,
+  type ManualDownloadItem,
+} from '@/api/manualDownloadConfig'
 import { fetchLeads, submitLead, type LeadPayload, type LeadRecord } from '@/api/leads'
 import {
   deleteHomepagePage,
@@ -25,7 +32,7 @@ import {
   saveHomepagePage,
 } from '@/api/homepagePrompts'
 
-type Tab = 'recommendations' | 'leads' | 'homepage-prompts'
+type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads'
 
 const RECO_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF Futurist' },
@@ -1239,12 +1246,134 @@ function HomepagePromptsTab() {
   )
 }
 
+/* ───── Manual Downloads Tab ───── */
+
+function ManualDownloadsTab() {
+  const [rows, setRows] = useState<ManualDownloadItem[]>(() => getDefaultManualDownloadItems())
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  const loadConfig = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const config = await fetchManualDownloadConfig()
+      setRows(config.manual_downloads)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载下载配置失败')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadConfig()
+  }, [loadConfig])
+
+  const handleRowChange = (productId: string, value: string) => {
+    setRows(prev =>
+      prev.map(row =>
+        row.product_id === productId
+          ? { ...row, download_url: value }
+          : row
+      )
+    )
+  }
+
+  const handleReset = () => {
+    setRows(getDefaultManualDownloadItems())
+    setError(null)
+    setSuccess(null)
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+
+    const normalized = DOWNLOADABLE_PRODUCTS.map(product => {
+      const row = rows.find(item => item.product_id === product.id)
+      return {
+        product_id: product.id,
+        label: product.label,
+        download_url: row?.download_url?.trim() || '',
+      }
+    })
+
+    if (normalized.some(item => isBlank(item.download_url))) {
+      setError('每个产品都需要填写下载链接。')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const config = await saveManualDownloadConfig({
+        manual_downloads: normalized,
+      })
+      setRows(config.manual_downloads)
+      setSuccess('下载链接已保存。标题栏桌面端下拉菜单会读取这里的配置。')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存下载配置失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section className="reco-card">
+      <form onSubmit={handleSubmit}>
+        <div className="recommendation-page-head">
+          <div>
+            <h1>下载链接配置</h1>
+            <p>配置桌面端标题栏 Download 下拉菜单的 PDF 链接。当前仅保留 6 个产品，不包含 FF 91 2.0。</p>
+          </div>
+          <div className="recommendation-page-links">
+            <button type="button" className="admin-link-btn" onClick={handleReset}>
+              重置为默认占位链接
+            </button>
+            <button type="button" className="admin-link-btn" onClick={loadConfig} disabled={loading}>
+              {loading ? '刷新中…' : '刷新'}
+            </button>
+          </div>
+        </div>
+
+        <div className="recommendation-form">
+          {rows.map(row => (
+            <label key={row.product_id} className="recommendation-form-full">
+              {row.label}
+              <input
+                type="url"
+                value={row.download_url}
+                onChange={(e) => handleRowChange(row.product_id, e.target.value)}
+                placeholder="https://example.com/manual.pdf"
+                required
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className="recommendation-form-actions">
+          <button type="submit" disabled={saving || loading}>
+            {saving ? '保存中…' : '保存下载链接'}
+          </button>
+        </div>
+
+        {success && <p className="lead-msg success">{success}</p>}
+        {error && <p className="lead-msg error">{error}</p>}
+      </form>
+    </section>
+  )
+}
+
 /* ───── Admin Page (Shell) ───── */
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'recommendations', label: '推荐管理' },
   { key: 'leads', label: '留资管理' },
   { key: 'homepage-prompts', label: '首页推荐' },
+  { key: 'manual-downloads', label: '下载配置' },
 ]
 
 export default function AdminPage() {
@@ -1284,6 +1413,7 @@ export default function AdminPage() {
         {activeTab === 'recommendations' && <RecommendationsTab />}
         {activeTab === 'leads' && <LeadsTab />}
         {activeTab === 'homepage-prompts' && <HomepagePromptsTab />}
+        {activeTab === 'manual-downloads' && <ManualDownloadsTab />}
       </main>
     </div>
   )

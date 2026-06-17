@@ -149,6 +149,16 @@ class LeadCaptureTriageConfigPayload(BaseModel):
     )
 
 
+class ManualDownloadItemPayload(BaseModel):
+    product_id: str = Field("", description="Stable product key for one manual download row")
+    label: str = Field("", description="Display label used in admin and header dropdown")
+    download_url: str = Field("", description="PDF download URL for this product")
+
+
+class ManualDownloadConfigPayload(BaseModel):
+    manual_downloads: list[ManualDownloadItemPayload] = Field(default_factory=list)
+
+
 @app.post("/api/chatkit")
 async def chatkit_endpoint(request: Request):
     """Self-hosted ChatKit protocol endpoint (used when CHAT_MODE=backend)."""
@@ -556,6 +566,30 @@ async def save_lead_capture_config(payload: LeadCaptureTriageConfigPayload):
         "POST /api/save-lead-capture-config  lead_keys=%s  has_keywords=%s",
         list((payload.lead_capture or {}).keys()),
         payload.purchase_intent_keywords is not None,
+    )
+    return {"ok": True, "config": config}
+
+
+@app.get("/api/get-manual-download-config")
+async def get_manual_download_config():
+    """Read manual download links used by the header dropdown and admin page."""
+    return recommendation_storage.get_manual_download_config()
+
+
+@app.post("/api/save-manual-download-config")
+async def save_manual_download_config(payload: ManualDownloadConfigPayload):
+    """Replace the downloadable manual links list with the normalized six-product config."""
+    try:
+        config = recommendation_storage.save_manual_download_config(
+            [item.model_dump() for item in payload.manual_downloads]
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    front_logger.info(
+        "POST /api/save-manual-download-config  count=%d product_ids=%s",
+        len(payload.manual_downloads),
+        [item.product_id for item in payload.manual_downloads],
     )
     return {"ok": True, "config": config}
 

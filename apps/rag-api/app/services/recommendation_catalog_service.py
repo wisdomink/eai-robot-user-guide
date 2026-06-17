@@ -13,6 +13,38 @@ class RecommendationCatalogStorage:
 
     _CONFIG_PK = "CONFIG"
     _CATALOG_PK = "CATALOG_ITEM"
+    _MANUAL_DOWNLOAD_PRODUCTS = [
+        (
+            "futurist",
+            "FF Futurist",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf",
+        ),
+        (
+            "futurist-ultra",
+            "FF Futurist Ultra",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf",
+        ),
+        (
+            "master",
+            "FF Master",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf",
+        ),
+        (
+            "aegis",
+            "FF Aegis",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX+Aegis.pdf",
+        ),
+        (
+            "aegis-ultra",
+            "FF Aegis Ultra",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf",
+        ),
+        (
+            "navi",
+            "FF NAVI",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf",
+        ),
+    ]
 
     def __init__(
         self,
@@ -96,8 +128,45 @@ class RecommendationCatalogStorage:
             "lead_capture": {},
             "products": [],
             "purchase_intent_keywords": {"cn": [], "en": []},
+            "manual_downloads": RecommendationCatalogStorage._default_manual_downloads(),
             "catalog_items": [],
         }
+
+    @classmethod
+    def _default_manual_downloads(cls) -> list[dict[str, str]]:
+        return [
+            {
+                "product_id": product_id,
+                "label": label,
+                "download_url": download_url,
+            }
+            for product_id, label, download_url in cls._MANUAL_DOWNLOAD_PRODUCTS
+        ]
+
+    @classmethod
+    def _normalize_manual_downloads(cls, raw: object) -> list[dict[str, str]]:
+        rows = raw if isinstance(raw, list) else []
+        by_id: dict[str, dict] = {}
+        for item in rows:
+            if not isinstance(item, dict):
+                continue
+            product_id = str(item.get("product_id", "")).strip()
+            if not product_id:
+                continue
+            by_id[product_id] = item
+
+        normalized: list[dict[str, str]] = []
+        for product_id, label, default_download_url in cls._MANUAL_DOWNLOAD_PRODUCTS:
+            item = by_id.get(product_id, {})
+            download_url = str(item.get("download_url", "")).strip() or default_download_url
+            normalized.append(
+                {
+                    "product_id": product_id,
+                    "label": label,
+                    "download_url": download_url,
+                }
+            )
+        return normalized
 
     def _load_seed_config(self) -> dict:
         if self._seed_cache is not None:
@@ -144,6 +213,7 @@ class RecommendationCatalogStorage:
         config["lead_capture"] = dict(seed.get("lead_capture") or {})
         config["products"] = list(seed.get("products") or [])
         config["purchase_intent_keywords"] = dict(seed.get("purchase_intent_keywords") or {"cn": [], "en": []})
+        config["manual_downloads"] = self._normalize_manual_downloads(seed.get("manual_downloads"))
 
         for item in self._query_partition(self._CONFIG_PK):
             sk = item.get("sk")
@@ -159,6 +229,8 @@ class RecommendationCatalogStorage:
                     "cn": list(row.get("cn", []) or []),
                     "en": list(row.get("en", []) or []),
                 }
+            elif sk == "MANUAL_DOWNLOADS":
+                config["manual_downloads"] = self._normalize_manual_downloads(row.get("items"))
 
         catalog_items = [
             {k: v for k, v in item.items() if k not in {"pk", "sk"}}
@@ -210,6 +282,16 @@ class RecommendationCatalogStorage:
                         "sk": "PURCHASE_INTENT_KEYWORDS",
                         "cn": self._normalize_keyword_list(keywords.get("cn")),
                         "en": self._normalize_keyword_list(keywords.get("en")),
+                    }
+                )
+
+            manual_downloads = seed.get("manual_downloads")
+            if isinstance(manual_downloads, list):
+                batch.put_item(
+                    Item={
+                        "pk": self._CONFIG_PK,
+                        "sk": "MANUAL_DOWNLOADS",
+                        "items": self._normalize_manual_downloads(manual_downloads),
                     }
                 )
 
@@ -282,6 +364,12 @@ class RecommendationCatalogStorage:
         if not isinstance(keywords, dict):
             keywords = {"cn": [], "en": []}
         return {"lead_capture": lead, "purchase_intent_keywords": keywords}
+
+    def get_manual_download_config(self) -> dict:
+        config = self._load_config()
+        return {
+            "manual_downloads": self._normalize_manual_downloads(config.get("manual_downloads"))
+        }
 
     @staticmethod
     def _normalize_keyword_list(raw: object) -> list[str]:
@@ -366,6 +454,26 @@ class RecommendationCatalogStorage:
 
         self._write_config(config)
         return self.get_lead_capture_triage_config()
+
+    def save_manual_download_config(self, manual_downloads: list[dict] | None = None) -> dict:
+        normalized = self._normalize_manual_downloads(manual_downloads)
+
+        if self._backend == "dynamodb":
+            self._ensure_dynamodb_seeded()
+            assert self._dynamodb_table is not None
+            self._dynamodb_table.put_item(
+                Item={
+                    "pk": self._CONFIG_PK,
+                    "sk": "MANUAL_DOWNLOADS",
+                    "items": normalized,
+                }
+            )
+            return self.get_manual_download_config()
+
+        config = self._load_config()
+        config["manual_downloads"] = normalized
+        self._write_config(config)
+        return self.get_manual_download_config()
 
     def delete_recommendation(self, recommendation_id: str) -> dict | None:
         if self._backend == "dynamodb":

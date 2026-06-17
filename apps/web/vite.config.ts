@@ -67,6 +67,14 @@ export default defineConfig(() => {
           target: 'http://localhost:8000',
           changeOrigin: true,
         },
+        '/api/get-manual-download-config': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
+        '/api/save-manual-download-config': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
         '/api/get-recommendations': {
           target: 'http://localhost:8000',
           changeOrigin: true,

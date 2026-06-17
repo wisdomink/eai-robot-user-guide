@@ -82,6 +82,38 @@
       "procurement"
     ]
   },
+  "manual_downloads": [
+    {
+      "product_id": "futurist",
+      "label": "FF Futurist",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf"
+    },
+    {
+      "product_id": "futurist-ultra",
+      "label": "FF Futurist Ultra",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf"
+    },
+    {
+      "product_id": "master",
+      "label": "FF Master",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf"
+    },
+    {
+      "product_id": "aegis",
+      "label": "FF Aegis",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX+Aegis.pdf"
+    },
+    {
+      "product_id": "aegis-ultra",
+      "label": "FF Aegis Ultra",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf"
+    },
+    {
+      "product_id": "navi",
+      "label": "FF NAVI",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf"
+    }
+  ],
   "catalog_items": [
     {
       "enabled": true,
