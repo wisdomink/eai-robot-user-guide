@@ -179,6 +179,34 @@ body {
   margin: 0;
 }
 
+.md-body blockquote.callout-warning {
+  border-left-color: #d93025;
+  background: rgba(217, 48, 37, 0.06);
+  color: var(--color-gray-700);
+}
+
+.md-body blockquote.callout-warning strong {
+  color: #d93025;
+}
+
+.md-body blockquote.callout-caution {
+  border-left-color: #e67e22;
+  background: rgba(230, 126, 34, 0.06);
+}
+
+.md-body blockquote.callout-caution strong {
+  color: #c0650a;
+}
+
+.md-body blockquote.callout-note {
+  border-left-color: var(--color-ios-blue);
+  background: rgba(10, 132, 255, 0.05);
+}
+
+.md-body blockquote.callout-note strong {
+  color: var(--color-ios-blue);
+}
+
 /* Code */
 .md-body code {
   background: var(--color-gray-50);
@@ -252,6 +280,12 @@ body {
   margin: 0.5rem 0 0;
   object-fit: cover;
   min-height: 50vh;
+}
+
+/* Battery warning label — compact inline size */
+.md-body img[src*="navi-home-warning"] {
+  max-width: min(520px, 70%);
+  display: block;
 }
 
 /* ══════════════════════════════════════════════════════════════

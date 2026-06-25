@@ -21,6 +21,20 @@ renderer.heading = function (token: Tokens.Heading) {
   return `<h${token.depth} id="${anchor}">${token.text}</h${token.depth}>\n`
 }
 
+function calloutClass(text: string): string | null {
+  const normalized = text.replace(/\*\*/g, '').trim()
+  const match = normalized.match(/^(WARNING|CAUTION|NOTE):/i)
+  if (!match) return null
+  return `callout-${match[1].toLowerCase()}`
+}
+
+renderer.blockquote = function (token: Tokens.Blockquote) {
+  const body = this.parser.parse(token.tokens)
+  const callout = calloutClass(token.text)
+  const classAttr = callout ? ` class="${callout}"` : ''
+  return `<blockquote${classAttr}>\n${body}</blockquote>\n`
+}
+
 renderer.link = function (token: Tokens.Link) {
   const { href, title, text } = token
   const safeHref = (href || '').replace(/"/g, '&quot;')
