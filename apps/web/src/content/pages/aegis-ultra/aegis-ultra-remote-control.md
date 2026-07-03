@@ -23,6 +23,7 @@
 ![Not connected](/images/aegis-ultra/aegis-ultra-remote-control-6.png)
 
 6. Select the Wi-Fi network of the robot to connect. The Wi-Fi name is found on the device nameplate.
+    For a password, pleas enter **12345678**.
 
 ![Select Wi-Fi](/images/aegis-ultra/aegis-ultra-remote-control-7.png)
 
