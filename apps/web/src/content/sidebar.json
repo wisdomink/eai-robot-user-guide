@@ -445,10 +445,10 @@
       },
       {
         "id": "aegis-warranty",
-        "title": "Warranty Instructions",
+        "title": "Safety, Warranty and Compliance",
         "pages": [
           {
-            "title": "Warranty Instructions",
+            "title": "Safety, Warranty and Compliance",
             "slug": "/aegis/warranty-instructions",
             "file": "aegis/aegis-warranty-instructions.md"
           }
@@ -579,10 +579,10 @@
       },
       {
         "id": "warranty",
-        "title": "Warranty Information",
+        "title": "Safety, Warranty and Compliance",
         "pages": [
           {
-            "title": "Warranty Information",
+            "title": "Safety, Warranty and Compliance",
             "slug": "/aegis-ultra/warranty",
             "file": "aegis-ultra/aegis-ultra-warranty.md"
           }

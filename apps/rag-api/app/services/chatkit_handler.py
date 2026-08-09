@@ -56,7 +56,7 @@ from chatkit.types import (
     UserMessageItem,
     WidgetItem,
 )
-from chatkit.widgets import Card, Caption, Input, Label, Select, Spacer, Text, Title
+from chatkit.widgets import Box, Button, Card, Caption, Form, Input, Label, Markdown, Select, Spacer, Text, Title
 
 from app.core.config import (
     LEADS_DIR,
@@ -94,6 +94,18 @@ front_logger = logging.getLogger(FRONT_LOGGER_NAME)
 
 # Legacy magic trigger – kept for reference only; detection now uses the x-ff-lead-capture header.
 _LEAD_CAPTURE_TRIGGER_LEGACY = "\u200b\u200bFF_LEAD_CAPTURE\u200b\u200b"
+_PRIVACY_POLICY_URL = "https://www.ff.com/us/privacy-policy/"
+_LEAD_COMPLIANCE_EN = (
+    "By submitting this form, I authorize Faraday Future to contact me with marketing and "
+    "promotional communications via the contact information I provided. I can unsubscribe or "
+    "opt out at any time by clicking the unsubscribe link in any email or texts. This consent "
+    "is not required to complete your request. For more information, please review our"
+)
+_LEAD_COMPLIANCE_CN = (
+    "提交此表单即表示您授权 Faraday Future 通过您提供的联系方式向您发送营销及推广信息。您可随时通过邮件或短信中的"
+    "退订链接取消订阅或选择退出。此授权并非完成申请的必要条件。如需了解更多，请查阅我们的"
+)
+_EMAIL_ADDRESS_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 # ── Paths ────────────────────────────────────────────────────────────────
 
@@ -1196,66 +1208,95 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
     def _build_lead_card(self, title: str, description: str, lang: str) -> Card:
         is_cn = lang == "cn"
+        compliance_text = _LEAD_COMPLIANCE_CN if is_cn else _LEAD_COMPLIANCE_EN
         return Card(
-            asForm=True,
             children=[
                 Title(value=title),
                 Caption(value=description),
                 Spacer(size="sm"),
-                Label(
-                    value="产品 / Product" if is_cn else "Product",
-                    fieldName="product",
-                ),
-                Select(
-                    name="product",
-                    options=self.reco_engine.product_options,
-                    defaultValue="aegis-ultra",
+                Form(
+                    onSubmitAction=ActionConfig(
+                        type="submit_lead",
+                        handler="server",
+                        streaming=True,
+                    ),
+                    children=[
+                        Label(
+                            value="产品 / Product" if is_cn else "Product",
+                            fieldName="product",
+                        ),
+                        Select(
+                            name="product",
+                            options=self.reco_engine.product_options,
+                            defaultValue="aegis-ultra",
+                        ),
+                        Spacer(size="sm"),
+                        Label(
+                            value="名 / First Name" if is_cn else "First Name",
+                            fieldName="firstName",
+                        ),
+                        Input(
+                            name="firstName",
+                            placeholder="请输入名" if is_cn else "Your first name",
+                        ),
+                        Spacer(size="sm"),
+                        Label(
+                            value="姓 / Last Name" if is_cn else "Last Name",
+                            fieldName="lastName",
+                        ),
+                        Input(
+                            name="lastName",
+                            placeholder="请输入姓" if is_cn else "Your last name",
+                        ),
+                        Spacer(size="sm"),
+                        Label(
+                            value="邮箱 / Email *" if is_cn else "Email *",
+                            fieldName="email",
+                        ),
+                        Input(
+                            name="email",
+                            inputType="email",
+                            required=True,
+                            placeholder="请输入邮箱" if is_cn else "Your email",
+                        ),
+                        Spacer(size="sm"),
+                        Label(
+                            value="电话 / Phone *" if is_cn else "Phone *",
+                            fieldName="phone",
+                        ),
+                        Input(
+                            name="phone",
+                            inputType="tel",
+                            required=True,
+                            placeholder="请输入电话" if is_cn else "Your phone number",
+                        ),
+                        Spacer(size="sm"),
+                        Button(
+                            label="提交" if is_cn else "Submit",
+                            submit=True,
+                        ),
+                    ],
                 ),
                 Spacer(size="sm"),
-                Label(
-                    value="名 / First Name" if is_cn else "First Name",
-                    fieldName="firstName",
+                Caption(
+                    value=compliance_text,
+                    size="md",
+                    textAlign="center",
+                    color="secondary",
                 ),
-                Input(
-                    name="firstName",
-                    placeholder="请输入名" if is_cn else "Your first name",
-                ),
-                Spacer(size="sm"),
-                Label(
-                    value="姓 / Last Name" if is_cn else "Last Name",
-                    fieldName="lastName",
-                ),
-                Input(
-                    name="lastName",
-                    placeholder="请输入姓" if is_cn else "Your last name",
-                ),
-                Spacer(size="sm"),
-                Label(
-                    value="邮箱 / Email" if is_cn else "Email",
-                    fieldName="email",
-                ),
-                Input(
-                    name="email",
-                    placeholder="请输入邮箱" if is_cn else "Your email",
-                ),
-                Spacer(size="sm"),
-                Label(
-                    value="电话 / Phone" if is_cn else "Phone",
-                    fieldName="phone",
-                ),
-                Input(
-                    name="phone",
-                    placeholder="请输入电话" if is_cn else "Your phone number",
+                Box(
+                    align="center",
+                    children=[
+                        Markdown(
+                            value=(
+                                f"[《隐私政策》]({_PRIVACY_POLICY_URL})。"
+                                if is_cn
+                                else f"[Privacy Policy]({_PRIVACY_POLICY_URL})."
+                            ),
+                        ),
+                    ],
                 ),
             ],
-            confirm={
-                "label": "提交" if is_cn else "Submit",
-                "action": ActionConfig(
-                    type="submit_lead",
-                    handler="server",
-                    streaming=True,
-                ),
-            },
         )
 
     # ── Lead persistence ──────────────────────────────────────────────────
@@ -1394,10 +1435,28 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         action_payload = getattr(action_obj, "payload", {}) or {}
 
         if action_type == "submit_lead":
-            self._save_lead(thread.id, action_payload)
-
             lang = self.store.thread_langs.get(thread.id, "en")
             is_cn = lang == "cn"
+            email = str(action_payload.get("email") or "").strip()
+            phone = str(action_payload.get("phone") or "").strip()
+
+            if not email or not phone or not _EMAIL_ADDRESS_RE.fullmatch(email):
+                error_text = (
+                    "请填写有效的邮箱和电话后再提交。"
+                    if is_cn
+                    else "Please enter a valid email address and phone number before submitting."
+                )
+                error_card = Card(children=[
+                    Title(value="提交未完成" if is_cn else "Submission incomplete"),
+                    Text(value=error_text),
+                ])
+                async for ev in stream_widget(thread, error_card):
+                    yield ev
+                return
+
+            lead_payload = {**action_payload, "email": email, "phone": phone}
+            self._save_lead(thread.id, lead_payload)
+
             success_title, success_text = self.reco_engine.lead_success_text(lang)
 
             # Build a summary of submitted info so it persists in the chat history
@@ -1418,15 +1477,10 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     Text(value=f"{'姓名 / Name' if is_cn else 'Name'}: {full_name}")
                 )
 
-            email = str(action_payload.get("email") or "").strip()
-            if email:
-                summary_lines.append(Text(value=f"Email: {email}"))
-
-            phone = str(action_payload.get("phone") or "").strip()
-            if phone:
-                summary_lines.append(
-                    Text(value=f"{'电话 / Phone' if is_cn else 'Phone'}: {phone}")
-                )
+            summary_lines.append(Text(value=f"Email: {email}"))
+            summary_lines.append(
+                Text(value=f"{'电话 / Phone' if is_cn else 'Phone'}: {phone}")
+            )
 
             success_card = Card(children=[
                 Title(value=success_title),

@@ -37,7 +37,7 @@ The controller is not included in the Aegis version.
 | Right-click / trigger | RB and RT buttons |
 | Direction keys | Left cross key |
 | Joystick | LS: Left Stick (Forward, Backward, Move Left, Move Right) RS: Right Stick (Rotate direction) |
-| Mode button | / |
+| Mode button | Press the **Mode** button to switch between **Joystick** and **Direction Key** control modes. |
 | Mode/Status indicator light | Status indicator light |
 | Vibration button | / |
 | Four action buttons | Function keys A, B, X and Y |
