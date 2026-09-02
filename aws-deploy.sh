@@ -3,24 +3,53 @@
 # 构建 Docker 镜像并部署到 AWS ECS
 #
 # Usage:
-#   ./aws-deploy.sh --build             # 构建镜像 + 推送 + 部署（一步到位）
-#   ./aws-deploy.sh setup-ssl <域名>    # 配置自定义域名 + HTTPS（首次）
-#   ./aws-deploy.sh status              # 查看 ECS 服务状态
-#   ./aws-deploy.sh logs                # 查看容器日志
-#   ./aws-deploy.sh destroy             # 删除所有 AWS 资源
+#   ./aws-deploy.sh --build
+#   AWS_PROFILE=eai-robot ./aws-deploy.sh --build
+#   ./aws-deploy.sh --profile eai-robot --build
+#   ./aws-deploy.sh --profile eai-robot setup-ssl <域名>
+#   ./aws-deploy.sh --profile eai-robot status
+#   ./aws-deploy.sh --profile eai-robot logs
+#   ./aws-deploy.sh --profile eai-robot destroy
 #
 set -euo pipefail
 
 # ══════════════════════════════════════════════════════════
-#  配置（在此填入你的 AWS 凭证）
+#  部署配置
 # ══════════════════════════════════════════════════════════
-export AWS_ACCESS_KEY_ID="xxx"
-export AWS_SECRET_ACCESS_KEY="xxxx"
-export AWS_DEFAULT_REGION="xxx"
+
+# 本地 `.env` 中保存 AWS 凭证；该文件被 Git 和 Docker 忽略。
+# 文件格式见 `.env.example`。也可改用 AWS_PROFILE 或外部环境变量。
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+AWS_DEPLOY_ENV_FILE="${AWS_DEPLOY_ENV_FILE:-$SCRIPT_DIR/.env}"
+AWS_DEPLOY_ENV_LOADED=false
+
+if [ -f "$AWS_DEPLOY_ENV_FILE" ]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$AWS_DEPLOY_ENV_FILE"
+    set +a
+    AWS_DEPLOY_ENV_LOADED=true
+fi
+
+if [ -n "${AWS_ACCESS_KEY_ID:-}" ] || [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+    if [ -z "${AWS_ACCESS_KEY_ID:-}" ] || [ -z "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+        echo "❌ AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY 必须同时设置。"
+        exit 1
+    fi
+    unset AWS_PROFILE || true
+else
+    unset AWS_SESSION_TOKEN || true
+fi
+
+AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+export AWS_DEFAULT_REGION="$AWS_REGION"
+
+# 新账号安全护栏：所有 AWS 操作必须在此账号中执行。
+# 不允许从环境变量或命令行覆盖，避免误部署到旧账号。
+EXPECTED_AWS_ACCOUNT_ID="018079438010"
 
 APP_NAME="eai-robot"
 IMAGE_NAME="eai-robot-app"
-AWS_REGION="$AWS_DEFAULT_REGION"
 ECR_REPO_NAME="eai-robot-app"
 LEADS_DDB_TABLE="${APP_NAME}-leads"
 RECOMMENDATIONS_DDB_TABLE="${APP_NAME}-recommendations"
@@ -30,28 +59,51 @@ CONTAINER_PORT=80
 CPU=512        # 0.5 vCPU
 MEMORY=1024    # 1 GB
 
-PRODUCTION_CHAT_SERVICE_ORIGIN="https://robotics-instruction-manual.ff.com"
+# 正式切流后默认使用生产域名；如需临时验证，可在运行前覆盖为测试域名。
+# 例如：PRODUCTION_CHAT_SERVICE_ORIGIN=https://robotics-instruction-manual-new.ff.com ./aws-deploy.sh --build
+PRODUCTION_CHAT_SERVICE_ORIGIN="${PRODUCTION_CHAT_SERVICE_ORIGIN:-https://robotics-instruction-manual.ff.com}"
 CHATKIT_DOMAIN_KEY="domain_pk_69d52b6b7cb08193b207b84802aa895d08baab6db3c053fa"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/apps/rag-api/.env"
-DEPLOY_CONFIG="$SCRIPT_DIR/.deploy-config"
+DEPLOY_CONFIG="${DEPLOY_CONFIG:-$SCRIPT_DIR/.deploy-config-new-account}"
+
+# 可选网络覆盖。若新账号没有 default VPC，可在运行时指定：
+# DEPLOY_VPC_ID=vpc-xxx DEPLOY_SUBNET_IDS=subnet-a,subnet-b ./aws-deploy.sh --profile eai-robot --build
+DEPLOY_VPC_ID="${DEPLOY_VPC_ID:-}"
+DEPLOY_SUBNET_IDS="${DEPLOY_SUBNET_IDS:-}"
 
 # ══════════════════════════════════════════════════════════
 #  工具函数
 # ══════════════════════════════════════════════════════════
+
+print_context() {
+    if [ "$AWS_DEPLOY_ENV_LOADED" = true ] && [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+        echo "  AWS Auth:     local .env access key (${AWS_ACCESS_KEY_ID:0:4}...)"
+    elif [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+        echo "  AWS Auth:     environment access key (${AWS_ACCESS_KEY_ID:0:4}...)"
+    else
+        echo "  AWS Auth:     profile/env (${AWS_PROFILE:-default})"
+    fi
+    echo "  AWS Account:  ${AWS_ACCOUNT_ID:-unknown}"
+    echo "  Region:       $AWS_REGION"
+    echo "  Config file:  $DEPLOY_CONFIG"
+}
 
 check_prerequisites() {
     if ! command -v aws &>/dev/null; then
         echo "❌ AWS CLI 未安装。请运行: brew install awscli"
         exit 1
     fi
-    if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-        echo "❌ AWS 凭证未配置。请在本脚本顶部填入 AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY"
+    if ! aws sts get-caller-identity &>/dev/null; then
+        echo "❌ AWS 凭证无效。请确认脚本顶部硬编码凭证、AWS_PROFILE 或默认 AWS CLI 凭证已配置。"
+        echo "   示例: aws configure --profile eai-robot-new"
         exit 1
     fi
-    if ! aws sts get-caller-identity &>/dev/null; then
-        echo "❌ AWS 凭证无效，请检查 AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY 是否正确"
+    AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+    if [ -n "$EXPECTED_AWS_ACCOUNT_ID" ] && [ "$AWS_ACCOUNT_ID" != "$EXPECTED_AWS_ACCOUNT_ID" ]; then
+        echo "❌ 当前 AWS 账号不匹配，已停止。"
+        echo "   当前账号: $AWS_ACCOUNT_ID"
+        echo "   预期账号: $EXPECTED_AWS_ACCOUNT_ID"
         exit 1
     fi
     if ! command -v docker &>/dev/null || ! docker info &>/dev/null 2>&1; then
@@ -62,12 +114,28 @@ check_prerequisites() {
 
 load_config() {
     AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-    ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-    ECR_IMAGE="$ECR_REGISTRY/$ECR_REPO_NAME:latest"
+    if [ -n "$EXPECTED_AWS_ACCOUNT_ID" ] && [ "$AWS_ACCOUNT_ID" != "$EXPECTED_AWS_ACCOUNT_ID" ]; then
+        echo "❌ 当前 AWS 账号不匹配，已停止。"
+        echo "   当前账号: $AWS_ACCOUNT_ID"
+        echo "   预期账号: $EXPECTED_AWS_ACCOUNT_ID"
+        exit 1
+    fi
 
     if [ -f "$DEPLOY_CONFIG" ]; then
         source "$DEPLOY_CONFIG"
+        if [ -n "${CONFIG_AWS_ACCOUNT_ID:-}" ] && [ "$CONFIG_AWS_ACCOUNT_ID" != "$AWS_ACCOUNT_ID" ]; then
+            echo "❌ 部署配置文件账号与当前 AWS 账号不一致，已停止。"
+            echo "   配置文件: $DEPLOY_CONFIG"
+            echo "   配置账号: $CONFIG_AWS_ACCOUNT_ID"
+            echo "   当前账号: $AWS_ACCOUNT_ID"
+            echo "   如需全新部署，请换一个 DEPLOY_CONFIG，或确认后手动处理该配置文件。"
+            exit 1
+        fi
     fi
+
+    export AWS_DEFAULT_REGION="$AWS_REGION"
+    ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+    ECR_IMAGE="$ECR_REGISTRY/$ECR_REPO_NAME:latest"
 }
 
 save_config() {
@@ -75,6 +143,8 @@ save_config() {
     current_image_id=$(docker images "$IMAGE_NAME:latest" --format "{{.ID}}" 2>/dev/null || echo "")
     cat > "$DEPLOY_CONFIG" << EOF
 # Auto-generated — do not edit
+CONFIG_AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID"
+AWS_REGION="$AWS_REGION"
 ECS_CLUSTER_NAME="$ECS_CLUSTER_NAME"
 ECS_SERVICE_NAME="$ECS_SERVICE_NAME"
 TASK_FAMILY="$TASK_FAMILY"
@@ -297,12 +367,14 @@ push_to_ecr() {
 cmd_status() {
     load_config
     if [ -z "${ECS_CLUSTER_NAME:-}" ]; then
-        echo "❌ 尚未部署。请先运行: ./aws-deploy.sh"
+        echo "❌ 尚未部署。请先运行: $0 --build"
         exit 1
     fi
 
     echo ""
     echo "═══ ECS 服务状态 ═══"
+    print_context
+    echo ""
     aws ecs describe-services \
         --cluster "$ECS_CLUSTER_NAME" \
         --services "$ECS_SERVICE_NAME" \
@@ -325,9 +397,9 @@ cmd_status() {
 
 cmd_logs() {
     load_config
-    local since="${2:-1h}"
+    local since="${1:-1h}"
     echo "📋 最近日志 (since=$since, Ctrl+C 退出):"
-    echo "   提示: ./aws-deploy.sh logs 24h  查看最近 24 小时"
+    echo "   提示: $0 logs 24h  查看最近 24 小时"
     aws logs tail "/ecs/$APP_NAME" --follow --since "$since" --region "$AWS_REGION" 2>/dev/null || {
         echo "  查看日志: AWS Console → CloudWatch → Log groups → /ecs/$APP_NAME"
     }
@@ -344,9 +416,14 @@ cmd_destroy() {
     fi
 
     echo ""
-    echo "⚠️  即将删除: ECS Service、Cluster、ALB"
-    read -p "确认删除？(y/N) " confirm
-    [ "$confirm" = "y" ] || exit 0
+    echo "⚠️  即将删除当前配置文件记录的新账号资源:"
+    print_context
+    echo ""
+    echo "   ECS Service、Cluster、ALB、Target Group，以及本地部署配置文件。"
+    echo "   注意：DynamoDB、ECR、CloudWatch Logs、IAM Role 不会由此命令删除。"
+    echo ""
+    read -r -p "请输入当前 AWS Account ID 以确认删除: " confirm
+    [ "$confirm" = "$AWS_ACCOUNT_ID" ] || { echo "已取消。"; exit 0; }
 
     aws ecs update-service --cluster "$ECS_CLUSTER_NAME" --service "$ECS_SERVICE_NAME" --desired-count 0 --region "$AWS_REGION" >/dev/null 2>&1 || true
     aws ecs delete-service --cluster "$ECS_CLUSTER_NAME" --service "$ECS_SERVICE_NAME" --force --region "$AWS_REGION" >/dev/null 2>&1 || true
@@ -367,7 +444,7 @@ cmd_setup_ssl() {
     load_config
 
     if [ -z "${ALB_ARN:-}" ]; then
-        echo "❌ 尚未部署。请先运行: ./aws-deploy.sh"
+        echo "❌ 尚未部署。请先运行: $0 --build"
         exit 1
     fi
 
@@ -468,7 +545,7 @@ cmd_setup_ssl() {
             echo ""
             echo "  ⚠️  证书尚未通过验证 (状态: $cert_status)"
             echo "     请确认 DNS 记录已添加，稍后重新运行:"
-            echo "     ./aws-deploy.sh setup-ssl $domain"
+            echo "     $0 setup-ssl $domain"
             exit 0
         fi
     fi
@@ -571,7 +648,7 @@ cmd_setup_ssl() {
     echo ""
     echo "  完成上述 DNS 和 OpenAI 白名单配置后，重新部署生效:"
     echo ""
-    echo "    ./aws-deploy.sh --build --force"
+    echo "    $0 --build"
     echo ""
     echo "  访问地址: https://$domain"
     echo "═══════════════════════════════════════════════════════"
@@ -589,8 +666,7 @@ cmd_deploy() {
     echo "  EAI Robot — 推送到 AWS 并部署"
     echo "═══════════════════════════════════════════════════════"
     echo ""
-    echo "  AWS Account: $AWS_ACCOUNT_ID"
-    echo "  Region:      $AWS_REGION"
+    print_context
     echo ""
 
     if [ ! -f "$ENV_FILE" ]; then
@@ -612,6 +688,10 @@ cmd_deploy() {
         aws iam attach-role-policy --role-name ecsTaskExecutionRole \
             --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy >/dev/null
     fi
+    # IAM role names can have a path (for example, service-role/). Resolve the
+    # ARN rather than constructing it, otherwise ECS cannot assume the role.
+    local execution_role_arn
+    execution_role_arn=$(aws iam get-role --role-name ecsTaskExecutionRole --query "Role.Arn" --output text)
     aws iam put-role-policy --role-name ecsTaskExecutionRole \
         --policy-name CloudWatchLogsCreateGroup \
         --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"logs:CreateLogGroup","Resource":"*"}]}' 2>/dev/null || true
@@ -636,7 +716,7 @@ cmd_deploy() {
     "requiresCompatibilities": ["FARGATE"],
     "cpu": "$CPU",
     "memory": "$MEMORY",
-    "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+    "executionRoleArn": "$execution_role_arn",
     "taskRoleArn": "$TASK_ROLE_ARN",
     "containerDefinitions": [{
         "name": "$APP_NAME",
@@ -696,13 +776,19 @@ TASKDEF
     echo ""
     echo "══ 创建网络和负载均衡器 ══"
 
-    VPC_ID=$(get_default_vpc)
+    VPC_ID="${DEPLOY_VPC_ID:-$(get_default_vpc)}"
     if [ -z "$VPC_ID" ] || [ "$VPC_ID" = "None" ]; then
-        echo "❌ 未找到默认 VPC"; exit 1
+        echo "❌ 未找到默认 VPC。"
+        echo "   如需使用指定网络，请设置:"
+        echo "   DEPLOY_VPC_ID=vpc-xxx DEPLOY_SUBNET_IDS=subnet-a,subnet-b $0 --build"
+        exit 1
     fi
-    SUBNET_IDS=$(get_public_subnets "$VPC_ID")
+    SUBNET_IDS="${DEPLOY_SUBNET_IDS:-$(get_public_subnets "$VPC_ID")}"
     if [ -z "$SUBNET_IDS" ]; then
-        echo "❌ 未找到公有子网"; exit 1
+        echo "❌ 未找到公有子网。"
+        echo "   如需使用指定子网，请设置:"
+        echo "   DEPLOY_SUBNET_IDS=subnet-a,subnet-b $0 --build"
+        exit 1
     fi
     echo "  VPC: $VPC_ID | 子网: $SUBNET_IDS"
 
@@ -775,10 +861,10 @@ TASKDEF
     echo ""
     echo "  🌐 访问地址: http://$dns"
     echo ""
-    echo "  后续更新:     ./aws-deploy.sh --build"
-    echo "  配置 HTTPS:   ./aws-deploy.sh setup-ssl <你的域名>"
-    echo "  查看状态:     ./aws-deploy.sh status"
-    echo "  查看日志:     ./aws-deploy.sh logs"
+    echo "  后续更新:     $0 --build"
+    echo "  配置 HTTPS:   $0 setup-ssl <你的域名>"
+    echo "  查看状态:     $0 status"
+    echo "  查看日志:     $0 logs"
     echo ""
     echo "  ⚠️  ChatKit 需要 HTTPS 才能在线上工作"
     echo "  请尽快运行 setup-ssl 配置自定义域名和 HTTPS"
@@ -790,7 +876,12 @@ TASKDEF
 # ══════════════════════════════════════════════════════════
 
 show_usage() {
-    echo "Usage: $0 <command>"
+    echo "Usage: $0 [global options] <command>"
+    echo ""
+    echo "Global options:"
+    echo "  --profile <name>             使用指定 AWS CLI profile"
+    echo "  --region <region>            覆盖 AWS region（默认 us-east-1）"
+    echo "  --config <path>              覆盖部署配置文件（默认 .deploy-config-new-account）"
     echo ""
     echo "Commands:"
     echo "  --build                构建镜像 + 推送 + 部署（一步到位）"
@@ -798,6 +889,11 @@ show_usage() {
     echo "  status                 查看 ECS 服务状态"
     echo "  logs [时长]            查看容器日志（默认 1h，如 24h）"
     echo "  destroy                删除所有 AWS 资源"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --build"
+    echo "  $0 --profile eai-robot-new --build"
+    echo "  DEPLOY_VPC_ID=vpc-xxx DEPLOY_SUBNET_IDS=subnet-a,subnet-b $0 --profile eai-robot-new --build"
 }
 
 if [ $# -eq 0 ]; then
@@ -805,7 +901,49 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --profile)
+            AWS_PROFILE="${2:-}"
+            if [ -z "$AWS_PROFILE" ]; then echo "❌ --profile 需要参数"; exit 1; fi
+            export AWS_PROFILE
+            shift 2
+            ;;
+        --region)
+            AWS_REGION="${2:-}"
+            if [ -z "$AWS_REGION" ]; then echo "❌ --region 需要参数"; exit 1; fi
+            export AWS_DEFAULT_REGION="$AWS_REGION"
+            shift 2
+            ;;
+        --config)
+            DEPLOY_CONFIG="${2:-}"
+            if [ -z "$DEPLOY_CONFIG" ]; then echo "❌ --config 需要参数"; exit 1; fi
+            shift 2
+            ;;
+        --expected-account)
+            if [ "${2:-}" != "$EXPECTED_AWS_ACCOUNT_ID" ]; then
+                echo "❌ 此脚本已固定为 AWS 账号 $EXPECTED_AWS_ACCOUNT_ID，不能覆盖。"
+                exit 1
+            fi
+            shift 2
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 1
+fi
+
 ACTION="$1"
+shift
 
 case "$ACTION" in
     --build)
@@ -813,7 +951,8 @@ case "$ACTION" in
 
         echo ""
         echo "══ 构建 Chat SDK (release) ══"
-        "$SCRIPT_DIR/packages/chat-sdk/build.sh" release
+        VITE_CHAT_SERVICE_ORIGIN="$PRODUCTION_CHAT_SERVICE_ORIGIN" \
+            "$SCRIPT_DIR/packages/chat-sdk/build.sh" release
 
         echo ""
         echo "══ 构建 Docker 镜像 ══"
@@ -830,7 +969,7 @@ case "$ACTION" in
         cmd_deploy
         ;;
     setup-ssl)
-        DOMAIN="${2:-}"
+        DOMAIN="${1:-}"
         if [ -z "$DOMAIN" ]; then
             echo "❌ 请指定域名。用法: $0 setup-ssl your.domain.com"
             exit 1
@@ -844,7 +983,7 @@ case "$ACTION" in
         ;;
     logs)
         load_config 2>/dev/null || { echo "❌ 尚未部署"; exit 1; }
-        cmd_logs
+        cmd_logs "$@"
         ;;
     destroy)
         load_config 2>/dev/null || { echo "❌ 尚未部署"; exit 1; }

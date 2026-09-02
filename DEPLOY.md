@@ -52,15 +52,19 @@ brew install awscli
 需要你的 AWS Access Key ID 和 Secret Access Key。
 获取方式：登录 AWS Console → 右上角用户名 → Security credentials → Create access key
 
-通过以下方式之一配置凭证：
+本地部署推荐使用项目根目录的 `.env` 文件：
 
 ```bash
-# 方式一：环境变量（推荐用于 CI/CD）
-export AWS_ACCESS_KEY_ID="AKIA...(你的 Access Key)"
-export AWS_SECRET_ACCESS_KEY="xxxx...(你的 Secret Key)"
-export AWS_DEFAULT_REGION="us-east-1"
+cp .env.example .env
+# 编辑 .env，填入 AWS_ACCESS_KEY_ID 和 AWS_SECRET_ACCESS_KEY
+```
 
-# 方式二：AWS CLI 配置（推荐用于本地开发）
+`.env` 不会被提交到 Git，也不会被包含进 Docker 镜像。部署脚本会校验当前身份是否为指定 AWS 账号。
+
+也可以通过以下方式配置凭证：
+
+```bash
+# AWS CLI Profile
 aws configure
 ```
 
@@ -248,14 +252,17 @@ docker compose down
 
 优先使用官方 Docker Hub。若你之前在 `~/.docker/daemon.json` 里配置过 `registry-mirrors`，请删除该字段后重启 Docker Desktop。
 
-### Q: `aws configure` 填什么 Region？
+### Q: AWS Region 是什么？
 
-查看你已有 ECS 集群所在的区域。登录 AWS Console → 右上角可以看到当前区域。
-常用区域：`us-east-1`（弗吉尼亚）、`us-west-2`（俄勒冈）、`ap-southeast-1`（新加坡）
+当前服务部署在 `us-east-1`（弗吉尼亚北部）；根目录 `.env` 中应设置 `AWS_REGION=us-east-1`。
 
 ### Q: 部署后环境变量改了怎么办？
 
 修改 `apps/rag-api/.env` 后重新运行 `./aws-deploy.sh`，会自动注册新的 Task Definition 并滚动更新。
+
+### Q: 是否需要再次运行 `setup-ssl`？
+
+当前正式站通过 CloudFront 将请求转发到 ALB 的 HTTP 80 端口。不要在当前架构下运行 `./aws-deploy.sh setup-ssl ...`，该命令会把 HTTP 监听器改为 HTTPS 跳转，导致 CloudFront 源站请求异常。
 
 ### Q: 如何查看部署是否成功？
 
