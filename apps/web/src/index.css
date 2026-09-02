@@ -582,6 +582,22 @@ mark.hl.current {
   gap: 8px;
 }
 
+.admin-version-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-family: var(--font-rubik);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.admin-version-info span + span {
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
 .reco-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -965,6 +981,7 @@ mark.hl.current {
 
 @media (max-width: 900px) {
   .reco-header { padding: 0 12px; }
+  .admin-version-info { display: none; }
   .admin-tabs { padding: 12px 12px 0; }
   .admin-tab { padding: 8px 16px; font-size: 13px; }
   .reco-body { padding: 12px; }

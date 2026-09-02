@@ -1376,11 +1376,37 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'manual-downloads', label: '下载配置' },
 ]
 
+function getFrontendBuildVersion(): string {
+  const buildTime = new Date(__BUILD_TIME__)
+  if (Number.isNaN(buildTime.getTime())) return '未知'
+
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${buildTime.getFullYear()}${pad(buildTime.getMonth() + 1)}${pad(buildTime.getDate())}.${pad(buildTime.getHours())}${pad(buildTime.getMinutes())}${pad(buildTime.getSeconds())}`
+}
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('recommendations')
+  const [backendVersion, setBackendVersion] = useState('加载中…')
+  const frontendBuildVersion = useMemo(getFrontendBuildVersion, [])
 
   useEffect(() => {
     document.title = '管理后台 - EAI Robot'
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    fetch(import.meta.env.VITE_HEALTH_API_URL || '/health', { signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error(`Health check failed (${response.status})`)
+        const data = await response.json() as { version?: unknown }
+        setBackendVersion(typeof data.version === 'string' && data.version ? data.version : '未知')
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setBackendVersion('不可用')
+      })
+
+    return () => controller.abort()
   }, [])
 
   return (
@@ -1393,6 +1419,10 @@ export default function AdminPage() {
           <span className="reco-header-title">管理后台</span>
         </div>
         <nav className="reco-header-nav">
+          <div className="admin-version-info" aria-label="服务版本信息">
+            <span>前端发布：{frontendBuildVersion}</span>
+            <span>后端服务：{backendVersion}</span>
+          </div>
           <Link to="/" className="reco-nav-btn">返回手册</Link>
         </nav>
       </header>
