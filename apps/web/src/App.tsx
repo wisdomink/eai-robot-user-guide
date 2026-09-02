@@ -3,6 +3,7 @@ import { ALL_PRODUCTS } from '@/hooks/useProductContext'
 import MarkdownPage from '@/pages/MarkdownPage'
 import AdminPage from '@/pages/AdminPage'
 import ChatPanelSdkBridge from '@/components/chat/ChatPanelSdkBridge'
+import ScrollToTop from '@/components/layout/ScrollToTop'
 
 function ManualRoutes() {
   return (
@@ -37,6 +38,7 @@ function ManualRoutes() {
 export function AppRoutes() {
   return (
     <>
+      <ScrollToTop />
       <ChatPanelSdkBridge />
       <Routes>
         {/* Standalone admin page — no sidebar, no ChatPanel */}
