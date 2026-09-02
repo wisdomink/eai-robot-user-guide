@@ -23,7 +23,9 @@ WEB_PUBLIC_DIR="$REPO_ROOT/apps/web/public"
 WEB_PUBLIC_EXTERNAL_DIR="$WEB_PUBLIC_DIR/dist-embed"
 
 DEBUG_ORIGIN="http://127.0.0.1:8000"
-RELEASE_ORIGIN="https://robotics-instruction-manual.ff.com"
+# Allow an isolated staging deployment to supply its own API origin while
+# preserving the established production default for normal release builds.
+RELEASE_ORIGIN="${VITE_CHAT_SERVICE_ORIGIN:-https://robotics-instruction-manual.ff.com}"
 RELEASE_CHATKIT_DOMAIN_KEY="domain_pk_69d52b6b7cb08193b207b84802aa895d08baab6db3c053fa"
 
 # ── Colors ────────────────────────────────────────────────────

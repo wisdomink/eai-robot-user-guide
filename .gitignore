@@ -48,6 +48,9 @@ venv/
 
 # Deploy
 .deploy-config
+.deploy-config-new-account
+apps/rag-api/migrate_dynamodb.py
+apps/rag-api/.migrate-dynamodb-*-state.json
 
 # Runtime
 .pids/
