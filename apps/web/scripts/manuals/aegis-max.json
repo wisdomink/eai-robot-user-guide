@@ -1,0 +1,36 @@
+{
+  "id": "aegis-max",
+  "title": "FF Aegis Max",
+  "source": "input/FF_Aegis_Max.docx",
+  "images": {
+    "directory": "aegis-max",
+    "altText": {}
+  },
+  "replacements": [
+    { "from": " ← see Section 0.2 item 1", "to": " (pending FF confirmation)" },
+    { "from": "Resolve before publication — see Section 0.2, item 1.", "to": "Confirm the final value before publication." },
+    { "from": "See Section 0.2, item 2.", "to": "See the release checklist on the Home page." },
+    { "from": "See Section 0.2, item 3.", "to": "See the release checklist on the Home page." }
+  ],
+  "subheadings": ["Warning", "Notes:", "Precautions", "Connecting to the Robot", "Mode Switching", "Settings"],
+  "home": {
+    "subtitle": "Quadruped Robot User Manual",
+    "reviewNotice": "This product was imported from an internal English content draft. It is available for content review only and must not be treated as a final published manual.",
+    "releaseChecks": [
+      "Confirm the correct payload specification: the source contains both **25 kg** and **30 kg** values.",
+      "Insert FF's approved radio/compliance statements and product model code.",
+      "Replace the remote-controller and application placeholders with final FF names.",
+      "Replace all source figures with FF-approved artwork.",
+      "Confirm or replace the warranty terms with FF's final policy."
+    ]
+  },
+  "chapters": [
+    { "number": 1, "file": "version-statement.md", "title": "Version Statement" },
+    { "number": 2, "file": "product-introduction.md", "title": "Product Introduction" },
+    { "number": 3, "file": "instructions-for-use.md", "title": "Instructions for Use" },
+    { "number": 4, "file": "remote-control.md", "title": "Remote Control" },
+    { "number": 5, "file": "anomalies-and-solutions.md", "title": "Anomalies and Solutions" },
+    { "number": 6, "file": "daily-maintenance.md", "title": "Daily Maintenance" },
+    { "number": 7, "file": "warranty-policy.md", "title": "Warranty Policy" }
+  ]
+}

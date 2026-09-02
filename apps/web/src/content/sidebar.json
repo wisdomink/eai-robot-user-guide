@@ -590,6 +590,99 @@
       }
     ]
   },
+  "aegis-max": {
+    "title": "FF Aegis Max",
+    "sections": [
+      {
+        "id": "aegis-max-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FF Aegis Max Quadruped Robot User Manual",
+            "slug": "/aegis-max",
+            "file": "aegis-max/aegis-max-home.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-version-statement",
+        "title": "1. Version Statement",
+        "pages": [
+          {
+            "title": "1. Version Statement",
+            "slug": "/aegis-max/version-statement",
+            "file": "aegis-max/aegis-max-version-statement.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-product-introduction",
+        "title": "2. Product Introduction",
+        "pages": [
+          {
+            "title": "2. Product Introduction",
+            "slug": "/aegis-max/product-introduction",
+            "file": "aegis-max/aegis-max-product-introduction.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-instructions-for-use",
+        "title": "3. Instructions for Use",
+        "pages": [
+          {
+            "title": "3. Instructions for Use",
+            "slug": "/aegis-max/instructions-for-use",
+            "file": "aegis-max/aegis-max-instructions-for-use.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-remote-control",
+        "title": "4. Remote Control",
+        "pages": [
+          {
+            "title": "4. Remote Control",
+            "slug": "/aegis-max/remote-control",
+            "file": "aegis-max/aegis-max-remote-control.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-anomalies-and-solutions",
+        "title": "5. Anomalies and Solutions",
+        "pages": [
+          {
+            "title": "5. Anomalies and Solutions",
+            "slug": "/aegis-max/anomalies-and-solutions",
+            "file": "aegis-max/aegis-max-anomalies-and-solutions.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-daily-maintenance",
+        "title": "6. Daily Maintenance",
+        "pages": [
+          {
+            "title": "6. Daily Maintenance",
+            "slug": "/aegis-max/daily-maintenance",
+            "file": "aegis-max/aegis-max-daily-maintenance.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-warranty-policy",
+        "title": "7. Warranty Policy",
+        "pages": [
+          {
+            "title": "7. Warranty Policy",
+            "slug": "/aegis-max/warranty-policy",
+            "file": "aegis-max/aegis-max-warranty-policy.md"
+          }
+        ]
+      }
+    ]
+  },
   "navi": {
     "title": "FF NAVI",
     "sections": [

@@ -1,11 +1,12 @@
 import { DOWNLOADABLE_PRODUCTS, type ProductId } from '@/hooks/useProductContext'
 
-export const DEFAULT_MANUAL_DOWNLOAD_URLS: Record<ProductId, string> = {
+export const DEFAULT_MANUAL_DOWNLOAD_URLS: Partial<Record<ProductId, string>> = {
   futurist: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf',
   'futurist-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf',
   master: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf',
   aegis: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX+Aegis.pdf',
   'aegis-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf',
+  'aegis-max': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Max.pdf',
   ff91: '',
   navi: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf',
 }
@@ -29,7 +30,7 @@ export function getDefaultManualDownloadItems(): ManualDownloadItem[] {
   return DOWNLOADABLE_PRODUCTS.map(product => ({
     product_id: product.id,
     label: product.label,
-    download_url: DEFAULT_MANUAL_DOWNLOAD_URLS[product.id],
+    download_url: DEFAULT_MANUAL_DOWNLOAD_URLS[product.id] ?? '',
   }))
 }
 
@@ -53,7 +54,7 @@ function normalizeManualDownloads(raw: unknown): ManualDownloadItem[] {
       download_url:
         typeof existing?.download_url === 'string' && existing.download_url.trim()
           ? existing.download_url.trim()
-          : DEFAULT_MANUAL_DOWNLOAD_URLS[product.id],
+          : DEFAULT_MANUAL_DOWNLOAD_URLS[product.id] ?? '',
     }
   })
 }

@@ -40,6 +40,7 @@
     "convert:aegisedu:images": "node scripts/convert-aegisedu.mjs --images-only",
     "convert:aegis": "node scripts/convert-aegis.mjs",
     "convert:aegis:text": "node scripts/convert-aegis.mjs --text-only",
-    "convert:aegis:images": "node scripts/convert-aegis.mjs --images-only"
+    "convert:aegis:images": "node scripts/convert-aegis.mjs --images-only",
+    "manual:import": "node scripts/import-manual.mjs"
   }
 }
