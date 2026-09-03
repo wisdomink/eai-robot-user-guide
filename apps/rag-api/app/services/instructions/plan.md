@@ -48,6 +48,7 @@
 | `futurist-ultra` | Futurist Ultra |
 | `aegis` | Aegis、Aegis Pro、Aegis EDU、教育版、尾灯、OTA、APP 使用指南（未提到 Ultra） |
 | `aegis-ultra` | Aegis Ultra、灯效、扩展接口、expansion interface |
+| `aegis-max` | Aegis Max、FF Aegis Max、轮腿、wheel-legged、IP67、30 kg 负载 |
 | `ff91` | FF 91、FF91、91 2.0、Futurist Alliance、电动汽车、EV、车辆、driving、ADAS、座椅、airbag、轮胎、infotainment |
 | `navi` | NAVI、NAVI Series、四足机器人狗、机器狗、fingertip remote controller、graphical programming、robot dog、quadruped、遥控器、图形化编程 |
 
@@ -78,6 +79,7 @@
 ### 简短示例
 - `Master 怎么充电` → `loop_plan: [{ "agent": "product", "product_key": "master" }]`
 - `Aegis Ultra 和 Futurist Ultra 有什么区别` → `loop_plan: [{ "agent": "product", "product_key": "aegis-ultra" }, { "agent": "product", "product_key": "futurist-ultra" }]`
+- `Aegis Max 怎么充电` → `loop_plan: [{ "agent": "product", "product_key": "aegis-max" }]`
 - `Aegis Ultra 多少钱、最近有什么更新` → `loop_plan: [{ "agent": "product", "product_key": "aegis-ultra" }, { "agent": "price" }, { "agent": "news" }]`
 - `哪款机器人最便宜` → `loop_plan: [{ "agent": "price" }]`
 - `今天天气怎么样` → `loop_plan: [{ "agent": "fallback" }]`
@@ -116,7 +118,7 @@
 - `query_text` 是给下游检索使用的查询文本；有非 fallback 项时应为便于检索的英文扩写；仅 fallback 时保留用户原始输入
 - `loop_plan` 是对象数组；每个对象必须包含 `agent` 字段；`agent` 为 `"product"` 时必须包含 `product_key` 字段
 - `agent` 只能是 `"product"`、`"price"`、`"news"` 或 `"fallback"`
-- `product_key` 只能是 `"master"`、`"futurist"`、`"futurist-ultra"`、`"aegis"`、`"aegis-ultra"`、`"ff91"` 或 `"navi"`
+- `product_key` 只能是 `"master"`、`"futurist"`、`"futurist-ultra"`、`"aegis"`、`"aegis-ultra"`、`"aegis-max"`、`"ff91"` 或 `"navi"`
 
 ## 行为规则
 1. 不要回答用户问题，你只做预处理

@@ -40,6 +40,11 @@ class RecommendationCatalogStorage:
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf",
         ),
         (
+            "aegis-max",
+            "FF Aegis Max",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Max.pdf",
+        ),
+        (
             "navi",
             "FF NAVI",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf",
@@ -167,6 +172,19 @@ class RecommendationCatalogStorage:
                 }
             )
         return normalized
+
+    @staticmethod
+    def _normalize_products(raw: object) -> list[dict]:
+        """Keep existing product options and ensure newly supported products appear.
+
+        DynamoDB installations can have a persisted PRODUCTS row that predates the
+        seed JSON, so relying on the seed alone would omit Aegis Max from the lead
+        form after deployment.
+        """
+        products = [dict(item) for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
+        if not any(str(item.get("value", "")).strip() == "aegis-max" for item in products):
+            products.append({"value": "aegis-max", "label": "FF Aegis Max"})
+        return products
 
     def _load_seed_config(self) -> dict:
         if self._seed_cache is not None:
@@ -304,7 +322,10 @@ class RecommendationCatalogStorage:
                     batch.put_item(Item={"pk": self._CATALOG_PK, "sk": normalized["id"], **normalized})
 
     def get_full_config(self) -> dict:
-        return self._load_config()
+        config = self._load_config()
+        config["products"] = self._normalize_products(config.get("products"))
+        config["manual_downloads"] = self._normalize_manual_downloads(config.get("manual_downloads"))
+        return config
 
     def list_recommendations(self) -> list[dict]:
         config = self._load_config()

@@ -87,7 +87,7 @@ apps/rag-api/
 
 ### 1. 创建 / 更新 Vector Store
 
-`create_vector_store.py` 会将 `apps/web/src/content/pages/` 下所有在 `sidebar.json` 中引用的 Markdown 同步到 **全量** Vector Store（`OPENAI_VECTOR_STORE_ROBOT_ALL_ID`）。语义搜索与该全量库绑定；后端主流程中的产品 loop pass 使用各自产品的 Vector Store ID。
+`create_vector_store.py` 会将 `apps/web/src/content/pages/` 下所有在 `sidebar.json` 中引用的 Markdown 同步到 **全量** Vector Store（`OPENAI_VECTOR_STORE_ROBOT_ALL_ID`）。语义搜索会查询该全量库，并合并 Aegis Max 的专属库；后端主流程中的产品 loop pass 使用各自产品的 Vector Store ID。
 
 ```bash
 cd apps/rag-api
@@ -145,8 +145,9 @@ uvicorn app.main:app --reload --port 8000
 | `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | ✅ | Futurist Ultra 产品文档库 |
 | `OPENAI_VECTOR_STORE_AEGIS_ID` | ✅ | Aegis 系列产品文档库（含 Aegis / Aegis Pro / Aegis EDU） |
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` | ✅ | Aegis Max 产品文档库 |
 | `OPENAI_VECTOR_STORE_FF91_ID` | ✅ | FF 91 2.0 产品文档库 |
-| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索；`create_vector_store.py` 同步目标） |
+| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索主库；`create_vector_store.py` 同步目标） |
 
 ### 其他
 
@@ -363,7 +364,7 @@ cd tools/eval
 
 ## 注意事项
 
-- 手册内容变更后，需重新运行 `create_vector_store.py` 更新全量 Vector Store；Backend 模式下若使用各产品独立库，需在 OpenAI 控制台或自有流程中同步对应库。
+- 手册内容变更后，需重新运行 `create_vector_store.py` 更新全量 Vector Store；Backend 模式下若使用各产品独立库，需在 OpenAI 控制台或自有流程中同步对应库。FF Aegis Max 的独立库由 `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` 指定。
 - Agent 的 Instructions 模板在 `app/services/instructions/*.md`，修改后重启服务即生效。
 - `.env` 含 API Key，已在 `.gitignore` 中排除，切勿提交。
 - `venv/` 为 Python 虚拟环境，已在 `.gitignore` 中排除。

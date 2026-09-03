@@ -9,6 +9,7 @@ FastAPI entry-point for the FF Robot ChatKit + Search service.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -25,6 +26,7 @@ from chatkit.server import StreamingResult
 from app.core.config import (
     LOG_DIR,
     OPENAI_API_KEY,
+    OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     SIDEBAR_PATH,
 )
@@ -269,10 +271,23 @@ async def search_endpoint(
         front_logger.info("<<< GET /api/search  status=200  q=<empty>  results=0  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return {"results": []}
 
-    if not OPENAI_VECTOR_STORE_ROBOT_ALL_ID:
+    # The legacy all-products store remains the primary search index.  Aegis
+    # Max is intentionally maintained in its own store, so include it here
+    # instead of requiring a destructive re-sync of the legacy all-products
+    # store whenever the Aegis Max manual changes.
+    vector_store_ids = list(dict.fromkeys(
+        vector_store_id
+        for vector_store_id in (
+            OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
+            OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+        )
+        if vector_store_id
+    ))
+
+    if not vector_store_ids:
         resp = {
             "results": [],
-            "error": "OPENAI_VECTOR_STORE_ROBOT_ALL_ID not configured",
+            "error": "No search vector store configured",
             "debug": {
                 "stage": "config",
                 "has_api_key": bool(OPENAI_API_KEY),
@@ -283,22 +298,33 @@ async def search_endpoint(
         front_logger.error("<<< GET /api/search  status=200  error=vector_store_not_configured  elapsed=%.1fms", (time.perf_counter() - start) * 1000)
         return resp
 
-    last_exc: Exception | None = None
-    page = None
-    for attempt in range(2):
-        try:
-            page = await _oai.vector_stores.search(
-                vector_store_id=OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
-                query=q.strip(),
-                max_num_results=limit,
-                rewrite_query=True,
-            )
-            break
-        except Exception as exc:
-            last_exc = exc
-            front_logger.warning("GET /api/search  vector_store attempt %d failed: %s", attempt + 1, exc)
-    if page is None:
+    async def search_store(vector_store_id: str):
+        last_exc: Exception | None = None
+        for attempt in range(2):
+            try:
+                return await _oai.vector_stores.search(
+                    vector_store_id=vector_store_id,
+                    query=q.strip(),
+                    max_num_results=limit,
+                    rewrite_query=True,
+                )
+            except Exception as exc:
+                last_exc = exc
+                front_logger.warning(
+                    "GET /api/search  vector_store=%s attempt %d failed: %s",
+                    vector_store_id[:8] + "...",
+                    attempt + 1,
+                    exc,
+                )
+        return last_exc
+
+    search_pages = await asyncio.gather(*(search_store(vector_store_id) for vector_store_id in vector_store_ids))
+    successful_pages = [page for page in search_pages if not isinstance(page, Exception)]
+    failures = [exc for exc in search_pages if isinstance(exc, Exception)]
+
+    if not successful_pages:
         elapsed_ms = (time.perf_counter() - start) * 1000
+        last_exc = failures[-1] if failures else RuntimeError("Vector store search returned no result")
         front_logger.error(
             "<<< GET /api/search  status=200  q=%r  error=%s(%s)  elapsed=%.1fms",
             q, type(last_exc).__name__, last_exc, elapsed_ms,
@@ -308,14 +334,20 @@ async def search_endpoint(
             "error": str(last_exc),
             "debug": {
                 "stage": "vector_store_search",
-                "vector_store_id_prefix": OPENAI_VECTOR_STORE_ROBOT_ALL_ID[:8] + "...",
+                "vector_store_id_prefixes": [vector_store_id[:8] + "..." for vector_store_id in vector_store_ids],
                 "exception_type": type(last_exc).__name__,
             },
         }
 
     skipped = []
     results = []
-    for item in page.data:
+    seen_result_keys: set[tuple[str, str]] = set()
+    all_items = sorted(
+        (item for page in successful_pages for item in page.data),
+        key=lambda item: item.score,
+        reverse=True,
+    )
+    for item in all_items:
         file_info = _FILE_INFO_MAP.get(item.filename)
         if not file_info:
             skipped.append({"filename": item.filename, "score": round(item.score, 4)})
@@ -330,6 +362,10 @@ async def search_endpoint(
         preview = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", preview)
         preview = re.sub(r"\s+", " ", preview).strip()[:200]
 
+        result_key = (file_info["slug"], heading_anchor)
+        if result_key in seen_result_keys:
+            continue
+        seen_result_keys.add(result_key)
         results.append({
             "pageSlug": file_info["slug"],
             "pageTitle": file_info["title"],
@@ -339,15 +375,18 @@ async def search_endpoint(
             "textPreview": preview,
             "similarity": round(item.score, 4),
         })
+        if len(results) >= limit:
+            break
 
     response: dict = {
         "results": results,
         "debug": {
             "stage": "complete",
-            "vector_store_id_prefix": OPENAI_VECTOR_STORE_ROBOT_ALL_ID[:8] + "...",
-            "raw_results_count": len(page.data),
+            "vector_store_id_prefixes": [vector_store_id[:8] + "..." for vector_store_id in vector_store_ids],
+            "raw_results_count": len(all_items),
             "mapped_count": len(results),
             "skipped": skipped,
+            "failed_store_count": len(failures),
             "file_info_map_count": len(_FILE_INFO_MAP),
             "sidebar_path": str(SIDEBAR_PATH),
             "sidebar_exists": SIDEBAR_PATH.exists(),
@@ -357,7 +396,7 @@ async def search_endpoint(
     elapsed_ms = (time.perf_counter() - start) * 1000
     front_logger.info(
         "<<< GET /api/search  status=200  q=%r  raw=%d  mapped=%d  skipped=%d  elapsed=%.1fms  response=%s",
-        q, len(page.data), len(results), len(skipped), elapsed_ms,
+        q, len(all_items), len(results), len(skipped), elapsed_ms,
         json.dumps(response, ensure_ascii=False)[:_MAX_BODY_LOG],
     )
     return response

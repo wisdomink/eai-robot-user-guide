@@ -41,6 +41,10 @@
       "label": "FF Aegis Ultra"
     },
     {
+      "value": "aegis-max",
+      "label": "FF Aegis Max"
+    },
+    {
       "value": "ff91",
       "label": "FF 91 2.0"
     }
@@ -107,6 +111,11 @@
       "product_id": "aegis-ultra",
       "label": "FF Aegis Ultra",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf"
+    },
+    {
+      "product_id": "aegis-max",
+      "label": "FF Aegis Max",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Max.pdf"
     },
     {
       "product_id": "navi",

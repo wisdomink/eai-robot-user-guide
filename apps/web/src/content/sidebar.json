@@ -594,17 +594,6 @@
     "title": "FF Aegis Max",
     "sections": [
       {
-        "id": "aegis-max-home",
-        "title": "Home",
-        "pages": [
-          {
-            "title": "FF Aegis Max Quadruped Robot User Manual",
-            "slug": "/aegis-max",
-            "file": "aegis-max/aegis-max-home.md"
-          }
-        ]
-      },
-      {
         "id": "aegis-max-version-statement",
         "title": "1. Version Statement",
         "pages": [

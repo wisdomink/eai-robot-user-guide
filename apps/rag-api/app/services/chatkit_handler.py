@@ -70,6 +70,7 @@ from app.core.config import (
     LOOP_PROGRESS_HEARTBEAT_SECONDS,
     LLM_MODEL,
     OPENAI_VECTOR_STORE_AEGIS_ID,
+    OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     OPENAI_VECTOR_STORE_FF91_ID,
     OPENAI_VECTOR_STORE_NAVI_ID,
@@ -327,6 +328,11 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "instructions_file": "product-aegis-ultra",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     },
+    "aegis-max": {
+        "name": "FF Aegis Max Product Agent",
+        "instructions_file": "product-aegis-max",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+    },
     "ff91": {
         "name": "FF 91 2.0 Product Agent",
         "instructions_file": "product-ff91",
@@ -356,6 +362,61 @@ _VALID_PRODUCT_KEYS: frozenset[str] = frozenset(
 
 
 _VALID_AGENT_TYPES: frozenset[str] = frozenset(("product", "price", "news", "fallback"))
+
+_PRODUCT_EXPLICIT_ALIASES: tuple[str, ...] = (
+    "aegis max",
+    "aegis ultra",
+    "aegis",
+    "futurist ultra",
+    "futurist",
+    "aegis edu",
+    "aegis pro",
+    "ff aegis",
+    "ff master",
+    "master ultra",
+    "master edu",
+    "ff 91",
+    "ff91",
+    "navi",
+)
+
+
+def _get_page_product_key(page_url: str) -> str | None:
+    """Return the product ID encoded in a manual route, if it is supported."""
+    path = urlparse(page_url).path.strip("/")
+    product_key = path.split("/", 1)[0].lower() if path else ""
+    return product_key if product_key in _VALID_PRODUCT_KEYS else None
+
+
+def _apply_page_product_context(
+    plan: PlanOutput,
+    *,
+    user_text: str,
+    page_url: str,
+) -> str | None:
+    """Prefer the current manual's product for ambiguous, single-product queries.
+
+    An explicitly named product always wins. Price/news-only and fallback plans are
+    left unchanged because no product retrieval pass is present to safely replace.
+    """
+    page_product_key = _get_page_product_key(page_url)
+    if not page_product_key:
+        return None
+
+    lowered_text = user_text.lower()
+    if any(alias in lowered_text for alias in _PRODUCT_EXPLICIT_ALIASES):
+        return None
+
+    product_items = [item for item in plan.loop_plan if item.agent == "product"]
+    if len(product_items) != 1:
+        return None
+
+    previous_key = (product_items[0].product_key or "").strip().lower()
+    if previous_key == page_product_key:
+        return None
+
+    product_items[0].product_key = page_product_key
+    return previous_key or None
 
 
 def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass]:
@@ -1592,6 +1653,18 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         plan_output: PlanOutput = plan_result.final_output
+        replaced_product_key = _apply_page_product_context(
+            plan_output,
+            user_text=user_text,
+            page_url=page_url,
+        )
+        if replaced_product_key:
+            front_logger.info(
+                "[thread=%s] page context routed ambiguous product %s → %s",
+                thread.id,
+                replaced_product_key,
+                _get_page_product_key(page_url),
+            )
         front_logger.info(
             "[thread=%s] plan → input_lang=%s, loop_plan=%s, query_text=%s",
             thread.id,
