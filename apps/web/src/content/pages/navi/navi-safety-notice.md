@@ -27,11 +27,11 @@ Note: This equipment has been tested and found to comply with the limits for a C
 
 ## Pre-Use Checklist
 
-Before using NAVI, please perform the following routine checks to ensure safe operation:
+Before using FX Navi, please perform the following routine checks to ensure safe operation:
 
-- Check that NAVI's battery is sufficiently charged.
+- Check that FX Navi's battery is sufficiently charged.
 - Check that the fingertip remote controller's battery is sufficiently charged.
-- Check that the foot pads on the bottom of NAVI's feet are intact.
+- Check that the foot pads on the bottom of FX Navi's feet are intact.
 - Check that all four limbs are intact and that the front and rear legs can move freely without obstruction.
-- Check that NAVI's back, chest, and abdomen show no signs of looseness or damage.
+- Check that FX Navi's back, chest, and abdomen show no signs of looseness or damage.
 - Check that the App runs normally.

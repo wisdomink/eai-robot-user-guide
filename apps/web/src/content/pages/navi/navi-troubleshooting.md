@@ -2,13 +2,13 @@
 
 ## Common Issues and Solutions
 
-**Q: My original fingertip remote controller broke and I bought a new one. How do I connect it to NAVI?**
+**Q: My original fingertip remote controller broke and I bought a new one. How do I connect it to FX Navi?**
 
-The new fingertip remote controller has not been paired with NAVI. For the first connection, you need to put the fingertip remote controller into pairing mode to establish a connection with NAVI. For the specific steps, refer to the "Initial Pairing Method" section of this manual.
+The new fingertip remote controller has not been paired with FX Navi. For the first connection, you need to put the fingertip remote controller into pairing mode to establish a connection with FX Navi. For the specific steps, refer to the "Initial Pairing Method" section of this manual.
 
 ---
 
-**Q: When controlling NAVI with the fingertip remote controller, NAVI moves very slowly. How do I make it faster?**
+**Q: When controlling FX Navi with the fingertip remote controller, FX Navi moves very slowly. How do I make it faster?**
 
 The fingertip remote controller has a high-speed mode and a low-speed mode; low-speed mode is the default. To increase speed, press the speed toggle button to switch modes. After increasing speed, please adapt gradually and avoid pushing the joystick too aggressively to prevent collisions.
 
@@ -16,7 +16,7 @@ The fingertip remote controller has a high-speed mode and a low-speed mode; low-
 
 **Q: The fingertip remote controller worked well at first, but sometimes it stops responding and then recovers after a moment.**
 
-The effective control range of the fingertip remote controller is 5 m, and up to 10 m in open areas. Nearby moving people or metal obstacles will significantly affect signal transmission and may cause disconnection. Once the distance meets the minimum communication range, the controller automatically reconnects to NAVI. For best results, use in open areas within 10 m.
+The effective control range of the fingertip remote controller is 5 m, and up to 10 m in open areas. Nearby moving people or metal obstacles will significantly affect signal transmission and may cause disconnection. Once the distance meets the minimum communication range, the controller automatically reconnects to FX Navi. For best results, use in open areas within 10 m.
 
 ## Help & Contact
 

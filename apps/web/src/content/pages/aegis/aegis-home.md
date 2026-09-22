@@ -1,4 +1,4 @@
-# FX Aegis/Aegis Pro / Aegis EDU
+# FX Aegis Classic/Aegis Pro / Aegis EDU
 
 **QUADRUPED ROBOT**
 

@@ -2,11 +2,11 @@
 
 ## Important Safety Information
 
-FX Aegis is a full-size quadruped robot containing high-torque motors, twelve powered joints, drive mechanisms, a lithium-ion battery, wireless connectivity, and electronic control systems. Aegis weighs approximately 15 kg and can travel at speeds up to 3.7 m/s. Always remain attentive during operation to prevent equipment damage, property damage, or personal injury caused by unintended actions.
+FX Aegis Classic is a full-size quadruped robot containing high-torque motors, twelve powered joints, drive mechanisms, a lithium-ion battery, wireless connectivity, and electronic control systems. FX Aegis Classic weighs approximately 15 kg and can travel at speeds up to 3.7 m/s. Always remain attentive during operation to prevent equipment damage, property damage, or personal injury caused by unintended actions.
 
 ### Operating Environment
 
-FX Aegis is rated **IP32** and is designed for indoor use on flat, hard, dry, open surfaces. Do not operate in the following environments:
+FX Aegis Classic is rated **IP32** and is designed for indoor use on flat, hard, dry, open surfaces. Do not operate in the following environments:
 
 - Outdoor environments exposed to rain, snow, mist, spray, or standing water
 - Wet, oily, slippery, or thick-carpeted surfaces
@@ -21,7 +21,7 @@ Maintain a minimum clearance of 2 meters (6.5 ft) around the robot during locomo
 
 ### Moving Parts Safety
 
-FX Aegis has 12 powered joints with maximum joint torque of 48 N·m. Its legs and body may present pinching, impact, crush, or tip-over hazards during operation.
+FX Aegis Classic has 12 powered joints with maximum joint torque of 48 N·m. Its legs and body may present pinching, impact, crush, or tip-over hazards during operation.
 
 - Confirm adequate clearance around the robot before powering on.
 - Keep fingers, hair, loose clothing, cables, and other objects clear of joints, feet, and moving parts at all times.
@@ -32,7 +32,7 @@ FX Aegis has 12 powered joints with maximum joint torque of 48 N·m. Its legs an
 
 ### Adult Operation and Supervision
 
-FX Aegis is not a toy. It is intended for use by adults 18 years of age and older. Minors may only operate the robot under continuous direct supervision of an adult who has read and understood this manual.
+FX Aegis Classic is not a toy. It is intended for use by adults 18 years of age and older. Minors may only operate the robot under continuous direct supervision of an adult who has read and understood this manual.
 
 - Only operators familiar with the safety instructions in this document should control the robot.
 - Do not allow bystanders — especially children and pets — to be within the robot's motion range during operation.
@@ -41,7 +41,7 @@ FX Aegis is not a toy. It is intended for use by adults 18 years of age and olde
 
 ### Emergency Stop and Incident Response
 
-FX Aegis is equipped with an emergency stop button on the robot body. When used with a compatible remote controller or App, additional emergency stop controls are available. Before operating the robot, ensure that all operators know the location and function of each emergency stop control.
+FX Aegis Classic is equipped with an emergency stop button on the robot body. When used with a compatible remote controller or App, additional emergency stop controls are available. Before operating the robot, ensure that all operators know the location and function of each emergency stop control.
 
 Stop the robot immediately if any of the following occurs:
 
@@ -56,7 +56,7 @@ After activating the emergency stop or halting operation, wait for the robot to 
 
 ### Battery and Charging Safety
 
-FX Aegis contains a high-capacity lithium-ion battery pack (216 Wh, nominal 43.2 V). Improper use may result in fire, explosion, or serious injury.
+FX Aegis Classic contains a high-capacity lithium-ion battery pack (216 Wh, nominal 43.2 V). Improper use may result in fire, explosion, or serious injury.
 
 - Use only Faraday Future original charging equipment and accessories, or accessories approved in writing by Faraday Future.
 - Do not use batteries, cables, chargers, or connectors that are damaged, deformed, overheated, or have been exposed to liquid.
@@ -70,13 +70,13 @@ Air transport of lithium batteries is regulated. Do not ship the robot or its ba
 
 ### Accessories and Payloads
 
-- Attach only accessories intended for FX Aegis. Do not exceed the rated payload capacity of 8 kg.
+- Attach only accessories intended for FX Aegis Classic. Do not exceed the rated payload capacity of 8 kg.
 - Secure all payloads to the robot before powering on; unsecured items may fall during motion and cause injury or damage.
 - Keep small components such as screws and mounting hardware away from children.
 
 ## After-sales Service
 
-Thank you for choosing FX Aegis. If a non-user-induced quality issue arises during the applicable warranty period, please contact FF after-sales support with your proof of purchase and product serial number. We will assist with remote diagnostics and, based on the assessment results, provide repair or replacement support in accordance with the FF AI Robotics General After-Sales Service Policy.
+Thank you for choosing FX Aegis Classic. If a non-user-induced quality issue arises during the applicable warranty period, please contact FF after-sales support with your proof of purchase and product serial number. We will assist with remote diagnostics and, based on the assessment results, provide repair or replacement support in accordance with the FF AI Robotics General After-Sales Service Policy.
 
 The following are **not covered** under this warranty:
 
@@ -98,7 +98,7 @@ After-sales email: [support@ff.com](mailto:support@ff.com)
 
 ## Regulatory and Compliance Information
 
-FX Aegis contains wireless communication modules (Wi-Fi and Bluetooth), an electronic control system, a rechargeable lithium-ion battery pack, and charging accessories. Regulatory information, certification numbers, compliance statements, labeling requirements, and user notices for the United States, Canada, and other applicable regions are provided on the product packaging and on the device rating label.
+FX Aegis Classic contains wireless communication modules (Wi-Fi and Bluetooth), an electronic control system, a rechargeable lithium-ion battery pack, and charging accessories. Regulatory information, certification numbers, compliance statements, labeling requirements, and user notices for the United States, Canada, and other applicable regions are provided on the product packaging and on the device rating label.
 
 Unauthorized modification, disassembly, servicing, or replacement of wireless, battery, motor, or power-related components may affect device safety, radio frequency compliance, and void warranty coverage.
 

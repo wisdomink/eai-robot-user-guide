@@ -4,19 +4,19 @@
 
 ### Post-Operation Care
 
-- Stop NAVI on a relatively flat surface before powering off.
+- Stop FX Navi on a relatively flat surface before powering off.
 - Always use the original charger to prevent battery damage or fire risk.
 
 ### Parts Requiring Regular Maintenance or Replacement
 
 ### Main Unit Maintenance
 
-- Check that all parts of NAVI are in good condition. If in doubt, contact the after-sales service team.
-- Before performing maintenance or cleaning, ensure NAVI is powered off and the power adapter is disconnected.
+- Check that all parts of FX Navi are in good condition. If in doubt, contact the after-sales service team.
+- Before performing maintenance or cleaning, ensure FX Navi is powered off and the power adapter is disconnected.
 - When replacing accessories, use manufacturer-specified parts to avoid damage caused by incompatibility.
-- The foot pads are consumable parts. Severe wear, missing corners, or detachment may cause NAVI to move or stand unstably.
+- The foot pads are consumable parts. Severe wear, missing corners, or detachment may cause FX Navi to move or stand unstably.
 - Regularly check battery level and health. When battery life noticeably decreases, contact customer service for a battery replacement.
-- Store NAVI and the power adapter in a cool, dry place.
+- Store FX Navi and the power adapter in a cool, dry place.
 
 ## Battery Maintenance
 

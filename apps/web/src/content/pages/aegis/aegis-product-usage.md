@@ -25,7 +25,7 @@ If you have any questions or operational confusion, please contact the official 
 
 ### Remote Control Introduction
 
-The controller is not included in the Aegis version.
+The controller is not included in the FX Aegis Classic version.
 
 ![](/images/aegis/aegis-product-usage-4.png)
 
@@ -84,7 +84,7 @@ Stunt actions in Lab Mode put a lot of strain on the joints. Using it for too lo
 
 ## APP User Guide
 
-Aegis Edition can't access the APP.
+FX Aegis Classic Edition can't access the APP.
 
 (Under Development)
 

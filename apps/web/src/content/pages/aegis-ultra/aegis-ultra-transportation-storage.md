@@ -1,23 +1,36 @@
 # Transportation & Storage
 
-## Product Transportation
+## Transportation and Handling
 
-The packing box size is `80cm x 45cm x 25cm`. Before carrying the box, remove the battery from the robot. During transportation, keep the front of the box facing up.
+- Packing box dimensions: 80 cm × 45 cm × 25 cm.
+- Power off the robot before carrying it. Avoid lifting or carrying it after startup.
+- Remove the battery from the robot before carrying the packing box.
+- Keep the front of the packing box facing up during transportation.
+- Handle all parts gently to avoid mechanical impact and damage.
 
 ## Storage Environment
 
-Store the power adapter and the entire unit in a dry and cool environment, away from direct sunlight, fire sources, and strong electromagnetic fields.
+Store the power adapter and the entire unit in a dry, cool location, away from direct sunlight, fire sources, and strong electromagnetic fields.
 
-The recommended storage temperature is between 20 C and 25 C. Do not store the product in environments above 60 C or below -10 C. For long-term storage, keep relative humidity at 0% to 60% RH and total battery charge below 50%.
+- Recommended temperature: 20°C–25°C, including for long-term storage.
+- Temperature limits: do not store above 60°C or below −10°C.
+- Relative humidity for long-term storage: 0%–60% RH.
+- Battery charge for long-term storage: below 50%.
 
-## Battery Precautions
+## Battery Storage and Maintenance
 
-Long idle time may affect battery performance. Avoid deep discharge to maintain battery health. The battery stops charging automatically when fully charged, but it is recommended to disconnect after charging.
+Long periods without use may affect battery performance. Avoid deep discharge to maintain battery health.
 
-Please check the battery charge regularly and charge / discharge it every 3 months to maintain activity. If the charge is below 20%, recharge to 40%-60% before storage.
+- Check the battery charge regularly.
+- Charge and discharge the battery every 3 months to maintain battery activity.
+- If the charge is below 20%, recharge to 40%–60% for storage to avoid battery damage.
+- The battery stops charging automatically when fully charged, but disconnecting it after charging is recommended.
 
-Risk of explosion exists if the battery is replaced by an incorrect type. Improper disposal, mechanical crushing, cutting, high-temperature exposure, or extremely low air pressure may cause explosion or leakage of flammable liquid or gas.
+## Battery Handling Hazards
 
-## Handle Gently
+The following conditions can cause an explosion or leakage of flammable liquid or gas:
 
-After startup, avoid lifting or carrying this product. Turn off the machine before carrying it. Handle all parts gently to avoid mechanical impact and damage.
+- Replacing the battery with an incorrect type can cause an explosion.
+- Disposing of a battery in fire or a hot oven, or mechanically crushing or cutting it, can cause an explosion.
+- Leaving a battery in an extremely high-temperature environment can cause an explosion or leakage.
+- Subjecting a battery to extremely low air pressure can cause an explosion or leakage.

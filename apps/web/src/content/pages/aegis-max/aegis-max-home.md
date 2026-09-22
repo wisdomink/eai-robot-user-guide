@@ -1,15 +1,17 @@
-# FF Aegis Max
+# FX Aegis Max User Manual
 
-*Quadruped Robot User Manual*
+*Wheeled-leg quadruped robot*
 
-> **Publication review required:** This product was imported from an internal English content draft. It is available for content review only and must not be treated as a final published manual.
+![FX Aegis Max wheeled-leg robot](/images/aegis-max/aegis-mega-a-d1-01.png)
 
-## Items to resolve before external release
+This manual covers the FX Aegis Max wheeled-leg robot, including preparation, remote control, dual-battery operation, maintenance and after-sales information.
 
-- Confirm the correct payload specification: the source contains both **25 kg** and **30 kg** values.
-- Insert FF's approved radio/compliance statements and product model code.
-- Replace the remote-controller and application placeholders with final FF names.
-- Replace all source figures with FF-approved artwork.
-- Confirm or replace the warranty terms with FF's final policy.
+## Before You Start
 
-See the sidebar for the imported manual content.
+- Read [Legal & Safety](/aegis-max/version-statement) and [Battery Safety](/aegis-max/battery-safety).
+- Follow [Preparation & Startup](/aegis-max/instructions-for-use).
+- Locate the [Emergency Stop & Protection](/aegis-max/emergency-stop) controls before operation.
+
+## Information Awaiting Confirmation
+
+The supplied manual is a draft. The permitted payload conflicts between 25 kg and 30 kg; the product model code, final app and controller-manual names, FF certification statements, artwork and warranty policy remain unconfirmed. See the relevant chapters for details.

@@ -1,12 +1,12 @@
-# NAVI Series Product Manual
+# FX Navi Series Product Manual
 
-![NAVI Product Overview](/images/navi/navi-cover.png)
+![FX Navi Product Overview](/images/navi/navi-cover.png)
 
 *AI-powered quadruped robot designed for learning, creativity, and robotics exploration*
 
 > **WARNING:** This product contains a non-replaceable CR1220 coin cell battery. Keep batteries away from children. Swallowing a coin cell battery may cause serious injury or death. Seek immediate medical attention if a battery is swallowed or suspected to have been swallowed.
 
-![NAVI Product Overview](/images/navi/navi-home-warning.png)
+![FX Navi Product Overview](/images/navi/navi-home-warning.png)
 
 
 > **WARNING – BUTTON/COIN CELL BATTERY**

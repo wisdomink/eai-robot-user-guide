@@ -6,7 +6,7 @@ Please refer to the official product page or in-App guide for the complete techn
 
 | Category | Details |
 |---|---|
-| Product Name | NAVI |
+| Product Name | FX Navi |
 | Type | AI-powered Quadruped Robot |
 | Age Requirement | 14 years and above |
 | Connectivity | Wi-Fi, Bluetooth |

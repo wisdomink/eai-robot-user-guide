@@ -1,34 +1,46 @@
 # Power Supply Introduction
 
-## Battery Capacity LED - Idle / Discharge
+## Battery Level Indicators
 
-### Battery Display in On State
+![Battery and battery indicators](/images/aegis-ultra/aegis-ultra-0921-05.jpeg)
 
-| No. | SOC (%) | LED 1 | LED 2 | LED 3 | LED 4 |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 0-14% | Flashing | OFF | OFF | OFF |
-| 2 | 15-24% | ON | OFF | OFF | OFF |
-| 3 | 25-49% | ON | ON | OFF | OFF |
-| 4 | 50-74% | ON | ON | ON | OFF |
-| 5 | 75-100% | ON | ON | ON | ON |
+### Battery Display — On State
 
-![Battery display on state](/images/aegis-ultra/aegis-ultra-power-supply-1.png)
-
-### Battery Display in Charge State
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
 | No. | SOC (%) | LED 1 | LED 2 | LED 3 | LED 4 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 0-24% | Flashing | OFF | OFF | OFF |
-| 2 | 25-49% | ON | Flashing | OFF | OFF |
-| 3 | 50-74% | ON | ON | Flashing | OFF |
-| 4 | 75-99% | ON | ON | ON | Flashing |
+| 1 | 0 – 14% | Flashing | OFF | OFF | OFF |
+| 2 | 15 – 24% | ON | OFF | OFF | OFF |
+| 3 | 25 – 49% | ON | ON | OFF | OFF |
+| 4 | 50 – 74% | ON | ON | ON | OFF |
+| 5 | 75 – 100% | ON | ON | ON | ON |
+
+</div>
+
+### Battery Display — Charging State
+
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
+
+| No. | SOC (%) | LED 1 | LED 2 | LED 3 | LED 4 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 0 – 24% | Flashing | OFF | OFF | OFF |
+| 2 | 25 – 49% | ON | Flashing | OFF | OFF |
+| 3 | 50 – 74% | ON | ON | Flashing | OFF |
+| 4 | 75 – 99% | ON | ON | ON | Flashing |
 | 5 | 100% | ON | ON | ON | ON |
+
+</div>
 
 ## Power Adapter
 
-| Status | Meaning |
-| --- | --- |
-| Light off | No power |
-| Light on | Connected to mains power (100V-240V) |
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
-![Power adapter](/images/aegis-ultra/aegis-ultra-power-supply-2.png)
+| Indicator | Meaning |
+| --- | --- |
+| Light off | No Power |
+| Light on | Connect mains power (100V~240V) |
+
+</div>
+
+![Power adapter](/images/aegis-ultra/aegis-ultra-0921-06.jpeg)

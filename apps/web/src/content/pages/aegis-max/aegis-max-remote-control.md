@@ -1,14 +1,12 @@
 # Remote Control
 
-## 4.1 Controls
+## Controls
 
-![FF Aegis Max figure 19 — description pending review](/images/aegis-max/aegis-max-figure-19.png)
+![Remote controller front controls](/images/aegis-max/aegis-mega-a-d1-20.png)
 
-*Source figure — reference only; FF artwork required before publication.*
+![Remote controller rear and side controls](/images/aegis-max/aegis-mega-a-d1-21.png)
 
-![FF Aegis Max figure 20 — description pending review](/images/aegis-max/aegis-max-figure-20.png)
-
-*Source figure — reference only; FF artwork required before publication.*
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
 | No. | Control | No. | Control |
 | --- | --- | --- | --- |
@@ -25,7 +23,11 @@
 | ⑪ | Power on/off | ㉓ | USB interface |
 | ⑫ | Right joystick | ㉔ | Shooting / video recording |
 
-## 4.2 Function Details
+</div>
+
+## Function Details
+
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
 | Function | Operation | Definition |
 | --- | --- | --- |
@@ -44,23 +46,27 @@
 | Video recording | Press and hold the shoot key for 3 s (㉔) | Starts recording; click again to stop. |
 | Fill light on/off | Click the fill light key (⑳) | Cycles through: both on — front on, rear off — rear on, front off — both off. |
 
-## 4.3 App
+</div>
+
+## Controller App
 
 ### Connecting to the Robot
 
-- Keep the robot near the remote control before connecting.
-- Once the robot is powered on, press and hold the remote control power button to start up.
-- Open the [FF app name to be assigned] app and wait for the remote control and robot to connect automatically.
+The final FF app name has not yet been assigned.
 
-![FF Aegis Max figure 21 — description pending review](/images/aegis-max/aegis-max-figure-21.png)
+1. Keep the robot near the remote control before connecting.
 
-*Source figure — reference only; FF artwork required before publication.*
+2. Once the robot is powered on, press and hold the remote control power button to start up.
+
+3. Open the robot controller app and wait for the remote control and robot to connect automatically.
+
+![Controller app connection screen](/images/aegis-max/aegis-mega-a-d1-22.png)
 
 ### Mode Switching
 
-![FF Aegis Max figure 22 — description pending review](/images/aegis-max/aegis-max-figure-22.png)
+![App motion mode controls](/images/aegis-max/aegis-mega-a-d1-23.png)
 
-*Source figure — reference only; FF artwork required before publication.*
+<div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
 | Mode | Function | Purpose | Scenarios |
 | --- | --- | --- | --- |
@@ -69,19 +75,22 @@
 | Navigation Mode | Guide the robot to build an environmental map; after mapping, set fixed-point tasks to initiate automated cruising and operation. | Autonomous, repeatable inspection and operational tasks. | Automated inspection, preset route patrol. |
 | Stair Climbing Mode | The robot autonomously plans its gait to steadily traverse multi-level stairs. | Efficient execution of cross-floor tasks. | Multi-storey building inspections. |
 
+</div>
+
 ### Settings
 
 - Auto activation of fill light: automatically activates or deactivates the front fill light based on ambient light intensity, to ensure clear video capture in low light.
+
 - Automatic obstacle stop: when enabled, the robot automatically stops moving forward if an obstacle is detected during manual operation. Designed for collision avoidance during manual control in complex environments.
+
 - Auxiliary posture — battery swapping posture: triggered when battery replacement is required; the robot assumes a specific posture to facilitate battery insertion and removal.
+
 - Equipment information: view the robot's core information, including equipment serial number and the software version of each subsystem (main control, motion, vision).
 
-![FF Aegis Max figure 23 — description pending review](/images/aegis-max/aegis-max-figure-23.png)
+![App mode selection](/images/aegis-max/aegis-mega-a-d1-24.png)
 
-*Source figure — reference only; FF artwork required before publication.*
+![App settings](/images/aegis-max/aegis-mega-a-d1-25.png)
 
-![FF Aegis Max figure 24 — description pending review](/images/aegis-max/aegis-max-figure-24.png)
+### Software Updates
 
-*Source figure — reference only; FF artwork required before publication.*
-
-> **Review note:** Software continuous upgrade statement<br>The app accompanying this product undergoes regular iteration and feature updates. Descriptions in this manual may therefore differ from the latest version. Specific functions are subject to what is actually presented within the app.
+The accompanying app receives regular feature updates. Its functions and screens may differ from this manual; refer to the version installed on the controller.

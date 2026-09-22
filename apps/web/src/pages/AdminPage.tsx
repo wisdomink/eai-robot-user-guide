@@ -38,20 +38,22 @@ const RECO_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF Futurist' },
   { value: 'futurist-ultra', label: 'FF Futurist Ultra' },
   { value: 'master', label: 'FF Master' },
-  { value: 'aegis', label: 'FF Aegis' },
-  { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
+  { value: 'aegis', label: 'FX Aegis Classic' },
+  { value: 'aegis-ultra', label: 'FX Aegis Classic Ultra' },
+  { value: 'aegis-mega-d', label: 'FX Aegis Mega D' },
   { value: 'ff91', label: 'FF 91 2.0' },
-  { value: 'navi', label: 'FF NAVI' },
+  { value: 'navi', label: 'FX Navi' },
 ]
 
 const LEAD_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF Futurist' },
   { value: 'futurist-ultra', label: 'FF Futurist Ultra' },
   { value: 'master', label: 'FF Master' },
-  { value: 'aegis', label: 'FF Aegis' },
-  { value: 'aegis-ultra', label: 'FF Aegis Ultra' },
+  { value: 'aegis', label: 'FX Aegis Classic' },
+  { value: 'aegis-ultra', label: 'FX Aegis Classic Ultra' },
+  { value: 'aegis-mega-d', label: 'FX Aegis Mega D' },
   { value: 'ff91', label: 'FF 91 2.0' },
-  { value: 'navi', label: 'FF NAVI' },
+  { value: 'navi', label: 'FX Navi' },
 ]
 
 const EMPTY_RECO_FORM: RecommendationPayload = {

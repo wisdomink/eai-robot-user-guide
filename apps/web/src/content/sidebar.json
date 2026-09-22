@@ -327,14 +327,14 @@
     ]
   },
   "aegis": {
-    "title": "FF Aegis",
+    "title": "FX Aegis Classic",
     "sections": [
       {
         "id": "aegis-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FX Aegis/Aegis Pro / Aegis EDU",
+            "title": "FX Aegis Classic / Aegis Pro / Aegis EDU",
             "slug": "/aegis",
             "file": "aegis/aegis-home.md"
           }
@@ -457,14 +457,14 @@
     ]
   },
   "aegis-ultra": {
-    "title": "FF Aegis Ultra",
+    "title": "FX Aegis Classic Ultra",
     "sections": [
       {
         "id": "aegis-ultra-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FF Aegis Ultra QUADRUPED ROBOT User Manual",
+            "title": "FX Aegis Classic Ultra / Ultra-W User Manual",
             "slug": "/aegis-ultra",
             "file": "aegis-ultra/aegis-ultra-home.md"
           }
@@ -488,6 +488,11 @@
             "title": "Battery & Charging Precautions",
             "slug": "/aegis-ultra/battery-charging",
             "file": "aegis-ultra/aegis-ultra-battery-charging.md"
+          },
+          {
+            "title": "Regulatory Compliance",
+            "slug": "/aegis-ultra/regulatory-compliance",
+            "file": "aegis-ultra/aegis-ultra-regulatory-compliance.md"
           }
         ]
       },
@@ -579,10 +584,10 @@
       },
       {
         "id": "warranty",
-        "title": "Safety, Warranty and Compliance",
+        "title": "Warranty Information",
         "pages": [
           {
-            "title": "Safety, Warranty and Compliance",
+            "title": "Warranty Information",
             "slug": "/aegis-ultra/warranty",
             "file": "aegis-ultra/aegis-ultra-warranty.md"
           }
@@ -591,80 +596,139 @@
     ]
   },
   "aegis-max": {
-    "title": "FF Aegis Max",
+    "title": "FX Aegis Max",
     "sections": [
       {
-        "id": "aegis-max-version-statement",
-        "title": "1. Version Statement",
+        "id": "aegis-max-home",
+        "title": "Home",
         "pages": [
           {
-            "title": "1. Version Statement",
+            "title": "FX Aegis Max User Manual",
+            "slug": "/aegis-max",
+            "file": "aegis-max/aegis-max-home.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-max-legal-safety",
+        "title": "Legal & Safety",
+        "pages": [
+          {
+            "title": "Legal & Safety",
             "slug": "/aegis-max/version-statement",
             "file": "aegis-max/aegis-max-version-statement.md"
+          },
+          {
+            "title": "Battery Safety",
+            "slug": "/aegis-max/battery-safety",
+            "file": "aegis-max/aegis-max-battery-safety.md"
+          },
+          {
+            "title": "Regulatory Compliance",
+            "slug": "/aegis-max/regulatory-compliance",
+            "file": "aegis-max/aegis-max-regulatory-compliance.md"
           }
         ]
       },
       {
-        "id": "aegis-max-product-introduction",
-        "title": "2. Product Introduction",
+        "id": "aegis-max-product-description",
+        "title": "Product Description",
         "pages": [
           {
-            "title": "2. Product Introduction",
+            "title": "Product Overview & Components",
             "slug": "/aegis-max/product-introduction",
             "file": "aegis-max/aegis-max-product-introduction.md"
+          },
+          {
+            "title": "Product Parameters",
+            "slug": "/aegis-max/product-parameters",
+            "file": "aegis-max/aegis-max-product-parameters.md"
+          },
+          {
+            "title": "Status Indicators",
+            "slug": "/aegis-max/lighting-effects",
+            "file": "aegis-max/aegis-max-lighting-effects.md"
+          },
+          {
+            "title": "Motion Modes",
+            "slug": "/aegis-max/motion-modes",
+            "file": "aegis-max/aegis-max-motion-modes.md"
+          },
+          {
+            "title": "Expansion Interface",
+            "slug": "/aegis-max/expansion-interface",
+            "file": "aegis-max/aegis-max-expansion-interface.md"
+          },
+          {
+            "title": "Network Ports",
+            "slug": "/aegis-max/network-ports",
+            "file": "aegis-max/aegis-max-network-ports.md"
+          },
+          {
+            "title": "Payload Expansion",
+            "slug": "/aegis-max/payload-expansion",
+            "file": "aegis-max/aegis-max-payload-expansion.md"
           }
         ]
       },
       {
-        "id": "aegis-max-instructions-for-use",
-        "title": "3. Instructions for Use",
+        "id": "aegis-max-operation-guide",
+        "title": "Operation Guide",
         "pages": [
           {
-            "title": "3. Instructions for Use",
+            "title": "Preparation & Startup",
             "slug": "/aegis-max/instructions-for-use",
             "file": "aegis-max/aegis-max-instructions-for-use.md"
-          }
-        ]
-      },
-      {
-        "id": "aegis-max-remote-control",
-        "title": "4. Remote Control",
-        "pages": [
+          },
           {
-            "title": "4. Remote Control",
+            "title": "Battery Swapping & Power-Off",
+            "slug": "/aegis-max/battery-power",
+            "file": "aegis-max/aegis-max-battery-power.md"
+          },
+          {
+            "title": "Emergency Stop & Protection",
+            "slug": "/aegis-max/emergency-stop",
+            "file": "aegis-max/aegis-max-emergency-stop.md"
+          },
+          {
+            "title": "Charging",
+            "slug": "/aegis-max/charging",
+            "file": "aegis-max/aegis-max-charging.md"
+          },
+          {
+            "title": "Remote Control",
             "slug": "/aegis-max/remote-control",
             "file": "aegis-max/aegis-max-remote-control.md"
           }
         ]
       },
       {
-        "id": "aegis-max-anomalies-and-solutions",
-        "title": "5. Anomalies and Solutions",
+        "id": "aegis-max-maintenance",
+        "title": "Care & Troubleshooting",
         "pages": [
           {
-            "title": "5. Anomalies and Solutions",
+            "title": "Troubleshooting",
             "slug": "/aegis-max/anomalies-and-solutions",
             "file": "aegis-max/aegis-max-anomalies-and-solutions.md"
-          }
-        ]
-      },
-      {
-        "id": "aegis-max-daily-maintenance",
-        "title": "6. Daily Maintenance",
-        "pages": [
+          },
           {
-            "title": "6. Daily Maintenance",
+            "title": "Daily Maintenance",
             "slug": "/aegis-max/daily-maintenance",
             "file": "aegis-max/aegis-max-daily-maintenance.md"
+          },
+          {
+            "title": "Transportation & Storage",
+            "slug": "/aegis-max/transportation-storage",
+            "file": "aegis-max/aegis-max-transportation-storage.md"
           }
         ]
       },
       {
-        "id": "aegis-max-warranty-policy",
-        "title": "7. Warranty Policy",
+        "id": "aegis-max-warranty",
+        "title": "Warranty",
         "pages": [
           {
-            "title": "7. Warranty Policy",
+            "title": "Warranty Policy",
             "slug": "/aegis-max/warranty-policy",
             "file": "aegis-max/aegis-max-warranty-policy.md"
           }
@@ -672,15 +736,140 @@
       }
     ]
   },
+  "aegis-mega-d": {
+    "title": "FX Aegis Mega D",
+    "sections": [
+      {
+        "id": "aegis-mega-d-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FX Aegis Mega D User Manual",
+            "slug": "/aegis-mega-d",
+            "file": "aegis-mega-d/aegis-mega-d-home.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-mega-d-safety",
+        "title": "Safety",
+        "pages": [
+          {
+            "title": "Safety & Reading Tips",
+            "slug": "/aegis-mega-d/safety",
+            "file": "aegis-mega-d/aegis-mega-d-safety.md"
+          },
+          {
+            "title": "Battery Safety & Storage",
+            "slug": "/aegis-mega-d/battery-safety",
+            "file": "aegis-mega-d/aegis-mega-d-battery-safety.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-mega-d-product",
+        "title": "Product Description",
+        "pages": [
+          {
+            "title": "Product Overview & Components",
+            "slug": "/aegis-mega-d/product-overview",
+            "file": "aegis-mega-d/aegis-mega-d-product-overview.md"
+          },
+          {
+            "title": "Product Specifications",
+            "slug": "/aegis-mega-d/specifications",
+            "file": "aegis-mega-d/aegis-mega-d-specifications.md"
+          },
+          {
+            "title": "Power, Battery & Status Indicators",
+            "slug": "/aegis-mega-d/indicators",
+            "file": "aegis-mega-d/aegis-mega-d-indicators.md"
+          },
+          {
+            "title": "Modes & Gaits",
+            "slug": "/aegis-mega-d/motion-modes",
+            "file": "aegis-mega-d/aegis-mega-d-motion-modes.md"
+          },
+          {
+            "title": "Payload & Expansion Ports",
+            "slug": "/aegis-mega-d/payload",
+            "file": "aegis-mega-d/aegis-mega-d-payload.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-mega-d-operation",
+        "title": "Operation Guide",
+        "pages": [
+          {
+            "title": "Preparation & Carrying",
+            "slug": "/aegis-mega-d/preparation",
+            "file": "aegis-mega-d/aegis-mega-d-preparation.md"
+          },
+          {
+            "title": "Charging",
+            "slug": "/aegis-mega-d/charging",
+            "file": "aegis-mega-d/aegis-mega-d-charging.md"
+          },
+          {
+            "title": "Startup & Shutdown",
+            "slug": "/aegis-mega-d/startup-shutdown",
+            "file": "aegis-mega-d/aegis-mega-d-startup-shutdown.md"
+          },
+          {
+            "title": "Controller & Settings",
+            "slug": "/aegis-mega-d/remote-control",
+            "file": "aegis-mega-d/aegis-mega-d-remote-control.md"
+          },
+          {
+            "title": "Route Marking Tool",
+            "slug": "/aegis-mega-d/marking-tool",
+            "file": "aegis-mega-d/aegis-mega-d-marking-tool.md"
+          },
+          {
+            "title": "Emergency Stop & Protection",
+            "slug": "/aegis-mega-d/emergency",
+            "file": "aegis-mega-d/aegis-mega-d-emergency.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-mega-d-care",
+        "title": "Care & Support",
+        "pages": [
+          {
+            "title": "Troubleshooting",
+            "slug": "/aegis-mega-d/troubleshooting",
+            "file": "aegis-mega-d/aegis-mega-d-troubleshooting.md"
+          },
+          {
+            "title": "Transportation & Storage",
+            "slug": "/aegis-mega-d/transportation-storage",
+            "file": "aegis-mega-d/aegis-mega-d-transportation-storage.md"
+          },
+          {
+            "title": "Service & Warranty",
+            "slug": "/aegis-mega-d/warranty",
+            "file": "aegis-mega-d/aegis-mega-d-warranty.md"
+          },
+          {
+            "title": "Disposal",
+            "slug": "/aegis-mega-d/disposal",
+            "file": "aegis-mega-d/aegis-mega-d-disposal.md"
+          }
+        ]
+      }
+    ]
+  },
   "navi": {
-    "title": "FF NAVI",
+    "title": "FX Navi",
     "sections": [
       {
         "id": "navi-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FF NAVI Series Product Manual",
+            "title": "FX Navi Series Product Manual",
             "slug": "/navi",
             "file": "navi/navi-home.md"
           }
