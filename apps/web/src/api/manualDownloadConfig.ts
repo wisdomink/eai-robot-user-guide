@@ -4,9 +4,10 @@ export const DEFAULT_MANUAL_DOWNLOAD_URLS: Partial<Record<ProductId, string>> = 
   futurist: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf',
   'futurist-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf',
   master: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf',
-  aegis: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX+Aegis.pdf',
-  'aegis-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf',
-  'aegis-max': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Max.pdf',
+  aegis: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_User_Manual.pdf',
+  'aegis-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_Ultra_User_Manual.pdf',
+  'aegis-max': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf',
+  'aegis-mega-d': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Mega_D_User_Manual.pdf',
   ff91: '',
   navi: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf',
 }

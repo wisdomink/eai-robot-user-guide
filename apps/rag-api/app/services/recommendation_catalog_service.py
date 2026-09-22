@@ -31,18 +31,23 @@ class RecommendationCatalogStorage:
         ),
         (
             "aegis",
-            "FF Aegis",
-            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX+Aegis.pdf",
+            "FX Aegis Classic",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_User_Manual.pdf",
         ),
         (
             "aegis-ultra",
-            "FF Aegis Ultra",
-            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Ultra.pdf",
+            "FX Aegis Classic Ultra",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_Ultra_User_Manual.pdf",
         ),
         (
             "aegis-max",
-            "FF Aegis Max",
-            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Aegis+Max.pdf",
+            "FX Aegis Max",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf",
+        ),
+        (
+            "aegis-mega-d",
+            "FX Aegis Mega D",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Mega_D_User_Manual.pdf",
         ),
         (
             "navi",
