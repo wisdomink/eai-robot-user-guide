@@ -4,6 +4,10 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
 
 当前主流程为自托管 `plan -> loop -> output -> recommendation` 多 Agent 工作流，聊天流量全部经过后端处理。
 
+## 说明书按产品同步
+
+使用 `sync_product_rag.py` 预览或替换更新指定产品的独立知识库，并清理符合归属与引用条件的旧文件，详见 [按产品同步说明](RAG_SYNC.md)。默认预览，添加 `--apply` 才修改远程。
+
 ## 技术栈
 
 | 组件 | 技术 | 说明 |
