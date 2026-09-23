@@ -26,11 +26,11 @@
     },
     {
       "value": "futurist",
-      "label": "FF Futurist"
+      "label": "FF All-New Futurist"
     },
     {
       "value": "futurist-ultra",
-      "label": "FF Futurist Ultra"
+      "label": "FF All-New Futurist Ultra"
     },
     {
       "value": "aegis",
@@ -89,12 +89,12 @@
   "manual_downloads": [
     {
       "product_id": "futurist",
-      "label": "FF Futurist",
+      "label": "FF All-New Futurist",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf"
     },
     {
       "product_id": "futurist-ultra",
-      "label": "FF Futurist Ultra",
+      "label": "FF All-New Futurist Ultra",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf"
     },
     {

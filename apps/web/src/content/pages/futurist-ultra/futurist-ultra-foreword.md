@@ -1,21 +1,9 @@
-# Foreword
+# Welcome & Support
 
+Thank you for choosing the FF All-New Futurist Ultra Robot.
 
-IMPORTANT SAFETY INSTRUCTIONS 
+This user manual helps you fully understand and quickly get started with the FF All-New Futurist Ultra Robot (hereinafter referred to as "the Robot"), and provides detailed information on operation and maintenance to ensure an optimal user experience. Should you have any problems during use, please call our service hotline or contact our official WeChat account. Our professional technical support team will be glad to assist you.
 
-READ ALL INSTRUCTIONS BEFORE USING FF Futurist 
+Read User Manual: /futurist-ultra
 
-Thank you for purchasing the general-purpose robot FF Futurist (hereinafter referred to as Futurist, the product, the robot or equipment). This product is developed by FF AI-Robotics Inc. (hereinafter referred to as our company) for general-purpose applications.  
-
-Before operation and maintenance of the equipment, please read the instructions in this manual carefully, and strictly follow the instructions. If you have any comments and suggestions, please contact us in time. We will provide you with warm and efficient service! 
-
-The specific operation in different versions may be different; this manual is only for end-user’s reference. Our company reserves the right to modify and interpret this manual.  
-
-
-CAUTION Read the instructions before using the machine. 
-
-
-WARNING: Read all safety warnings and instructions. Failure to follow the warnings and instructions may result in electric shock, fire and/or serious injury. 
-
-
-FF AI Robotics Inc.
+Contact After-sales Service: https://support.ff.com/us/

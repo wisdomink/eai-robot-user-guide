@@ -1,60 +1,85 @@
-# 7. Specifications
+# Radio Frequency Specifications
 
-## RF and wireless specifications
+Wi-Fi and Bluetooth
 
-2.4GHz Wi-Fi: 20dBm (EIRP)
+- 2.4 GHz Wi-Fi: 20 dBm (EIRP)
 
-Bluetooth: 20dBm (EIRP)
+- Bluetooth: 20 dBm (EIRP)
 
-5GHz Wi-Fi:
+- 5 GHz Wi-Fi:
 
-- 5150-5250MHz: 23dBm (EIRP)
-- 5725-5850MHz: 14dBm (EIRP)
+- 5150–5250 MHz: 23 dBm (EIRP)
 
-SRD (868-868.6MHz, 863-865MHz, 865.0-868.0MHz): 14dBm (ERP)
+- 5725–5850 MHz: 14 dBm (EIRP)
 
-GNSS Receiver: 1559-1610MHz, 1164-1215MHz
+Wi-Fi operation in the 5150–5250 MHz frequency range is restricted to indoor use in all EU/EFTA member states and Turkey.
 
-Wi-Fi 5150-5250MHz frequency range is limited to indoor use in all EU/EFTA member states and Turkey.
+UWB
 
-![Specifications label](/images/futurist-ultra/futurist-ultra-specifications-1.png)
+- 7987.2 MHz: 0 dBm (EIRP)
 
-## Cellular bands
+Cellular Bands
 
-- LTE Band 1: Uplink 1920-1980MHz, Downlink 2110-2170MHz
-- LTE Band 3: Uplink 1710-1785MHz, Downlink 1805-1880MHz
-- LTE Band 7: Uplink 2500-2570MHz, Downlink 2620-2690MHz
-- LTE Band 8: Uplink 880-915MHz, Downlink 925-960MHz
-- LTE Band 20: Uplink 832-862MHz, Downlink 791-821MHz
-- LTE Band 28: Uplink 703-748MHz, Downlink 758-803MHz
-- LTE Band 34: Uplink and Downlink 2010-2025MHz
-- LTE Band 38: Uplink and Downlink 2570-2620MHz
-- LTE Band 40: Uplink and Downlink 2300-2400MHz
-- LTE Band 42: Uplink and Downlink 3400-3600MHz
+- LTE Band 1: Uplink: 1920–1980 MHz; Downlink: 2110–2170 MHz
 
-## 5G NR
+- LTE Band 3: Uplink: 1710–1785 MHz; Downlink: 1805–1880 MHz
 
-- NR n1: Uplink 1920-1980MHz, Downlink 2110-2170MHz
-- NR n3: Uplink 1710-1785MHz, Downlink 1805-1880MHz
-- NR n7: Uplink 2500-2570MHz, Downlink 2620-2690MHz
-- NR n8: Uplink 880-915MHz, Downlink 925-960MHz
-- NR n20: Uplink 832-862MHz, Downlink 791-821MHz
-- NR n28: Uplink 703-748MHz, Downlink 758-803MHz
-- NR n38: Uplink and Downlink 2570-2620MHz
-- NR n40: Uplink and Downlink 2300-2400MHz
-- NR n41: Uplink and Downlink 2496-2690MHz
-- NR n77: Uplink and Downlink 3300-4200MHz
-- NR n78: Uplink and Downlink 3300-3800MHz
+- LTE Band 7: Uplink: 2500–2570 MHz; Downlink: 2620–2690 MHz
 
-LTE bands: 23dBm +2.0dB/-2.0dB (Power class 3, LTE band 1/3/7/8/20/28/34/38/40/42)
+- LTE Band 8: Uplink: 880–915 MHz; Downlink: 925–960 MHz
 
-5G NR:
+- LTE Band 20: Uplink: 832–862 MHz; Downlink: 791–821 MHz
 
-- 23dBm +2.0dB/-2.0dB (Power class 3, NR band n1/3/7/8/20/28/38/40)
-- 26dBm +3dB/-4dB (Power class 2, NR band n41/77/78)
+- LTE Band 28: Uplink: 703–748 MHz; Downlink: 758–803 MHz
 
-## RF exposure
+- LTE Band 32: Downlink only: 1452–1496 MHz
 
-The equipment complies with radiation exposure limits set for an uncontrolled environment. To avoid the possibility of exceeding radio frequency exposure limits, human proximity to the antenna shall not be less than 20cm during normal operation.
+- LTE Band 34: Uplink and downlink: 2010–2025 MHz
 
-This transmitter must not be co-located or operated in conjunction with any antenna or transmitter.
+- LTE Band 38: Uplink and downlink: 2570–2620 MHz
+
+- LTE Band 40: Uplink and downlink: 2300–2400 MHz
+
+- LTE Band 41: Uplink and downlink: 2496–2690 MHz
+
+- LTE Band 42: Uplink and downlink: 3400–3600 MHz
+
+- LTE Band 43: Uplink and downlink: 3600–3800 MHz
+
+- LTE Band 46: Downlink only: 5150–5925 MHz
+
+5G NR Bands
+
+- NR n1: Uplink: 1920–1980 MHz; Downlink: 2110–2170 MHz
+
+- NR n3: Uplink: 1710–1785 MHz; Downlink: 1805–1880 MHz
+
+- NR n7: Uplink: 2500–2570 MHz; Downlink: 2620–2690 MHz
+
+- NR n8: Uplink: 880–915 MHz; Downlink: 925–960 MHz
+
+- NR n20: Uplink: 832–862 MHz; Downlink: 791–821 MHz
+
+- NR n28: Uplink: 703–748 MHz; Downlink: 758–803 MHz
+
+- NR n38: Uplink and downlink: 2570–2620 MHz
+
+- NR n40: Uplink and downlink: 2300–2400 MHz
+
+- NR n41: Uplink and downlink: 2496–2690 MHz
+
+- NR n75: Downlink only: 1432–1517 MHz
+
+- NR n76: Downlink only: 1427–1432 MHz
+
+- NR n77: Uplink and downlink: 3300–4200 MHz
+
+- NR n78: Uplink and downlink: 3300–3800 MHz
+
+Maximum Transmit Power
+
+- LTE bands: 23 dBm (+2.0/-2.0 dB)
+
+- 5G NR Power Class 3, bands n1/n3/n7/n8/n20/n28/n38/n40: 23 dBm (+2.0/-2.0 dB)
+
+- 5G NR Power Class 2, bands n41/n77/n78: 26 dBm (+3/-4 dB)

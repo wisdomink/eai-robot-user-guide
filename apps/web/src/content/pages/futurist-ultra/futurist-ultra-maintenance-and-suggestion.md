@@ -1,30 +1,41 @@
-# 4. Maintenance and Suggestion
+# Daily Maintenance
 
-The operator needs to carry out simple maintenance before and after use of the robot every time, and periodically carry out the necessary inspection of the robot.
+1. Safety Warnings
 
-## 4.1 Routine Maintenance
+- a. Power-off Maintenance: Before any maintenance or component replacement, completely power off the device and confirm it is in a fully de-energized safe state.
 
-We need to carry out necessary maintenance of the robot to increase the life of the robot, so that the robot stays in good condition for a long time and creates more value for customers.
+- b. No Unauthorized Modification: Do not modify the robot or alter its original design and configuration without authorization.
 
-- Before maintenance, the power must be turned off to prevent accidental electric shock or parts damage.
-- The machine should be placed in a dry and ventilated place to prevent a humid environment from affecting electronic and electrical components and shortening their lifespan.
+- c. Professional Repair Only: Do not disassemble the robot personally. If maintenance is required, contact the manufacturer's designated professional service personnel.
 
-## 4.2 Battery Maintenance
+2. Maintenance and Upkeep
 
-- The battery is not allowed to be disassembled or replaced without permission to avoid unnecessary loss.
-- Keep batteries away from heat sources, high pressure places, and prolonged sunlight exposure.
-- Do not put the battery in water or fire.
-- Short-circuiting the positive and negative battery terminals with metal is prohibited.
-- Avoid excessive physical shock and impact on the battery. Do not hit, drop, or step on the battery.
-- Without the permission and guidance of the manufacturer, it is strictly prohibited to disassemble or assemble the battery.
-- Do not mix batteries of different manufacturers, types, and models.
-- Do not use or store in a high-temperature environment above 36 degrees C, otherwise it may cause heat, fire, or reduced service life.
-- Do not use it in a low-temperature environment below -10 degrees C, otherwise it may cause machine malfunction and reduce battery life.
-- Normally, the battery needs to be fully charged every 20 charges.
-- If the machine is stored for more than 2 months, keep the battery at least 60% charged and recharge it every 60 days.
-- WARNING: When charging the battery, only use the "UY600L-W546080" provided with this appliance.
-- Stop using the battery when it has abnormal odor, discoloration, noise, leakage, or serious deformation, and contact qualified after-sales service personnel.
-- If the electrolyte leaks into the skin or eyes, rinse with water and seek medical attention immediately.
-- Keep batteries out of reach of pets and children.
-- When loading and unloading batteries during transportation, be careful not to drop them. Do not stack more than 3 layers or turn them over.
-- Do not use a battery pack or appliance that is damaged, or batteries may exhibit unpredictable behavior resulting in fire, explosion, or risk of injury.
+- a. Routine Maintenance: Perform regular maintenance in accordance with the manufacturer's (FF EAI Robotics) recommendations to keep the robot in optimal operating condition.
+
+- b. Use Original Spare Parts: Only use manufacturer-specified original spare parts for component replacement to guarantee equipment performance and operational safety.
+
+3. Fault Handling
+
+- a. Fault Response: Immediately stop operation once any malfunction occurs during operation, and notify professional technicians to conduct inspection and repair.
+
+- b. No Unauthorized Disassembly &amp; Repair: Do not disassemble or attempt to repair the robot by yourself, so as to prevent further damage.
+
+4. Battery and Power Management
+
+- a. Safe Charging: Do not disassemble the battery for separate charging; charge only by connecting the power supply.
+
+- b. Charging Environment: The robot's battery shall be charged in a safe, dry environment. Avoid humid and high-temperature surroundings.
+
+- c. Prevent Overcharging: Do not keep the device connected to power for a prolonged period to avoid battery overcharging and overheating, and to prolong battery service life.
+
+- d. Battery Replacement: Battery replacement must be performed only by qualified professionals. Using a charger for one battery type on another may cause fire hazards.
+
+- e. Dedicated Power Supply Only: Use only the supplied removable power supply unit for charging.
+
+- f. Battery Disposal: Remove the battery and dispose of it in accordance with safety regulations before scrapping the device.
+
+5. Software Management
+
+- a. Regular Updates: Regularly check and update the robot's operating system and control software to fix vulnerabilities and enhance security.
+
+Note: Compliance with the above instructions ensures safe and efficient operation of the robot. For any inquiries, please contact the manufacturer or authorized service provider for support.

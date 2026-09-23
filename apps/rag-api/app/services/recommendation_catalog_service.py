@@ -16,12 +16,12 @@ class RecommendationCatalogStorage:
     _MANUAL_DOWNLOAD_PRODUCTS = [
         (
             "futurist",
-            "FF Futurist",
+            "FF All-New Futurist",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf",
         ),
         (
             "futurist-ultra",
-            "FF Futurist Ultra",
+            "FF All-New Futurist Ultra",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf",
         ),
         (

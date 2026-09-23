@@ -1,15 +1,20 @@
 {
   "futurist": {
-    "title": "FF Futurist",
+    "title": "FF All-New Futurist",
     "sections": [
       {
         "id": "futurist-home",
-        "title": "Home",
+        "title": "Overview",
         "pages": [
           {
-            "title": "FF Futurist",
+            "title": "FF All-New Futurist",
             "slug": "/futurist",
             "file": "futurist/futurist-home.md"
+          },
+          {
+            "title": "Welcome & Support",
+            "slug": "/futurist/foreword",
+            "file": "futurist/futurist-foreword.md"
           }
         ]
       },
@@ -18,168 +23,381 @@
         "title": "Safety",
         "pages": [
           {
-            "title": "Safety",
+            "title": "Safety Precautions & Guidelines",
             "slug": "/futurist/safety",
             "file": "futurist/futurist-safety.md"
+          },
+          {
+            "title": "Usage Recommendations",
+            "slug": "/futurist/usage-recommendations",
+            "file": "futurist/futurist-usage-recommendations.md"
           }
         ]
       },
       {
-        "id": "futurist-basic-description",
-        "title": "Basic Description",
+        "id": "futurist-product-specifications",
+        "title": "Product & Specifications",
         "pages": [
           {
-            "title": "Basic Description",
+            "title": "Unpacking List",
+            "slug": "/futurist/unpacking",
+            "file": "futurist/futurist-unpacking.md"
+          },
+          {
+            "title": "Product Overview",
             "slug": "/futurist/basic-description",
             "file": "futurist/futurist-basic-description.md"
+          },
+          {
+            "title": "Body & Battery Indicators",
+            "slug": "/futurist/indicators",
+            "file": "futurist/futurist-indicators.md"
+          },
+          {
+            "title": "Debugging & Power Interfaces",
+            "slug": "/futurist/debugging-interfaces",
+            "file": "futurist/futurist-debugging-interfaces.md"
+          },
+          {
+            "title": "Joint Motion Range",
+            "slug": "/futurist/joint-limits",
+            "file": "futurist/futurist-joint-limits.md"
+          },
+          {
+            "title": "Sensor Field of View",
+            "slug": "/futurist/sensor-fov",
+            "file": "futurist/futurist-sensor-fov.md"
+          },
+          {
+            "title": "Robot Specifications",
+            "slug": "/futurist/product-specifications",
+            "file": "futurist/futurist-product-specifications.md"
+          },
+          {
+            "title": "Radio Frequency Specifications",
+            "slug": "/futurist/specifications",
+            "file": "futurist/futurist-specifications.md"
           }
         ]
       },
       {
-        "id": "futurist-quick-start-guide",
-        "title": "Quick Start Guide",
+        "id": "futurist-setup-operation",
+        "title": "Setup & Operation",
         "pages": [
           {
-            "title": "Quick Start Guide",
+            "title": "Remote Control",
+            "slug": "/futurist/remote-control",
+            "file": "futurist/futurist-remote-control.md"
+          },
+          {
+            "title": "App Connection Guide",
             "slug": "/futurist/quick-start-guide",
             "file": "futurist/futurist-quick-start-guide.md"
+          },
+          {
+            "title": "Startup from the Packing Box",
+            "slug": "/futurist/startup-packing",
+            "file": "futurist/futurist-startup-packing.md"
+          },
+          {
+            "title": "Startup from a Supine Position",
+            "slug": "/futurist/startup-supine",
+            "file": "futurist/futurist-startup-supine.md"
+          },
+          {
+            "title": "Startup from a Prone Position",
+            "slug": "/futurist/startup-prone",
+            "file": "futurist/futurist-startup-prone.md"
+          },
+          {
+            "title": "Shutdown & Packing",
+            "slug": "/futurist/shutdown",
+            "file": "futurist/futurist-shutdown.md"
           }
         ]
       },
       {
-        "id": "futurist-charging-battery",
-        "title": "Charging and Battery Replacement",
+        "id": "futurist-power-safety",
+        "title": "Power & Safety",
         "pages": [
           {
-            "title": "Charging and Battery Replacement",
+            "title": "Battery Storage Mode",
+            "slug": "/futurist/battery-storage",
+            "file": "futurist/futurist-battery-storage.md"
+          },
+          {
+            "title": "Charging & Battery Replacement",
             "slug": "/futurist/charging-and-battery-replacement",
             "file": "futurist/futurist-charging-and-battery-replacement.md"
+          },
+          {
+            "title": "Emergency Stop",
+            "slug": "/futurist/emergency-stop",
+            "file": "futurist/futurist-emergency-stop.md"
+          },
+          {
+            "title": "Lifting Ring Installation",
+            "slug": "/futurist/lifting-rings",
+            "file": "futurist/futurist-lifting-rings.md"
           }
         ]
       },
       {
-        "id": "futurist-dressing-guide",
-        "title": "Dressing Guide",
+        "id": "futurist-features-connectivity",
+        "title": "Features & Connectivity",
         "pages": [
           {
-            "title": "Dressing Guide",
-            "slug": "/futurist/dressing-guide",
-            "file": "futurist/futurist-dressing-guide.md"
+            "title": "Dance & Body Actions",
+            "slug": "/futurist/actions",
+            "file": "futurist/futurist-actions.md"
+          },
+          {
+            "title": "Voice & Robot Interaction",
+            "slug": "/futurist/interaction",
+            "file": "futurist/futurist-interaction.md"
+          },
+          {
+            "title": "4G/5G & SIM Cards",
+            "slug": "/futurist/cellular-network",
+            "file": "futurist/futurist-cellular-network.md"
           }
         ]
       },
       {
-        "id": "futurist-other-notes",
-        "title": "Other Notes",
+        "id": "futurist-maintenance-service",
+        "title": "Maintenance & Service",
         "pages": [
           {
-            "title": "Other Notes",
+            "title": "Daily Maintenance",
             "slug": "/futurist/other-notes",
             "file": "futurist/futurist-other-notes.md"
+          },
+          {
+            "title": "Warranty & Support",
+            "slug": "/futurist/warranty",
+            "file": "futurist/futurist-warranty.md"
+          },
+          {
+            "title": "App Privacy Policy",
+            "slug": "/futurist/privacy-policy",
+            "file": "futurist/futurist-privacy-policy.md"
+          },
+          {
+            "title": "Dressing Guide & Current Reference",
+            "slug": "/futurist/dressing-guide",
+            "file": "futurist/futurist-dressing-guide.md"
           }
         ]
       }
     ]
   },
   "futurist-ultra": {
-    "title": "FF Futurist Ultra",
+    "title": "FF All-New Futurist Ultra",
     "sections": [
       {
         "id": "futurist-ultra-home",
-        "title": "Home",
+        "title": "Overview",
         "pages": [
           {
-            "title": "FF Futurist Ultra Edition Instruction Manual V1.0",
+            "title": "FF All-New Futurist Ultra",
             "slug": "/futurist-ultra",
             "file": "futurist-ultra/futurist-ultra-home.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-foreword",
-        "title": "Foreword",
-        "pages": [
+          },
           {
-            "title": "Foreword",
+            "title": "Welcome & Support",
             "slug": "/futurist-ultra/foreword",
             "file": "futurist-ultra/futurist-ultra-foreword.md"
           }
         ]
       },
       {
-        "id": "futurist-ultra-safety-protection-measures",
-        "title": "1. Safety Protection Measures",
+        "id": "futurist-ultra-safety",
+        "title": "Safety",
         "pages": [
           {
-            "title": "1. Safety Protection Measures",
+            "title": "Safety Precautions & Guidelines",
             "slug": "/futurist-ultra/safety-protection-measures",
             "file": "futurist-ultra/futurist-ultra-safety-protection-measures.md"
           }
         ]
       },
       {
-        "id": "futurist-ultra-product-overview",
-        "title": "2. Product Overview",
+        "id": "futurist-ultra-product-specifications",
+        "title": "Product & Specifications",
         "pages": [
           {
-            "title": "2. Product Overview",
+            "title": "Unpacking List",
+            "slug": "/futurist-ultra/unpacking",
+            "file": "futurist-ultra/futurist-ultra-unpacking.md"
+          },
+          {
+            "title": "Product Overview",
             "slug": "/futurist-ultra/product-overview",
             "file": "futurist-ultra/futurist-ultra-product-overview.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-quick-start-guide",
-        "title": "3. Quick Start Guide",
-        "pages": [
+          },
           {
-            "title": "3. Quick Start Guide",
-            "slug": "/futurist-ultra/quick-start-guide",
-            "file": "futurist-ultra/futurist-ultra-quick-start-guide.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-maintenance-and-suggestion",
-        "title": "4. Maintenance and Suggestion",
-        "pages": [
+            "title": "Body & Battery Indicators",
+            "slug": "/futurist-ultra/indicators",
+            "file": "futurist-ultra/futurist-ultra-indicators.md"
+          },
           {
-            "title": "4. Maintenance and Suggestion",
-            "slug": "/futurist-ultra/maintenance-and-suggestion",
-            "file": "futurist-ultra/futurist-ultra-maintenance-and-suggestion.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-product-specifications",
-        "title": "5. Product Specifications",
-        "pages": [
+            "title": "Debugging & Power Interfaces",
+            "slug": "/futurist-ultra/debugging-interfaces",
+            "file": "futurist-ultra/futurist-ultra-debugging-interfaces.md"
+          },
           {
-            "title": "5. Product Specifications",
+            "title": "Joint Motion Range",
+            "slug": "/futurist-ultra/joint-limits",
+            "file": "futurist-ultra/futurist-ultra-joint-limits.md"
+          },
+          {
+            "title": "Sensor Field of View",
+            "slug": "/futurist-ultra/sensor-fov",
+            "file": "futurist-ultra/futurist-ultra-sensor-fov.md"
+          },
+          {
+            "title": "Robot Specifications",
             "slug": "/futurist-ultra/product-specifications",
             "file": "futurist-ultra/futurist-ultra-product-specifications.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-product-label-description",
-        "title": "6. Product label description",
-        "pages": [
+          },
           {
-            "title": "6. Product label description",
-            "slug": "/futurist-ultra/product-label-description",
-            "file": "futurist-ultra/futurist-ultra-product-label-description.md"
-          }
-        ]
-      },
-      {
-        "id": "futurist-ultra-specifications",
-        "title": "7. Specifications",
-        "pages": [
-          {
-            "title": "7. Specifications",
+            "title": "Radio Frequency Specifications",
             "slug": "/futurist-ultra/specifications",
             "file": "futurist-ultra/futurist-ultra-specifications.md"
+          }
+        ]
+      },
+      {
+        "id": "futurist-ultra-setup-operation",
+        "title": "Setup & Operation",
+        "pages": [
+          {
+            "title": "Remote Control",
+            "slug": "/futurist-ultra/remote-control",
+            "file": "futurist-ultra/futurist-ultra-remote-control.md"
+          },
+          {
+            "title": "App Connection Guide",
+            "slug": "/futurist-ultra/quick-start-guide",
+            "file": "futurist-ultra/futurist-ultra-quick-start-guide.md"
+          },
+          {
+            "title": "Startup from the Packing Box",
+            "slug": "/futurist-ultra/startup-packing",
+            "file": "futurist-ultra/futurist-ultra-startup-packing.md"
+          },
+          {
+            "title": "Startup from a Supine Position",
+            "slug": "/futurist-ultra/startup-supine",
+            "file": "futurist-ultra/futurist-ultra-startup-supine.md"
+          },
+          {
+            "title": "Startup from a Prone Position",
+            "slug": "/futurist-ultra/startup-prone",
+            "file": "futurist-ultra/futurist-ultra-startup-prone.md"
+          },
+          {
+            "title": "Shutdown & Packing",
+            "slug": "/futurist-ultra/shutdown",
+            "file": "futurist-ultra/futurist-ultra-shutdown.md"
+          }
+        ]
+      },
+      {
+        "id": "futurist-ultra-power-safety",
+        "title": "Power & Safety",
+        "pages": [
+          {
+            "title": "Battery Storage Mode",
+            "slug": "/futurist-ultra/battery-storage",
+            "file": "futurist-ultra/futurist-ultra-battery-storage.md"
+          },
+          {
+            "title": "Charging & Battery Replacement",
+            "slug": "/futurist-ultra/charging",
+            "file": "futurist-ultra/futurist-ultra-charging.md"
+          },
+          {
+            "title": "Autonomous Charging",
+            "slug": "/futurist-ultra/autonomous-charging",
+            "file": "futurist-ultra/futurist-ultra-autonomous-charging.md"
+          },
+          {
+            "title": "Emergency Stop",
+            "slug": "/futurist-ultra/emergency-stop",
+            "file": "futurist-ultra/futurist-ultra-emergency-stop.md"
+          },
+          {
+            "title": "Lifting Ring Installation",
+            "slug": "/futurist-ultra/lifting-rings",
+            "file": "futurist-ultra/futurist-ultra-lifting-rings.md"
+          }
+        ]
+      },
+      {
+        "id": "futurist-ultra-features-connectivity",
+        "title": "Features & Connectivity",
+        "pages": [
+          {
+            "title": "Dance & Body Actions",
+            "slug": "/futurist-ultra/actions",
+            "file": "futurist-ultra/futurist-ultra-actions.md"
+          },
+          {
+            "title": "Navigation & Lively Standby",
+            "slug": "/futurist-ultra/navigation",
+            "file": "futurist-ultra/futurist-ultra-navigation.md"
+          },
+          {
+            "title": "Voice & Robot Interaction",
+            "slug": "/futurist-ultra/interaction",
+            "file": "futurist-ultra/futurist-ultra-interaction.md"
+          },
+          {
+            "title": "Maps & Spatial Tasks",
+            "slug": "/futurist-ultra/spatial-tasks",
+            "file": "futurist-ultra/futurist-ultra-spatial-tasks.md"
+          },
+          {
+            "title": "Fleet Projects & Resources",
+            "slug": "/futurist-ultra/fleet-control",
+            "file": "futurist-ultra/futurist-ultra-fleet-control.md"
+          },
+          {
+            "title": "Fleet Task Orchestration",
+            "slug": "/futurist-ultra/fleet-tasks",
+            "file": "futurist-ultra/futurist-ultra-fleet-tasks.md"
+          },
+          {
+            "title": "4G/5G & SIM Cards",
+            "slug": "/futurist-ultra/cellular-network",
+            "file": "futurist-ultra/futurist-ultra-cellular-network.md"
+          }
+        ]
+      },
+      {
+        "id": "futurist-ultra-maintenance-service",
+        "title": "Maintenance & Service",
+        "pages": [
+          {
+            "title": "Daily Maintenance",
+            "slug": "/futurist-ultra/maintenance-and-suggestion",
+            "file": "futurist-ultra/futurist-ultra-maintenance-and-suggestion.md"
+          },
+          {
+            "title": "Warranty & Support",
+            "slug": "/futurist-ultra/warranty",
+            "file": "futurist-ultra/futurist-ultra-warranty.md"
+          },
+          {
+            "title": "App Privacy Policy",
+            "slug": "/futurist-ultra/privacy-policy",
+            "file": "futurist-ultra/futurist-ultra-privacy-policy.md"
+          },
+          {
+            "title": "Product Labels & Current Reference",
+            "slug": "/futurist-ultra/product-label-description",
+            "file": "futurist-ultra/futurist-ultra-product-label-description.md"
           }
         ]
       }
@@ -321,6 +539,172 @@
             "title": "5. Contact Information",
             "slug": "/master/contact-information",
             "file": "master/master-contact-information.md"
+          }
+        ]
+      }
+    ]
+  },
+  "master-mini": {
+    "title": "FF Master Mini",
+    "sections": [
+      {
+        "id": "master-mini-overview",
+        "title": "Overview",
+        "pages": [
+          {
+            "title": "FF Master Mini",
+            "slug": "/master-mini",
+            "file": "master-mini/master-mini-home.md"
+          }
+        ]
+      },
+      {
+        "id": "master-mini-safety",
+        "title": "Safety",
+        "pages": [
+          {
+            "title": "Safety & Warnings",
+            "slug": "/master-mini/safety",
+            "file": "master-mini/master-mini-safety.md"
+          },
+          {
+            "title": "FCC Compliance",
+            "slug": "/master-mini/regulatory-compliance",
+            "file": "master-mini/master-mini-regulatory-compliance.md"
+          }
+        ]
+      },
+      {
+        "id": "master-mini-product-hardware",
+        "title": "Product & Hardware",
+        "pages": [
+          {
+            "title": "Product Specifications",
+            "slug": "/master-mini/specifications",
+            "file": "master-mini/master-mini-specifications.md"
+          },
+          {
+            "title": "Joint Limits & Coordinate Systems",
+            "slug": "/master-mini/joints",
+            "file": "master-mini/master-mini-joints.md"
+          },
+          {
+            "title": "Controller Specifications",
+            "slug": "/master-mini/controller",
+            "file": "master-mini/master-mini-controller.md"
+          }
+        ]
+      },
+      {
+        "id": "master-mini-operation",
+        "title": "Operation",
+        "pages": [
+          {
+            "title": "Operating Modes",
+            "slug": "/master-mini/modes",
+            "file": "master-mini/master-mini-modes.md"
+          },
+          {
+            "title": "Power & Body Controls",
+            "slug": "/master-mini/body-controls",
+            "file": "master-mini/master-mini-body-controls.md"
+          },
+          {
+            "title": "Master Mini Joystick",
+            "slug": "/master-mini/joystick",
+            "file": "master-mini/master-mini-joystick.md"
+          },
+          {
+            "title": "Xbox Controller",
+            "slug": "/master-mini/xbox-controller",
+            "file": "master-mini/master-mini-xbox-controller.md"
+          },
+          {
+            "title": "App & Terminal Connection",
+            "slug": "/master-mini/connection",
+            "file": "master-mini/master-mini-connection.md"
+          },
+          {
+            "title": "Battery Charging",
+            "slug": "/master-mini/charging",
+            "file": "master-mini/master-mini-charging.md"
+          }
+        ]
+      },
+      {
+        "id": "master-mini-agents",
+        "title": "Agents",
+        "pages": [
+          {
+            "title": "Using Agents",
+            "slug": "/master-mini/agents",
+            "file": "master-mini/master-mini-agents.md"
+          },
+          {
+            "title": "Master Mini Agent",
+            "slug": "/master-mini/agent-master-mini",
+            "file": "master-mini/master-mini-agent-master-mini.md"
+          },
+          {
+            "title": "Soccer Agent",
+            "slug": "/master-mini/agent-soccer",
+            "file": "master-mini/master-mini-agent-soccer.md"
+          },
+          {
+            "title": "Hi Chat Agent",
+            "slug": "/master-mini/agent-hi-chat",
+            "file": "master-mini/master-mini-agent-hi-chat.md"
+          },
+          {
+            "title": "Teach Agent",
+            "slug": "/master-mini/agent-teach",
+            "file": "master-mini/master-mini-agent-teach.md"
+          },
+          {
+            "title": "Dance Agent",
+            "slug": "/master-mini/agent-dance",
+            "file": "master-mini/master-mini-agent-dance.md"
+          },
+          {
+            "title": "Lion Dance Agent",
+            "slug": "/master-mini/agent-lion-dance",
+            "file": "master-mini/master-mini-agent-lion-dance.md"
+          },
+          {
+            "title": "Voice Interaction",
+            "slug": "/master-mini/voice-interaction",
+            "file": "master-mini/master-mini-voice-interaction.md"
+          }
+        ]
+      },
+      {
+        "id": "master-mini-maintenance-support",
+        "title": "Maintenance & Support",
+        "pages": [
+          {
+            "title": "Restarting Services",
+            "slug": "/master-mini/service",
+            "file": "master-mini/master-mini-service.md"
+          },
+          {
+            "title": "Firmware & Upgrades",
+            "slug": "/master-mini/firmware",
+            "file": "master-mini/master-mini-firmware.md"
+          },
+          {
+            "title": "Factory Recovery",
+            "slug": "/master-mini/factory-reset",
+            "file": "master-mini/master-mini-factory-reset.md"
+          },
+          {
+            "title": "Log Retrieval",
+            "slug": "/master-mini/logs",
+            "file": "master-mini/master-mini-logs.md"
+          },
+          {
+            "title": "Remote Support",
+            "slug": "/master-mini/remote-support",
+            "file": "master-mini/master-mini-remote-support.md"
           }
         ]
       }
