@@ -10,8 +10,8 @@
  *   npm run convert:aegisedu:images       # images only
  *
  * Source files:
- *   src/content/source/aegisedu.pdf   — text source
- *   src/content/source/aegisedu.docx  — image source
+ *   ../../input/aegisedu.pdf   — text source
+ *   ../../input/aegisedu.docx  — image source
  *
  * Output:
  *   src/content/pages/aegis-edu/*.md   — markdown files
@@ -26,8 +26,8 @@ import mammoth from 'mammoth'
 // ─── Paths ──────────────────────────────────────────────────────────────────
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const PDF_PATH = path.join(ROOT, 'src/content/source/aegisedu.pdf')
-const DOCX_PATH = path.join(ROOT, 'src/content/source/aegisedu.docx')
+const PDF_PATH = path.join(ROOT, '../../input/aegisedu.pdf')
+const DOCX_PATH = path.join(ROOT, '../../input/aegisedu.docx')
 const PAGES_DIR = path.join(ROOT, 'src/content/pages/aegis-edu')
 const IMAGES_DIR = path.join(ROOT, 'public/images/aegis-edu')
 

@@ -15,8 +15,8 @@
  *   npm run convert:images         # images only (extract from Word, no text regen)
  *
  * Source files:
- *   src/content/source/manual.pdf   — text source (pdftotext -layout)
- *   src/content/source/manual.docx  — image source (mammoth)
+ *   ../../input/manual.pdf   — text source (pdftotext -layout)
+ *   ../../input/manual.docx  — image source (mammoth)
  *
  * Output:
  *   src/content/pages/*.md          — markdown files with image references
@@ -31,8 +31,8 @@ import mammoth from 'mammoth'
 // ─── Paths ──────────────────────────────────────────────────────────────────
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const PDF_PATH = path.join(ROOT, 'src/content/source/manual.pdf')
-const DOCX_PATH = path.join(ROOT, 'src/content/source/manual.docx')
+const PDF_PATH = path.join(ROOT, '../../input/manual.pdf')
+const DOCX_PATH = path.join(ROOT, '../../input/manual.docx')
 const PAGES_DIR = path.join(ROOT, 'src/content/pages')
 const IMAGES_DIR = path.join(ROOT, 'public/images/docx')
 

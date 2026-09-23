@@ -7,7 +7,7 @@
 ## 概览
 
 ```
-Step 1  DOCX → Markdown + 图片提取
+Step 1  AI 根据原始说明书生成或更新 Markdown + 提取图片
 Step 2  Markdown 按章节拆分为子页面 + 更新 sidebar.json
 Step 3  注册产品路由（useProductContext.tsx）
 Step 4  创建 OpenAI Vector Store 并同步文档
@@ -16,70 +16,24 @@ Step 5  接入 FF Assist（config + agent instructions + plan routing）
 
 ---
 
-## Step 1 — DOCX 转 Markdown
+## Step 1 — 由 AI 生成或更新 Markdown
 
-### 1.1 安装依赖（首次）
+将原始说明书放在 `input/`，直接让 AI 根据原文生成或更新对应产品的 Markdown，并提取需要的图片。后续内容更新沿用此流程，无需为产品维护专用转换脚本。
 
-```bash
-pip3 install python-docx Pillow
-```
-
-### 1.2 参考转换脚本
-
-参考 `scripts/convert_navi_docx.py`，为新产品新建一个同类脚本，例如 `scripts/convert_{product}_docx.py`。
-
-**关键配置项：**
-
-| 变量 | 说明 |
-|---|---|
-| `DOCX_PATH` | 源 docx 文件路径，放在 `docs/` 下 |
-| `IMG_OUT_DIR` | `apps/web/public/images/{product}/` |
-| `MD_OUT_PATH` | `apps/web/src/content/source/v3/{Product} Manual.md` |
-| `HEADING_MAP` | `{ 段落index: 标题层级 }` — 需要根据文档结构手动标注 |
-| `SKIP_INDICES` | 跳过的段落（空行、重复封面等） |
-| `LIST_ITEM_INDICES` | 渲染为列表项（`-`）的段落 |
-| `RID_TO_FILENAME` | `{ "rId6": "product-cover.png", ... }` — rId 与语义文件名的映射 |
-| `RID_TO_ALT` | 对应图片的 alt 文本 |
-
-**确认文档结构的方法：**
-
-```bash
-python3 - << 'EOF'
-from docx import Document
-doc = Document("docs/YourProduct.docx")
-# 打印所有段落 + rId
-for i, p in enumerate(doc.paragraphs):
-    if p.text.strip():
-        print(f"[{i:3d}] {p.text[:80]}")
-# 打印图片 rel 映射
-for rid, rel in doc.part.rels.items():
-    if "image" in rel.reltype:
-        print(f"  {rid} → {rel.target_ref}")
-EOF
-```
-
-### 1.3 执行转换
-
-```bash
-python3 scripts/convert_{product}_docx.py
-```
-
-**产出：**
-- `apps/web/public/images/{product}/` — 所有图片（按语义命名）
-- `apps/web/src/content/source/v3/{Product} Manual.md` — 完整源 Markdown
+- 保留原文中的参数、操作步骤、安全提示和表格，不补写未经来源支持的内容。
+- 图片保存到 `apps/web/public/images/{product}/`，采用语义化文件名，并在 Markdown 中使用 `/images/{product}/...` 引用。
+- 如需完整 Markdown 中间稿，保存到 `output/{Product} Manual.md`；网页直接使用下一步的子页面文件。
 
 ---
 
-## Step 2 — 拆分子页面 + 更新 sidebar.json
+## Step 2 — 由 AI 按章节更新子页面和导航
 
-### 2.1 参考拆分脚本
-
-参考 `scripts/split_navi_pages.py`，新建 `scripts/split_{product}_pages.py`。
+让 AI 将内容写入 `apps/web/src/content/pages/{product}/`，并同步更新 `apps/web/src/content/sidebar.json`。更新已有产品时，保留现有页面路径，按实际变更修改内容。
 
 **分页原则：**
-- 每个 H2 大章节对应 1 个页面文件（短节可合并）
-- 文件命名：`{product}/{product}-{section}.md`，例如 `navi/navi-power-on-off.md`
-- 内容可在脚本里直接以字符串定义（便于手动优化），无需机械按行切割
+- 每个 H2 大章节对应 1 个页面文件（短节可合并）。
+- 文件命名：`{product}/{product}-{section}.md`，例如 `navi/navi-power-on-off.md`。
+- 对照原始说明书核对章节、图片引用和导航，避免遗漏或重复。
 
 **必须配置的 sidebar.json 结构：**
 
@@ -273,10 +227,10 @@ python create_vector_store.py
 ## 检查清单
 
 ```
-[ ] docs/{Product}.docx 已放入 docs/
-[ ] scripts/convert_{product}_docx.py 已按文档结构配置
+[ ] 原始说明书已放入 input/
+[ ] AI 生成或更新的 Markdown 已对照原文核对
 [ ] apps/web/public/images/{product}/ 图片已按语义命名
-[ ] apps/web/src/content/source/v3/ 源 md 已生成
+[ ] 如需完整 Markdown 中间稿，已保存到 output/
 [ ] apps/web/src/content/pages/{product}/ 子页面已创建
 [ ] sidebar.json 已注入 {product} 条目
 [ ] useProductContext.tsx ProductId 类型已扩展
@@ -297,11 +251,9 @@ python create_vector_store.py
 
 | 用途 | 路径 |
 |---|---|
-| 源 docx | `docs/{Product}.docx` |
-| 转换脚本 | `scripts/convert_{product}_docx.py` |
-| 分页脚本 | `scripts/split_{product}_pages.py` |
+| 源 docx | `input/{Product}.docx` |
 | 图片目录 | `apps/web/public/images/{product}/` |
-| 源 Markdown | `apps/web/src/content/source/v3/` |
+| Markdown 中间稿（可选） | `output/` |
 | 子页面目录 | `apps/web/src/content/pages/{product}/` |
 | 导航配置 | `apps/web/src/content/sidebar.json` |
 | 路由注册 | `apps/web/src/hooks/useProductContext.tsx` |

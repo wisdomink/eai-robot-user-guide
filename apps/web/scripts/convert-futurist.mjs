@@ -14,8 +14,8 @@
  *   npm run convert:futurist:images       # images only
  *
  * Source files:
- *   src/content/source/futurist.pdf   — text source
- *   src/content/source/futurist.docx  — image source
+ *   ../../input/futurist.pdf   — text source
+ *   ../../input/futurist.docx  — image source
  *
  * Output:
  *   src/content/pages/futurist-ultra/*.md   — markdown files
@@ -30,8 +30,8 @@ import mammoth from 'mammoth'
 // ─── Paths ──────────────────────────────────────────────────────────────────
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const PDF_PATH = path.join(ROOT, 'src/content/source/futurist.pdf')
-const DOCX_PATH = path.join(ROOT, 'src/content/source/futurist.docx')
+const PDF_PATH = path.join(ROOT, '../../input/futurist.pdf')
+const DOCX_PATH = path.join(ROOT, '../../input/futurist.docx')
 const PAGES_DIR = path.join(ROOT, 'src/content/pages/futurist-ultra')
 const IMAGES_DIR = path.join(ROOT, 'public/images/futurist-ultra')
 

@@ -7,7 +7,7 @@
  *   npm run convert:aegis:text         # text only
  *   npm run convert:aegis:images       # images only
  *
- * Source:  src/content/source/aegisultra.pdf + aegisultra.docx
+ * Source:  ../../input/aegisultra.pdf + aegisultra.docx
  * Output:  src/content/pages/aegis-ultra/*.md  +  public/images/aegis-ultra/*
  */
 
@@ -17,8 +17,8 @@ import { execSync } from 'node:child_process'
 import mammoth from 'mammoth'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const PDF_PATH = path.join(ROOT, 'src/content/source/aegisultra.pdf')
-const DOCX_PATH = path.join(ROOT, 'src/content/source/aegisultra.docx')
+const PDF_PATH = path.join(ROOT, '../../input/aegisultra.pdf')
+const DOCX_PATH = path.join(ROOT, '../../input/aegisultra.docx')
 const PAGES_DIR = path.join(ROOT, 'src/content/pages/aegis-ultra')
 const IMAGES_DIR = path.join(ROOT, 'public/images/aegis-ultra')
 
