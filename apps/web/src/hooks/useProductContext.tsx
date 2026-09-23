@@ -31,6 +31,7 @@ export const DOWNLOADABLE_PRODUCT_IDS: ProductId[] = [
   'futurist',
   'futurist-ultra',
   'master',
+  'master-mini',
   'aegis',
   'aegis-ultra',
   'aegis-max',

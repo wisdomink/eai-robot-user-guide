@@ -17,17 +17,22 @@ class RecommendationCatalogStorage:
         (
             "futurist",
             "FF All-New Futurist",
-            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+User+Manual.pdf",
         ),
         (
             "futurist-ultra",
             "FF All-New Futurist Ultra",
-            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+Ultra+User+Manual.pdf",
         ),
         (
             "master",
             "FF Master",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf",
+        ),
+        (
+            "master-mini",
+            "FF Master Mini",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF_Master_Mini_User_Manual.pdf",
         ),
         (
             "aegis",

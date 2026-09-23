@@ -90,17 +90,22 @@
     {
       "product_id": "futurist",
       "label": "FF All-New Futurist",
-      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf"
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+User+Manual.pdf"
     },
     {
       "product_id": "futurist-ultra",
       "label": "FF All-New Futurist Ultra",
-      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf"
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+Ultra+User+Manual.pdf"
     },
     {
       "product_id": "master",
       "label": "FF Master",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf"
+    },
+    {
+      "product_id": "master-mini",
+      "label": "FF Master Mini",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF_Master_Mini_User_Manual.pdf"
     },
     {
       "product_id": "aegis",

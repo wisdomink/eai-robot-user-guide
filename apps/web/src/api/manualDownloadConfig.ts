@@ -1,9 +1,10 @@
 import { DOWNLOADABLE_PRODUCTS, type ProductId } from '@/hooks/useProductContext'
 
 export const DEFAULT_MANUAL_DOWNLOAD_URLS: Partial<Record<ProductId, string>> = {
-  futurist: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist.pdf',
-  'futurist-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Futurist+Ultra.pdf',
+  futurist: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+User+Manual.pdf',
+  'futurist-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+All-New+Futurist+Ultra+User+Manual.pdf',
   master: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf',
+  'master-mini': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF_Master_Mini_User_Manual.pdf',
   aegis: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_User_Manual.pdf',
   'aegis-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_Ultra_User_Manual.pdf',
   'aegis-max': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf',
