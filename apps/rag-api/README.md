@@ -2,7 +2,9 @@
 
 FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语义搜索能力。
 
-当前主流程为自托管 `plan -> loop -> output -> recommendation` 多 Agent 工作流，聊天流量全部经过后端处理。
+当前主流程为自托管 `Plan -> 并行原文检索 -> Output -> Post-Decision`，聊天流量全部经过后端处理。`CHAT_RETRIEVAL_MODE=agent` 可回退到中间检索 Agent；默认 `direct` 直接检索。
+
+点击预置问题时，SDK 传递按钮 ID 和页面范围，后端校验当前配置后直接返回预置答案；自由输入不再使用模糊 FAQ 或历史生成答案缓存。管理页可维护普通按钮的 `reply_text`，留空时兼容既有 FAQ 的精确匹配。答案返回后仍执行推荐判断。详见 [分阶段改造与部署说明](../../docs/rag-chat-migration.md)。
 
 ## 说明书按产品同步
 
@@ -91,6 +93,10 @@ apps/rag-api/
 
 ### 1. 创建 / 更新 Vector Store
 
+共享索引路径已就绪：`MANUALS_INDEX_MODE=shared` 时，产品 chat 与网站搜索都读取 `OPENAI_VECTOR_STORE_MANUALS_ID`，按 `MANUALS_RELEASE_MANIFEST` 中的产品生效版本过滤；价格、新闻仍用独立库。新增 `sync_manuals_rag.py` 支持先上传验证、后原子激活，保留旧版本。部署及回滚步骤见 [RAG_SYNC.md](./RAG_SYNC.md#共享-manuals-索引阶段-3)。默认仍为 `legacy`，需完成全部产品索引与清单发布后再切换。Docker 中将清单部署到持久化的 `/app/rag-api/data/manuals-releases.json`。
+
+下面是 `legacy` 模式的旧索引维护方式：
+
 `create_vector_store.py` 会将 `apps/web/src/content/pages/` 下所有在 `sidebar.json` 中引用的 Markdown 同步到 **全量** Vector Store（`OPENAI_VECTOR_STORE_ROBOT_ALL_ID`）。语义搜索会查询该全量库，并合并 Aegis Max 的专属库；后端主流程中的产品 loop pass 使用各自产品的 Vector Store ID。
 
 ```bash
@@ -150,6 +156,7 @@ uvicorn app.main:app --reload --port 8000
 | `OPENAI_VECTOR_STORE_AEGIS_ID` | ✅ | Aegis 系列产品文档库（含 Aegis / Aegis Pro / Aegis EDU） |
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
 | `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` | ✅ | Aegis Max 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID` | ✅ | FX Aegis Mega D 产品文档库；Agent 路由 key 为 `aegis-mega-d` |
 | `OPENAI_VECTOR_STORE_FF91_ID` | ✅ | FF 91 2.0 产品文档库 |
 | `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索主库；`create_vector_store.py` 同步目标） |
 
@@ -316,43 +323,39 @@ AWS 部署时只负责把生产环境切到 DynamoDB：
 }
 ```
 
-## 多 Agent 工作流
+## Chat 工作流
 
-### Plan Agent（路由预处理）
+### Plan
 
-接收用户输入，输出结构化 JSON：
+Plan 在处理前获得服务器识别的页面产品，并结合本轮明确型号和会话上下文生成：
 
 | 字段 | 说明 |
-|------|------|
-| `input_lang` | 用户语言：`cn`（中文）/ `en`（英文） |
-| `query_type` | 产品主路由：`master` / `futurist` / `futurist-ultra` / `aegis` / `aegis-ultra` / `ff91` / `""` |
-| `query_text` | 翻译为英文并扩写后的搜索查询，用于优化 RAG 检索 |
-| `product_types` | 需要检索的产品手册 key 列表；后端会按元素逐轮执行 product loop |
-| `needs_product` / `needs_price` / `needs_news` | 控制后端是否执行产品、价格、新闻 loop；若都为 `no`，后端进入兜底模块 |
+| --- | --- |
+| `input_lang` | `cn` 或 `en` |
+| `query_text` | 通用检索查询 |
+| `loop_plan` | 检索项列表，每项包含 agent、product_key 和独立 query_text |
+| `clarification_question` | 非空时先追问，停止本轮检索和推荐 |
 
-### Loop Agents（检索子模块）
+### 并行检索
 
-后端根据 Plan 结果执行 1-N 轮 loop。产品、价格、新闻 loop 均使用 `instructions/*.md` 模板；仅当没有命中任何领域时，进入无工具兜底模块。
+`retrieval_service.py` 是 chat 与网站搜索共用的直接检索实现。Chat 保留各产品、价格、新闻的独立库，网站搜索仍使用原 all + Aegis Max 组合，本阶段未迁移数据。
 
-| Loop 类型 | Vector Store | 说明 |
-|----------|-------------|------|
-| Product | 各产品独立库 | 产出结构化检索结果，供 Output Agent 汇总 |
-| Price | 价格库 | 提取价格、报价、币种、条款等信息 |
-| News | 新闻库 | 提取动态、公告、时间线、最近状态 |
-| Fallback Guard | 无 | 生成兜底说明中间结果，不做检索 |
+默认 direct 模式返回原文片段、文件 ID、属性、分数和 evidence_id，不运行中间摘要 Agent。保留并发限制、超时、心跳和部分失败降级。缺少库配置属于资料不可用，不是超出服务范围；无结果不能推断参数或步骤。
 
-### Output Agent（最终回答）
+`CHAT_RETRIEVAL_MODE=agent` 保留原来的中间 Agent 检索方式以供对照。它仅切换检索实现，不回退新的 Plan/Output 提示词。`RETRIEVAL_MAX_RESULTS` 默认 6，`RETRIEVAL_MAX_CHARS_PER_PASS` 默认 18000；每域独立限制，截断片段明确标记。
 
-Output Agent 不做新的 `file_search`，只接收 loop 结果，负责汇总、去重、冲突消解，并流式生成最终回答。最终来源会由 `FFRobotConverter` 和后处理逻辑转换成前端可点击的 `EntitySource`。
+### Output 与推荐
 
-## 引用来源跳转
+Output 基于证据生成流式回答，使用 `[[E1_1]]` 等标记引用实际片段。内部标记在流式输出中被隐藏，最终内容带服务端转换的原生引用。推荐/留资判断仍在答案之后执行，判断失败不会丢失已完成答案。
 
-AI 回答中的引用可点击跳转到对应手册页面：
+### 引用来源跳转
 
-1. `FileSearchTool` 检索文档后，模型回答包含 `file_citation`
-2. `FFRobotConverter` 通过 `sidebar.json` 将文件名映射为页面 slug
-3. 输出 `EntitySource`（带 `data.slug`），前端 `entities.onClick` 拦截
-4. 前端通过 React Router 执行 SPA 导航
+- 手册来源按产品和原始文件路径映射到 sidebar 页面，使用 EntitySource，沿用前端 SPA 导航回调。
+- 新闻使用该片段的元数据或头部原始链接，转换为 URLSource。
+- 无页面链接的资料使用 FileSource，仅展示真实文件信息。
+- 只有实际引用且 ID 有效的证据会展示引用，不把所有检索命中自动当成答案来源。
+
+Trace 包含检索模式、Plan/检索耗时、首段正文/总耗时、命中文件与分数以及降级状态。尚未进行真实 API 的准确率和性能对照，不能把节点减少直接等同于已测得的提速或成本下降。
 
 ## 评测
 

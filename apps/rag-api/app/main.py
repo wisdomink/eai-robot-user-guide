@@ -15,6 +15,7 @@ import logging
 import re
 import time
 import traceback
+from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,8 @@ from app.core.logging_config import setup_logging
 from app.core.openai_http import configure_agents_default_openai_client, create_async_openai_client
 from app.services.chatkit_handler import create_chatkit_server
 from app.services.homepage_prompts_service import HomepagePromptsStorage
+from app.services.retrieval_service import RetrievalService
+from app.services.manuals_index import shared_snapshot, release_filter
 from app.services.lead_service import LeadStorage
 from app.services.recommendation_catalog_service import RecommendationCatalogStorage
 
@@ -96,6 +99,7 @@ homepage_prompts_storage = HomepagePromptsStorage.from_config()
 chatkit_server = create_chatkit_server(
     lead_storage=lead_storage,
     recommendation_storage=recommendation_storage,
+    homepage_prompts_storage=homepage_prompts_storage,
 )
 
 
@@ -120,10 +124,10 @@ class RecommendationCatalogItemRequest(BaseModel):
 class HomepagePagePromptRequest(BaseModel):
     id: str = Field("", description="Prompt ID (auto-generated if omitted)")
     enabled: bool = Field(True, description="Whether this prompt is visible on the homepage")
-    type: str = Field("message", description="Button type: 'message' (send to GPT) or 'lead_capture' (show lead form directly)")
+    type: str = Field("message", description="Button type: 'message' (prepared answer or normal chat) or 'lead_capture' (lead form)")
     label: str = Field("", description="Button label shown on the homepage")
     prompt: str = Field("", description="Full prompt text sent to ChatKit on click (unused for lead_capture type)")
-    reply_text: str = Field("", description="AI reply text shown before the lead form widget; empty = skip text reply")
+    reply_text: str = Field("", description="Prepared answer for message buttons, or introductory text for lead forms")
     sort_order: int = Field(0, description="Sort weight (lower = higher in list)")
 
 
@@ -182,6 +186,8 @@ async def chatkit_endpoint(request: Request):
                 ),
                 "lead_capture": request.headers.get("x-ff-lead-capture") == "1",
                 "lead_reply_text": request.headers.get("x-ff-lead-reply", ""),
+                "faq_id": unquote(request.headers.get("x-ff-faq-id", "")),
+                "faq_scope": unquote(request.headers.get("x-ff-faq-scope", "")),
             },
         )
     except Exception as exc:
@@ -210,6 +216,7 @@ async def chatkit_endpoint(request: Request):
 
 # Semantic search: shorter read timeout than Agents (ChatKit); connect uses OPENAI_HTTP_CONNECT_TIMEOUT.
 _oai = create_async_openai_client(read_timeout=30.0)
+_retrieval = RetrievalService(_oai)
 
 
 def _to_anchor(heading: str) -> str:
@@ -240,6 +247,7 @@ def _build_file_info_map() -> dict[str, dict]:
                     "sectionId": section["id"],
                 }
                 result[page["file"]] = info
+                result[page["slug"]] = info
                 basename = page["file"].rsplit("/", 1)[-1]
                 result[basename] = info
     return result
@@ -283,6 +291,16 @@ async def search_endpoint(
         )
         if vector_store_id
     ))
+    filters = None
+    try:
+        snapshot = shared_snapshot()
+        if snapshot:
+            store_id, releases = snapshot
+            vector_store_ids = [store_id]
+            filters = release_filter(releases)
+    except (OSError, ValueError, KeyError, TypeError):
+        logger.exception("Shared manuals manifest unavailable")
+        return {"results": [], "error": "Shared manuals index unavailable"}
 
     if not vector_store_ids:
         resp = {
@@ -302,11 +320,12 @@ async def search_endpoint(
         last_exc: Exception | None = None
         for attempt in range(2):
             try:
-                return await _oai.vector_stores.search(
+                return await _retrieval.search(
                     vector_store_id=vector_store_id,
                     query=q.strip(),
-                    max_num_results=limit,
+                    limit=limit,
                     rewrite_query=True,
+                    **({"filters": filters} if filters else {}),
                 )
             except Exception as exc:
                 last_exc = exc
@@ -343,18 +362,18 @@ async def search_endpoint(
     results = []
     seen_result_keys: set[tuple[str, str]] = set()
     all_items = sorted(
-        (item for page in successful_pages for item in page.data),
+        (item for page in successful_pages for item in page),
         key=lambda item: item.score,
         reverse=True,
     )
     for item in all_items:
-        file_info = _FILE_INFO_MAP.get(item.filename)
+        file_info = _FILE_INFO_MAP.get(item.attributes.get("page_slug") if filters else item.filename)
         if not file_info:
             skipped.append({"filename": item.filename, "score": round(item.score, 4)})
             front_logger.warning("GET /api/search  unmapped filename=%r score=%.4f", item.filename, item.score)
             continue
 
-        full_text = " ".join(c.text for c in item.content if c.type == "text")
+        full_text = item.text
         section_title, heading_anchor = _extract_heading(full_text)
 
         preview = re.sub(r"^#{1,6}\s+", "", full_text, flags=re.MULTILINE)

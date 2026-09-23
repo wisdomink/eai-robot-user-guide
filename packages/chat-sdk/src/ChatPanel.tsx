@@ -13,6 +13,7 @@ import clsx from 'clsx'
 import { fetchHomepagePrompts, type HomepagePromptsConfig } from './homepagePromptsClient'
 import { getDefaultChatkitApiUrl } from './chatEndpoints'
 import { getChatSdkVersionInfo } from './version'
+import { matchesPresetMessage, type PresetSelection } from './presetSelection'
 
 const isDev = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.DEV)
 
@@ -68,6 +69,8 @@ const _NO_LEAD_CAPTURE = null
 type OverlayMode = 'buttons' | null
 
 export interface ChatPromptOption {
+  id?: string
+  scope?: string
   label: string
   prompt: string
   type?: 'message' | 'lead_capture'
@@ -224,16 +227,31 @@ export default function ChatPanel({
   const versionClickResetTimerRef = useRef<number | null>(null)
   // Holds the reply_text for the next lead-capture chatkit request; consumed once sent
   const leadCapturePayloadRef = useRef<{ replyText: string } | typeof _NO_LEAD_CAPTURE>(_NO_LEAD_CAPTURE)
+  const presetSelectionRef = useRef<PresetSelection | null>(null)
+  const sendingPromptRef = useRef(false)
   useSourceSectionHider(chatkitBodyRef)
 
   const resolvedApiConfig = useMemo(() => {
     const base = apiConfig ?? buildApiConfig()
     const baseFetch = base.fetch ?? globalThis.fetch.bind(globalThis)
-    const contextualFetch: typeof fetch = (input, init) => {
-      const headers = new Headers(init?.headers)
+    const contextualFetch: typeof fetch = async (input, init) => {
+      const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined))
+      headers.delete('x-ff-faq-id')
+      headers.delete('x-ff-faq-scope')
       const currentUrl = hostUrl || (typeof window !== 'undefined' ? window.location.href : '')
       if (currentUrl) {
         headers.set('x-ff-page-url', currentUrl)
+      }
+      const selection = presetSelectionRef.current
+      if (selection) {
+        const body = typeof init?.body === 'string'
+          ? init.body
+          : input instanceof Request && init?.body === undefined ? await input.clone().text() : ''
+        if (presetSelectionRef.current === selection && matchesPresetMessage(body, selection)) {
+          headers.set('x-ff-faq-id', encodeURIComponent(selection.id))
+          headers.set('x-ff-faq-scope', encodeURIComponent(selection.scope))
+          presetSelectionRef.current = null
+        }
       }
       // Inject lead-capture headers once for the chatkit respond request
       const payload = leadCapturePayloadRef.current
@@ -355,8 +373,10 @@ export default function ChatPanel({
 
   const greeting = remoteConfig?.greeting || greetingProp
   const placeholder = remoteConfig?.placeholder || placeholderProp
-  const globalPrompts = remoteConfig?.global_prompts ?? []
-  const pagePrompts = remoteConfig?.prompts?.length ? remoteConfig.prompts : promptsProp
+  const globalPrompts = (remoteConfig?.global_prompts ?? []).map(p => ({ ...p, scope: 'global' }))
+  const pagePrompts = remoteConfig
+    ? remoteConfig.prompts.map(p => ({ ...p, scope: `page:${remoteConfig.id}` }))
+    : promptsProp
   const prompts = globalPrompts.length > 0 || remoteConfig !== null
     ? [...globalPrompts, ...pagePrompts]
     : promptsProp
@@ -513,22 +533,36 @@ export default function ChatPanel({
     setVersionDialogOpen(false)
   }, [])
 
-  const handlePromptClick = useCallback((option: ChatPromptOption) => {
+  const handlePromptClick = useCallback(async (option: ChatPromptOption) => {
+    if (sendingPromptRef.current) return
+    sendingPromptRef.current = true
     setOverlayMode(null)
-    if (option.type === 'lead_capture') {
-      // Store reply_text so contextualFetch injects it as a header on the next chatkit request
-      leadCapturePayloadRef.current = { replyText: option.reply_text ?? '' }
-      // User bubble shows the button label (e.g. "Contact Us")
-      sendUserMessage({ text: option.label })
-    } else {
-      sendUserMessage({ text: option.prompt })
+    try {
+      if (option.type === 'lead_capture') {
+        // User bubble shows the button label (e.g. "Contact Us").
+        leadCapturePayloadRef.current = { replyText: option.reply_text ?? '' }
+        await sendUserMessage({ text: option.label })
+      } else {
+        presetSelectionRef.current = option.id && option.scope
+          ? { id: option.id, scope: option.scope, text: option.prompt }
+          : null
+        await sendUserMessage({ text: option.prompt })
+      }
+    } catch (error) {
+      console.error('[ChatPanel] Failed to send preset question:', error)
+      setOverlayMode('buttons')
+    } finally {
+      presetSelectionRef.current = null
+      leadCapturePayloadRef.current = _NO_LEAD_CAPTURE
+      sendingPromptRef.current = false
     }
   }, [sendUserMessage])
 
   const handleInputSend = useCallback((e?: FormEvent) => {
     e?.preventDefault()
     const text = inputValue.trim()
-    if (!text) return
+    if (!text || sendingPromptRef.current) return
+    presetSelectionRef.current = null
     setInputValue('')
     setOverlayMode(null)
     sendUserMessage({ text: text })

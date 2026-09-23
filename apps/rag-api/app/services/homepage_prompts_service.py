@@ -542,6 +542,23 @@ class HomepagePromptsStorage:
         result["global_prompts"] = self.get_global_prompts(include_disabled=include_disabled)
         return result
 
+    def resolve_selected_prompt(self, prompt_id: str, scope: str, *, url: str) -> dict | None:
+        """Resolve an enabled button in its current scope, never trust a client answer."""
+        if not prompt_id or not scope:
+            return None
+        if scope == "global":
+            prompts = self.get_global_prompts()
+        else:
+            page = self.resolve_page(url)
+            if scope != f"page:{page['id']}":
+                return None
+            if self._match_rank(page["pattern"], self._normalize_url_value(url)) is None:
+                return None
+            prompts = page.get("prompts", [])
+        matches = [p for p in prompts if p.get("id") == prompt_id and p.get("enabled", True)]
+        # Reject ambiguous IDs instead of selecting an arbitrary answer.
+        return matches[0] if len(matches) == 1 and matches[0].get("type") == "message" else None
+
     def upsert_page(self, payload: dict) -> tuple[dict, bool]:
         if self._backend == "dynamodb":
             return self._upsert_page_dynamodb(payload)

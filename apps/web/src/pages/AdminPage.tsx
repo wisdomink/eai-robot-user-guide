@@ -974,6 +974,17 @@ function HomepagePromptsTab() {
                     />
                   </label>
 
+                  {(prompt.type ?? 'message') !== 'lead_capture' && (
+                    <label className="recommendation-form-full">
+                      预置答案（点击后直接回复）
+                      <textarea
+                        value={prompt.reply_text ?? ''}
+                        onChange={(e) => handleGlobalPromptChange(index, 'reply_text', e.target.value)}
+                        placeholder="填写维护好的答案；留空时尝试已有 FAQ，无匹配则正常问答。"
+                        rows={4}
+                      />
+                    </label>
+                  )}
                   {(prompt.type ?? 'message') !== 'lead_capture' ? (
                     <label className="recommendation-form-full">
                       Prompt 内容
@@ -1200,6 +1211,17 @@ function HomepagePromptsTab() {
                         />
                       </label>
 
+                      {(prompt.type ?? 'message') !== 'lead_capture' && (
+                        <label className="recommendation-form-full">
+                          预置答案（点击后直接回复）
+                          <textarea
+                            value={prompt.reply_text ?? ''}
+                            onChange={(e) => handlePromptChange(index, 'reply_text', e.target.value)}
+                            placeholder="填写维护好的答案；留空时尝试已有 FAQ，无匹配则正常问答。"
+                            rows={4}
+                          />
+                        </label>
+                      )}
                       {(prompt.type ?? 'message') !== 'lead_capture' ? (
                         <label className="recommendation-form-full">
                           Prompt 内容

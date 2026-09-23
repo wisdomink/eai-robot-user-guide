@@ -23,6 +23,16 @@ OPENAI_HTTP_READ_TIMEOUT: float = float(os.getenv("OPENAI_HTTP_READ_TIMEOUT", "6
 LOOP_PASS_MAX_CONCURRENCY: int = int(os.getenv("LOOP_PASS_MAX_CONCURRENCY", "4"))
 LOOP_PASS_TIMEOUT_SECONDS: float = float(os.getenv("LOOP_PASS_TIMEOUT_SECONDS", "240"))
 LOOP_PROGRESS_HEARTBEAT_SECONDS: float = float(os.getenv("LOOP_PROGRESS_HEARTBEAT_SECONDS", "20"))
+CHAT_RETRIEVAL_MODE: str = os.getenv("CHAT_RETRIEVAL_MODE", "direct").strip().lower()
+if CHAT_RETRIEVAL_MODE not in {"direct", "agent"}:
+    raise ValueError("CHAT_RETRIEVAL_MODE must be direct or agent")
+RETRIEVAL_MAX_RESULTS: int = max(1, min(50, int(os.getenv("RETRIEVAL_MAX_RESULTS", "6"))))
+RETRIEVAL_MAX_CHARS_PER_PASS: int = max(1000, int(os.getenv("RETRIEVAL_MAX_CHARS_PER_PASS", "18000")))
+MANUALS_INDEX_MODE = os.getenv("MANUALS_INDEX_MODE", "legacy").strip().lower()
+if MANUALS_INDEX_MODE not in {"legacy", "shared"}:
+    raise ValueError("MANUALS_INDEX_MODE must be legacy or shared")
+OPENAI_VECTOR_STORE_MANUALS_ID = os.getenv("OPENAI_VECTOR_STORE_MANUALS_ID", "").strip()
+MANUALS_RELEASE_MANIFEST = Path(os.getenv("MANUALS_RELEASE_MANIFEST", str(RAG_SERVER_ROOT / "data" / "manuals-releases.json")))
 
 # ── Vector Stores (per-product) ──────────────────────────────────────────
 OPENAI_VECTOR_STORE_MASTER_ID: str = os.getenv("OPENAI_VECTOR_STORE_MASTER_ID", "")
@@ -31,6 +41,7 @@ OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_FUTU
 OPENAI_VECTOR_STORE_AEGIS_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_ID", "")
 OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID", "")
 OPENAI_VECTOR_STORE_AEGIS_MAX_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_MAX_ID", "")
+OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID", "")
 OPENAI_VECTOR_STORE_FF91_ID: str = os.getenv("OPENAI_VECTOR_STORE_FF91_ID", "")
 OPENAI_VECTOR_STORE_NAVI_ID: str = os.getenv("OPENAI_VECTOR_STORE_NAVI_ID", "")
 OPENAI_VECTOR_STORE_ROBOT_ALL_ID: str = os.getenv("OPENAI_VECTOR_STORE_ROBOT_ALL_ID", "")

@@ -1,10 +1,9 @@
 """
 FF Robot RAG Evaluation Script (V3)
 
-Uses the production Plan → Loop (domain agents) → Output pipeline by default:
-  1. Plan Agent — routing, domain flags (product / price / news), query expansion
-  2. Loop — Product / Price / News retrieval agents (non-streamed)
-  3. Output Agent — streamed final answer
+Uses the production ChatKit respond pipeline by default:
+  Plan → parallel retrieval → streamed Output → Post-Decision.
+  CHAT_RETRIEVAL_MODE=direct (default) or agent (legacy retrieval).
 
 Pass --no-triage to fall back to a simple single-agent mode (legacy).
 
@@ -28,13 +27,10 @@ Usage:
 
 Environment variables (via .env or shell):
     OPENAI_API_KEY                      — Required. OpenAI API key.
-    OPENAI_VECTOR_STORE_ROBOT_ALL_ID    — All-products vector store (used as fallback).
     OPENAI_VECTOR_STORE_ID              — Legacy single-store ID (used by --no-triage).
-    OPENAI_VECTOR_STORE_MASTER_ULTRA_ID — Per-product store (optional, falls back to ALL).
-    OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID
-    OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID
-    OPENAI_VECTOR_STORE_AEGIS_EDU_ID
-    LLM_MODEL                           — Model for Support Agent (default: gpt-4o).
+    OPENAI_VECTOR_STORE_<PRODUCT>_ID    — Production product stores (no ALL fallback).
+    CHAT_RETRIEVAL_MODE                 — direct | agent.
+    LLM_MODEL                          — Production answer model (config.py default).
 """
 
 from __future__ import annotations
@@ -73,7 +69,6 @@ from agents import Agent, FileSearchTool, ModelSettings, Runner
 from openai import AsyncOpenAI
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 OPENAI_VECTOR_STORE_ID: str = os.getenv("OPENAI_VECTOR_STORE_ID", "")
-LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o")
 
 # ── Per-product vector store IDs (fallback to OPENAI_VECTOR_STORE_ID) ────
 
@@ -94,32 +89,9 @@ def _load_instructions(name: str) -> str:
     return (_INSTRUCTIONS_DIR / f"{name}.md").read_text(encoding="utf-8")
 
 
-from app.services.recommendation_engine import RecommendationEngine
-from app.services.chatkit_handler import (
-    TriageOutput,
-    _build_loop_domain_agent,
-    _build_output_agent,
-    _plan_loop_passes,
-)
-
-# ── Plan Agent (mirrors production chatkit_handler.py schema) ────────────
-
-_TRIAGE_MODEL_SETTINGS = ModelSettings(store=False)
-
-_reco_engine = RecommendationEngine()
-_TRIAGE_INSTRUCTIONS = (
-    _load_instructions("triage")
-    .replace("{{recommendation_rules}}", _reco_engine.build_triage_rules_prompt())
-    .replace("{{purchase_intent_rules}}", _reco_engine.build_purchase_intent_prompt())
-)
-
-triage_agent = Agent(
-    name="FF Robot Plan",
-    instructions=_TRIAGE_INSTRUCTIONS,
-    model="gpt-4o",
-    output_type=TriageOutput,
-    model_settings=_TRIAGE_MODEL_SETTINGS,
-)
+from app.services import chatkit_handler as chat_handler
+from app.core.openai_http import configure_agents_default_openai_client
+from app.core.config import CHAT_RETRIEVAL_MODE, LLM_MODEL
 
 
 # ── Legacy simple agent (used when --no-triage is set) ───────────────────
@@ -310,39 +282,36 @@ async def ask_agent(question: str, retries: int = MAX_RETRIES) -> str:
 
 
 async def _ask_with_triage(question: str, retries: int) -> str:
-    """Production-equivalent flow: Plan → Loop (domain agents) → Output."""
+    """Exercise the production respond flow, including citations and degradation."""
+    configure_agents_default_openai_client()
     for attempt in range(1, retries + 1):
         try:
-            triage_result = await Runner.run(triage_agent, input=question)
-            triage_output: TriageOutput = triage_result.final_output
-            print(
-                f"  ◆ Plan → type={triage_output.query_type}, "
-                f"product_types={triage_output.product_types}, "
-                f"lang={triage_output.input_lang}, "
-                f"domains product={triage_output.needs_product} "
-                f"price={triage_output.needs_price} news={triage_output.needs_news}, "
-                f"query={triage_output.query_text[:80]}…"
+            server = chat_handler.create_chatkit_server()
+            now = datetime.now()
+            thread = chat_handler.ThreadMetadata(id="eval_thread", created_at=now)
+            message = chat_handler.UserMessageItem(
+                id="eval_message", thread_id=thread.id, created_at=now,
+                content=[{"type": "input_text", "text": question}], inference_options={},
             )
-
-            loop_passes = _plan_loop_passes(triage_output)
-            conversation = [{"role": "user", "content": triage_output.query_text}]
-            retrieval_results: list[tuple[str, str]] = []
-
-            for pass_info in loop_passes:
-                domain_agent = _build_loop_domain_agent(triage_output, pass_info)
-                pass_result = await Runner.run(domain_agent, input=conversation)
-                pass_text = pass_result.final_output
-                if not isinstance(pass_text, str):
-                    pass_text = str(pass_text)
-                retrieval_results.append((pass_info.focus_label, pass_text))
-
-            output_agent = _build_output_agent(
-                triage_output.input_lang,
-                triage_output.query_text,
-                retrieval_results,
-            )
-            result = await Runner.run(output_agent, input=conversation)
-            return _extract_answer_with_citations(result)
+            answers = []
+            async for event in server.respond(thread, message, {"page_url": ""}):
+                if event.type == "thread.item.done" and isinstance(event.item, chat_handler.AssistantMessageItem):
+                    for content in event.item.content:
+                        sources = []
+                        for annotation in content.annotations:
+                            source = annotation.source
+                            target = getattr(source, "url", None) or getattr(source, "filename", None)
+                            if isinstance(source, chat_handler.EntitySource):
+                                target = source.data.get("pageUrl") or source.data.get("slug")
+                            sources.append(f"{source.title}: {target or ''}")
+                        suffix = "\nSources: " + "; ".join(dict.fromkeys(sources)) if sources else ""
+                        answers.append(content.text + suffix)
+            traces = server.store.agent_traces.get(thread.id, [])
+            if traces:
+                trace = traces[-1]
+                print(f"  ◆ mode={CHAT_RETRIEVAL_MODE}, workflow={trace.get('workflow')}, "
+                      f"first_text_ms={trace.get('first_text_ms')}, elapsed_ms={trace.get('elapsed_ms')}")
+            return "\n".join(answers)
         except Exception as e:
             if attempt < retries:
                 print(f"  ⚠ Attempt {attempt} failed: {e}. Retrying in {RETRY_DELAY_S}s...")
@@ -854,6 +823,7 @@ async def main(
         "meta": {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "rag_model": LLM_MODEL,
+            "retrieval_mode": CHAT_RETRIEVAL_MODE,
             "vector_store_id": OPENAI_VECTOR_STORE_ID,
             "judge_models": judge_models,
             "primary_judge_model": primary_model,
@@ -1215,7 +1185,7 @@ if __name__ == "__main__":
         USE_TRIAGE = False  # noqa: F841 — read by ask_agent()
         print("⚠ Triage disabled — using legacy single-agent mode")
     else:
-        print("◆ Using production Triage → Support Agent pipeline")
+        print(f"◆ Using production chat pipeline: retrieval_mode={CHAT_RETRIEVAL_MODE}")
 
     asyncio.run(main(
         ids=args.ids,

@@ -4,9 +4,8 @@ ChatKit server: multi-agent workflow powered by OpenAI Agents SDK.
 Workflow (plan → loop → output → post-decision):
   1. Plan Agent        – generates an execution plan (loop_plan) with language detection,
                          product identification, domain routing, and query expansion
-  2. Loop              – for each item in loop_plan, run a dedicated retrieval Agent
-                         (product manual VS, price VS, news VS, or fallback)
-  3. Output Agent      – merges all domain retrieval results into one streamed answer
+  2. Retrieval         – parallel direct searches (legacy domain Agents optional)
+  3. Output Agent      – answers from original evidence with validated citations
   4. Post-Decision     – evaluates purchase intent and recommendation rule matching
   5. Recommendation    – post-answer product card / lead-capture widget
 
@@ -20,7 +19,9 @@ import asyncio
 import json
 import logging
 import re
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, replace
+from app.services.manuals_index import shared_snapshot, release_filter
 from collections import defaultdict
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
@@ -47,6 +48,8 @@ from chatkit.types import (
     AssistantMessageItem,
     Attachment,
     EntitySource,
+    FileSource,
+    URLSource,
     Page,
     ProgressUpdateEvent,
     ThreadItemDoneEvent,
@@ -61,16 +64,19 @@ from chatkit.widgets import Box, Button, Card, Caption, Form, Input, Label, Mark
 from app.core.config import (
     LEADS_DIR,
     ANSWER_MEMORY_DATA_PATH,
-    ANSWER_MEMORY_ENABLED,
     ANSWER_MEMORY_FUZZY_THRESHOLD,
     ANSWER_MEMORY_MAX_RECORDS,
     FAST_ANSWER_ENABLED,
+    CHAT_RETRIEVAL_MODE,
+    RETRIEVAL_MAX_RESULTS,
+    RETRIEVAL_MAX_CHARS_PER_PASS,
     LOOP_PASS_MAX_CONCURRENCY,
     LOOP_PASS_TIMEOUT_SECONDS,
     LOOP_PROGRESS_HEARTBEAT_SECONDS,
     LLM_MODEL,
     OPENAI_VECTOR_STORE_AEGIS_ID,
     OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+    OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     OPENAI_VECTOR_STORE_FF91_ID,
     OPENAI_VECTOR_STORE_NAVI_ID,
@@ -85,7 +91,10 @@ from app.core.config import (
     SIDEBAR_PATH,
 )
 from app.core.logging_config import FRONT_LOGGER_NAME
+from app.core.openai_http import configure_agents_default_openai_client
+from app.services.retrieval_service import Evidence, RetrievalService
 from app.services.lead_service import LeadStorage
+from app.services.homepage_prompts_service import HomepagePromptsStorage
 from app.services.recommendation_catalog_service import RecommendationCatalogStorage
 from app.services.recommendation_engine import RecommendationEngine
 from app.services.fast_answer_service import FastAnswerMatch, FastAnswerService, detect_input_lang
@@ -199,12 +208,14 @@ class LoopPlanItem(BaseModel):
 
     agent: str  # "product" | "price" | "news" | "fallback"
     product_key: str | None = None  # required when agent == "product"
+    query_text: str = ""  # focused query for this product/domain
 
 
 class PlanOutput(BaseModel):
     input_lang: str  # "cn" | "en"
     query_text: str  # expanded retrieval query
     loop_plan: list[LoopPlanItem] = Field(default_factory=list)
+    clarification_question: str = ""  # non-empty: clarify before retrieval
 
 
 class PostDecisionOutput(BaseModel):
@@ -226,6 +237,8 @@ class LoopPass:
     vector_store_ids: list[str]
     focus_label: str
     product_key: str | None = None  # set when domain == "product" (manual routing)
+    query_text: str = ""
+    filters: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -240,6 +253,9 @@ class RetrievedSource:
     url: str | None = None
     source_host: str | None = None
     published_at: str | None = None
+    evidence_id: str = ""
+    file_id: str = ""
+    score: float | None = None
 
 
 @dataclass(frozen=True)
@@ -251,6 +267,8 @@ class LoopPassResult:
     product_key: str | None
     text: str
     sources: tuple[RetrievedSource, ...] = ()
+    elapsed_ms: float = 0
+    status: str = "ok"
 
 
 # ── Agent definitions ────────────────────────────────────────────────────
@@ -293,10 +311,15 @@ _PRODUCT_LOOP_RETRIEVAL_PREFIX = """## 当前轮次身份
 """
 
 
-def _build_plan_agent() -> Agent:
+def _build_plan_agent(page_url: str = "") -> Agent:
+    page_product = _get_page_product_key(page_url)
     return Agent(
         name="FF Robot Plan Agent",
-        instructions=_PLAN_INSTRUCTIONS_TEMPLATE,
+        instructions=_PLAN_INSTRUCTIONS_TEMPLATE + (
+            "\n\n当前页面产品（服务器识别）：" + (page_product or "未知")
+            + "。用户本轮明确型号优先，其次对话中已确定的型号，最后才使用页面产品。"
+            "路由和 query_text 必须使用同一个已确定的产品；无法确定操作/故障问题型号时输出 clarification_question。"
+        ),
         model="gpt-5.4-mini",
         output_type=PlanOutput,
         model_settings=_PLAN_MODEL_SETTINGS,
@@ -333,6 +356,11 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "instructions_file": "product-aegis-max",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
     },
+    "aegis-mega-d": {
+        "name": "FX Aegis Mega D Product Agent",
+        "instructions_file": "product-aegis-mega-d",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
+    },
     "ff91": {
         "name": "FF 91 2.0 Product Agent",
         "instructions_file": "product-ff91",
@@ -364,6 +392,9 @@ _VALID_PRODUCT_KEYS: frozenset[str] = frozenset(
 _VALID_AGENT_TYPES: frozenset[str] = frozenset(("product", "price", "news", "fallback"))
 
 _PRODUCT_EXPLICIT_ALIASES: tuple[str, ...] = (
+    "mega d",
+    "mega-d",
+    "mega_d",
     "aegis max",
     "aegis ultra",
     "aegis",
@@ -431,11 +462,16 @@ def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass
         return [LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")]
 
     passes: list[LoopPass] = []
+    queries: dict[tuple[str, str | None], str] = {}
 
     for item in loop_plan:
         if item.agent not in _VALID_AGENT_TYPES:
             logger.warning("Unknown agent type in loop_plan: %r, skipping", item.agent)
             continue
+        key = (item.agent, (item.product_key or "").strip().lower() if item.agent == "product" else None)
+        if key in queries:
+            continue
+        queries[key] = item.query_text
 
         if item.agent == "product":
             pk = (item.product_key or "").strip().lower()
@@ -450,41 +486,22 @@ def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass
             vs = (cfg.get("vector_store_id") or "").strip()
             if not vs:
                 logger.warning(
-                    "Skipping product pass: no vector_store_id configured for product key=%s", pk
+                    "Product store unavailable for product key=%s", pk
                 )
-                continue
             passes.append(
                 LoopPass(
                     domain="product",
-                    vector_store_ids=[vs],
+                    vector_store_ids=[vs] if vs else [],
                     focus_label=f"product ({cfg['name']})",
                     product_key=pk,
                 )
             )
 
-        elif item.agent == "price":
-            if OPENAI_VECTOR_STORE_PRICE_ID:
-                passes.append(
-                    LoopPass(
-                        domain="price",
-                        vector_store_ids=[OPENAI_VECTOR_STORE_PRICE_ID],
-                        focus_label="price",
-                    )
-                )
-            else:
-                logger.warning("price agent requested but OPENAI_VECTOR_STORE_PRICE_ID is empty")
-
-        elif item.agent == "news":
-            if OPENAI_VECTOR_STORE_NEWS_ID:
-                passes.append(
-                    LoopPass(
-                        domain="news",
-                        vector_store_ids=[OPENAI_VECTOR_STORE_NEWS_ID],
-                        focus_label="news",
-                    )
-                )
-            else:
-                logger.warning("news agent requested but OPENAI_VECTOR_STORE_NEWS_ID is empty")
+        elif item.agent in {"price", "news"}:
+            store_id = OPENAI_VECTOR_STORE_PRICE_ID if item.agent == "price" else OPENAI_VECTOR_STORE_NEWS_ID
+            passes.append(LoopPass(
+                domain=item.agent, vector_store_ids=[store_id] if store_id else [], focus_label=item.agent,
+            ))
 
         elif item.agent == "fallback":
             passes.append(
@@ -497,7 +514,17 @@ def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass
             LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")
         )
 
-    return passes
+    if any(p.domain == "product" for p in passes):
+        try:
+            snapshot = shared_snapshot()
+            if snapshot:
+                store_id, releases = snapshot
+                passes = [replace(p, vector_store_ids=[store_id], filters=release_filter(releases, p.product_key))
+                          if p.domain == "product" else p for p in passes]
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            logger.error("Shared manuals unavailable: %s", exc)
+            passes = [replace(p, vector_store_ids=[]) if p.domain == "product" else p for p in passes]
+    return [replace(p, query_text=queries.get((p.domain, p.product_key), "")) for p in passes]
 
 
 def _build_retrieval_focus_instructions(loop_plan: list[LoopPlanItem]) -> str:
@@ -569,7 +596,7 @@ def _build_loop_domain_agent(plan: PlanOutput, loop_pass: LoopPass) -> Agent:
             name=f"{cfg['name']} (product)",
             instructions=instructions,
             model=LLM_MODEL,
-            tools=[FileSearchTool(vector_store_ids=loop_pass.vector_store_ids)],
+            tools=[FileSearchTool(vector_store_ids=loop_pass.vector_store_ids, filters=loop_pass.filters)],
             model_settings=_SUPPORT_MODEL_SETTINGS,
         )
 
@@ -677,14 +704,16 @@ def _build_file_slug_map() -> dict[str, dict]:
         return {}
 
     result: dict[str, dict] = {}
-    for product_sidebar in all_sidebars.values():
+    for product_id, product_sidebar in all_sidebars.items():
         for section in product_sidebar.get("sections", []):
             for page in section.get("pages", []):
                 entry = {
                     "slug": page["slug"],
                     "title": page["title"],
+                    "source_path": page["file"],
                 }
                 rel_path = page["file"]
+                result[f"{product_id}:{rel_path}"] = entry
                 result[rel_path] = entry
                 basename = rel_path.rsplit("/", 1)[-1]
                 if basename != rel_path:
@@ -693,6 +722,89 @@ def _build_file_slug_map() -> dict[str, dict]:
 
 
 FILE_SLUG_MAP = _build_file_slug_map()
+
+
+def _lookup_product_page(filename: str, product_key: str) -> dict | None:
+    """Resolve filenames within a product to avoid cross-product basename collisions."""
+    candidates = {
+        entry["slug"]: entry for path, entry in FILE_SLUG_MAP.items()
+        if entry["slug"].strip("/").split("/", 1)[0] == product_key
+        and (entry.get("source_path", path) == filename
+             or entry.get("source_path", path).rsplit("/", 1)[-1] == filename.rsplit("/", 1)[-1])
+    }
+    return next(iter(candidates.values())) if len(candidates) == 1 else None
+
+
+def _source_for_evidence(hit: Evidence, domain: str, product_key: str | None, evidence_id: str) -> RetrievedSource:
+    attrs = hit.attributes
+    page = _lookup_product_page(str(attrs.get("source_path") or hit.filename), product_key) if product_key else None
+    source = RetrievedSource(
+        kind=domain, filename=hit.filename,
+        title=page["title"] if page else str(attrs.get("title") or hit.filename),
+        slug=page["slug"] if page else None,
+        page_url=_build_page_url(page["slug"]) if page else None,
+        evidence_id=evidence_id, file_id=hit.file_id, score=hit.score,
+    )
+    if domain == "news":
+        # Only attach a URL from this hit's metadata/header, never a different chunk.
+        url = str(attrs.get("source") or attrs.get("url") or "")
+        title = str(attrs.get("title") or hit.filename)
+        published = str(attrs.get("published_at") or attrs.get("published") or "")
+        if not url:
+            headers = dict((m.group(1).lower(), m.group(2).strip().strip('"'))
+                           for line in hit.text.splitlines()[:20]
+                           if (m := _NEWS_SOURCE_LINE_RE.match(line)))
+            url = headers.get("source") or headers.get("url") or ""
+            title = headers.get("title") or title
+            published = headers.get("published") or headers.get("date") or published
+        try:
+            parsed = urlparse(url)
+        except ValueError:
+            return source
+        if parsed.scheme in {"http", "https"} and parsed.netloc:
+            source = replace(source, url=url, title=title, published_at=published or None, source_host=parsed.netloc)
+    return source
+
+
+async def retrieve_loop_pass(
+    service: RetrievalService | None, plan: PlanOutput, loop_pass: LoopPass, pass_idx: int,
+) -> LoopPassResult:
+    """Fetch bounded original evidence, without a per-domain model or summary."""
+    started = time.perf_counter()
+    if loop_pass.domain == "fallback":
+        return LoopPassResult("fallback", "fallback", None, "用户问题不在服务范围内，请按服务边界简短回复。", status="fallback")
+    if not loop_pass.vector_store_ids:
+        raise ValueError(f"No store configured for {loop_pass.focus_label}")
+    if service is None:
+        raise ValueError("Retrieval service is not configured")
+    hits = []
+    for store_id in loop_pass.vector_store_ids:
+        hits.extend(await service.search(
+            loop_pass.query_text or plan.query_text,
+            vector_store_id=store_id, limit=RETRIEVAL_MAX_RESULTS, product_key=loop_pass.product_key,
+            **({"filters": loop_pass.filters} if loop_pass.filters else {}),
+        ))
+    sources = []
+    evidence = []
+    remaining = RETRIEVAL_MAX_CHARS_PER_PASS
+    for hit in sorted(hits, key=lambda h: h.score, reverse=True)[:RETRIEVAL_MAX_RESULTS]:
+        if remaining <= 0:
+            break
+        evidence_id = f"E{pass_idx + 1}_{len(evidence) + 1}"
+        text = hit.text[:remaining]
+        remaining -= len(text)
+        source = _source_for_evidence(hit, loop_pass.domain, loop_pass.product_key, evidence_id)
+        sources.append(source)
+        evidence.append({
+            "evidence_id": evidence_id, "product_key": loop_pass.product_key,
+            "file_id": hit.file_id, "filename": hit.filename, "score": hit.score,
+            "attributes": hit.attributes, "text": text, "truncated": len(text) < len(hit.text),
+        })
+    return LoopPassResult(
+        loop_pass.domain, loop_pass.focus_label, loop_pass.product_key,
+        json.dumps(evidence, ensure_ascii=False) if evidence else "未检索到可用原文证据；不要推断产品参数、价格或操作步骤。",
+        tuple(sources), (time.perf_counter() - started) * 1000, "ok" if evidence else "empty",
+    )
 
 
 def _lookup_page_info(filename: str) -> dict | None:
@@ -980,10 +1092,10 @@ def _merge_source_lists(
     *source_groups: tuple[RetrievedSource, ...],
 ) -> tuple[RetrievedSource, ...]:
     merged: list[RetrievedSource] = []
-    seen: set[tuple[str, str | None, str, str | None, str | None]] = set()
+    seen: set[tuple] = set()
     for group in source_groups:
         for source in group:
-            key = (source.kind, source.slug, source.filename, source.url, source.page_url)
+            key = (source.evidence_id, source.kind, source.slug, source.filename, source.url, source.page_url)
             if key in seen:
                 continue
             seen.add(key)
@@ -1044,6 +1156,8 @@ def _render_source_catalog(results: list[LoopPassResult]) -> str:
     lines: list[str] = []
     for source in sources:
         extra = []
+        if source.evidence_id:
+            extra.append(f"evidence_id={source.evidence_id}")
         extra.append(f"kind={source.kind}")
         if source.slug:
             extra.append(f"slug={source.slug}")
@@ -1068,14 +1182,67 @@ def _is_displayable_source(source: RetrievedSource) -> bool:
 
 
 class _FinalSourceAppender:
-    """Append one canonical source list to the final assistant message."""
+    """Convert model evidence markers to server-validated, native ChatKit citations.
+
+    Markers are hidden during streaming. The final content carries annotations at
+    exact character offsets; uncited and unknown evidence never gets a citation.
+    """
+
+    _marker = re.compile(r"\[\[(E[\w-]*)\]\]")
 
     def __init__(self, sources: tuple[RetrievedSource, ...], input_lang: str) -> None:
-        self._sources = tuple(source for source in sources if _is_displayable_source(source))
-        self._input_lang = input_lang
-        self._done = False
+        self._sources = {s.evidence_id: s for s in sources if s.evidence_id}
+        self._buffers: dict[tuple[str, int], str] = {}
+        self._emitted: dict[tuple[str, int], int] = {}
+
+    def render(self, text: str) -> tuple[str, list[Annotation]]:
+        annotations = []
+        parts = []
+        last = 0
+        position = 0
+        for match in self._marker.finditer(text):
+            prefix = text[last:match.start()]
+            parts.append(prefix)
+            position += len(prefix)
+            source = self._sources.get(match.group(1))
+            if source:
+                if source.slug:
+                    annotation = _build_entity_annotation(
+                        title=source.title, slug=source.slug, page_url=source.page_url, index=position,
+                    )
+                elif source.url:
+                    annotation = Annotation(source=URLSource(title=source.title, url=source.url), index=position)
+                else:
+                    annotation = Annotation(source=FileSource(title=source.title, filename=source.filename), index=position)
+                annotations.append(annotation)
+            last = match.end()
+        parts.append(text[last:])
+        return "".join(parts), annotations
+
+    def _finish_content(self, content: AssistantMessageContent) -> None:
+        content.text, annotations = self.render(content.text)
+        for annotation in annotations:
+            if annotation not in content.annotations:
+                content.annotations.append(annotation)
 
     def process(self, event: ThreadStreamEvent) -> ThreadStreamEvent:
+        if event.type == "thread.item.updated":
+            update = event.update
+            if update.type == "assistant_message.content_part.text_delta":
+                key = (event.item_id, update.content_index)
+                raw = self._buffers.get(key, "") + update.delta
+                self._buffers[key] = raw
+                # Hold incomplete markers (including a trailing '[') across deltas.
+                partial = re.search(r"\[(?:\[E[\w-]*\]?)?$|\[\[$", raw)
+                visible, _ = self.render(raw[:partial.start()] if partial else raw)
+                emitted = self._emitted.get(key, 0)
+                update.delta = visible[emitted:]
+                self._emitted[key] = len(visible)
+            elif update.type in {"assistant_message.content_part.done", "assistant_message.content_part.added"}:
+                self._finish_content(update.content)
+        elif event.type in {"thread.item.done", "thread.item.added"} and isinstance(event.item, AssistantMessageItem):
+            for content in event.item.content:
+                self._finish_content(content)
         return event
 
 
@@ -1229,8 +1396,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
     1. **Plan Agent** (non-streamed): generates ``loop_plan`` — an ordered list of
        agent steps (product/price/news/fallback) with query expansion.
-    2. **Loop**: run domain Agents per ``loop_plan`` item; each pass uses one
-       vector store. Non-streamed retrieval.
+    2. **Retrieval**: directly search each domain's vector store in parallel;
+       ``CHAT_RETRIEVAL_MODE=agent`` keeps the previous domain Agents available.
     3. **Output Agent**: streams the final user-facing answer.
     4. **Post-Decision Agent** (non-streamed): evaluates purchase intent and
        recommendation rule matching based on the full context.
@@ -1243,16 +1410,20 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         *,
         lead_storage: LeadStorage | None = None,
         recommendation_storage: RecommendationCatalogStorage | None = None,
+        homepage_prompts_storage: HomepagePromptsStorage | None = None,
+        retrieval_service: RetrievalService | None = None,
     ) -> None:
         super().__init__(store=store)
         self._recommendation_storage = recommendation_storage or RecommendationCatalogStorage.from_config()
         self.reco_engine = RecommendationEngine(self._recommendation_storage)
         self._lead_storage = lead_storage or LeadStorage.from_config()
+        self.homepage_prompts = homepage_prompts_storage or HomepagePromptsStorage.from_config()
+        self.retrieval_service = retrieval_service
         self.fast_answers = FastAnswerService(
             preset_faq_paths=PRESET_FAQ_PATHS,
             memory_path=ANSWER_MEMORY_DATA_PATH,
             enabled=FAST_ANSWER_ENABLED,
-            memory_enabled=ANSWER_MEMORY_ENABLED,
+            memory_enabled=False,
             memory_max_records=ANSWER_MEMORY_MAX_RECORDS,
             preset_fuzzy_threshold=PRESET_FAQ_FUZZY_THRESHOLD,
             memory_fuzzy_threshold=ANSWER_MEMORY_FUZZY_THRESHOLD,
@@ -1442,6 +1613,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 "answer_source": fast_match.answer_source,
                 "score": fast_match.score,
                 "faq_id": fast_match.faq_id,
+                "faq_scope": str(context.get("faq_scope") or ""),
                 "matched_question": fast_match.matched_question,
                 "section_title": fast_match.section_title,
             },
@@ -1562,6 +1734,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         input_user_message: UserMessageItem | None,
         context: dict,
     ) -> AsyncIterator[ThreadStreamEvent]:
+        request_started = time.perf_counter()
         history_page = await self.store.load_thread_items(
             thread.id, after=None, limit=100, order="asc", context=context
         )
@@ -1617,7 +1790,19 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 yield ev
             return
 
-        fast_match = self.fast_answers.lookup(user_text, page_url=page_url)
+        fast_match = None
+        faq_id = str(context.get("faq_id") or "")
+        if faq_id:
+            try:
+                selected_prompt = self.homepage_prompts.resolve_selected_prompt(
+                    faq_id, str(context.get("faq_scope") or ""), url=page_url,
+                )
+                if selected_prompt:
+                    fast_match = self.fast_answers.lookup_selected(
+                        selected_prompt, raw_question=user_text, page_url=page_url,
+                    )
+            except Exception:
+                logger.exception("Preset answer lookup failed; continuing with normal chat")
         if fast_match:
             input_lang = detect_input_lang(user_text)
             self.store.thread_langs[thread.id] = input_lang
@@ -1641,7 +1826,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         # ── Phase 1: Plan Agent (non-streamed, structured JSON) ─────────
         yield ProgressUpdateEvent(icon="sparkle", text="Analyzing your question…")
 
-        plan_agent = _build_plan_agent()
+        plan_agent = _build_plan_agent(page_url)
+        plan_started = time.perf_counter()
         logger.info("Running plan agent …")
         plan_result = await Runner.run(
             plan_agent,
@@ -1653,18 +1839,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         plan_output: PlanOutput = plan_result.final_output
-        replaced_product_key = _apply_page_product_context(
-            plan_output,
-            user_text=user_text,
-            page_url=page_url,
-        )
-        if replaced_product_key:
-            front_logger.info(
-                "[thread=%s] page context routed ambiguous product %s → %s",
-                thread.id,
-                replaced_product_key,
-                _get_page_product_key(page_url),
-            )
+        plan_elapsed_ms = (time.perf_counter() - plan_started) * 1000
         front_logger.info(
             "[thread=%s] plan → input_lang=%s, loop_plan=%s, query_text=%s",
             thread.id,
@@ -1675,7 +1850,20 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         self.store.thread_langs[thread.id] = plan_output.input_lang
 
-        # ── Phase 2: Loop (domain agents) → Output ─────────────────────────
+        if plan_output.clarification_question.strip():
+            yield ThreadItemDoneEvent(item=AssistantMessageItem(
+                id=self.store.generate_item_id("message", thread, context), thread_id=thread.id,
+                created_at=datetime.now(timezone.utc),
+                content=[AssistantMessageContent(text=plan_output.clarification_question.strip())],
+            ))
+            self.store.agent_traces[thread.id].append({
+                "timestamp": datetime.now(timezone.utc).isoformat(), "user_message": user_text[:300],
+                "workflow": "clarification", "retrieval_mode": CHAT_RETRIEVAL_MODE,
+                "plan": plan_output.model_dump(), "plan_elapsed_ms": plan_elapsed_ms,
+            })
+            return
+
+        # ── Phase 2: Parallel retrieval → Output ─────────────────────────
 
         loop_passes = _build_loop_passes_from_plan(plan_output.loop_plan)
         front_logger.info(
@@ -1703,6 +1891,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             "agent": plan_agent.name,
             "model": "gpt-5.4-mini",
             "role": "plan",
+            "elapsed_ms": plan_elapsed_ms,
             "output": {
                 "input_lang": plan_output.input_lang,
                 "query_text": plan_output.query_text,
@@ -1729,42 +1918,37 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                     pass_info.vector_store_ids,
                 )
                 try:
-                    domain_agent = _build_loop_domain_agent(plan_output, pass_info)
-                    pass_result = await asyncio.wait_for(
-                        Runner.run(
-                            domain_agent,
-                            retrieval_conversation,
-                            context=agent_context,
-                            run_config=RunConfig(
-                                trace_metadata={"__trace_source__": "agent-builder"},
-                            ),
-                        ),
-                        timeout=LOOP_PASS_TIMEOUT_SECONDS,
-                    )
-
-                    pass_text = pass_result.final_output
-                    if not isinstance(pass_text, str):
-                        pass_text = str(pass_text)
-
-                    pass_sources = _extract_retrieved_sources(pass_result)
-                    if pass_info.domain == "news":
-                        pass_sources = _merge_source_lists(
-                            pass_sources,
-                            _extract_news_sources_from_text(pass_text),
+                    started = time.perf_counter()
+                    if CHAT_RETRIEVAL_MODE == "direct" or pass_info.domain == "fallback":
+                        if self.retrieval_service is None and pass_info.domain != "fallback":
+                            self.retrieval_service = RetrievalService(configure_agents_default_openai_client())
+                        result = await asyncio.wait_for(
+                            retrieve_loop_pass(self.retrieval_service, plan_output, pass_info, pass_idx),
+                            timeout=LOOP_PASS_TIMEOUT_SECONDS,
                         )
-                    result = LoopPassResult(
-                        domain=pass_info.domain,
-                        focus_label=pass_info.focus_label,
-                        product_key=pass_info.product_key,
-                        text=pass_text,
-                        sources=pass_sources,
-                    )
+                    else:
+                        if not pass_info.vector_store_ids:
+                            raise ValueError(f"No store configured for {pass_info.focus_label}")
+                        domain_agent = _build_loop_domain_agent(plan_output, pass_info)
+                        pass_result = await asyncio.wait_for(
+                            Runner.run(domain_agent, retrieval_conversation, context=agent_context,
+                                       run_config=RunConfig(trace_metadata={"__trace_source__": "agent-builder"})),
+                            timeout=LOOP_PASS_TIMEOUT_SECONDS,
+                        )
+                        pass_text = str(pass_result.final_output)
+                        pass_sources = _extract_retrieved_sources(pass_result)
+                        if pass_info.domain == "news":
+                            pass_sources = _merge_source_lists(pass_sources, _extract_news_sources_from_text(pass_text))
+                        result = LoopPassResult(
+                            pass_info.domain, pass_info.focus_label, pass_info.product_key,
+                            pass_text, pass_sources, (time.perf_counter() - started) * 1000,
+                        )
                     front_logger.info(
                         "[thread=%s] loop pass %d done → result_length=%d source_count=%d",
                         thread.id,
                         pass_idx + 1,
-                        len(pass_text),
-                        len(pass_sources),
+                        len(result.text),
+                        len(result.sources),
                     )
                     return pass_idx, result, None
                 except Exception as exc:
@@ -1791,6 +1975,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                             product_key=pass_info.product_key,
                             text=fallback_text,
                             sources=(),
+                            status="unavailable",
+                            elapsed_ms=(time.perf_counter() - started) * 1000,
                         ),
                         exc,
                     )
@@ -1848,6 +2034,8 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         finally:
             for task in pending:
                 task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
 
         retrieval_results = [result for result in retrieval_results_by_idx if result is not None]
         if degraded_count:
@@ -1883,36 +2071,23 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         answer_text_parts: list[str] = []
+        completed_answer: str | None = None
+        first_text_ms: float | None = None
         async for event in stream_agent_response(
             agent_context, output_result, converter=FFRobotConverter()
         ):
+            event = source_appender.process(rewriter.process(event))
             if event.type == "thread.item.updated":
                 update = event.update
                 if hasattr(update, "delta") and isinstance(update.delta, str):
                     answer_text_parts.append(update.delta)
-            event = rewriter.process(event)
-            yield source_appender.process(event)
+                    if update.delta and first_text_ms is None:
+                        first_text_ms = (time.perf_counter() - request_started) * 1000
+            elif event.type == "thread.item.done" and isinstance(event.item, AssistantMessageItem):
+                completed_answer = "".join(c.text for c in event.item.content)
+            yield event
 
-        answer_text = "".join(answer_text_parts)
-        self.fast_answers.remember(
-            raw_question=user_text,
-            page_url=page_url,
-            answer=answer_text,
-            answer_source="rag",
-            thread_id=thread.id,
-            metadata={
-                "source_count": len(final_sources),
-                "sources": [
-                    {
-                        "title": source.title,
-                        "kind": source.kind,
-                        "slug": source.slug,
-                        "url": source.url or source.page_url,
-                    }
-                    for source in final_sources[:8]
-                ],
-            },
-        )
+        answer_text = completed_answer if completed_answer is not None else "".join(answer_text_parts)
 
         # ── Phase 3: Post-Decision Agent ─────────────────────────────────
         retrieval_summary = "\n".join(
@@ -1927,15 +2102,17 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             retrieval_summary=retrieval_summary,
             answer_text=answer_text,
         )
-        post_decision_result = await Runner.run(
-            post_decision_agent,
-            [{"role": "user", "content": user_text}],
-            context=agent_context,
-            run_config=RunConfig(
-                trace_metadata={"__trace_source__": "agent-builder"},
-            ),
-        )
-        post_decision: PostDecisionOutput = post_decision_result.final_output
+        try:
+            post_decision_result = await Runner.run(
+                post_decision_agent,
+                [{"role": "user", "content": user_text}],
+                context=agent_context,
+                run_config=RunConfig(trace_metadata={"__trace_source__": "agent-builder"}),
+            )
+            post_decision: PostDecisionOutput = post_decision_result.final_output
+        except Exception:
+            logger.exception("Post-decision failed; preserving the completed answer")
+            post_decision = PostDecisionOutput()
         front_logger.info(
             "[thread=%s] post-decision → purchase_intent=%s, recommendation_hit=%s, "
             "recommendation_rule_id=%s",
@@ -1949,9 +2126,13 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_message": user_text[:300],
             "workflow": "plan-loop-output",
+            "retrieval_mode": CHAT_RETRIEVAL_MODE,
+            "first_text_ms": first_text_ms,
+            "elapsed_ms": (time.perf_counter() - request_started) * 1000,
             "plan": {
                 "loop_plan": [item.model_dump() for item in plan_output.loop_plan],
                 "domains": [p.domain for p in loop_passes],
+                "manuals_filters": {p.product_key: p.filters for p in loop_passes if p.domain == "product"},
                 "details": [
                     (p.domain, p.focus_label, p.product_key, p.vector_store_ids)
                     for p in loop_passes
@@ -1962,12 +2143,16 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 *[
                     {
                         "agent": result.focus_label,
-                        "model": LLM_MODEL,
+                        "model": LLM_MODEL if CHAT_RETRIEVAL_MODE == "agent" and result.domain != "fallback" else None,
                         "role": "domain_retrieval",
                         "domain": result.domain,
                         "product_key": result.product_key,
                         "result_length": len(result.text),
                         "source_count": len(result.sources),
+                        "status": result.status,
+                        "elapsed_ms": result.elapsed_ms,
+                        "evidence": [{"id": s.evidence_id, "file_id": s.file_id, "score": s.score}
+                                     for s in result.sources],
                         "sources": [source.title for source in result.sources],
                     }
                     for result in retrieval_results
@@ -2014,9 +2199,11 @@ def create_chatkit_server(
     *,
     lead_storage: LeadStorage | None = None,
     recommendation_storage: RecommendationCatalogStorage | None = None,
+    homepage_prompts_storage: HomepagePromptsStorage | None = None,
 ) -> FFRobotChatKitServer:
     return FFRobotChatKitServer(
         store=InMemoryStore(),
         lead_storage=lead_storage,
         recommendation_storage=recommendation_storage,
+        homepage_prompts_storage=homepage_prompts_storage,
     )

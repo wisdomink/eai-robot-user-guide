@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 _HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 _QA_RE = re.compile(r"^###\s+([\d.]+)\s+(.+?)\s*$", re.MULTILINE)
-_PATH_RE = re.compile(r"^\*\*(?:路径|Path)：?\*\*\s*`([^`]+)`\s*$", re.MULTILINE | re.IGNORECASE)
+_PATH_RE = re.compile(r"^\*\*(?:路径|Path)[:：]?\*\*\s*`([^`]+)`\s*$", re.MULTILINE | re.IGNORECASE)
 _WELCOME_RE = re.compile(
     r"^\*\*(?:欢迎语|Welcome message)：?\*\*\s*(.+?)\s*$",
     re.MULTILINE | re.IGNORECASE,
@@ -458,6 +458,7 @@ class FastAnswerService:
             paths.extend(Path(p) for p in preset_faq_paths)
         elif preset_faq_path:
             paths.append(preset_faq_path)
+        self._preset_paths = paths
         self.preset_faqs = []
         if enabled:
             for path in paths:
@@ -475,6 +476,35 @@ class FastAnswerService:
             )
             if enabled and memory_enabled
             else None
+        )
+
+    def lookup_selected(
+        self, prompt: dict, *, raw_question: str, page_url: str | None,
+    ) -> FastAnswerMatch | None:
+        """Answer only a server-resolved button; legacy Markdown uses exact matching."""
+        if not self.enabled or raw_question.strip() != str(prompt.get("prompt", "")).strip():
+            return None
+        answer = str(prompt.get("reply_text", "")).strip()
+        if not answer:
+            # Read current content so edits/removals take effect without restarting.
+            candidates = [
+                faq
+                for path in self._preset_paths
+                for faq in parse_preset_faq_markdown(path, language=_infer_language_from_path(path))
+                if faq.question.strip() == raw_question.strip()
+                and faq.language == detect_input_lang(raw_question)
+                and _page_matches(faq.page_pattern, page_url)
+            ]
+            if not candidates:
+                return None
+            best_rank = max(_page_match_rank(faq.page_pattern) for faq in candidates)
+            candidates = [faq for faq in candidates if _page_match_rank(faq.page_pattern) == best_rank]
+            if len(candidates) != 1:
+                return None
+            answer = candidates[0].answer
+        return FastAnswerMatch(
+            answer=answer, answer_source="preset_id", score=1.0,
+            matched_question=raw_question, faq_id=prompt["id"],
         )
 
     def lookup(self, raw_question: str, *, page_url: str | None) -> FastAnswerMatch | None:
