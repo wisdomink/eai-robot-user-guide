@@ -60,6 +60,18 @@ class RecommendationCatalogStorage:
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf",
         ),
     ]
+    _REQUIRED_LEAD_PRODUCTS = [
+        ("master", "FF Master"),
+        ("master-mini", "FF Master Mini"),
+        ("futurist", "FF All-New Futurist"),
+        ("futurist-ultra", "FF All-New Futurist Ultra"),
+        ("aegis", "FX Aegis Classic"),
+        ("aegis-ultra", "FX Aegis Classic Ultra"),
+        ("aegis-max", "FX Aegis Max"),
+        ("aegis-mega-d", "FX Aegis Mega D"),
+        ("navi", "FF NAVI"),
+        ("ff91", "FF 91 2.0"),
+    ]
 
     def __init__(
         self,
@@ -185,15 +197,17 @@ class RecommendationCatalogStorage:
 
     @staticmethod
     def _normalize_products(raw: object) -> list[dict]:
-        """Keep existing product options and ensure newly supported products appear.
+        """Keep configured options and append every supported lead product.
 
         DynamoDB installations can have a persisted PRODUCTS row that predates the
-        seed JSON, so relying on the seed alone would omit Aegis Max from the lead
-        form after deployment.
+        current product catalog, so relying on the seed alone would omit newer
+        products from the lead form after deployment.
         """
         products = [dict(item) for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
-        if not any(str(item.get("value", "")).strip() == "aegis-max" for item in products):
-            products.append({"value": "aegis-max", "label": "FF Aegis Max"})
+        existing = {str(item.get("value", "")).strip() for item in products}
+        for value, label in RecommendationCatalogStorage._REQUIRED_LEAD_PRODUCTS:
+            if value not in existing:
+                products.append({"value": value, "label": label})
         return products
 
     def _load_seed_config(self) -> dict:

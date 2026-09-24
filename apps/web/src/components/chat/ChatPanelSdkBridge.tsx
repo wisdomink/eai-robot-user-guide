@@ -29,11 +29,12 @@ export default function ChatPanelSdkBridge() {
     }
 
     window.FFRobotChat?.init({
+      hostUrl: window.location.href,
       onEntityNavigate: handleEntityNavigate,
     }).catch((error: unknown) => {
       console.error('[ChatPanelSdkBridge] Failed to initialize SDK:', error)
     })
-  }, [location.pathname, navigate])
+  }, [location.pathname, location.search, location.hash, navigate])
 
   return null
 }

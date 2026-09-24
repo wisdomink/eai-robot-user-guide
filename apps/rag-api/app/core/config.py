@@ -36,6 +36,7 @@ MANUALS_RELEASE_MANIFEST = Path(os.getenv("MANUALS_RELEASE_MANIFEST", str(RAG_SE
 
 # ── Vector Stores (per-product) ──────────────────────────────────────────
 OPENAI_VECTOR_STORE_MASTER_ID: str = os.getenv("OPENAI_VECTOR_STORE_MASTER_ID", "")
+OPENAI_VECTOR_STORE_MASTER_MINI_ID: str = os.getenv("OPENAI_VECTOR_STORE_MASTER_MINI_ID", "")
 OPENAI_VECTOR_STORE_FUTURIST_ID: str = os.getenv("OPENAI_VECTOR_STORE_FUTURIST_ID", "")
 OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID: str = os.getenv("OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID", "")
 OPENAI_VECTOR_STORE_AEGIS_ID: str = os.getenv("OPENAI_VECTOR_STORE_AEGIS_ID", "")
@@ -124,3 +125,7 @@ ANSWER_MEMORY_FUZZY_THRESHOLD: float = float(os.getenv("ANSWER_MEMORY_FUZZY_THRE
 
 # ── Public URL (for rewriting image paths in ChatKit iframe) ─────────────
 PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+
+# Chat history persistence (production deployment selects DynamoDB).
+CHAT_BACKEND = os.getenv("CHAT_BACKEND", "memory").strip().lower()
+CHAT_DDB_TABLE = os.getenv("CHAT_DDB_TABLE", "").strip()

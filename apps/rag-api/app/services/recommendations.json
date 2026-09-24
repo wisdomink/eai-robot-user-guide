@@ -25,6 +25,10 @@
       "label": "FF Master"
     },
     {
+      "value": "master-mini",
+      "label": "FF Master Mini"
+    },
+    {
       "value": "futurist",
       "label": "FF All-New Futurist"
     },
@@ -43,6 +47,14 @@
     {
       "value": "aegis-max",
       "label": "FF Aegis Max"
+    },
+    {
+      "value": "aegis-mega-d",
+      "label": "FX Aegis Mega D"
+    },
+    {
+      "value": "navi",
+      "label": "FF NAVI"
     },
     {
       "value": "ff91",

@@ -23,11 +23,13 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from chatkit.server import StreamingResult
+from chatkit.store import NotFoundError
 
 from app.core.config import (
     LOG_DIR,
     OPENAI_API_KEY,
     OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+    OPENAI_VECTOR_STORE_MASTER_MINI_ID,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     SIDEBAR_PATH,
 )
@@ -280,14 +282,15 @@ async def search_endpoint(
         return {"results": []}
 
     # The legacy all-products store remains the primary search index.  Aegis
-    # Max is intentionally maintained in its own store, so include it here
-    # instead of requiring a destructive re-sync of the legacy all-products
-    # store whenever the Aegis Max manual changes.
+    # Max and Master Mini are intentionally maintained in their own stores,
+    # so include them here instead of requiring a destructive re-sync of the
+    # legacy all-products store whenever either manual changes.
     vector_store_ids = list(dict.fromkeys(
         vector_store_id
         for vector_store_id in (
             OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
             OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+            OPENAI_VECTOR_STORE_MASTER_MINI_ID,
         )
         if vector_store_id
     ))
@@ -546,38 +549,34 @@ def _serialize_item(item) -> dict:
 async def list_threads(
     request: Request,
     limit: int = Query(50, ge=1, le=200, description="Max threads"),
-    order: str = Query("desc", description="Sort order: asc or desc"),
+    order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order: asc or desc"),
+    after: str | None = Query(None),
 ):
     """List all conversation threads (newest first by default)."""
     base_url = str(request.base_url).rstrip("/")
     store = chatkit_server.store
-    page = await store.load_threads(limit=limit, after=None, order=order, context={})
+    try:
+        page = await store.load_threads(limit=limit, after=after, order=order, context={})
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Chat history cursor not found") from exc
+    semaphore = asyncio.Semaphore(8)
+
+    async def load_summary(thread_id):
+        async with semaphore:
+            return await store.history_summary(thread_id)
+
+    summaries = await asyncio.gather(*(load_summary(t.id) for t in page.data))
     threads = []
-    for t in page.data:
-        item_count = len(store.items.get(t.id, []))
-        first_msg = ""
-        for item in store.items.get(t.id, []):
-            if getattr(item, "type", None) == "user_message":
-                if hasattr(item, "content") and isinstance(item.content, list):
-                    first_msg = " ".join(
-                        getattr(p, "text", "") for p in item.content
-                    ).strip()[:200]
-                break
-        traces = store.agent_traces.get(t.id, [])
-        last_agents = []
-        if traces:
-            last_agents = [n["agent"] for n in traces[-1].get("nodes", [])]
+    for t, summary in zip(page.data, summaries):
         threads.append({
             "id": t.id,
             "detail_url": f"{base_url}/api/chat-history/{t.id}",
             "title": t.title,
             "created_at": t.created_at.isoformat(),
             "status": t.status if isinstance(t.status, str) else str(t.status),
-            "item_count": item_count,
-            "first_message": first_msg,
-            "agents": last_agents,
+            **summary,
         })
-    return {"threads": threads, "total": len(threads), "has_more": page.has_more}
+    return {"threads": threads, "total": len(threads), "has_more": page.has_more, "after": page.after}
 
 
 @app.post("/api/post-lead")
@@ -702,19 +701,27 @@ async def delete_recommendation(recommendation_id: str):
 
 
 @app.get("/api/chat-history/{thread_id}")
-async def get_thread_detail(thread_id: str):
+async def get_thread_detail(
+    thread_id: str,
+    after: str | None = Query(None),
+    limit: int = Query(500, ge=1, le=500),
+):
     """Get all messages in a specific thread."""
     store = chatkit_server.store
-    if thread_id not in store.threads:
+    try:
+        thread = await store.load_thread(thread_id, context={})
+    except NotFoundError:
         return Response(
             content=json.dumps({"error": f"Thread {thread_id} not found"}),
             status_code=404,
             media_type="application/json",
         )
-    thread = store.threads[thread_id]
-    items_page = await store.load_thread_items(
-        thread_id, after=None, limit=500, order="asc", context={}
-    )
+    try:
+        items_page = await store.load_thread_items(
+            thread_id, after=after, limit=limit, order="asc", context={}
+        )
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Chat message cursor not found") from exc
     return {
         "thread": {
             "id": thread.id,
@@ -722,7 +729,9 @@ async def get_thread_detail(thread_id: str):
             "created_at": thread.created_at.isoformat(),
             "status": thread.status if isinstance(thread.status, str) else str(thread.status),
         },
-        "agent_traces": store.agent_traces.get(thread_id, []),
+        "agent_traces": await store.load_traces(thread_id),
+        "has_more": items_page.has_more,
+        "after": items_page.after,
         "items": [_serialize_item(item) for item in items_page.data],
     }
 

@@ -52,6 +52,7 @@ APP_NAME="eai-robot"
 IMAGE_NAME="eai-robot-app"
 ECR_REPO_NAME="eai-robot-app"
 LEADS_DDB_TABLE="${APP_NAME}-leads"
+CHAT_DDB_TABLE="${APP_NAME}-chat-history"
 RECOMMENDATIONS_DDB_TABLE="${APP_NAME}-recommendations"
 HOMEPAGE_PROMPTS_DDB_TABLE="${APP_NAME}-homepage-prompts"
 TASK_ROLE_NAME="${APP_NAME}-task-role"
@@ -180,6 +181,7 @@ build_task_env_json() {
     local base_json="$1"
     BASE_JSON="$base_json" \
     AWS_REGION="$AWS_REGION" \
+    CHAT_DDB_TABLE="$CHAT_DDB_TABLE" \
     LEADS_DDB_TABLE="$LEADS_DDB_TABLE" \
     RECOMMENDATIONS_DDB_TABLE="$RECOMMENDATIONS_DDB_TABLE" \
     HOMEPAGE_PROMPTS_DDB_TABLE="$HOMEPAGE_PROMPTS_DDB_TABLE" \
@@ -190,6 +192,8 @@ import os
 data = json.loads(os.environ["BASE_JSON"])
 extra = {
     "AWS_DEFAULT_REGION": os.environ["AWS_REGION"],
+    "CHAT_BACKEND": "dynamodb",
+    "CHAT_DDB_TABLE": os.environ["CHAT_DDB_TABLE"],
     "LEADS_BACKEND": "dynamodb",
     "LEADS_DDB_TABLE": os.environ["LEADS_DDB_TABLE"],
     "RECOMMENDATIONS_BACKEND": "dynamodb",
@@ -218,6 +222,20 @@ PY
 ensure_dynamodb_tables() {
     echo ""
     echo "══ 配置 DynamoDB ══"
+
+    aws dynamodb describe-table \
+        --table-name "$CHAT_DDB_TABLE" \
+        --region "$AWS_REGION" >/dev/null 2>&1 || {
+        echo "  📦 创建表: $CHAT_DDB_TABLE"
+        aws dynamodb create-table \
+            --table-name "$CHAT_DDB_TABLE" \
+            --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S AttributeName=gpk,AttributeType=S AttributeName=gsk,AttributeType=S \
+            --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
+            --global-secondary-indexes '[{"IndexName":"threads-by-created","KeySchema":[{"AttributeName":"gpk","KeyType":"HASH"},{"AttributeName":"gsk","KeyType":"RANGE"}],"Projection":{"ProjectionType":"ALL"}}]' \
+            --billing-mode PAY_PER_REQUEST \
+            --region "$AWS_REGION" >/dev/null
+        aws dynamodb wait table-exists --table-name "$CHAT_DDB_TABLE" --region "$AWS_REGION"
+    }
 
     aws dynamodb describe-table \
         --table-name "$LEADS_DDB_TABLE" \
@@ -291,6 +309,8 @@ ensure_task_role() {
         "dynamodb:Scan"
       ],
       "Resource": [
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$CHAT_DDB_TABLE",
+        "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$CHAT_DDB_TABLE/index/*",
         "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$LEADS_DDB_TABLE",
         "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$RECOMMENDATIONS_DDB_TABLE",
         "arn:aws:dynamodb:$AWS_REGION:$AWS_ACCOUNT_ID:table/$HOMEPAGE_PROMPTS_DDB_TABLE"

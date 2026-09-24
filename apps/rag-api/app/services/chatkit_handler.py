@@ -22,7 +22,6 @@ import re
 import time
 from dataclasses import dataclass, replace
 from app.services.manuals_index import shared_snapshot, release_filter
-from collections import defaultdict
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,16 +40,14 @@ from chatkit.agents import (
 )
 from chatkit.actions import ActionConfig
 from chatkit.server import ChatKitServer, stream_widget
-from chatkit.store import NotFoundError, Store
+from app.services.chat_store import InMemoryStore, create_chat_store
 from chatkit.types import (
     Annotation,
     AssistantMessageContent,
     AssistantMessageItem,
-    Attachment,
     EntitySource,
     FileSource,
     URLSource,
-    Page,
     ProgressUpdateEvent,
     ThreadItemDoneEvent,
     ThreadItem,
@@ -83,6 +80,7 @@ from app.core.config import (
     OPENAI_VECTOR_STORE_FUTURIST_ID,
     OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID,
     OPENAI_VECTOR_STORE_MASTER_ID,
+    OPENAI_VECTOR_STORE_MASTER_MINI_ID,
     OPENAI_VECTOR_STORE_NEWS_ID,
     OPENAI_VECTOR_STORE_PRICE_ID,
     PRESET_FAQ_FUZZY_THRESHOLD,
@@ -331,6 +329,11 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "instructions_file": "product-master",
         "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ID,
     },
+    "master-mini": {
+        "name": "FF Master Mini Product Agent",
+        "instructions_file": "product-master-mini",
+        "vector_store_id": OPENAI_VECTOR_STORE_MASTER_MINI_ID,
+    },
     "futurist": {
         "name": "FF Futurist Product Agent",
         "instructions_file": "product-futurist",
@@ -391,24 +394,27 @@ _VALID_PRODUCT_KEYS: frozenset[str] = frozenset(
 
 _VALID_AGENT_TYPES: frozenset[str] = frozenset(("product", "price", "news", "fallback"))
 
+_EXPLICIT_PRODUCT_ALIASES_BY_KEY: dict[str, tuple[str, ...]] = {
+    "master-mini": ("ff master mini", "master mini", "master-mini", "master_mini"),
+    "master": ("master ultra", "master edu"),
+    "futurist-ultra": ("ff futurist ultra", "futurist ultra", "futurist-ultra", "futurist_ultra"),
+    "aegis": ("aegis edu", "aegis pro"),
+    "aegis-ultra": ("ff aegis ultra", "aegis ultra", "aegis-ultra", "aegis_ultra"),
+    "aegis-max": ("ff aegis max", "aegis max", "aegis-max", "aegis_max"),
+    "aegis-mega-d": (
+        "fx aegis mega d", "ff aegis mega d", "aegis mega d", "mega d",
+        "aegis-mega-d", "aegis_mega_d", "mega-d", "mega_d",
+    ),
+    "ff91": ("ff 91", "ff91", "91 2.0"),
+    "navi": ("ff navi", "navi"),
+}
+
 _PRODUCT_EXPLICIT_ALIASES: tuple[str, ...] = (
-    "mega d",
-    "mega-d",
-    "mega_d",
-    "aegis max",
-    "aegis ultra",
+    *(alias for aliases in _EXPLICIT_PRODUCT_ALIASES_BY_KEY.values() for alias in aliases),
     "aegis",
-    "futurist ultra",
     "futurist",
-    "aegis edu",
-    "aegis pro",
     "ff aegis",
     "ff master",
-    "master ultra",
-    "master edu",
-    "ff 91",
-    "ff91",
-    "navi",
 )
 
 
@@ -430,15 +436,33 @@ def _apply_page_product_context(
     An explicitly named product always wins. Price/news-only and fallback plans are
     left unchanged because no product retrieval pass is present to safely replace.
     """
+    lowered_text = user_text.lower()
+    product_items = [item for item in plan.loop_plan if item.agent == "product"]
+
+    explicit_keys = {
+        product_key
+        for product_key, aliases in _EXPLICIT_PRODUCT_ALIASES_BY_KEY.items()
+        if any(alias in lowered_text for alias in aliases)
+    }
+
+    # Correct an unambiguous, explicitly named model deterministically. This
+    # prevents compound names such as Aegis Mega D or Futurist Ultra from being
+    # sent to their generic family store after an occasional model misroute.
+    if len(product_items) == 1 and len(explicit_keys) == 1:
+        explicit_key = next(iter(explicit_keys))
+        previous_key = (product_items[0].product_key or "").strip().lower()
+        if previous_key != explicit_key:
+            product_items[0].product_key = explicit_key
+            return previous_key or None
+        return None
+
     page_product_key = _get_page_product_key(page_url)
     if not page_product_key:
         return None
 
-    lowered_text = user_text.lower()
     if any(alias in lowered_text for alias in _PRODUCT_EXPLICIT_ALIASES):
         return None
 
-    product_items = [item for item in plan.loop_plan if item.agent == "product"]
     if len(product_items) != 1:
         return None
 
@@ -457,9 +481,9 @@ def _build_loop_passes_from_plan(loop_plan: list[LoopPlanItem]) -> list[LoopPass
 
     if has_fallback and has_others:
         logger.warning(
-            "loop_plan contains fallback mixed with other agents; keeping only fallback"
+            "loop_plan contains fallback mixed with other agents; discarding fallback"
         )
-        return [LoopPass(domain="fallback", vector_store_ids=[], focus_label="fallback")]
+        loop_plan = [item for item in loop_plan if item.agent != "fallback"]
 
     passes: list[LoopPass] = []
     queries: dict[tuple[str, str | None], str] = {}
@@ -552,7 +576,7 @@ def _build_loop_domain_agent(plan: PlanOutput, loop_pass: LoopPass) -> Agent:
     """One domain Agent: product manual, price store, news store, or fallback (no tools)."""
     domain = loop_pass.domain
     input_lang = plan.input_lang
-    query_text = plan.query_text
+    query_text = loop_pass.query_text or plan.query_text
 
     if domain == "fallback":
         template = _INSTRUCTION_TEMPLATES["fallback"]
@@ -1273,121 +1297,6 @@ class FFRobotConverter(ResponseStreamConverter):
         )
 
 
-# ── In-memory Store ──────────────────────────────────────────────────────
-
-
-class InMemoryStore(Store[dict]):
-    """Minimal in-memory store for development. Replace with a
-    database-backed store (Postgres, MySQL, etc.) for production.
-    """
-
-    def __init__(self) -> None:
-        self.threads: dict[str, ThreadMetadata] = {}
-        self.items: dict[str, list[ThreadItem]] = defaultdict(list)
-        self.agent_traces: dict[str, list[dict]] = defaultdict(list)
-        self.thread_langs: dict[str, str] = {}
-
-    async def load_thread(self, thread_id: str, context: dict) -> ThreadMetadata:
-        if thread_id not in self.threads:
-            raise NotFoundError(f"Thread {thread_id} not found")
-        return self.threads[thread_id]
-
-    async def save_thread(self, thread: ThreadMetadata, context: dict) -> None:
-        is_new = thread.id not in self.threads
-        self.threads[thread.id] = thread
-        if is_new:
-            front_logger.info("[thread=%s] new thread created", thread.id)
-
-    async def load_threads(
-        self, limit: int, after: str | None, order: str, context: dict
-    ) -> Page[ThreadMetadata]:
-        return self._paginate(
-            list(self.threads.values()),
-            after, limit, order,
-            sort_key=lambda t: t.created_at,
-            cursor_key=lambda t: t.id,
-        )
-
-    async def load_thread_items(
-        self, thread_id: str, after: str | None, limit: int, order: str, context: dict
-    ) -> Page[ThreadItem]:
-        return self._paginate(
-            self.items.get(thread_id, []),
-            after, limit, order,
-            sort_key=lambda i: i.created_at,
-            cursor_key=lambda i: i.id,
-        )
-
-    async def add_thread_item(
-        self, thread_id: str, item: ThreadItem, context: dict
-    ) -> None:
-        self.items[thread_id].append(item)
-        item_type = type(item).__name__
-        preview = ""
-        if hasattr(item, "content") and isinstance(item.content, list):
-            preview = " ".join(
-                getattr(part, "text", "")[:80] for part in item.content[:2]
-            ).strip()
-        front_logger.debug(
-            "[thread=%s] +item type=%s id=%s preview=%r",
-            thread_id, item_type, getattr(item, "id", "?"), preview[:150],
-        )
-
-    async def save_item(
-        self, thread_id: str, item: ThreadItem, context: dict
-    ) -> None:
-        items = self.items[thread_id]
-        for idx, existing in enumerate(items):
-            if existing.id == item.id:
-                items[idx] = item
-                return
-        items.append(item)
-
-    async def load_item(
-        self, thread_id: str, item_id: str, context: dict
-    ) -> ThreadItem:
-        for item in self.items.get(thread_id, []):
-            if item.id == item_id:
-                return item
-        raise NotFoundError(f"Item {item_id} not found in thread {thread_id}")
-
-    async def delete_thread(self, thread_id: str, context: dict) -> None:
-        self.threads.pop(thread_id, None)
-        self.items.pop(thread_id, None)
-
-    async def delete_thread_item(
-        self, thread_id: str, item_id: str, context: dict
-    ) -> None:
-        self.items[thread_id] = [
-            item for item in self.items.get(thread_id, []) if item.id != item_id
-        ]
-
-    def _paginate(
-        self, rows: list, after: str | None, limit: int, order: str,
-        sort_key, cursor_key,
-    ):
-        sorted_rows = sorted(rows, key=sort_key, reverse=order == "desc")
-        start = 0
-        if after:
-            for idx, row in enumerate(sorted_rows):
-                if cursor_key(row) == after:
-                    start = idx + 1
-                    break
-        data = sorted_rows[start : start + limit]
-        has_more = start + limit < len(sorted_rows)
-        next_after = cursor_key(data[-1]) if has_more and data else None
-        return Page(data=data, has_more=has_more, after=next_after)
-
-    async def save_attachment(self, attachment: Attachment, context: dict) -> None:
-        raise NotImplementedError()
-
-    async def load_attachment(self, attachment_id: str, context: dict) -> Attachment:
-        raise NotImplementedError()
-
-    async def delete_attachment(self, attachment_id: str, context: dict) -> None:
-        raise NotImplementedError()
-
-
 # ── ChatKit Server ───────────────────────────────────────────────────────
 
 
@@ -1604,7 +1513,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             post_decision.recommendation_rule_id,
         )
 
-        self.store.agent_traces[thread.id].append({
+        await self.store.add_trace(thread.id, {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_message": user_text[:300],
             "workflow": "fast-answer",
@@ -1668,7 +1577,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         action_payload = getattr(action_obj, "payload", {}) or {}
 
         if action_type == "submit_lead":
-            lang = self.store.thread_langs.get(thread.id, "en")
+            lang = await self.store.get_language(thread.id)
             is_cn = lang == "cn"
             email = str(action_payload.get("email") or "").strip()
             phone = str(action_payload.get("phone") or "").strip()
@@ -1768,7 +1677,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
 
         # ── Lead-capture shortcut (triggered by x-ff-lead-capture header from SDK) ──
         if context.get("lead_capture"):
-            input_lang = self.store.thread_langs.get(thread.id, "en")
+            input_lang = await self.store.get_language(thread.id)
             reply_text = str(context.get("lead_reply_text") or "").strip()
             front_logger.info(
                 "[thread=%s] lead_capture → reply_text=%r → streaming lead widget",
@@ -1805,7 +1714,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 logger.exception("Preset answer lookup failed; continuing with normal chat")
         if fast_match:
             input_lang = detect_input_lang(user_text)
-            self.store.thread_langs[thread.id] = input_lang
+            await self.store.set_language(thread.id, input_lang)
             yield ProgressUpdateEvent(icon="sparkle", text="Found a prepared answer.")
             async for event in self._stream_fast_answer(thread, context, fast_match):
                 yield event
@@ -1839,6 +1748,21 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
         )
 
         plan_output: PlanOutput = plan_result.final_output
+        previous_product = _apply_page_product_context(
+            plan_output,
+            user_text=user_text,
+            page_url=page_url,
+        )
+        if previous_product:
+            front_logger.info(
+                "[thread=%s] product context corrected %s → %s",
+                thread.id,
+                previous_product,
+                next(
+                    (item.product_key for item in plan_output.loop_plan if item.agent == "product"),
+                    None,
+                ),
+            )
         plan_elapsed_ms = (time.perf_counter() - plan_started) * 1000
         front_logger.info(
             "[thread=%s] plan → input_lang=%s, loop_plan=%s, query_text=%s",
@@ -1848,7 +1772,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             plan_output.query_text[:120] if plan_output.query_text else "",
         )
 
-        self.store.thread_langs[thread.id] = plan_output.input_lang
+        await self.store.set_language(thread.id, plan_output.input_lang)
 
         if plan_output.clarification_question.strip():
             yield ThreadItemDoneEvent(item=AssistantMessageItem(
@@ -1856,7 +1780,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                 created_at=datetime.now(timezone.utc),
                 content=[AssistantMessageContent(text=plan_output.clarification_question.strip())],
             ))
-            self.store.agent_traces[thread.id].append({
+            await self.store.add_trace(thread.id, {
                 "timestamp": datetime.now(timezone.utc).isoformat(), "user_message": user_text[:300],
                 "workflow": "clarification", "retrieval_mode": CHAT_RETRIEVAL_MODE,
                 "plan": plan_output.model_dump(), "plan_elapsed_ms": plan_elapsed_ms,
@@ -1930,8 +1854,18 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
                         if not pass_info.vector_store_ids:
                             raise ValueError(f"No store configured for {pass_info.focus_label}")
                         domain_agent = _build_loop_domain_agent(plan_output, pass_info)
+                        pass_conversation = list(retrieval_conversation)
+                        focused_query = pass_info.query_text or plan_output.query_text
+                        for item_idx in range(len(pass_conversation) - 1, -1, -1):
+                            item = pass_conversation[item_idx]
+                            if isinstance(item, dict) and item.get("role") == "user":
+                                pass_conversation[item_idx] = {
+                                    "role": "user",
+                                    "content": focused_query,
+                                }
+                                break
                         pass_result = await asyncio.wait_for(
-                            Runner.run(domain_agent, retrieval_conversation, context=agent_context,
+                            Runner.run(domain_agent, pass_conversation, context=agent_context,
                                        run_config=RunConfig(trace_metadata={"__trace_source__": "agent-builder"})),
                             timeout=LOOP_PASS_TIMEOUT_SECONDS,
                         )
@@ -2122,7 +2056,7 @@ class FFRobotChatKitServer(ChatKitServer[dict]):
             post_decision.recommendation_rule_id,
         )
 
-        self.store.agent_traces[thread.id].append({
+        await self.store.add_trace(thread.id, {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_message": user_text[:300],
             "workflow": "plan-loop-output",
@@ -2202,7 +2136,7 @@ def create_chatkit_server(
     homepage_prompts_storage: HomepagePromptsStorage | None = None,
 ) -> FFRobotChatKitServer:
     return FFRobotChatKitServer(
-        store=InMemoryStore(),
+        store=create_chat_store(),
         lead_storage=lead_storage,
         recommendation_storage=recommendation_storage,
         homepage_prompts_storage=homepage_prompts_storage,

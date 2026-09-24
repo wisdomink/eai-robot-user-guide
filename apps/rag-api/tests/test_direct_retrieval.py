@@ -83,6 +83,24 @@ class RetrievalTests(unittest.IsolatedAsyncioTestCase):
         result = h._build_loop_passes_from_plan(plan)
         self.assertEqual([r.query_text for r in result], ['aegis-max payload', 'aegis-mega-d payload'])
 
+    def test_mixed_fallback_keeps_valid_retrieval_passes(self):
+        plan = [
+            h.LoopPlanItem(agent='product', product_key='aegis-max', query_text='Max payload'),
+            h.LoopPlanItem(agent='fallback'),
+        ]
+        with patch.dict(h._SUPPORT_AGENT_CONFIGS['aegis-max'], vector_store_id='vs_max'):
+            result = h._build_loop_passes_from_plan(plan)
+        self.assertEqual([(item.domain, item.product_key) for item in result], [('product', 'aegis-max')])
+
+    def test_domain_agent_uses_focused_pass_query(self):
+        plan = h.PlanOutput(input_lang='en', query_text='compare Max and Mega D')
+        loop = h.LoopPass(
+            'product', ['vs_max'], 'Max', 'aegis-max', 'Aegis Max payload only'
+        )
+        agent = h._build_loop_domain_agent(plan, loop)
+        self.assertIn('Aegis Max payload only', agent.instructions)
+        self.assertNotIn('compare Max and Mega D', agent.instructions)
+
 
 class CitationTests(unittest.TestCase):
     def setUp(self):
@@ -249,9 +267,14 @@ class SearchEndpointTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(main, '_retrieval', service), \
              patch.object(main, 'OPENAI_VECTOR_STORE_ROBOT_ALL_ID', 'vs_all'), \
              patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_MAX_ID', 'vs_max'), \
+             patch.object(main, 'OPENAI_VECTOR_STORE_MASTER_MINI_ID', 'vs_master_mini'), \
              patch.object(main, '_FILE_INFO_MAP', {'spec.md': {'slug': '/aegis-max/spec', 'title': 'Specs', 'sectionId': 'manual'}}):
             response = await main.search_endpoint(q='charge', limit=10)
-        self.assertEqual(service.search.await_count, 2)
+        self.assertEqual(service.search.await_count, 3)
+        self.assertEqual(
+            [call.kwargs['vector_store_id'] for call in service.search.await_args_list],
+            ['vs_all', 'vs_max', 'vs_master_mini'],
+        )
         self.assertTrue(all(call.kwargs['rewrite_query'] for call in service.search.await_args_list))
         self.assertEqual(len(response['results']), 1)
         self.assertEqual(response['results'][0]['pageSlug'], '/aegis-max/spec')

@@ -35,6 +35,43 @@ class MegaDRoutingTests(unittest.TestCase):
                 handler._apply_page_product_context(plan, user_text=f"{name}怎么充电？", page_url="https://example.com/aegis-max/charging")
                 self.assertEqual(plan.loop_plan[0].product_key, "aegis-mega-d")
 
+    def test_explicit_mega_d_corrects_generic_aegis_plan(self):
+        plan = self.plan("aegis")
+        handler._apply_page_product_context(
+            plan,
+            user_text="FX Aegis Mega D 怎么充电？",
+            page_url="https://example.com/aegis/charging",
+        )
+        self.assertEqual(plan.loop_plan[0].product_key, "aegis-mega-d")
+
+    def test_compound_model_names_correct_generic_single_product_plans(self):
+        cases = (
+            ("Aegis Ultra 怎么充电？", "aegis", "aegis-ultra"),
+            ("Aegis Max 怎么充电？", "aegis", "aegis-max"),
+            ("Futurist Ultra 怎么充电？", "futurist", "futurist-ultra"),
+            ("Master Ultra 怎么充电？", "master-mini", "master"),
+            ("FF 91 如何充电？", "futurist", "ff91"),
+            ("NAVI 怎么连接？", "aegis", "navi"),
+        )
+        for question, planned, expected in cases:
+            with self.subTest(question=question):
+                plan = self.plan(planned)
+                handler._apply_page_product_context(
+                    plan,
+                    user_text=question,
+                    page_url="https://example.com/",
+                )
+                self.assertEqual(plan.loop_plan[0].product_key, expected)
+
+    def test_multiple_explicit_models_do_not_force_single_product_correction(self):
+        plan = self.plan("aegis")
+        handler._apply_page_product_context(
+            plan,
+            user_text="比较 Aegis Max 和 Aegis Ultra",
+            page_url="https://example.com/aegis/",
+        )
+        self.assertEqual(plan.loop_plan[0].product_key, "aegis")
+
     def test_comparison_is_not_overridden_by_page(self):
         plan = self.plan("aegis-mega-d", "aegis-max")
         handler._apply_page_product_context(plan, user_text="比较两款的载荷", page_url="https://example.com/aegis/charging")
