@@ -2,7 +2,7 @@
 
 <div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
-| Type | Specification Parameters | Geek | Education | Professional |
+| Type | Specification Parameters | Master Mini | Master Mini Pro | Master Mini Ultra |
 | --- | --- | --- | --- | --- |
 | Basic Parameters | Height (when standing upright) | 0.95m | 0.95m | 0.95m |
 | Basic Parameters | Weight | About 19.5kg | About 19.5kg | About 19.5kg |

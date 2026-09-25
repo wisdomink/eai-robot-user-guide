@@ -1,6 +1,6 @@
 # FF Master Mini User Manual
 
-*Humanoid robot development platform — Geek, Education and Professional editions*
+*Humanoid robot development platform — Master Mini, Master Mini Pro and Master Mini Ultra*
 
 FF Master Mini is a humanoid robot development platform for competitions, education, entertainment, and related scenarios. It is affordable, lightweight, and durable.
 
@@ -9,9 +9,9 @@ FF Master Mini is a humanoid robot development platform for competitions, educat
 ## Before You Start
 
 - Read [Safety & Warnings](/master-mini/safety).
-- Compare the Geek, Education and Professional editions in [Product Specifications](/master-mini/specifications).
+- Compare Master Mini, Master Mini Pro and Master Mini Ultra in [Product Specifications](/master-mini/specifications).
 - Review [Operating Modes](/master-mini/modes) before using the [body controls](/master-mini/body-controls) or joystick.
-- Follow [App & Terminal Connection](/master-mini/connection) and [Battery Charging](/master-mini/charging).
+- Follow [Battery Charging](/master-mini/charging) before first use.
 
 ## Product Composition
 
@@ -47,4 +47,3 @@ Built-in Agents. FF Master Mini includes 6 official Agents, which work like read
 </div>
 
 Safety Protection. When the robot enters an uncontrollable state, it automatically switches to DAMP mode to prevent damage. In dangerous situations, the joystick, App, and back-panel buttons can all trigger a soft emergency stop.
-

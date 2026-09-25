@@ -620,11 +620,6 @@
             "file": "master-mini/master-mini-xbox-controller.md"
           },
           {
-            "title": "App & Terminal Connection",
-            "slug": "/master-mini/connection",
-            "file": "master-mini/master-mini-connection.md"
-          },
-          {
             "title": "Battery Charging",
             "slug": "/master-mini/charging",
             "file": "master-mini/master-mini-charging.md"

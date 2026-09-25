@@ -2,7 +2,7 @@
 
 <div class="overflow-x-auto" role="region" aria-label="Scrollable table" tabindex="0">
 
-| Parameter | Geek | Education | Professional |
+| Parameter | Master Mini | Master Mini Pro | Master Mini Ultra |
 | --- | --- | --- | --- |
 | Processor | High-performance ARM Processor | Jetson Orin NX 8GB | Jetson AGX Orin 32GB |
 | Computing performance | 1×GoldP@3.2GHz4×Gold@2.8GHz3×Silver@2.0GHz48 TOPS (Dense) | 6-core Cortex-A78AE CPU@2GHzAI performance: 117 TOPS | 8-core Cortex-A78AE CPU@2.2GHzAI performance: 200 TOPS |
