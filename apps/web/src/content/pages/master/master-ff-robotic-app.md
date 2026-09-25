@@ -1,6 +1,6 @@
 # 3.7 FF Robotic APP Manual
 
-FF Robotic APP is the official companion control application for the FF Master robot.
+FF Robotic APP is the official companion control application for the FF Master Classic robot.
 
 Through FF Robotic APP, users can perform full lifecycle management of the robot, including:
 

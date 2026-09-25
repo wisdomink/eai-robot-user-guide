@@ -10,7 +10,7 @@ To extend the product's service life, do not use it in high-temperature or high-
 
 This manual aims to include functional descriptions and usage instructions for the product as comprehensively as possible. However, due to continuous improvements in functionality and design changes, there may be discrepancies between the actual product and the manual content. If there are differences between the actual product and this manual in terms of colour, appearance, etc., please refer to the actual product.
 
-This manual applies to FX Aegis Max. The product model code has not yet been assigned.
+This manual applies to FX Aegis Mega A. The product model code has not yet been assigned.
 
 ## Operating Environment and Movement
 

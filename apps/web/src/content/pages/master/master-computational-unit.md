@@ -2,7 +2,7 @@
 
 | Type | On-board computer |
 | --- | --- |
-| FF Master / FF Master Edu | One operation and control computing unit (PC1) and one interactive computing unit (PC3) |
+| FF Master Classic / FF Master Edu | One operation and control computing unit (PC1) and one interactive computing unit (PC3) |
 | FF Master Ultra | One operation and control computing unit (PC1), one interactive computing unit (PC3), and one development computing unit (PC2) |
 
 | Parameter | Development Computing Unit (PC2) |

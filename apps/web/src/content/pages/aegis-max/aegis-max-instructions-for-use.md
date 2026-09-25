@@ -26,7 +26,7 @@
 
 - Handle the robot, battery, remote control and charger cradle gently during transport.
 
-- After transport, check that the FX Aegis Max emergency stop button and battery power button have not been triggered.
+- After transport, check that the FX Aegis Mega A emergency stop button and battery power button have not been triggered.
 
 ![Unpacking the flight case](/images/aegis-max/aegis-mega-a-d1-09.png)
 
@@ -100,7 +100,7 @@ A flashing white status indicator means startup is in progress. A steady white l
 
 - The dual batteries feature mutual wake-up. In dual-battery mode, only both-on or both-off states are supported; one battery on and one off is not supported.
 
-- When FX Aegis Max is powered on with a single battery, inserting another battery — powered on or off — will automatically activate and connect it.
+- When FX Aegis Mega A is powered on with a single battery, inserting another battery — powered on or off — will automatically activate and connect it.
 
 ### Power On the Remote Control
 

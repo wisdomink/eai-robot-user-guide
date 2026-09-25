@@ -28,7 +28,9 @@ from chatkit.store import NotFoundError
 from app.core.config import (
     LOG_DIR,
     OPENAI_API_KEY,
+    OPENAI_VECTOR_STORE_AEGIS_HYPER_ID,
     OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+    OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
     OPENAI_VECTOR_STORE_MASTER_MINI_ID,
     OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
     SIDEBAR_PATH,
@@ -282,7 +284,7 @@ async def search_endpoint(
         return {"results": []}
 
     # The legacy all-products store remains the primary search index.  Aegis
-    # Max and Master Mini are intentionally maintained in their own stores,
+    # Max, Mega D, Hyper, and Master Mini are intentionally maintained in their own stores,
     # so include them here instead of requiring a destructive re-sync of the
     # legacy all-products store whenever either manual changes.
     vector_store_ids = list(dict.fromkeys(
@@ -290,6 +292,8 @@ async def search_endpoint(
         for vector_store_id in (
             OPENAI_VECTOR_STORE_ROBOT_ALL_ID,
             OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
+            OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
+            OPENAI_VECTOR_STORE_AEGIS_HYPER_ID,
             OPENAI_VECTOR_STORE_MASTER_MINI_ID,
         )
         if vector_store_id

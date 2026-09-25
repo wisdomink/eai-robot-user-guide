@@ -404,14 +404,14 @@
     ]
   },
   "master": {
-    "title": "FF Master",
+    "title": "FF Master Classic",
     "sections": [
       {
         "id": "master-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FF Master / Master EDU / Master Ultra Edition Instruction Manual V1.0",
+            "title": "FF Master Classic / Master EDU / Master Ultra Edition Instruction Manual V1.0",
             "slug": "/master",
             "file": "master/master-home.md"
           }
@@ -430,7 +430,7 @@
       },
       {
         "id": "master-about",
-        "title": "2. About FF Master",
+        "title": "2. About FF Master Classic",
         "pages": [
           {
             "title": "2.1 Packing List",
@@ -980,14 +980,14 @@
     ]
   },
   "aegis-max": {
-    "title": "FX Aegis Max",
+    "title": "FX Aegis Mega A",
     "sections": [
       {
         "id": "aegis-max-home",
         "title": "Home",
         "pages": [
           {
-            "title": "FX Aegis Max User Manual",
+            "title": "FX Aegis Mega A User Manual",
             "slug": "/aegis-max",
             "file": "aegis-max/aegis-max-home.md"
           }
@@ -1240,6 +1240,86 @@
             "title": "Disposal",
             "slug": "/aegis-mega-d/disposal",
             "file": "aegis-mega-d/aegis-mega-d-disposal.md"
+          }
+        ]
+      }
+    ]
+  },
+  "aegis-hyper": {
+    "title": "FX Aegis Hyper",
+    "sections": [
+      {
+        "id": "aegis-hyper-home",
+        "title": "Home",
+        "pages": [
+          {
+            "title": "FX Aegis Hyper User Manual",
+            "slug": "/aegis-hyper",
+            "file": "aegis-hyper/aegis-hyper-home.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-hyper-safety",
+        "title": "Safety",
+        "pages": [
+          {
+            "title": "Statement & Reading Tips",
+            "slug": "/aegis-hyper/safety",
+            "file": "aegis-hyper/aegis-hyper-safety.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-hyper-product",
+        "title": "Product Description",
+        "pages": [
+          {
+            "title": "Introduction & Specifications",
+            "slug": "/aegis-hyper/introduction",
+            "file": "aegis-hyper/aegis-hyper-introduction.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-hyper-operation",
+        "title": "Operation Guide",
+        "pages": [
+          {
+            "title": "Operation",
+            "slug": "/aegis-hyper/operation",
+            "file": "aegis-hyper/aegis-hyper-operation.md"
+          }
+        ]
+      },
+      {
+        "id": "aegis-hyper-care",
+        "title": "Care & Support",
+        "pages": [
+          {
+            "title": "Precautions",
+            "slug": "/aegis-hyper/precautions",
+            "file": "aegis-hyper/aegis-hyper-precautions.md"
+          },
+          {
+            "title": "FAQs",
+            "slug": "/aegis-hyper/faqs",
+            "file": "aegis-hyper/aegis-hyper-faqs.md"
+          },
+          {
+            "title": "Transport & Storage",
+            "slug": "/aegis-hyper/transport-storage",
+            "file": "aegis-hyper/aegis-hyper-transport-storage.md"
+          },
+          {
+            "title": "Service & Warranty",
+            "slug": "/aegis-hyper/service-warranty",
+            "file": "aegis-hyper/aegis-hyper-service-warranty.md"
+          },
+          {
+            "title": "Disposal",
+            "slug": "/aegis-hyper/disposal",
+            "file": "aegis-hyper/aegis-hyper-disposal.md"
           }
         ]
       }

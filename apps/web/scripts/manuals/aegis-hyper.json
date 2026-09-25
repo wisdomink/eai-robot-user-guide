@@ -1,0 +1,53 @@
+{
+  "id": "aegis-hyper",
+  "title": "FX Aegis Hyper",
+  "source": "output/FX_Aegis_Hyper_User_Manual.docx",
+  "images": {
+    "directory": "aegis-hyper",
+    "skip": [3, 23, 26, 27, 28],
+    "altText": {
+      "1": "FX Aegis Hyper robot",
+      "4": "FX Aegis Hyper dimensions and package contents",
+      "5": "FX Aegis Hyper components",
+      "7": "FX Aegis Hyper power and emergency stop controls",
+      "8": "FX Aegis Hyper intelligent controller",
+      "9": "FX Aegis Hyper intelligent controller interfaces",
+      "13": "FX Aegis Hyper battery replacement procedure",
+      "14": "FX Aegis Hyper startup posture",
+      "15": "FX Aegis Hyper remote controller controls",
+      "18": "FX Aegis Hyper controller settings",
+      "24": "FX Aegis Hyper carrying points"
+    }
+  },
+  "replacements": [],
+  "ignoreText": [
+    "FX Aegis Hyper User Manual",
+    "Content",
+    "1 Introduction",
+    "2 Operation",
+    "3 Precautions",
+    "4 FAQs",
+    "5 Transport and Storage",
+    "6 Service and Warranty",
+    "7 Disposal"
+  ],
+  "subheadings": [
+    "Reading Tips",
+    "Description of Symbols",
+    "Help Acquiring"
+  ],
+  "home": {
+    "subtitle": "Intelligent Quadruped Robot",
+    "introduction": "This manual covers the product overview, specifications, charging, startup, motion control, emergency handling, payload development, precautions, troubleshooting, transportation, storage, warranty, and disposal information for FX Aegis Hyper. Read the safety guidance before operating the robot."
+  },
+  "chapters": [
+    { "file": "safety.md", "title": "Statement and Reading Tips", "sourcePages": [2] },
+    { "file": "introduction.md", "title": "Introduction", "sourcePages": [4, 5, 6, 7, 8, 9, 10, 11] },
+    { "file": "operation.md", "title": "Operation", "sourcePages": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21] },
+    { "file": "precautions.md", "title": "Precautions", "sourcePages": [22] },
+    { "file": "faqs.md", "title": "FAQs", "sourcePages": [23] },
+    { "file": "transport-storage.md", "title": "Transport and Storage", "sourcePages": [24] },
+    { "file": "service-warranty.md", "title": "Service and Warranty", "sourcePages": [25, 26, 27] },
+    { "file": "disposal.md", "title": "Disposal", "sourcePages": [28] }
+  ]
+}

@@ -157,6 +157,7 @@ uvicorn app.main:app --reload --port 8000
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
 | `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` | ✅ | Aegis Max 产品文档库 |
 | `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID` | ✅ | FX Aegis Mega D 产品文档库；Agent 路由 key 为 `aegis-mega-d` |
+| `OPENAI_VECTOR_STORE_AEGIS_HYPER_ID` | ✅ | FX Aegis Hyper 产品文档库；Agent 路由 key 为 `aegis-hyper` |
 | `OPENAI_VECTOR_STORE_FF91_ID` | ✅ | FF 91 2.0 产品文档库 |
 | `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索主库；`create_vector_store.py` 同步目标） |
 

@@ -76,7 +76,7 @@ const SECTIONS = [
     endBefore: /^2\.\s{1,2}[A-Z]/m,
   },
 
-  // ── Chapter 2: About FF Master ─────────────────────────────────────────
+  // ── Chapter 2: About FF Master Classic ─────────────────────────────────
   {
     chapter: 2,
     file: 'packing-list.md',
@@ -139,7 +139,7 @@ const SECTIONS = [
           '| Configuration | Description |',
           '| --- | --- |',
           '| Type | On-board computer |',
-          '| FF Master / FF Master Edu | One operation and control computing unit (PC1) and one interactive computing unit (PC3) |',
+          '| FF Master Classic / FF Master Edu | One operation and control computing unit (PC1) and one interactive computing unit (PC3) |',
           '| FF Master Ultra | One operation and control computing unit (PC1), one interactive computing unit (PC3) and one development computing unit (PC2) |',
         ].join('\n'),
       },
@@ -228,7 +228,7 @@ const SECTIONS = [
         hardcoded: [
           '| Item | Perception Configuration | Perception Ability |',
           '| --- | --- | --- |',
-          '| FF Master / FF Master EDU | Interactive RGB Camera | Precision environmental data in real time |',
+          '| FF Master Classic / FF Master EDU | Interactive RGB Camera | Precision environmental data in real time |',
           '| FF Master Ultra | LiDAR; RGB-D Depth Camera; Front Stereo RGB Cameras; Front Interactive RGB Camera; Rear RGB Camera | LiDAR: a. Captures high-precision environmental data in real time; b. Rapidly detects and measures surrounding objects; c. Outputs high-resolution point-cloud data. Additional Camera Suite: a. RGB-D Depth Camera provides accurate 3-D spatial information; b. Stereo RGB Cameras enhances 3-D perception and distance-estimation precision; c. Rear RGB Camera covers rear field eliminating blind spots; d. Interactive Cameras enable visual recognition and response during human-robot interaction. |',
         ].join('\n'),
       },
@@ -248,7 +248,7 @@ const SECTIONS = [
         headerPattern: /Joint Name\s{2,}Joint Limit/,
         replaceToEnd: true,
         hardcoded: [
-          '| Joint Name | FF Master / FF Master Edu | FF Master Ultra |',
+          '| Joint Name | FF Master Classic / FF Master Edu | FF Master Ultra |',
           '| --- | --- | --- |',
           '| Arm Workspace | J1(Shoulder pitch): ±146.5° | J1(Shoulder pitch): ±146.5° |',
           '| | J2(Shoulder roll): -3.5~+174.5° | J2(Shoulder roll): -3.5~+174.5° |',
@@ -293,7 +293,7 @@ const SECTIONS = [
         headerPattern: /Item\s{2,}FF Master\s{2,}FF Master Edu\s{2,}FF Master Ultra/,
         replaceToEnd: true,
         hardcoded: [
-          '| Item | Sub-item | FF Master | FF Master Edu | FF Master Ultra |',
+          '| Item | Sub-item | FF Master Classic | FF Master Edu | FF Master Ultra |',
           '| --- | --- | --- | --- | --- |',
           '| Overall | Dimensions | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm | 1310(H)*460(W)*210(L)mm |',
           '| | Height | Approx. 1.31 m | Approx. 1.31 m | Approx. 1.31 m |',
@@ -966,7 +966,7 @@ function convertToMarkdown(rawText) {
       continue
     }
 
-    // Label lines: standalone labels like "FF Master:", "Type:", "Parameter"
+    // Label lines: standalone labels like "FF Master Classic:", "Type:", "Parameter"
     // Short lines at col 0 ending with ":" that aren't numbered items.
     // These must NOT be merged into the previous paragraph.
     // A blank line before the label ensures markdown renders it as a new paragraph

@@ -9,6 +9,7 @@ export const DEFAULT_MANUAL_DOWNLOAD_URLS: Partial<Record<ProductId, string>> = 
   'aegis-ultra': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Classic_Ultra_User_Manual.pdf',
   'aegis-max': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf',
   'aegis-mega-d': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Mega_D_User_Manual.pdf',
+  'aegis-hyper': 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Hyper_User_Manual.pdf',
   ff91: '',
   navi: 'https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf',
 }

@@ -74,6 +74,7 @@ from app.core.config import (
     OPENAI_VECTOR_STORE_AEGIS_ID,
     OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
     OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
+    OPENAI_VECTOR_STORE_AEGIS_HYPER_ID,
     OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     OPENAI_VECTOR_STORE_FF91_ID,
     OPENAI_VECTOR_STORE_NAVI_ID,
@@ -325,7 +326,7 @@ def _build_plan_agent(page_url: str = "") -> Agent:
 
 _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
     "master": {
-        "name": "FF Master Product Agent",
+        "name": "FF Master Classic Product Agent",
         "instructions_file": "product-master",
         "vector_store_id": OPENAI_VECTOR_STORE_MASTER_ID,
     },
@@ -355,7 +356,7 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID,
     },
     "aegis-max": {
-        "name": "FF Aegis Max Product Agent",
+        "name": "FX Aegis Mega A Product Agent",
         "instructions_file": "product-aegis-max",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_MAX_ID,
     },
@@ -363,6 +364,11 @@ _SUPPORT_AGENT_CONFIGS: dict[str, dict] = {
         "name": "FX Aegis Mega D Product Agent",
         "instructions_file": "product-aegis-mega-d",
         "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID,
+    },
+    "aegis-hyper": {
+        "name": "FX Aegis Hyper Product Agent",
+        "instructions_file": "product-aegis-hyper",
+        "vector_store_id": OPENAI_VECTOR_STORE_AEGIS_HYPER_ID,
     },
     "ff91": {
         "name": "FF 91 2.0 Product Agent",
@@ -396,14 +402,26 @@ _VALID_AGENT_TYPES: frozenset[str] = frozenset(("product", "price", "news", "fal
 
 _EXPLICIT_PRODUCT_ALIASES_BY_KEY: dict[str, tuple[str, ...]] = {
     "master-mini": ("ff master mini", "master mini", "master-mini", "master_mini"),
-    "master": ("master ultra", "master edu"),
+    "master": ("ff master classic", "master classic", "master ultra", "master edu"),
     "futurist-ultra": ("ff futurist ultra", "futurist ultra", "futurist-ultra", "futurist_ultra"),
     "aegis": ("aegis edu", "aegis pro"),
     "aegis-ultra": ("ff aegis ultra", "aegis ultra", "aegis-ultra", "aegis_ultra"),
-    "aegis-max": ("ff aegis max", "aegis max", "aegis-max", "aegis_max"),
+    "aegis-max": (
+        "fx aegis mega a",
+        "aegis mega a",
+        "mega a",
+        "ff aegis max",
+        "aegis max",
+        "aegis-max",
+        "aegis_max",
+    ),
     "aegis-mega-d": (
         "fx aegis mega d", "ff aegis mega d", "aegis mega d", "mega d",
         "aegis-mega-d", "aegis_mega_d", "mega-d", "mega_d",
+    ),
+    "aegis-hyper": (
+        "fx aegis hyper", "ff aegis hyper", "aegis hyper",
+        "aegis-hyper", "aegis_hyper",
     ),
     "ff91": ("ff 91", "ff91", "91 2.0"),
     "navi": ("ff navi", "navi"),

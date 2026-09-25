@@ -25,7 +25,7 @@
 ### 3.6.3.1 Voice Chat
 
 - Everyday topics such as news, weather, and surrounding environment.
-- FF Master topics including personality, preferences, and product details.
+- FF Master Classic topics including personality, preferences, and product details.
 - Knowledge-base topics depending on system configuration.
 - Supports multi-language interaction including English, Chinese, Spanish, French, and Italian.
 

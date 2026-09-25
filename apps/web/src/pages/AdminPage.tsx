@@ -37,24 +37,26 @@ type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads'
 const RECO_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF All-New Futurist' },
   { value: 'futurist-ultra', label: 'FF All-New Futurist Ultra' },
-  { value: 'master', label: 'FF Master' },
+  { value: 'master', label: 'FF Master Classic' },
   { value: 'master-mini', label: 'FF Master Mini' },
   { value: 'aegis', label: 'FX Aegis Classic' },
   { value: 'aegis-ultra', label: 'FX Aegis Classic Ultra' },
   { value: 'aegis-mega-d', label: 'FX Aegis Mega D' },
   { value: 'ff91', label: 'FF 91 2.0' },
+  { value: 'aegis-hyper', label: 'FX Aegis Hyper' },
   { value: 'navi', label: 'FX Navi' },
 ]
 
 const LEAD_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF All-New Futurist' },
   { value: 'futurist-ultra', label: 'FF All-New Futurist Ultra' },
-  { value: 'master', label: 'FF Master' },
+  { value: 'master', label: 'FF Master Classic' },
   { value: 'master-mini', label: 'FF Master Mini' },
   { value: 'aegis', label: 'FX Aegis Classic' },
   { value: 'aegis-ultra', label: 'FX Aegis Classic Ultra' },
   { value: 'aegis-mega-d', label: 'FX Aegis Mega D' },
   { value: 'ff91', label: 'FF 91 2.0' },
+  { value: 'aegis-hyper', label: 'FX Aegis Hyper' },
   { value: 'navi', label: 'FX Navi' },
 ]
 

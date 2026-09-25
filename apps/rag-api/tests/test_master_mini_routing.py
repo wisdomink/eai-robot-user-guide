@@ -59,6 +59,17 @@ class MasterMiniRoutingTests(unittest.TestCase):
                 )
                 self.assertEqual(plan.loop_plan[0].product_key, "master-mini")
 
+    def test_explicit_master_classic_corrects_master_mini_plan(self):
+        for name in ("FF Master Classic", "Master Classic"):
+            with self.subTest(name=name):
+                plan = self.plan("master-mini")
+                handler._apply_page_product_context(
+                    plan,
+                    user_text=f"{name} 怎么充电？",
+                    page_url="https://example.com/master-mini/charging",
+                )
+                self.assertEqual(plan.loop_plan[0].product_key, "master")
+
     def test_comparison_uses_separate_master_stores(self):
         with patch.dict(
             handler._SUPPORT_AGENT_CONFIGS["master"],

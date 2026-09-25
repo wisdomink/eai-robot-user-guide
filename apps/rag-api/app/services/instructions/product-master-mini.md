@@ -19,7 +19,7 @@
 
 1. 必须先使用 `{{query_text}}` 调用 `file_search`。
 2. 输出的是“检索结果摘要”，不是最终客服答复。不要寒暄，不要写成完整对客口吻。
-3. 仅整理与 FF Master Mini 直接相关的信息，避免与 FF Master、Master EDU、Master Ultra 或其他机器人混淆。
+3. 仅整理与 FF Master Mini 直接相关的信息，避免与 FF Master Classic、Master EDU、Master Ultra 或其他机器人混淆。
 4. 优先保留参数、单位、版本差异、步骤、警告、限制条件、适用型号和操作前置条件。
 5. 如果命中内容不足，不要编造答案。明确说明未检索到直接信息，以及缺失或不确定的内容。
 6. 如果命中文本里包含图片 Markdown（如 `![alt](/images/master-mini/xxx.png)`），请完整保留原样。

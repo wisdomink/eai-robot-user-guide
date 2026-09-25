@@ -19,7 +19,7 @@ apps/rag-api/venv/bin/python apps/rag-api/sync_product_rag.py --product aegis-ma
 
 默认读取 `apps/rag-api/.env`，其中值覆盖同名 shell 环境变量。需要 `OPENAI_API_KEY` 和产品库变量，如 `OPENAI_VECTOR_STORE_AEGIS_MAX_ID`；其他产品按大写 ID、连字符变下划线推导。可用 `--env-file` 指定环境，`--product-store-id` 显式指定库。配置中若目标 ID 同时属于总库或其他产品，脚本拒绝执行。
 
-`--create-product-store` 在没有配置产品库时允许创建；预览不创建。创建前检查同名库，发现已有库则停止并列出 ID；创建请求关闭自动重试。创建 ID 输出并写入报告，不自动修改服务端配置。重试前必须保存该 ID，避免重复创建。Mega D 已接入后端产品 Agent，路由 key 为 `aegis-mega-d`，使用 `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID`；同步该库后无需更新 All 即可供 Agent 检索。
+`--create-product-store` 在没有配置产品库时允许创建；预览不创建。创建前检查同名库，发现已有库则停止并列出 ID；创建请求关闭自动重试。创建 ID 输出并写入报告，不自动修改服务端配置。重试前必须保存该 ID，避免重复创建。Mega D 和 Hyper 均已接入后端产品 Agent：路由 key 分别为 `aegis-mega-d`、`aegis-hyper`，使用 `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID`、`OPENAI_VECTOR_STORE_AEGIS_HYPER_ID`；同步对应产品库后即可供 Agent 检索。两个专属库也已加入旧版网站 `/api/search` 的查询集合。以后新增独立产品库时，需要同步更新该查询集合，或将内容同步至全量库。
 
 本地唯一内容来源是 `apps/web/src/content/sidebar.json` 引用的产品 Markdown。不会读取 DOCX。`--content-dir` 可覆盖目录，`--base-url` 可将根路径 Markdown 链接转换成绝对链接；每次同步应保持域名一致。不会上传图片或识别图中文字。
 

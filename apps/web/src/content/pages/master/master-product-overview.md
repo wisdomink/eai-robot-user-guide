@@ -1,10 +1,10 @@
 # 2.2 Product Overview
 
-The FF Master series includes three versions: `FF Master`, `FF Master Edu`, and `FF Master Ultra`.
+The FF Master series includes three versions: `FF Master Classic`, `FF Master Edu`, and `FF Master Ultra`.
 
 Each version differs slightly in configuration and functional capability, with a total of 27 to 31 degrees of freedom across the series, enabling precise motion and posture control.
 
-## FF Master
+## FF Master Classic
 
 - Equipped with a total of 25 degrees of freedom.
 - Each arm has 5 DOF and each leg has 6 DOF; the waist has 3 DOF.
@@ -15,7 +15,7 @@ Each version differs slightly in configuration and functional capability, with a
 ## FF Master Edu
 
 - Equipped with a total of 25 degrees of freedom.
-- Adds 4G/5G communication modules on top of FF Master.
+- Adds 4G/5G communication modules on top of FF Master Classic.
 - This version does not support full secondary development, but it is compatible with the Locomotion & Manipulation Platform.
 
 ## FF Master Ultra

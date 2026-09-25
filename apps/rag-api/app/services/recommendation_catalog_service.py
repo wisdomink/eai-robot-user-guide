@@ -26,7 +26,7 @@ class RecommendationCatalogStorage:
         ),
         (
             "master",
-            "FF Master",
+            "FF Master Classic",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf",
         ),
         (
@@ -46,7 +46,7 @@ class RecommendationCatalogStorage:
         ),
         (
             "aegis-max",
-            "FX Aegis Max",
+            "FX Aegis Mega A",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf",
         ),
         (
@@ -55,20 +55,26 @@ class RecommendationCatalogStorage:
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Mega_D_User_Manual.pdf",
         ),
         (
+            "aegis-hyper",
+            "FX Aegis Hyper",
+            "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Hyper_User_Manual.pdf",
+        ),
+        (
             "navi",
             "FF NAVI",
             "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+NAVI.pdf",
         ),
     ]
     _REQUIRED_LEAD_PRODUCTS = [
-        ("master", "FF Master"),
+        ("master", "FF Master Classic"),
         ("master-mini", "FF Master Mini"),
         ("futurist", "FF All-New Futurist"),
         ("futurist-ultra", "FF All-New Futurist Ultra"),
         ("aegis", "FX Aegis Classic"),
         ("aegis-ultra", "FX Aegis Classic Ultra"),
-        ("aegis-max", "FX Aegis Max"),
+        ("aegis-max", "FX Aegis Mega A"),
         ("aegis-mega-d", "FX Aegis Mega D"),
+        ("aegis-hyper", "FX Aegis Hyper"),
         ("navi", "FF NAVI"),
         ("ff91", "FF 91 2.0"),
     ]

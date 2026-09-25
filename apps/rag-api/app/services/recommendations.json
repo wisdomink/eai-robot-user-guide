@@ -22,7 +22,7 @@
   "products": [
     {
       "value": "master",
-      "label": "FF Master"
+      "label": "FF Master Classic"
     },
     {
       "value": "master-mini",
@@ -46,11 +46,15 @@
     },
     {
       "value": "aegis-max",
-      "label": "FF Aegis Max"
+      "label": "FX Aegis Mega A"
     },
     {
       "value": "aegis-mega-d",
       "label": "FX Aegis Mega D"
+    },
+    {
+      "value": "aegis-hyper",
+      "label": "FX Aegis Hyper"
     },
     {
       "value": "navi",
@@ -111,7 +115,7 @@
     },
     {
       "product_id": "master",
-      "label": "FF Master",
+      "label": "FF Master Classic",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FF+Master.pdf"
     },
     {
@@ -131,13 +135,18 @@
     },
     {
       "product_id": "aegis-max",
-      "label": "FX Aegis Max",
+      "label": "FX Aegis Mega A",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Max_User_Manual.pdf"
     },
     {
       "product_id": "aegis-mega-d",
       "label": "FX Aegis Mega D",
       "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Mega_D_User_Manual.pdf"
+    },
+    {
+      "product_id": "aegis-hyper",
+      "label": "FX Aegis Hyper",
+      "download_url": "https://ff-genesis-cdn-dev.s3.us-west-2.amazonaws.com/evan-test/download/FX_Aegis_Hyper_User_Manual.pdf"
     },
     {
       "product_id": "navi",

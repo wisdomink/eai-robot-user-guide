@@ -310,8 +310,8 @@
     {
       "id": "robotics_ff_master",
       "pattern": "https://robotics.ff.com/ff-master",
-      "label": "FF Master Robot",
-      "greeting": "Want to learn about the FF Master robot?",
+      "label": "FF Master Classic Robot",
+      "greeting": "Want to learn about the FF Master Classic robot?",
       "placeholder": "Ask anything about FF...",
       "info_text": "",
       "prompts": [
@@ -569,8 +569,8 @@
     {
       "id": "manual_master",
       "pattern": "https://robotics-instruction-manual.ff.com/master",
-      "label": "FF Master Manual",
-      "greeting": "Need help with your FF Master?",
+      "label": "FF Master Classic Manual",
+      "greeting": "Need help with your FF Master Classic?",
       "placeholder": "Ask anything about FF...",
       "info_text": "",
       "prompts": [
@@ -674,6 +674,43 @@
           "reply_text": "",
           "sort_order": 2,
           "id": "manual_aegis_3"
+        }
+      ]
+    },
+    {
+      "id": "manual_aegis_hyper",
+      "pattern": "https://robotics-instruction-manual.ff.com/aegis-hyper",
+      "label": "FX Aegis Hyper Manual",
+      "greeting": "Need help with your FX Aegis Hyper?",
+      "placeholder": "Ask anything about FX Aegis Hyper...",
+      "info_text": "",
+      "prompts": [
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "How do I charge or replace the battery?",
+          "prompt": "How do I charge or replace the battery?",
+          "reply_text": "",
+          "sort_order": 0,
+          "id": "manual_aegis_hyper_1"
+        },
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "How do I start and control the robot?",
+          "prompt": "How do I start and control the robot?",
+          "reply_text": "",
+          "sort_order": 1,
+          "id": "manual_aegis_hyper_2"
+        },
+        {
+          "enabled": true,
+          "type": "message",
+          "label": "What should I do in an emergency?",
+          "prompt": "What should I do in an emergency?",
+          "reply_text": "",
+          "sort_order": 2,
+          "id": "manual_aegis_hyper_3"
         }
       ]
     },

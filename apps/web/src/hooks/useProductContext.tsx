@@ -36,6 +36,7 @@ export const DOWNLOADABLE_PRODUCT_IDS: ProductId[] = [
   'aegis-ultra',
   'aegis-max',
   'aegis-mega-d',
+  'aegis-hyper',
   'navi',
 ]
 

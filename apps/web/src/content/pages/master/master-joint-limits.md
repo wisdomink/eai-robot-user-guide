@@ -2,7 +2,7 @@
 
 ![Joint limits](/images/master/master-joint-limits-1.png)
 
-| Joint Name | FF Master / FF Master Edu | FF Master Ultra |
+| Joint Name | FF Master Classic / FF Master Edu | FF Master Ultra |
 | --- | --- | --- |
 | Arm Workspace | J1 Shoulder pitch: +/-146.5 deg | J1 Shoulder pitch: +/-146.5 deg |
 |  | J2 Shoulder roll: -3.5 to +174.5 deg | J2 Shoulder roll: -3.5 to +174.5 deg |

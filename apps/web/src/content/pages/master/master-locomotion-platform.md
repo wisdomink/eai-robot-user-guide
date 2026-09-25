@@ -1,6 +1,6 @@
 # 4. Locomotion & Manipulation Platform Manual
 
-The FF Master supports the use of the Locomotion & Manipulation Platform, developed by FF EAI-Robotics.
+The FF Master Classic supports the use of the Locomotion & Manipulation Platform, developed by FF EAI-Robotics.
 
 Locomotion & Manipulation is a content creation and performance platform designed for general creators, enabling users to easily produce and publish robotic performances without requiring professional backgrounds in programming, control, or motion design.
 

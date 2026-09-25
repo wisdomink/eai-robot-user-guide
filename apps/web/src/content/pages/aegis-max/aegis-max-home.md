@@ -1,10 +1,10 @@
-# FX Aegis Max User Manual
+# FX Aegis Mega A User Manual
 
 *Wheeled-leg quadruped robot*
 
-![FX Aegis Max wheeled-leg robot](/images/aegis-max/aegis-mega-a-d1-01.png)
+![FX Aegis Mega A wheeled-leg robot](/images/aegis-max/aegis-mega-a-d1-01.png)
 
-This manual covers the FX Aegis Max wheeled-leg robot, including preparation, remote control, dual-battery operation, maintenance and after-sales information.
+This manual covers the FX Aegis Mega A wheeled-leg robot, including preparation, remote control, dual-battery operation, maintenance and after-sales information.
 
 ## Before You Start
 

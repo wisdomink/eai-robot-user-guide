@@ -1,6 +1,6 @@
 # 2.8 Specifications
 
-| Item | FF Master | FF Master Edu | FF Master Ultra |
+| Item | FF Master Classic | FF Master Edu | FF Master Ultra |
 | --- | --- | --- | --- |
 | Dimensions | 1310(H) x 460(W) x 210(L) mm | 1310(H) x 460(W) x 210(L) mm | 1310(H) x 460(W) x 210(L) mm |
 | Height | Approx. 1.31 m | Approx. 1.31 m | Approx. 1.31 m |

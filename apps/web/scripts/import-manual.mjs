@@ -58,15 +58,20 @@ function paragraphToMarkdown(html, config) {
   const image = html.match(/<img[^>]+src="([^"]+)"[^>]*>/i)
   if (image) {
     const number = Number(image[1].match(/-(\d+)\.[a-z0-9]+$/i)?.[1] ?? 0)
-    const alt = config.images.altText?.[number] ?? `FF Aegis Max figure ${number} — description pending review`
+    if (config.images.skip?.includes(number)) return ''
+    const alt = config.images.altText?.[number] ?? `${config.title} figure ${number}`
     return `![${alt}](${image[1]})`
   }
   const text = textFromHtml(html)
   if (!text) return ''
+  if (config.ignoreText?.includes(text)) return ''
+  if (/^\d+$/.test(text)) return ''
   if (text.startsWith('Source figure')) return `*${text}*`
+  if (/^\d+(?:\.\d+){2,}\s+/.test(text)) return `### ${text}`
   if (/^\d+\.\d+\s+/.test(text)) return `## ${text}`
   if (/^[A-Z]\.\s+/.test(text)) return `### ${text}`
   if (config.subheadings.includes(text)) return `### ${text}`
+  if (text.startsWith('•')) return `- ${text.slice(1).trim()}`
   return text
 }
 
@@ -98,16 +103,37 @@ function htmlToBlocks(html, config) {
 }
 
 function buildHome(config) {
+  if (config.home.introduction) {
+    return `# ${config.title} User Manual\n\n*${config.home.subtitle}*\n\n${config.home.introduction}\n\nSee the sidebar for the complete manual.\n`
+  }
   const checks = config.home.releaseChecks.map(check => `- ${check}`).join('\n')
   return `# ${config.title}\n\n*${config.home.subtitle}*\n\n> **Publication review required:** ${config.home.reviewNotice}\n\n## Items to resolve before external release\n\n${checks}\n\nSee the sidebar for the imported manual content.\n`
 }
 
-function buildPages(blocks, config) {
+function splitHtmlPages(html) {
+  return html.split(/(?=<p><img\b)/i).filter(page => page.trim())
+}
+
+function buildPages(blocks, config, html) {
+  if (config.chapters.some(chapter => chapter.sourcePages)) {
+    const sourcePages = splitHtmlPages(html).map(page => htmlToBlocks(page, config))
+    return config.chapters.map(chapter => ({
+      file: chapter.file,
+      content: applyReplacements(
+        `# ${chapter.title}\n\n${chapter.sourcePages
+          .flatMap(page => sourcePages[page - 1] ?? [])
+          .map(block => block.value)
+          .filter(Boolean)
+          .join('\n\n')}\n`,
+        config.replacements,
+      ),
+    }))
+  }
   const pages = new Map(config.chapters.map(chapter => [chapter.number, []]))
   let chapter
   for (const block of blocks) {
     if (block.type === 'paragraph') {
-      const match = block.text.match(/^(\d+)\.\s+/)
+      const match = block.text.match(/^(\d+)(?:\.\s+|\s+)/)
       if (match && pages.has(Number(match[1]))) {
         chapter = Number(match[1])
         continue
@@ -193,7 +219,7 @@ async function main() {
   if (imageResult.messages.length) console.warn(imageResult.messages)
 
   const blocks = htmlToBlocks(imageResult.html, config)
-  const files = [{ file: 'home.md', content: buildHome(config) }, ...buildPages(blocks, config)]
+  const files = [{ file: 'home.md', content: buildHome(config) }, ...buildPages(blocks, config, imageResult.html)]
   let changed = 0
   for (const page of files) {
     if (await writeIfChanged(path.join(outputDir, `${config.id}-${page.file}`), page.content, dryRun)) changed += 1

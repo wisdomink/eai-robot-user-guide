@@ -267,13 +267,15 @@ class SearchEndpointTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(main, '_retrieval', service), \
              patch.object(main, 'OPENAI_VECTOR_STORE_ROBOT_ALL_ID', 'vs_all'), \
              patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_MAX_ID', 'vs_max'), \
+             patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID', 'vs_mega_d'), \
+             patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_HYPER_ID', 'vs_hyper'), \
              patch.object(main, 'OPENAI_VECTOR_STORE_MASTER_MINI_ID', 'vs_master_mini'), \
              patch.object(main, '_FILE_INFO_MAP', {'spec.md': {'slug': '/aegis-max/spec', 'title': 'Specs', 'sectionId': 'manual'}}):
             response = await main.search_endpoint(q='charge', limit=10)
-        self.assertEqual(service.search.await_count, 3)
+        self.assertEqual(service.search.await_count, 5)
         self.assertEqual(
             [call.kwargs['vector_store_id'] for call in service.search.await_args_list],
-            ['vs_all', 'vs_max', 'vs_master_mini'],
+            ['vs_all', 'vs_max', 'vs_mega_d', 'vs_hyper', 'vs_master_mini'],
         )
         self.assertTrue(all(call.kwargs['rewrite_query'] for call in service.search.await_args_list))
         self.assertEqual(len(response['results']), 1)

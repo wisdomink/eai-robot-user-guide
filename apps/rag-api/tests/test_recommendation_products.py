@@ -22,6 +22,7 @@ class RecommendationProductTests(unittest.TestCase):
         self.assertEqual(by_value["aegis-max"], "Custom Max Label")
         self.assertEqual(by_value["master-mini"], "FF Master Mini")
         self.assertEqual(by_value["aegis-mega-d"], "FX Aegis Mega D")
+        self.assertEqual(by_value["aegis-hyper"], "FX Aegis Hyper")
         self.assertEqual(by_value["navi"], "FF NAVI")
 
 

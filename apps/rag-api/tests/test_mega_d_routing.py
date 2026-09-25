@@ -47,7 +47,9 @@ class MegaDRoutingTests(unittest.TestCase):
     def test_compound_model_names_correct_generic_single_product_plans(self):
         cases = (
             ("Aegis Ultra 怎么充电？", "aegis", "aegis-ultra"),
+            ("FX Aegis Mega A 怎么充电？", "aegis", "aegis-max"),
             ("Aegis Max 怎么充电？", "aegis", "aegis-max"),
+            ("FX Aegis Hyper 怎么充电？", "aegis", "aegis-hyper"),
             ("Futurist Ultra 怎么充电？", "futurist", "futurist-ultra"),
             ("Master Ultra 怎么充电？", "master-mini", "master"),
             ("FF 91 如何充电？", "futurist", "ff91"),
@@ -67,7 +69,7 @@ class MegaDRoutingTests(unittest.TestCase):
         plan = self.plan("aegis")
         handler._apply_page_product_context(
             plan,
-            user_text="比较 Aegis Max 和 Aegis Ultra",
+            user_text="比较 Aegis Mega A 和 Aegis Ultra",
             page_url="https://example.com/aegis/",
         )
         self.assertEqual(plan.loop_plan[0].product_key, "aegis")
