@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "vector_store_id": "vs_6ab738eada848191b0abdc953f750a35",
+  "releases": {
+    "futurist": "32728de2e093aed8e7bbbd38650fcd416153ccdba5fe3e5f71d3b6dfc2f3490d",
+    "futurist-ultra": "4bd60225a8cf3c616987b9880938b861c65a0376d4545436a06ba8291b9f6e39",
+    "master": "6c5cf0f68d27a193cbd9353abc59c747477ce05dab89038f19cabbf7db278780",
+    "master-mini": "3f44dea1688edce67863386e6ea28ebab5b639f7c26d399b624f736c3e2d9704",
+    "aegis": "61474d73b8ab81ae8b20fdfbfc244db046b79ff0d0a3fcef543a05fa09e6ead9",
+    "aegis-ultra": "55545c39d8f4a7b0309f9c4a78588a081b9894ad18c6fe11c3d5ce8f0a20e981",
+    "aegis-max": "1677dcc607937821e3137c4c39b0f4e6bf194e07d939bdb65081716edb8facea",
+    "aegis-mega-d": "4654f2ebd018729cd8ec50672e1bd6b9c8c97e6e346bfee4ca14a3f7bf8b4def",
+    "aegis-hyper": "3d2dadf1dd06cb4e5444801586aa53a520666d84c1da217064b8865bee20ac68",
+    "navi": "1bef7741fd33c9a02edfbacdc41cf8c7f46e0147a342c718b63c7cd37eeae3ba",
+    "ff91": "af086debd6868e80b5373606bcc67a3d5ab6321179447909b5bc780e1a6e25a4"
+  }
+}
