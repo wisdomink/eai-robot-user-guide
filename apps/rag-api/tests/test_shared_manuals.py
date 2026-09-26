@@ -150,6 +150,23 @@ class SyncTests(unittest.TestCase):
 
 
 class SharedSearchTests(unittest.IsolatedAsyncioTestCase):
+    async def test_health_fails_closed_when_shared_manifest_is_unavailable(self):
+        with patch('app.core.logging_config.setup_logging'), patch('app.core.openai_http.configure_agents_default_openai_client'), patch('app.core.openai_http.create_async_openai_client'):
+            main = importlib.import_module('app.main')
+
+        response = main.Response()
+        with patch.object(main, 'shared_snapshot', return_value=('vs_shared', {'master': 'r1', 'navi': 'r2'})):
+            body = await main.health(response)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(body['manualsIndex'], 'shared')
+        self.assertEqual(body['manualsProducts'], 2)
+
+        response = main.Response()
+        with patch.object(main, 'shared_snapshot', side_effect=FileNotFoundError('missing manifest')), self.assertLogs(main.front_logger, level='ERROR'):
+            body = await main.health(response)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(body['manualsIndex'], 'unavailable')
+
     async def test_remote_filter_and_local_defense(self):
         attrs = dict(product_id='master', release_id='r1', managed_by=sync.MANAGER)
         hits = [NS(file_id=str(i), filename='unique.md', attributes=a, score=.9, content=[NS(type='text', text='evidence')]) for i, a in enumerate([attrs, {}, dict(attrs, release_id='old')])]

@@ -50,7 +50,7 @@ done
 
 if [ "$VS_COUNT" -eq 0 ]; then
     echo "⚠️  未在 $ENV_FILE 中检测到任何有效的 Vector Store ID"
-    echo "   如尚未创建 Vector Store，请先运行: python create_vector_store.py"
+    echo "   Shared 模式请先运行 sync_manuals_rag.py；legacy 模式请配置产品库。"
     exit 1
 fi
 

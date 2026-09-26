@@ -1,7 +1,9 @@
 # ============================================================
 # Stage 1: Build the frontend (React + Vite + SSR prerender)
 # ============================================================
-FROM node:20-alpine AS frontend-builder
+# Alpine-based Node images can terminate `npm ci` with npm's
+# "Exit handler never called" error. Use the Debian-based build image.
+FROM node:20.19.5-bookworm-slim AS frontend-builder
 
 WORKDIR /build
 
@@ -9,7 +11,7 @@ WORKDIR /build
 COPY package.json package-lock.json* ./
 COPY apps/web/package.json apps/web/
 COPY packages/chat-sdk/package.json packages/chat-sdk/
-RUN npm ci
+RUN npm ci --no-audit --no-fund && test -x node_modules/.bin/tsc
 
 COPY . .
 
@@ -28,6 +30,11 @@ RUN npm run build -w web
 # ============================================================
 FROM python:3.13-alpine
 
+# Complete the frontend stage before downloading Python dependencies. This
+# avoids concurrent npm/pip network installs, which can trigger npm's
+# misleading "Exit handler never called" failure under BuildKit.
+COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
+
 RUN apk add --no-cache nginx && mkdir -p /run/nginx
 
 COPY apps/rag-api/requirements.txt /tmp/requirements.txt
@@ -37,17 +44,18 @@ RUN pip install --no-cache-dir supervisor -r /tmp/requirements.txt && rm /tmp/re
 RUN rm -f /etc/nginx/http.d/default.conf
 COPY nginx/default.conf /etc/nginx/http.d/app.conf
 
-# Frontend static files
-COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
-
-# Backend code + sidebar.json (CONTENT_DIR=/app/src/content in container)
+# Backend code + sidebar.json + active manuals release manifest.
+# The manifest is image-versioned so every task in one deployment reads the
+# same release snapshot; /app/rag-api/data is an ephemeral runtime volume.
 COPY apps/rag-api/app /app/rag-api/app
 COPY apps/web/src/content/sidebar.json /app/src/content/sidebar.json
+COPY apps/rag-api/data/manuals-releases.json /app/rag-api/config/manuals-releases.json
 COPY ["input/FF Assist_QA_CN.md", "/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md"]
 COPY ["input/FF_Assist_QA_EN.md", "/app/rag-api/fast-answer/ff_assist_preset_faq_en.md"]
 
 # Match sidebar path for FastAPI (see app/core/config.py CONTENT_DIR)
 ENV CONTENT_DIR=/app/src/content
+ENV MANUALS_RELEASE_MANIFEST=/app/rag-api/config/manuals-releases.json
 ENV PRESET_FAQ_PATHS=/app/rag-api/fast-answer/ff_assist_preset_faq_cn.md,/app/rag-api/fast-answer/ff_assist_preset_faq_en.md
 ENV ANSWER_MEMORY_DATA_PATH=/app/rag-api/data/answer_memory.jsonl
 

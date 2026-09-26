@@ -8,6 +8,11 @@ from app.services import chatkit_handler as handler
 
 
 class MegaDRoutingTests(unittest.TestCase):
+    def setUp(self):
+        legacy = patch.object(handler, "shared_snapshot", return_value=None)
+        legacy.start()
+        self.addCleanup(legacy.stop)
+
     def plan(self, *products):
         return handler.PlanOutput(
             input_lang="cn", query_text="charging",

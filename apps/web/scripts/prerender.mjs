@@ -57,4 +57,9 @@ for (const route of routes) {
   console.log(`  ✓ ${route.slug} → ${path.relative(dist, filePath)}`)
 }
 
+// The server bundle is a build-time tool only. The deployed application is
+// static HTML served by nginx, so keeping it would unnecessarily enlarge the
+// runtime image.
+fs.rmSync(path.resolve(dist, 'server'), { recursive: true, force: true })
+
 console.log(`\nDone! ${routes.length} pages pre-rendered.`)

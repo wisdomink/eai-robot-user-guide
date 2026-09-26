@@ -249,6 +249,8 @@ apps/rag-api/venv/bin/python apps/rag-api/sync_manuals_rag.py \
   --activate
 ```
 
+激活后必须提交更新后的 `apps/rag-api/data/manuals-releases.json` 并重新构建部署。Docker 会把它复制到 `/app/rag-api/config/manuals-releases.json`；不要向容器的临时 `/app/rag-api/data` 目录手工写入生产 manifest。
+
 详细风险、清单激活和回滚方式以 `apps/rag-api/RAG_SYNC.md` 为准。
 
 ## 第八步：最终检查与交付

@@ -89,13 +89,13 @@ apps/rag-api/
 
 - Python 3.10+
 - OpenAI API Key
-- OpenAI Vector Store（各产品独立库 + 全量库，见下方环境变量）
+- OpenAI shared manuals Vector Store；价格和新闻仍使用独立库
 
 ### 1. 创建 / 更新 Vector Store
 
-共享索引路径已就绪：`MANUALS_INDEX_MODE=shared` 时，产品 chat 与网站搜索都读取 `OPENAI_VECTOR_STORE_MANUALS_ID`，按 `MANUALS_RELEASE_MANIFEST` 中的产品生效版本过滤；价格、新闻仍用独立库。新增 `sync_manuals_rag.py` 支持先上传验证、后原子激活，保留旧版本。部署及回滚步骤见 [RAG_SYNC.md](./RAG_SYNC.md#共享-manuals-索引阶段-3)。默认仍为 `legacy`，需完成全部产品索引与清单发布后再切换。Docker 中将清单部署到持久化的 `/app/rag-api/data/manuals-releases.json`。
+生产使用 `MANUALS_INDEX_MODE=shared`：产品 chat 与网站搜索都读取 `OPENAI_VECTOR_STORE_MANUALS_ID`，按 manifest 中的产品生效版本过滤；价格、新闻仍用独立库。`sync_manuals_rag.py` 支持先上传验证、后原子激活并保留旧版本。Docker 构建把已提交的 `apps/rag-api/data/manuals-releases.json` 打包到 `/app/rag-api/config/manuals-releases.json`，缺失或非法时健康检查返回 503。部署及回滚步骤见 [RAG_SYNC.md](./RAG_SYNC.md#共享-manuals-索引阶段-3)。
 
-下面是 `legacy` 模式的旧索引维护方式：
+下面是仅供回滚的 `legacy` 旧索引维护方式：
 
 `create_vector_store.py` 会将 `apps/web/src/content/pages/` 下所有在 `sidebar.json` 中引用的 Markdown 同步到 **全量** Vector Store（`OPENAI_VECTOR_STORE_ROBOT_ALL_ID`）。语义搜索会查询该全量库，并合并 Aegis Max 的专属库；后端主流程中的产品 loop pass 使用各自产品的 Vector Store ID。
 
@@ -150,16 +150,19 @@ uvicorn app.main:app --reload --port 8000
 
 | 变量 | 必填 | 说明 |
 |------|:----:|------|
-| `OPENAI_VECTOR_STORE_MASTER_ID` | ✅ | Master 系列产品文档库（含 Master / Master EDU / Master Ultra） |
-| `OPENAI_VECTOR_STORE_FUTURIST_ID` | ✅ | Futurist 产品文档库 |
-| `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | ✅ | Futurist Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_ID` | ✅ | Aegis 系列产品文档库（含 Aegis / Aegis Pro / Aegis EDU） |
-| `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | ✅ | Aegis Ultra 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` | ✅ | Aegis Max 产品文档库 |
-| `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID` | ✅ | FX Aegis Mega D 产品文档库；Agent 路由 key 为 `aegis-mega-d` |
-| `OPENAI_VECTOR_STORE_AEGIS_HYPER_ID` | ✅ | FX Aegis Hyper 产品文档库；Agent 路由 key 为 `aegis-hyper` |
-| `OPENAI_VECTOR_STORE_FF91_ID` | ✅ | FF 91 2.0 产品文档库 |
-| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | ✅ | 全量文档库（语义搜索主库；`create_vector_store.py` 同步目标） |
+| `MANUALS_INDEX_MODE` | ✅ | 生产使用 `shared` |
+| `OPENAI_VECTOR_STORE_MANUALS_ID` | ✅ | Shared manuals 文档库 |
+| `MANUALS_RELEASE_MANIFEST` | | 容器默认 `/app/rag-api/config/manuals-releases.json` |
+| `OPENAI_VECTOR_STORE_MASTER_ID` | | Legacy 回滚：Master 产品文档库 |
+| `OPENAI_VECTOR_STORE_FUTURIST_ID` | | Legacy 回滚：Futurist 产品文档库 |
+| `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | | Legacy 回滚：Futurist Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_ID` | | Legacy 回滚：Aegis 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | | Legacy 回滚：Aegis Ultra 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` | | Legacy 回滚：Aegis Max 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID` | | Legacy 回滚：FX Aegis Mega D 产品文档库 |
+| `OPENAI_VECTOR_STORE_AEGIS_HYPER_ID` | | Legacy 回滚：FX Aegis Hyper 产品文档库 |
+| `OPENAI_VECTOR_STORE_FF91_ID` | | Legacy 回滚：FF 91 2.0 产品文档库 |
+| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | | Legacy 回滚：旧网站全量搜索库；shared 不读取 |
 
 ### 其他
 
@@ -372,7 +375,7 @@ cd tools/eval
 
 ## 注意事项
 
-- 手册内容变更后，需重新运行 `create_vector_store.py` 更新全量 Vector Store；Backend 模式下若使用各产品独立库，需在 OpenAI 控制台或自有流程中同步对应库。FF Aegis Max 的独立库由 `OPENAI_VECTOR_STORE_AEGIS_MAX_ID` 指定。
+- 手册内容变更后，使用 `sync_manuals_rag.py --product <id> --apply --activate` 发布共享版本，提交更新后的 `data/manuals-releases.json`，再重新构建部署镜像。`create_vector_store.py` 和产品独立库仅用于 legacy 回滚。
 - Agent 的 Instructions 模板在 `app/services/instructions/*.md`，修改后重启服务即生效。
 - `.env` 含 API Key，已在 `.gitignore` 中排除，切勿提交。
 - `venv/` 为 Python 虚拟环境，已在 `.gitignore` 中排除。

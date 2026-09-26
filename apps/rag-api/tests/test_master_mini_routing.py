@@ -8,6 +8,11 @@ from app.services import chatkit_handler as handler
 
 
 class MasterMiniRoutingTests(unittest.TestCase):
+    def setUp(self):
+        legacy = patch.object(handler, "shared_snapshot", return_value=None)
+        legacy.start()
+        self.addCleanup(legacy.stop)
+
     @staticmethod
     def plan(*products: str) -> handler.PlanOutput:
         return handler.PlanOutput(

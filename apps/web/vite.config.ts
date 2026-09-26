@@ -7,7 +7,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export default defineConfig(() => {
+export default defineConfig(({ isSsrBuild }) => {
   const sharedConfig = {
     define: {
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
@@ -25,6 +25,10 @@ export default defineConfig(() => {
 
   return {
     ...sharedConfig,
+    // The SSR bundle is only used to pre-render HTML during the build. Public
+    // assets already belong to the client build, so copying them into
+    // dist/server would duplicate every manual image.
+    publicDir: isSsrBuild ? false : 'public',
     server: {
       host: '0.0.0.0',
       watch: {

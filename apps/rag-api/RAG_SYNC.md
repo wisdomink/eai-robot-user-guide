@@ -77,7 +77,7 @@ apps/rag-api/venv/bin/python -m unittest discover -s apps/rag-api/tests -p test_
 
 共享库使用 **`sync_manuals_rag.py`**；不要用上面的独立库替换脚本操作它。源文件仍为 sidebar 引用的 Markdown。每个章节携带 product_id、source_path、page_slug、language、content_hash、release_id、managed_by。版本按整个产品计算，章节改变时新建该产品完整版本；从清单移除的章节不会进入新版。旧版留存会增加存储量，清理留到迁移确认之后。
 
-从仓库根目录执行（这些是上线步骤，本次仅执行了 local-only）：
+从仓库根目录执行。初始全量版本已完成 `--all --apply --activate`；后续产品更新仍按下面流程操作：
 
 ```bash
 # 1. 本地完整清单校验，不访问 OpenAI
@@ -109,17 +109,17 @@ apps/rag-api/venv/bin/python apps/rag-api/sync_manuals_rag.py --product aegis-ma
 ```dotenv
 MANUALS_INDEX_MODE=shared
 OPENAI_VECTOR_STORE_MANUALS_ID=vs_新共享库ID
-MANUALS_RELEASE_MANIFEST=/app/rag-api/data/manuals-releases.json
 CHAT_RETRIEVAL_MODE=direct
 ```
 
-先把已验证的清单部署到服务端持久化目录，再修改配置并重启。Docker 已声明 `/app/rag-api/data` 数据卷，但不会自动复制本地清单。多实例应部署完全相同的清单和库 ID；一次请求固定读取一个版本快照，之后的请求可看到新清单。清单不完整或库 ID 不符时停止产品检索，不混入 legacy 数据。价格和新闻配置不变。
+本地同步脚本读写 `apps/rag-api/data/manuals-releases.json`。Docker 构建会把该文件复制到只读的 `/app/rag-api/config/manuals-releases.json`，并通过镜像环境变量设置 `MANUALS_RELEASE_MANIFEST`。因此每次激活新版本后，必须提交更新后的 manifest 并重新构建、部署镜像。多实例在同一次部署中读取完全相同的清单；一次请求固定读取一个版本快照。清单不完整、文件缺失或库 ID 不符时，健康检查返回 503，产品检索不会回退到 legacy 数据。价格和新闻配置不变。
 
-每次实际激活变更前备份旧清单为同目录 `manuals-releases.previous.json`，重复激活同一版本不覆盖备份。回退最近版本时，在没有同步发布任务运行的情况下，原子替换生效清单（以下路径为容器默认值）：
+每次实际激活变更前，脚本会在本地生成 `apps/rag-api/data/manuals-releases.previous.json`；重复激活同一版本不覆盖备份。回退最近版本时，在没有同步发布任务运行的情况下，将 previous 文件恢复为当前 manifest，然后重新构建部署：
 
 ```bash
-cp /app/rag-api/data/manuals-releases.previous.json /app/rag-api/data/manuals-releases.rollback.tmp
-mv /app/rag-api/data/manuals-releases.rollback.tmp /app/rag-api/data/manuals-releases.json
+cp apps/rag-api/data/manuals-releases.previous.json apps/rag-api/data/manuals-releases.rollback.tmp
+mv apps/rag-api/data/manuals-releases.rollback.tmp apps/rag-api/data/manuals-releases.json
+./aws-deploy.sh --build
 ```
 
 首次激活没有 previous 备份。需回退整个索引架构时，将 `MANUALS_INDEX_MODE=legacy` 并重启，保留原产品与 ROBOT_ALL 配置即可。旧库及旧共享版本均未被本脚本删除。实际效果、费用、索引可用性和多实例发布仍需阶段 4 联网验收。

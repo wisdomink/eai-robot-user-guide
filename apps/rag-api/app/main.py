@@ -827,6 +827,20 @@ async def warmup():
 
 
 @app.get("/health")
-async def health():
-    front_logger.debug("GET /health → 200")
-    return {"status": "ok", "version": app.version}
+async def health(response: Response):
+    try:
+        snapshot = shared_snapshot()
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        response.status_code = 503
+        front_logger.error("GET /health → 503 shared manuals unavailable: %s", exc)
+        return {
+            "status": "error",
+            "version": app.version,
+            "manualsIndex": "unavailable",
+        }
+
+    result = {"status": "ok", "version": app.version, "manualsIndex": "legacy"}
+    if snapshot:
+        result.update(manualsIndex="shared", manualsProducts=len(snapshot[1]))
+    front_logger.debug("GET /health → 200 manuals_index=%s", result["manualsIndex"])
+    return result

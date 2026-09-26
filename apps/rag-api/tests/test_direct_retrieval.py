@@ -184,6 +184,7 @@ class PipelineTests(unittest.IsolatedAsyncioTestCase):
         message = h.UserMessageItem(id='user', thread_id='thread', created_at=now,
                                     content=[{'type': 'input_text', 'text': '载荷是多少？'}], inference_options={})
         with patch.object(h, 'CHAT_RETRIEVAL_MODE', mode), \
+             patch.object(h, 'shared_snapshot', return_value=None), \
              patch.dict(h._SUPPORT_AGENT_CONFIGS['aegis-max'], vector_store_id='vs_max'), \
              patch.dict(h._SUPPORT_AGENT_CONFIGS['aegis-mega-d'], vector_store_id='vs_mega'), \
              patch.object(h.Runner, 'run', side_effect=self.run_model), \
@@ -265,6 +266,7 @@ class SearchEndpointTests(unittest.IsolatedAsyncioTestCase):
         hit = evidence('## Charging\nConnect the supplied charger.')
         service = Mock(search=AsyncMock(return_value=[hit]))
         with patch.object(main, '_retrieval', service), \
+             patch.object(main, 'shared_snapshot', return_value=None), \
              patch.object(main, 'OPENAI_VECTOR_STORE_ROBOT_ALL_ID', 'vs_all'), \
              patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_MAX_ID', 'vs_max'), \
              patch.object(main, 'OPENAI_VECTOR_STORE_AEGIS_MEGA_D_ID', 'vs_mega_d'), \

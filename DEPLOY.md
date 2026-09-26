@@ -214,11 +214,14 @@ docker compose down
 |--------|:----:|------|
 | `OPENAI_API_KEY` | ✅ | OpenAI API Key |
 | `LLM_MODEL` | — | LLM 模型（默认 gpt-5） |
+| `MANUALS_INDEX_MODE` | ✅ | 生产使用 `shared` |
+| `OPENAI_VECTOR_STORE_MANUALS_ID` | ✅ | Shared manuals Vector Store ID |
+| `MANUALS_RELEASE_MANIFEST` | — | 镜像默认 `/app/rag-api/config/manuals-releases.json` |
 | `OPENAI_VECTOR_STORE_MASTER_ULTRA_ID` | — | Master Ultra 向量库 ID |
 | `OPENAI_VECTOR_STORE_FUTURIST_ULTRA_ID` | — | Futurist Ultra 向量库 ID |
 | `OPENAI_VECTOR_STORE_AEGIS_ULTRA_ID` | — | Aegis Ultra 向量库 ID |
 | `OPENAI_VECTOR_STORE_AEGIS_EDU_ID` | — | Aegis EDU 向量库 ID |
-| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | — | 全产品统一向量库 ID |
+| `OPENAI_VECTOR_STORE_ROBOT_ALL_ID` | — | 仅 legacy 回滚使用；shared 模式不配置 |
 | `PUBLIC_BASE_URL` | — | 公网 URL（部署后需更新为实际域名） |
 
 ---
