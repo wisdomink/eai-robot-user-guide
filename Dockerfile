@@ -23,26 +23,42 @@ ENV VITE_CHAT_SERVICE_ORIGIN=$VITE_CHAT_SERVICE_ORIGIN
 ENV VITE_CHATKIT_DOMAIN_KEY=$VITE_CHATKIT_DOMAIN_KEY
 ENV VITE_SEARCH_API_URL=$VITE_SEARCH_API_URL
 
-RUN npm run build -w web
+# Images are copied into their own runtime layer below. Remove Vite's copy
+# from dist so frequently changing HTML/JS does not invalidate the large,
+# otherwise stable image layer on every deployment.
+RUN npm run build -w web \
+    && test -d apps/web/dist/images \
+    && rm -rf apps/web/dist/images \
+    && touch /build/.frontend-build-complete
 
 # ============================================================
 # Stage 2: Combined runtime (nginx + Python backend)
 # ============================================================
 FROM python:3.13-alpine
 
-# Complete the frontend stage before downloading Python dependencies. This
-# avoids concurrent npm/pip network installs, which can trigger npm's
-# misleading "Exit handler never called" failure under BuildKit.
-COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
+# Wait for the frontend build before downloading Python dependencies without
+# copying the frequently changing frontend output yet. The stable marker keeps
+# npm/pip installs serialized while allowing the dependency layers below to be
+# reused when only frontend code changes.
+COPY --from=frontend-builder /build/.frontend-build-complete /tmp/.frontend-build-complete
 
 RUN apk add --no-cache nginx && mkdir -p /run/nginx
 
-COPY apps/rag-api/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir supervisor -r /tmp/requirements.txt && rm /tmp/requirements.txt
+COPY apps/rag-api/requirements.txt apps/rag-api/requirements.lock /tmp/
+RUN pip install --no-cache-dir --require-hashes --retries 10 --timeout 60 \
+        -r /tmp/requirements.lock \
+    && rm /tmp/requirements.txt /tmp/requirements.lock
 
 # nginx: remove default config, add ours
 RUN rm -f /etc/nginx/http.d/default.conf
 COPY nginx/default.conf /etc/nginx/http.d/app.conf
+
+# Keep manual images in a dedicated layer. When the images are unchanged, ECR
+# reuses this layer and only the much smaller HTML/JS layer is uploaded.
+COPY apps/web/public/images /usr/share/nginx/html/images
+
+# dist no longer contains images, so this is a small application layer.
+COPY --from=frontend-builder /build/apps/web/dist /usr/share/nginx/html
 
 # Backend code + sidebar.json + active manuals release manifest.
 # The manifest is image-versioned so every task in one deployment reads the

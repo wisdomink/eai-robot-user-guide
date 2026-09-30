@@ -78,7 +78,8 @@ apps/rag-api/
 ├── create_vector_store.py           # 同步手册文档到 Vector Store（ROBOT_ALL）
 ├── .env                             # 环境变量（勿提交）
 ├── .env.example                     # 环境变量模板
-├── requirements.txt                 # Python 依赖
+├── requirements.txt                 # Python 直接依赖范围（开发/更新输入）
+├── requirements.lock                # 生产镜像完整版本与哈希锁
 ├── server_run.sh                    # 一键启动脚本
 └── README.md
 ```

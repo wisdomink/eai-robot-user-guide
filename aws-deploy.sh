@@ -77,6 +77,11 @@ DEPLOY_SUBNET_IDS="${DEPLOY_SUBNET_IDS:-}"
 #  工具函数
 # ══════════════════════════════════════════════════════════
 
+# 使用 AWS CLI 自带的标准重试处理连接中断、限流和服务端瞬时错误。
+# 不改变 IAM/ECR 配置，也不额外引入脚本级 AWS 重试。
+export AWS_RETRY_MODE="${AWS_RETRY_MODE:-standard}"
+export AWS_MAX_ATTEMPTS="${AWS_MAX_ATTEMPTS:-5}"
+
 print_context() {
     if [ "$AWS_DEPLOY_ENV_LOADED" = true ] && [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
         echo "  AWS Auth:     local .env access key (${AWS_ACCESS_KEY_ID:0:4}...)"
@@ -136,7 +141,7 @@ load_config() {
 
     export AWS_DEFAULT_REGION="$AWS_REGION"
     ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-    ECR_IMAGE="$ECR_REGISTRY/$ECR_REPO_NAME:latest"
+    ECR_IMAGE="$ECR_REGISTRY/$ECR_REPO_NAME:${DEPLOY_IMAGE_TAG:-latest}"
 }
 
 save_config() {
@@ -341,11 +346,23 @@ get_public_subnets() {
 }
 
 wait_for_service_stable() {
-    echo "  ⏳ 等待服务稳定（最多 5 分钟）..."
-    aws ecs wait services-stable \
+    echo "  ⏳ 等待服务稳定（最多约 10 分钟）..."
+    if ! aws ecs wait services-stable \
         --cluster "$ECS_CLUSTER_NAME" \
         --services "$ECS_SERVICE_NAME" \
-        --region "$AWS_REGION" 2>/dev/null || true
+        --region "$AWS_REGION"; then
+        echo "  ❌ ECS 服务未能在等待时间内稳定。"
+        echo ""
+        echo "  ── ECS 最近事件 ──"
+        aws ecs describe-services \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --services "$ECS_SERVICE_NAME" \
+            --query "services[0].events[0:10].[createdAt,message]" \
+            --output table --region "$AWS_REGION" || true
+        return 1
+    fi
+
+    echo "  ✅ ECS 服务已稳定"
 }
 
 get_alb_dns() {
@@ -969,6 +986,10 @@ case "$ACTION" in
     --build)
         check_prerequisites
 
+        git_revision=$(git -C "$SCRIPT_DIR" rev-parse --short=12 HEAD 2>/dev/null || echo "nogit")
+        DEPLOY_IMAGE_TAG="${DEPLOY_IMAGE_TAG:-deploy-$(date -u +%Y%m%d%H%M%S)-$git_revision}"
+        export DEPLOY_IMAGE_TAG
+
         echo ""
         echo "══ 构建 Chat SDK (release) ══"
         VITE_CHAT_SERVICE_ORIGIN="$PRODUCTION_CHAT_SERVICE_ORIGIN" \
@@ -977,6 +998,7 @@ case "$ACTION" in
         echo ""
         echo "══ 构建 Docker 镜像 ══"
         echo "  🌐 Chat 服务域名: $PRODUCTION_CHAT_SERVICE_ORIGIN"
+        echo "  🏷️  ECR 镜像标签: $DEPLOY_IMAGE_TAG"
         echo ""
         echo "  🔨 构建中（目标平台: linux/amd64）..."
         docker buildx build --platform linux/amd64 \

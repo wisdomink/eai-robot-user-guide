@@ -105,7 +105,7 @@ docker compose down
 只需一条命令，脚本会自动完成所有工作：
 
 ```bash
-./aws-deploy.sh
+./aws-deploy.sh --build
 ```
 
 脚本自动执行的步骤：
@@ -125,7 +125,7 @@ docker compose down
 
   🌐 访问地址: http://eai-robot-alb-xxx.us-east-1.elb.amazonaws.com
 
-  后续更新只需再次运行: ./aws-deploy.sh
+  后续更新只需再次运行: ./aws-deploy.sh --build
 ```
 
 这个 `elb.amazonaws.com` 域名就是 AWS 分配的公网地址，可以直接在浏览器访问。
@@ -137,13 +137,16 @@ docker compose down
 修改代码后，再次运行同一命令即可滚动更新：
 
 ```bash
-./aws-deploy.sh
+./aws-deploy.sh --build
 ```
 
 脚本会检测到已有部署，自动执行：
-1. 构建最新镜像并推送
+1. 构建最新镜像，并使用唯一的 `deploy-时间-Git提交` 标签推送
 2. 更新 Task Definition（包含最新环境变量）
-3. 触发 ECS 滚动更新（零停机）
+3. 触发 ECS 滚动更新
+4. 等待服务稳定；超时会返回非零状态并打印最近的 ECS 事件
+
+AWS CLI 使用标准重试模式，默认最多尝试 5 次，可通过 `AWS_MAX_ATTEMPTS` 覆盖。
 
 ---
 
@@ -246,6 +249,18 @@ docker compose down
 | `docker compose logs -f` | 查看日志 |
 | `docker compose down` | 停止 |
 | `docker compose exec app sh` | 进入容器 |
+
+### Python 生产依赖锁
+
+`requirements.txt` 维护直接依赖范围，`requirements.lock` 固定生产镜像使用的完整依赖树和 SHA-256 哈希。修改 `requirements.txt` 后必须重新生成并提交锁文件：
+
+```bash
+docker run --rm --platform linux/amd64 \
+  -v "$PWD:/workspace" -w /workspace python:3.13-alpine \
+  sh -c 'pip install --no-cache-dir "uv==0.8.17" && uv pip compile --python-platform x86_64-unknown-linux-musl --python-version 3.13 --generate-hashes --no-emit-index-url --output-file apps/rag-api/requirements.lock apps/rag-api/requirements.txt'
+```
+
+Docker 构建使用 `pip --require-hashes`；锁文件缺失、版本未锁定或下载内容哈希不匹配时会立即失败。
 
 ---
 
