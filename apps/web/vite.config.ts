@@ -35,6 +35,10 @@ export default defineConfig(({ isSsrBuild }) => {
         ignored: ['**/apps/rag-api/**', '**/tools/eval/**', '**/node_modules/**', '**/.git/**'],
       },
       proxy: {
+        '/api/admin': {
+          target: 'http://localhost:8000',
+          changeOrigin: false,
+        },
         '/api/get-order-now-config': {
           target: 'http://localhost:8000',
           changeOrigin: true,

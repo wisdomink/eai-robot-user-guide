@@ -76,6 +76,11 @@ ALERT_LEVEL: str = os.getenv("ALERT_LEVEL", "ERROR").upper()
 ALERT_APP_NAME: str = os.getenv("ALERT_APP_NAME", "EAI Robot")
 ALERT_DIGEST_INTERVAL: int = int(os.getenv("ALERT_DIGEST_INTERVAL", "3600"))  # 1 hour
 
+# ── Admin accounts (separate from the public business API) ────────────────
+ADMIN_BACKEND: str = os.getenv("ADMIN_BACKEND", "sqlite").strip().lower()
+ADMIN_DB_PATH: Path = Path(os.getenv("ADMIN_DB_PATH", str(RAG_SERVER_ROOT / "data" / "admin.sqlite3")))
+ADMIN_DDB_TABLE: str = os.getenv("ADMIN_DDB_TABLE", "").strip()
+
 # ── Leads (contact form submissions) ─────────────────────────────────────
 LEADS_DIR: Path = Path(os.getenv("LEADS_DIR", str(RAG_SERVER_ROOT / "data")))
 LEADS_BACKEND: str = os.getenv("LEADS_BACKEND", "file").strip().lower()

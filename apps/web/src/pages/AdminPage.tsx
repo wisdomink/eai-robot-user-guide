@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { Link } from 'react-router-dom'
 import logoDark from '@/assets/icons/logo-dark.svg'
 import OrderNowTab from '@/components/admin/OrderNowTab'
+import UsersTab from '@/components/admin/UsersTab'
+import { ADMIN_SESSION_EXPIRED, fetchAdminSession, loginAdmin, logoutAdmin, type AdminSession, type AdminUser } from '@/api/admin'
 import { DOWNLOADABLE_PRODUCTS } from '@/hooks/useProductContext'
 import {
   deleteRecommendation,
@@ -33,7 +35,7 @@ import {
   saveHomepagePage,
 } from '@/api/homepagePrompts'
 
-type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads' | 'order-now'
+type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads' | 'order-now' | 'users'
 
 const RECO_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF All-New Futurist' },
@@ -1404,6 +1406,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'homepage-prompts', label: '首页推荐' },
   { key: 'order-now', label: 'Order Now 配置' },
   { key: 'manual-downloads', label: '下载配置' },
+  { key: 'users', label: '账号管理' },
 ]
 
 function getFrontendBuildVersion(): string {
@@ -1415,6 +1418,125 @@ function getFrontendBuildVersion(): string {
 }
 
 export default function AdminPage() {
+  const [session, setSession] = useState<AdminSession | null>(null)
+  const [checking, setChecking] = useState(true)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    document.title = '管理后台 - EAI Robot'
+    const controller = new AbortController()
+    fetchAdminSession(controller.signal)
+      .then(value => { if (!controller.signal.aborted) setSession(value) })
+      .catch(() => { if (!controller.signal.aborted) setError('无法验证登录状态，请稍后重试') })
+      .finally(() => { if (!controller.signal.aborted) setChecking(false) })
+    const expired = () => { setSession(null); setError('登录已失效，请重新登录') }
+    window.addEventListener(ADMIN_SESSION_EXPIRED, expired)
+    return () => { controller.abort(); window.removeEventListener(ADMIN_SESSION_EXPIRED, expired) }
+  }, [])
+
+  const expiresAt = session?.expires_at
+  useEffect(() => {
+    if (!expiresAt) return
+    let controller = new AbortController()
+    const verify = () => {
+      if (document.hidden) return
+      controller.abort()
+      controller = new AbortController()
+      const signal = controller.signal
+      fetchAdminSession(signal)
+        .then(value => {
+          if (signal.aborted) return
+          setSession(value)
+          if (!value) setError('登录已失效，请重新登录')
+        })
+        .catch(() => {
+          if (!signal.aborted) { setSession(null); setError('无法验证登录状态，请重新登录') }
+        })
+    }
+    const timeout = window.setTimeout(() => {
+      setSession(null); setError('登录已过期，请重新登录')
+    }, Math.max(0, expiresAt * 1000 - Date.now()))
+    const interval = window.setInterval(verify, 60_000)
+    window.addEventListener('focus', verify)
+    document.addEventListener('visibilitychange', verify)
+    return () => {
+      controller.abort(); window.clearTimeout(timeout); window.clearInterval(interval)
+      window.removeEventListener('focus', verify); document.removeEventListener('visibilitychange', verify)
+    }
+  }, [expiresAt])
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const data = new FormData(form)
+    setPending(true)
+    setError('')
+    try {
+      const value = await loginAdmin(String(data.get('username')), String(data.get('password')))
+      form.reset()
+      setSession(value)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登录失败，请稍后重试')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleLogout() {
+    setPending(true)
+    setError('')
+    try {
+      await logoutAdmin()
+      setSession(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '退出失败，请稍后重试')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  if (checking) {
+    return <main className="reco-standalone admin-login" role="status">正在验证登录状态…</main>
+  }
+
+  if (session) {
+    return (
+      <>
+        {error && <p className="lead-msg error" role="alert">{error}</p>}
+        <AdminDashboard user={session.user} onLogout={handleLogout} loggingOut={pending} />
+      </>
+    )
+  }
+
+  return (
+    <main className="reco-standalone admin-login">
+      <section className="reco-card admin-login-card" aria-labelledby="admin-login-title">
+        <Link to="/" aria-label="返回手册">
+          <img src={logoDark} alt="EAI Robot" className="reco-header-logo" />
+        </Link>
+        <h1 id="admin-login-title">管理后台登录</h1>
+        <p>请输入管理员账号和密码</p>
+        <form className="recommendation-form" onSubmit={handleLogin}>
+          <label>
+            账号
+            <input name="username" autoComplete="username" required maxLength={64} disabled={pending} />
+          </label>
+          <label>
+            密码
+            <input name="password" type="password" autoComplete="current-password" required maxLength={128} disabled={pending} />
+          </label>
+          {error && <p className="lead-msg error" role="alert">{error}</p>}
+          <div className="recommendation-form-actions">
+            <button type="submit" disabled={pending}>{pending ? '登录中…' : '登录'}</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  )
+}
+
+function AdminDashboard({ user, onLogout, loggingOut }: { user: AdminUser; onLogout: () => void; loggingOut: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>('recommendations')
   const [backendVersion, setBackendVersion] = useState('加载中…')
   const frontendBuildVersion = useMemo(getFrontendBuildVersion, [])
@@ -1449,16 +1571,18 @@ export default function AdminPage() {
           <span className="reco-header-title">管理后台</span>
         </div>
         <nav className="reco-header-nav">
+          <span className="admin-current-user" title={user.username}>{user.username}</span>
           <div className="admin-version-info" aria-label="服务版本信息">
             <span>前端发布：{frontendBuildVersion}</span>
             <span>后端服务：{backendVersion}</span>
           </div>
           <Link to="/" className="reco-nav-btn">返回手册</Link>
+          <button type="button" className="reco-nav-btn" onClick={onLogout} disabled={loggingOut}>{loggingOut ? '退出中…' : '退出登录'}</button>
         </nav>
       </header>
 
       <div className="admin-tabs">
-        {TABS.map(tab => (
+        {TABS.filter(tab => tab.key !== 'users' || user.role === 'admin').map(tab => (
           <button
             key={tab.key}
             className={`admin-tab ${activeTab === tab.key ? 'active' : ''}`}
@@ -1475,6 +1599,7 @@ export default function AdminPage() {
         {activeTab === 'homepage-prompts' && <HomepagePromptsTab />}
         {activeTab === 'order-now' && <OrderNowTab />}
         {activeTab === 'manual-downloads' && <ManualDownloadsTab />}
+        {activeTab === 'users' && user.role === 'admin' && <UsersTab />}
       </main>
     </div>
   )

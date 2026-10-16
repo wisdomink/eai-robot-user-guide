@@ -544,6 +544,57 @@ mark.hl.current {
   background: var(--color-gray-50);
 }
 
+.admin-login {
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.admin-login-card .reco-header-logo {
+  margin-bottom: 16px;
+}
+
+.admin-login-card .recommendation-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-login-card .recommendation-form-actions button {
+  width: 100%;
+}
+
+.admin-current-user {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.admin-account-card {
+  min-width: 0;
+}
+
+.admin-log-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.recommendation-row-actions button:disabled,
+.admin-link-btn:disabled,
+.reco-nav-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ── Header ─────────────────────────────────────────────────── */
 .reco-header {
   position: sticky;
@@ -995,4 +1046,5 @@ mark.hl.current {
 
 @media (max-width: 600px) {
   .reco-header-title { display: none; }
+  .admin-current-user { max-width: 80px; }
 }

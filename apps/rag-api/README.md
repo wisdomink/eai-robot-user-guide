@@ -51,6 +51,21 @@ FF Robot 全系列产品的 AI 后端服务，提供多 Agent 智能问答和语
                     SSE 流式返回 → 前端 ChatPanel
 ```
 
+## 后台账号管理
+
+访问前端 `/admin` 使用统一登录页。首次登录时初始化管理员 `admin / root123!`，后续启动和部署不会覆盖已有账号。
+管理员在「账号管理」标签创建普通账号、重置密码、启用/停用账号，并查看按账号筛选和分页的登录记录。
+所有账号拥有相同的现有业务权限，账号管理接口只允许管理员访问。内置管理员不可修改或停用。
+
+本地默认 `ADMIN_BACKEND=sqlite`，账号、会话和记录保存在 `apps/rag-api/data/admin.sqlite3`（已忽略提交），可通过 `ADMIN_DB_PATH` 更改路径。
+生产部署由 `aws-deploy.sh` 配置 `ADMIN_BACKEND=dynamodb` 和独立的 `ADMIN_DDB_TABLE`，并创建表、授权及会话 TTL，避免容器更新丢失账号。
+
+新增接口均位于 `/api/admin/`：`login`、`logout`、`me`、`users`、`users/{username}`、`login-logs`。
+管理接口的来源校验同时识别请求 Host 和 `PUBLIC_BASE_URL` 中配置的公开站点来源，兼容反向代理将 Host 改写为 ALB 域名的部署方式。
+密码保存加盐哈希，会话使用 HttpOnly Cookie，有效期 8 小时；退出、停用或重置密码会使相应会话失效。
+登录记录包含账号、时间、IP、成功/失败，界面统一显示北京时间。
+现有业务 API 的地址、参数、处理逻辑和访问方式保持不变。
+
 ## 项目结构
 
 ```

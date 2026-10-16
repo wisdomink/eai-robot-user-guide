@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from chatkit.server import StreamingResult
 from chatkit.store import NotFoundError
 
+from app.admin import router as admin_router
 from app.core.config import (
     LOG_DIR,
     OPENAI_API_KEY,
@@ -66,6 +67,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(admin_router)
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 

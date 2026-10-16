@@ -56,6 +56,7 @@ apps/rag-api/.migrate-dynamodb-*-state.json
 .pids/
 .logs/
 apps/rag-api/data/order_now.json
+apps/rag-api/data/admin.sqlite3*
 
 # Logs
 *.log
