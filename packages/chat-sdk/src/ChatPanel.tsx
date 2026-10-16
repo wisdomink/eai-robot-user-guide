@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useMemo,
+  useSyncExternalStore,
   type CSSProperties,
   type FormEvent,
   type RefObject,
@@ -14,6 +15,8 @@ import { fetchHomepagePrompts, type HomepagePromptsConfig } from './homepageProm
 import { getDefaultChatkitApiUrl } from './chatEndpoints'
 import { getChatSdkVersionInfo } from './version'
 import { matchesPresetMessage, type PresetSelection } from './presetSelection'
+import { DEFAULT_ORDER_NOW_CONFIG, fetchOrderNowConfig, resolveOrderNowAction } from './orderNowClient'
+import { getPageUrl, subscribeToPageUrl } from './pageUrl'
 
 const isDev = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.DEV)
 
@@ -291,7 +294,20 @@ export default function ChatPanel({
   const [chatKitRuntimeError, setChatKitRuntimeError] = useState<unknown>(null)
 
   const [remoteConfig, setRemoteConfig] = useState<HomepagePromptsConfig | null>(null)
+  const [orderNowConfig, setOrderNowConfig] = useState(DEFAULT_ORDER_NOW_CONFIG)
+  const pageUrl = useSyncExternalStore(subscribeToPageUrl, getPageUrl, () => '')
+  const orderNowAction = resolveOrderNowAction(orderNowConfig, hostUrl || pageUrl)
   const [promptsLoading, setPromptsLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const apiUrl = new URL('/api/get-order-now-config', new URL(resolvedApiConfig.url, window.location.href))
+    setOrderNowConfig(DEFAULT_ORDER_NOW_CONFIG)
+    fetchOrderNowConfig(apiUrl.toString()).then(config => {
+      if (!cancelled) setOrderNowConfig(config)
+    })
+    return () => { cancelled = true }
+  }, [resolvedApiConfig.url])
   useScrollBleedBlocker(
     chatkitBodyRef,
     isChatOpen && (chatKitRuntimeStatus !== 'ready' || overlayMode === 'buttons'),
@@ -577,30 +593,47 @@ export default function ChatPanel({
       data-build-time={versionInfo.buildTime || undefined}
     >
       {showFab && !isChatOpen && (
-        <button
-          type="button"
-          className="chat-fab"
-          onClick={openChat}
-          aria-label={fabAriaLabel}
-          aria-controls={panelId}
-          aria-expanded={false}
-        >
-          <span className="chat-fab-backdrop" aria-hidden="true" />
-          <span className="chat-fab-content">
-            <span className="chat-fab-icon" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M12 11H12.01M16 11H16.01M8 11H8.01M22 17C22 17.5304 21.7893 18.0391 21.4142 18.4142C21.0391 18.7893 20.5304 19 20 19H6.828C6.29761 19.0001 5.78899 19.2109 5.414 19.586L3.212 21.788C3.1127 21.8873 2.9862 21.9549 2.84849 21.9823C2.71077 22.0097 2.56803 21.9956 2.43831 21.9419C2.30858 21.8881 2.1977 21.7971 2.11969 21.6804C2.04167 21.5637 2.00002 21.4264 2 21.286V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H20C20.5304 3 21.0391 3.21071 21.4142 3.58579C21.7893 3.96086 22 4.46957 22 5V17Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+        <div className="chat-launchers">
+          <button
+            type="button"
+            className="chat-fab"
+            aria-label={`${orderNowAction.label} (opens in a new tab)`}
+            onClick={() => window.open(
+              resolveOrderNowAction(orderNowConfig, hostUrl || window.location.href).url,
+              '_blank',
+              'noopener,noreferrer',
+            )}
+          >
+            <span className="chat-fab-backdrop" aria-hidden="true" />
+            <span className="chat-fab-content">
+              <span className="chat-fab-label">{orderNowAction.label}</span>
             </span>
-            <span className="chat-fab-label">{CHAT_FAB_LABEL}</span>
-          </span>
-        </button>
+          </button>
+          <button
+            type="button"
+            className="chat-fab"
+            onClick={openChat}
+            aria-label={fabAriaLabel}
+            aria-controls={panelId}
+            aria-expanded={false}
+          >
+            <span className="chat-fab-backdrop" aria-hidden="true" />
+            <span className="chat-fab-content">
+              <span className="chat-fab-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 11H12.01M16 11H16.01M8 11H8.01M22 17C22 17.5304 21.7893 18.0391 21.4142 18.4142C21.0391 18.7893 20.5304 19 20 19H6.828C6.29761 19.0001 5.78899 19.2109 5.414 19.586L3.212 21.788C3.1127 21.8873 2.9862 21.9549 2.84849 21.9823C2.71077 22.0097 2.56803 21.9956 2.43831 21.9419C2.30858 21.8881 2.1977 21.7971 2.11969 21.6804C2.04167 21.5637 2.00002 21.4264 2 21.286V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H20C20.5304 3 21.0391 3.21071 21.4142 3.58579C21.7893 3.96086 22 4.46957 22 5V17Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span className="chat-fab-label">{CHAT_FAB_LABEL}</span>
+            </span>
+          </button>
+        </div>
       )}
 
       {isChatOpen && (

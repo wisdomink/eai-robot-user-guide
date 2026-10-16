@@ -54,6 +54,18 @@ python3 scripts/sync_homepage_prompts.py --api-base https://other-deploy.ff.com
 
 ## 典型工作流
 
+Order Now 产品规则同步：
+
+```bash
+# 默认目标为本机，仅新增缺少的规则，保留已存在配置
+python3 scripts/sync_order_now_rules.py --dry-run
+python3 scripts/sync_order_now_rules.py
+# 其他部署需显式指定目标
+python3 scripts/sync_order_now_rules.py --api-base https://your-deployment.example.com
+```
+
+数据源为 `apps/rag-api/app/services/order_now_defaults.json`，包含 10 个产品、13 条页面规则和各自按钮文字。显式运行同步会补充缺失条目；日常重启不会运行同步，因此不会自动恢复后台删除的规则。
+
 ```
 1. 编辑 input/FF_Assist_QA_EN.md
 2. python3 scripts/generate_homepage_prompts.py       # 更新本地 JSON

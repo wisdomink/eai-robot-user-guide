@@ -622,6 +622,7 @@ mark.hl.current {
 /* ── Admin Tabs ────────────────────────────────────────────── */
 .admin-tabs {
   display: flex;
+  overflow-x: auto;
   gap: 0;
   max-width: 1440px;
   margin: 0 auto;
@@ -630,6 +631,8 @@ mark.hl.current {
 }
 
 .admin-tab {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 10px 24px;
   font-size: 14px;
   font-weight: 500;

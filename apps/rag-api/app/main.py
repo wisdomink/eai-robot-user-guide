@@ -39,6 +39,7 @@ from app.core.logging_config import setup_logging
 from app.core.openai_http import configure_agents_default_openai_client, create_async_openai_client
 from app.services.chatkit_handler import create_chatkit_server
 from app.services.homepage_prompts_service import HomepagePromptsStorage
+from app.services.order_now_service import OrderNowStorage
 from app.services.retrieval_service import RetrievalService
 from app.services.manuals_index import shared_snapshot, release_filter
 from app.services.lead_service import LeadStorage
@@ -100,6 +101,7 @@ def _summarize_chatkit_body(raw: bytes) -> str:
 lead_storage = LeadStorage.from_config()
 recommendation_storage = RecommendationCatalogStorage.from_config()
 homepage_prompts_storage = HomepagePromptsStorage.from_config()
+order_now_storage = OrderNowStorage.from_config()
 chatkit_server = create_chatkit_server(
     lead_storage=lead_storage,
     recommendation_storage=recommendation_storage,
@@ -147,6 +149,15 @@ class HomepagePageRequest(BaseModel):
     placeholder: str = Field("", description="Placeholder text for the input box")
     info_text: str = Field("", description="Informational text shown below prompt buttons")
     prompts: list[HomepagePagePromptRequest] = Field(default_factory=list)
+
+
+class OrderNowRuleRequest(BaseModel):
+    id: str = Field("", max_length=128, pattern=r"^[A-Za-z0-9_-]*$")
+    label: str = Field(..., min_length=1, max_length=200)
+    pattern: str = Field(..., min_length=1, max_length=2048)
+    target_url: str = Field(..., min_length=1, max_length=2048)
+    button_label: str = Field("Order Now", min_length=1, max_length=40)
+    enabled: bool = True
 
 
 class LeadCaptureTriageConfigPayload(BaseModel):
@@ -426,6 +437,32 @@ async def search_endpoint(
         json.dumps(response, ensure_ascii=False)[:_MAX_BODY_LOG],
     )
     return response
+
+
+# ── Order Now API ─────────────────────────────────────────────────────────
+
+
+@app.get("/api/get-order-now-config")
+async def get_order_now_config(response: Response, all: bool = Query(False)):
+    response.headers["Cache-Control"] = "no-store"
+    return order_now_storage.get_config(include_disabled=all)
+
+
+@app.post("/api/save-order-now-rule")
+async def save_order_now_rule(payload: OrderNowRuleRequest):
+    try:
+        rule, created = order_now_storage.save_rule(payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "created": created, "rule": rule}
+
+
+@app.delete("/api/delete-order-now-rule/{rule_id}")
+async def delete_order_now_rule(rule_id: str):
+    deleted = order_now_storage.delete_rule(rule_id)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Order Now rule not found")
+    return {"ok": True, "rule": deleted}
 
 
 # ── Homepage Prompts API ──────────────────────────────────────────────────

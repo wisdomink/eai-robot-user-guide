@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import logoDark from '@/assets/icons/logo-dark.svg'
+import OrderNowTab from '@/components/admin/OrderNowTab'
 import { DOWNLOADABLE_PRODUCTS } from '@/hooks/useProductContext'
 import {
   deleteRecommendation,
@@ -32,7 +33,7 @@ import {
   saveHomepagePage,
 } from '@/api/homepagePrompts'
 
-type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads'
+type Tab = 'recommendations' | 'leads' | 'homepage-prompts' | 'manual-downloads' | 'order-now'
 
 const RECO_PRODUCT_OPTIONS = [
   { value: 'futurist', label: 'FF All-New Futurist' },
@@ -1401,6 +1402,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'recommendations', label: '推荐管理' },
   { key: 'leads', label: '留资管理' },
   { key: 'homepage-prompts', label: '首页推荐' },
+  { key: 'order-now', label: 'Order Now 配置' },
   { key: 'manual-downloads', label: '下载配置' },
 ]
 
@@ -1471,6 +1473,7 @@ export default function AdminPage() {
         {activeTab === 'recommendations' && <RecommendationsTab />}
         {activeTab === 'leads' && <LeadsTab />}
         {activeTab === 'homepage-prompts' && <HomepagePromptsTab />}
+        {activeTab === 'order-now' && <OrderNowTab />}
         {activeTab === 'manual-downloads' && <ManualDownloadsTab />}
       </main>
     </div>

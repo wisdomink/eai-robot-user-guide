@@ -15,6 +15,18 @@ ChatPanel 聊天面板 SDK — 构建为 IIFE 单文件，通过 `<script>` 标�
 
 默认聊天面板为收起状态；若需在加载后自动展开，可传入 `defaultOpen: true`。
 
+右下角入口依次为 `Order Now`（上）和 `FF Assist`（下）。打开聊天时两者一起隐藏，关闭聊天后恢复；`showFab: false` 同时隐藏两个入口。
+
+### Order Now
+
+SDK 初始化时从 ChatKit API 所在服务的 `/api/get-order-now-config` 独立加载全部启用规则。同一页面内缓存请求及结果，内部路由跳转和重复初始化不会重新请求；完整刷新页面后获取最新配置。
+
+入口文字由规则中的 `button_label` 决定，默认 `Order Now`；Nova 显示 `Apply Now`，Faber 显示 `Contact Sales`。点击时使用当前 `window.location.href`（或显式传入的 `hostUrl`）本地匹配，并在新标签页打开目标链接。匹配优先级为精确 URL、最长路径前缀（`/*`）、默认商城首页；来源 URL 的查询参数、hash 和末尾 `/` 不参与匹配。配置加载中、失败或无匹配规则时显示 Order Now，跳转 `https://shop.ff.com/`。目标链接的查询参数和 hash 会原样保留。
+
+SDK 会监听 `pushState`、`replaceState`、前进后退和 hash 变化，更新当前入口文字；该过程使用已缓存的规则，不会重新请求配置。
+
+在 `/admin` 的 **Order Now 配置** 标签中维护规则。使用显式 `hostUrl` 的单页网站应在路由变化后调用 `FFRobotChat.update({ hostUrl: window.location.href })` 更新覆盖值。
+
 默认收起状态下，SDK 只挂载右下角入口，不加载 ChatKit runtime，也不渲染聊天面板主体。用户首次打开面板时才会加载聊天运行时，以降低对宿主页面滚动与触摸事件的影响。
 
 SDK 在浏览器中会自动读取 `window.location.href`，并在请求首页推荐配置时作为 `url` 参数发送给后端，用于按页面返回不同的欢迎语与预置问题。也可以通过 `hostUrl` 手动覆盖：

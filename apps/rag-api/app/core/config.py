@@ -90,6 +90,10 @@ HOMEPAGE_PROMPTS_DDB_TABLE: str = os.getenv("HOMEPAGE_PROMPTS_DDB_TABLE", "").st
 HOMEPAGE_PROMPTS_DATA_PATH: Path = Path(
     os.getenv("HOMEPAGE_PROMPTS_DATA_PATH", str(RAG_SERVER_ROOT / "data" / "homepage_prompts.json"))
 )
+# Order Now shares the homepage backend/table, with its own config record and local file.
+ORDER_NOW_DATA_PATH: Path = Path(
+    os.getenv("ORDER_NOW_DATA_PATH", str(HOMEPAGE_PROMPTS_DATA_PATH.with_name("order_now.json")))
+)
 
 # ── Recommendation config persistence ─────────────────────────────────────
 RECOMMENDATIONS_BACKEND: str = os.getenv("RECOMMENDATIONS_BACKEND", "file").strip().lower()

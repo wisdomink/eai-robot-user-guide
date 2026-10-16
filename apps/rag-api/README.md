@@ -203,6 +203,16 @@ uvicorn app.main:app --reload --port 8000
 | `/api/logs/{log_name}` | GET | 获取指定日志的最后 N 行（`?tail=200`，允许：`front.log`、`back.log`、`system.log`） |
 | `/health` | GET | 健康检查 |
 
+## Order Now 配置
+
+Order Now 提供独立接口：`GET /api/get-order-now-config` 返回 `default_url` 和全部启用的 `rules`；加 `all=true` 返回包括停用规则的管理列表。`POST /api/save-order-now-rule` 新增或修改规则，`DELETE /api/delete-order-now-rule/{id}` 删除规则。规则字段为 `id`、`label`、`pattern`、`target_url`、`button_label`、`enabled`。`button_label` 默认 Order Now，支持 1～40 字符；旧规则缺少该字段时兼容为 Order Now。来源支持完整 HTTP(S) URL 或末尾 `/*`，默认地址为 `https://shop.ff.com/`。
+
+存储复用 `HOMEPAGE_PROMPTS_BACKEND` 和 `HOMEPAGE_PROMPTS_DDB_TABLE`。DynamoDB 使用独立记录 `pk=ORDER_NOW, sk=CONFIG`，按规则 ID 原子更新，不随容器重建丢失。本地文件默认位于首页推荐 JSON 同目录的 `order_now.json`，可通过 `ORDER_NOW_DATA_PATH` 覆盖。
+
+新存储首次读取初始化 `app/services/order_now_defaults.json` 中的 10 个产品、13 条页面规则（包含页面别名）。Nova 使用 Apply Now 跳转开发者申请页，Faber 使用 Contact Sales 跳转官网联系锚点。初始化记录会保留，后台修改或删除（包括删除全部规则）后，重启不会重新填入初始规则。SDK 在一个页面生命周期中仅请求一次，后台保存后需刷新宿主页面获取新配置。
+
+已有存储可显式执行 `python3 scripts/sync_order_now_rules.py --api-base http://127.0.0.1:8000` 补充缺少的默认规则（从仓库根目录运行）。该脚本按 ID 和来源 URL 检查已存在规则，保留后台已有修改和停用状态；`--dry-run` 仅预览。同步通过 API 写入当前部署配置的持久化存储，不在服务启动时自动运行。
+
 ## 首页推荐配置持久化
 
 首页推荐配置支持两种持久化后端：

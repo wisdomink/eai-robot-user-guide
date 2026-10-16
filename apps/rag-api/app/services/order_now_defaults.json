@@ -1,0 +1,106 @@
+{
+  "futurist": {
+    "id": "futurist",
+    "label": "FF All-New Futurist",
+    "pattern": "https://futurist.ff.com/us/",
+    "target_url": "https://shop.ff.com/products/ff-all-new-futurist",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "futurist-www": {
+    "id": "futurist-www",
+    "label": "FF All-New Futurist",
+    "pattern": "https://www.ff.com/us/futurist/",
+    "target_url": "https://shop.ff.com/products/ff-all-new-futurist",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "master": {
+    "id": "master",
+    "label": "FF Master Classic",
+    "pattern": "https://robotics.ff.com/us/ff-master/",
+    "target_url": "https://shop.ff.com/products/master",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "master-mini": {
+    "id": "master-mini",
+    "label": "FF Master Mini",
+    "pattern": "https://robotics.ff.com/us/ff-master-mini/",
+    "target_url": "https://shop.ff.com/products/ff-master-mini",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "aegis": {
+    "id": "aegis",
+    "label": "FX Aegis Classic",
+    "pattern": "https://robotics.ff.com/us/fx-aegis/",
+    "target_url": "https://shop.ff.com/products/aegis",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "aegis-mega": {
+    "id": "aegis-mega",
+    "label": "FX Aegis Mega",
+    "pattern": "https://robotics.ff.com/us/fx-aegis-mega/",
+    "target_url": "https://shop.ff.com/products/fx-aegis-mega",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "aegis-hyper": {
+    "id": "aegis-hyper",
+    "label": "FX Aegis Hyper",
+    "pattern": "https://robotics.ff.com/us/fx-aegis-hyper/",
+    "target_url": "https://shop.ff.com/products/fx-aegis-hyper",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "navi": {
+    "id": "navi",
+    "label": "FX Navi",
+    "pattern": "https://www.ff.com/us/navi/",
+    "target_url": "https://shop.ff.com/products/fx-navi",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "navi-domain": {
+    "id": "navi-domain",
+    "label": "FX Navi",
+    "pattern": "https://navi.ff.com/",
+    "target_url": "https://shop.ff.com/products/fx-navi",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "nova": {
+    "id": "nova",
+    "label": "FF Nova",
+    "pattern": "https://robotics.ff.com/us/nova/",
+    "target_url": "https://developer.ff.com/onboarding/en/nova",
+    "button_label": "Apply Now",
+    "enabled": true
+  },
+  "nova-mini": {
+    "id": "nova-mini",
+    "label": "FF Nova Mini",
+    "pattern": "https://robotics.ff.com/us/nova-mini/",
+    "target_url": "https://shop.ff.com/products/ff-nova-mini",
+    "button_label": "Order Now",
+    "enabled": true
+  },
+  "faber": {
+    "id": "faber",
+    "label": "FF Faber",
+    "pattern": "https://faber.ff.com/us/",
+    "target_url": "https://www.ff.com/#eai-robotics-contact-us",
+    "button_label": "Contact Sales",
+    "enabled": true
+  },
+  "faber-www": {
+    "id": "faber-www",
+    "label": "FF Faber",
+    "pattern": "https://www.ff.com/us/faber/",
+    "target_url": "https://www.ff.com/#eai-robotics-contact-us",
+    "button_label": "Contact Sales",
+    "enabled": true
+  }
+}

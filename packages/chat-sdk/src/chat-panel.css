@@ -365,11 +365,19 @@
   outline-offset: 2px;
 }
 
-.ffrobot-chat-root .chat-fab {
-  box-sizing: border-box;
+.ffrobot-chat-root .chat-launchers {
   position: fixed;
   right: 24px;
   bottom: calc(24px + var(--ffrobot-safe-area-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: var(--ffrobot-chat-fab-z-index, 170);
+}
+
+.ffrobot-chat-root .chat-fab {
+  box-sizing: border-box;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -418,6 +426,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
 }
 
+.ffrobot-chat-root .chat-fab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .ffrobot-chat-root .chat-fab:hover .chat-fab-backdrop {
   background: rgba(42, 45, 48, 0.92);
 }
@@ -449,7 +462,7 @@
 
 @media (max-width: 768px) {
   .ffrobot-chat-root .chat-panel,
-  .ffrobot-chat-root .chat-fab {
+  .ffrobot-chat-root .chat-launchers {
     right: 16px;
     bottom: calc(16px + var(--ffrobot-safe-area-bottom));
   }
